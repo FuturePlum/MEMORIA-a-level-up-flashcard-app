@@ -1,9 +1,12 @@
 # 🃏 Flashcard
 
-**Révise mieux, en moins de temps.** Une application de flashcards à répétition espacée, en français, qui s'installe comme une vraie app sur ton téléphone et fonctionne même sans connexion.
+### Ton cours entre dans l'app. Il reste dans ta tête.
+
+**Colle ton cours, prends-le en photo ou glisse ton PDF : l'IA en fait des cartes en quelques secondes. Ensuite, l'app te dit exactement quoi réviser aujourd'hui, et te prévient quand un contrôle approche.** Plus de « je commence par quoi ? », plus de révisions de dernière minute : tu arrives au contrôle avec de la marge.
 
 ![PWA](https://img.shields.io/badge/PWA-installable-ff8a2b)
 ![Hors ligne](https://img.shields.io/badge/hors%20ligne-oui-ffd23f)
+![Sans compte](https://img.shields.io/badge/sans%20compte-oui-2b2b3a)
 ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-2b2b3a)
 
 <!-- Ajoute ici 2 ou 3 captures d'écran :
@@ -16,31 +19,50 @@
 
 ---
 
-## ✨ L'esprit de l'app
+## ⚡ Ce qui fait la différence
 
-Flashcard est pensée pour être **fluide, vivante et cohérente**. Tout réagit au toucher : les boutons « s'enfoncent » comme de vrais boutons en relief, la carte se retourne avec une animation douce, et l'interface reste animée même au repos. Le style, appelé *Pop nuit*, mêle un fond sombre à des touches d'orange et de jaune, avec des cartes à l'ombre décalée.
+### 📸 De ton cours à tes cartes en un clin d'œil
+Texte collé, photo du tableau, PDF, Word, fichier texte : tu déposes, l'IA génère les cartes. Tu relis, tu corriges, tu valides. Fini les heures à recopier. Tu peux même demander à l'IA de **retoucher toute une matière** : elle te propose les changements, et c'est toi qui acceptes ou refuses carte par carte.
 
-## 🎯 Fonctionnalités
+### 🧠 Les bonnes cartes, au bon moment
+Chaque réponse (rouge, orange, vert) décide quand la carte reviendra : demain, dans 3 jours, 1 semaine, 2 semaines… jusqu'à 3 mois. Ce que tu sais déjà s'efface de ta file. Ce qui te résiste revient. Tu passes ton temps sur ce qui compte vraiment.
 
-**Réviser**
-- Répétition espacée : l'app te propose les cartes au bon moment, selon tes réponses (rouge, orange, vert).
-- Boutons de réponse grands et toujours accessibles en bas de l'écran.
-- Bouton « annuler » pour corriger une réponse donnée par erreur.
-- Mode Quiz pour t'entraîner autrement.
+### 📅 Un planning qui pense à ta place
+Tu donnes la date de tes contrôles, l'app calcule le reste :
+- ta **marge avant chaque échéance**, visible d'un coup d'œil ;
+- un badge **« À risque »** quand un contrôle approche et que ça ne suit pas, pour ne jamais être surpris ;
+- les **cartes en retard étalées intelligemment** sur les jours suivants, au lieu de te tomber dessus d'un seul coup ;
+- les derniers jours, **zéro carte neuve** : que de la révision, pour arriver serein ;
+- le contrôle passé, la matière s'**archive toute seule**.
 
-**Ajouter des cartes**
-- Génération de cartes par IA à partir de ton cours.
-- Import simple de cartes (question / réponse).
+### 🔄 Une carte, deux sens
+Un bouton ⇄ et ta carte marche dans les deux sens : question → réponse, puis réponse → question. Une seule carte, une seule progression, et l'app choisit le sens au hasard pour t'empêcher de réviser en pilote automatique.
 
-**S'organiser avant un contrôle**
-- **Matières et contrôles** : renseigne la date de tes contrôles.
-- **Planning** : visualise ta semaine et ta marge avant chaque échéance.
-- **Zone de révision avant contrôle** : les derniers jours, plus de cartes neuves, uniquement de la révision.
-- Après la date du contrôle, la matière est archivée automatiquement et ses cartes sortent des révisions.
+### 📝 Ta fiche de synthèse, prête à imprimer
+À partir de ton cours, l'IA rédige une fiche selon **tes consignes**. Tu la lis, tu la modifies, puis tu l'exportes en **Word ou PDF**. Tu peux garder tes consignes préférées comme modèle.
 
-**Suivre sa progression**
-- Statistiques et synthèse de ce que tu maîtrises.
-- Parcourir toutes tes cartes, par matière.
+### 🔁 Ta progression te suit partout
+Avec ton code perso (sans compte, sans mot de passe à inventer), tes cartes, tes paliers et ta clé IA passent d'un appareil à l'autre. Tu révises sur le téléphone dans le bus, tu retrouves tout sur la tablette le soir.
+
+### 🤝 Partage une matière en 6 caractères
+Un code, un copier-coller, et ton pote a toutes tes cartes. Aussi simple que ça.
+
+### 🔔 Un rappel qui sait insister (gentiment)
+Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si tu l'ignores, un second rappel arrive 2 h plus tard. De temps en temps, l'app glisse aussi quelques cartes déjà maîtrisées pour qu'elles ne s'oublient pas.
+
+---
+
+## 🎮 Et au quotidien
+
+- **Réviser** : de grands boutons de réponse toujours à portée de pouce, un bouton « annuler » si tu t'es trompé, un **mode Quiz** pour changer de rythme.
+- **Série** : ta flamme monte tant que tu révises. Elle ne casse que si tu as vraiment laissé des cartes en retard.
+- **Statistiques** : ce que tu maîtrises, matière par matière, en un coup d'œil.
+- **Parcourir** : recherche, modifie, partage ou supprime n'importe quelle carte.
+- **Cartes illustrées** : ajoute tes photos à tes cartes (schémas, cartes, formules).
+
+## 🎨 L'esprit
+
+Une app **fluide, vivante et cohérente**. Tout réagit au toucher : les boutons s'enfoncent comme de vrais boutons en relief, la carte se retourne tout en douceur, et le fond bouge légèrement même au repos. Le style *Pop nuit* mêle un fond sombre à des touches d'orange et de jaune. Réviser doit donner envie de rouvrir l'app, pas de la fuir.
 
 ## 📲 Installer l'application
 
@@ -53,16 +75,19 @@ Flashcard est pensée pour être **fluide, vivante et cohérente**. Tout réagit
 1. Ouvre l'adresse de l'app dans Chrome.
 2. Menu ⋮ → **Installer l'application** (ou **Ajouter à l'écran d'accueil**).
 
+Et ça marche **sans connexion** : métro, train, salle sans réseau, tes cartes sont là.
+
 ## 🔒 Tes données
 
-Tes cartes et ta progression restent **sur ton appareil**. Il n'y a pas de compte à créer.
+Pas de compte, pas de pub, pas de pistage. Tes cartes et ta progression restent **sur ton appareil**. La synchronisation est facultative : si tu l'actives, elle passe par ton code perso, rien d'autre. Tu peux aussi exporter toute ta progression en un fichier quand tu veux.
 
 ## 🛠️ Technique
 
 - Application web progressive (PWA) : `index.html` + `manifest.json` + service worker `sw.js`
 - HTML, CSS et JavaScript, sans framework
 - Fonctionne hors ligne grâce au cache du service worker
-- Dossier `worker/` : partie serveur légère utilisée pour la génération IA
+- Génération IA avec ta propre clé Gemini (à renseigner dans les Réglages)
+- Dossier `worker/` : partie serveur légère (synchronisation et génération IA)
 - Hébergement : Cloudflare Pages
 
 ## 📁 Structure du dépôt
@@ -72,7 +97,7 @@ index.html       l'application complète
 sw.js            service worker (mode hors ligne)
 manifest.json    configuration PWA
 icon-*.png       icônes de l'app
-worker/          fonction serveur (génération IA)
+worker/          fonctions serveur
 docs/            documentation
 .well-known/     liaison avec l'app Android
 ```
