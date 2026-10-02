@@ -9,22 +9,22 @@
 ![Sans compte](https://img.shields.io/badge/sans%20compte-oui-2b2b3a)
 ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-2b2b3a)
 
-<!-- Ajoute ici 2 ou 3 captures d'écran :
 <p align="center">
-  <img src="docs/capture-reviser.png" width="240" alt="Réviser">
-  <img src="docs/capture-planning.png" width="240" alt="Planning">
-  <img src="docs/capture-ajouter.png" width="240" alt="Ajouter">
+  <img src="docs/capture-accueil.png" width="23%" alt="Écran d'accueil : les cartes à réviser aujourd'hui et le compte à rebours avant le contrôle">
+  <img src="docs/capture-carte.png" width="23%" alt="Une carte retournée avec les boutons Pas su, Difficile et Facile">
+  <img src="docs/capture-planning.png" width="23%" alt="Planning : charge de révision jour par jour et marge avant le contrôle">
+  <img src="docs/capture-ajouter.png" width="23%" alt="Ajouter : colle ton cours ou joins une photo, l'IA génère les cartes">
 </p>
--->
+<p align="center"><sub>Réviser · Retourner la carte · Planning · Générer avec l'IA</sub></p>
 
 ---
 
 ## ⚡ Ce qui fait la différence
 
-### 📸 De ton cours à tes cartes en un clin d'œil
+### 📸 Photographie ton cours, l'IA fait les cartes
 Texte collé, photo du tableau, PDF, Word, fichier texte : tu déposes, l'IA génère les cartes. Tu relis, tu corriges, tu valides. Fini les heures à recopier. Tu peux même demander à l'IA de **retoucher toute une matière** : elle te propose les changements, et c'est toi qui acceptes ou refuses carte par carte.
 
-### 🧠 Les bonnes cartes, au bon moment
+### 🧠 Révise uniquement ce que tu risques d'oublier
 Chaque réponse (rouge, orange, vert) décide quand la carte reviendra : demain, dans 3 jours, 1 semaine, 2 semaines… jusqu'à 3 mois. Ce que tu sais déjà s'efface de ta file. Ce qui te résiste revient. Tu passes ton temps sur ce qui compte vraiment.
 
 ### 📅 Un planning qui pense à ta place
@@ -34,9 +34,6 @@ Tu donnes la date de tes contrôles, l'app calcule le reste :
 - les **cartes en retard étalées intelligemment** sur les jours suivants, au lieu de te tomber dessus d'un seul coup ;
 - les derniers jours, **zéro carte neuve** : que de la révision, pour arriver serein ;
 - le contrôle passé, la matière s'**archive toute seule**.
-
-### 🔄 Une carte, deux sens
-Un bouton ⇄ et ta carte marche dans les deux sens : question → réponse, puis réponse → question. Une seule carte, une seule progression, et l'app choisit le sens au hasard pour t'empêcher de réviser en pilote automatique.
 
 ### 📝 Ta fiche de synthèse, prête à imprimer
 À partir de ton cours, l'IA rédige une fiche selon **tes consignes**. Tu la lis, tu la modifies, puis tu l'exportes en **Word ou PDF**. Tu peux garder tes consignes préférées comme modèle.
@@ -55,6 +52,7 @@ Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si t
 ## 🎮 Et au quotidien
 
 - **Réviser** : de grands boutons de réponse toujours à portée de pouce, un bouton « annuler » si tu t'es trompé, un **mode Quiz** pour changer de rythme.
+- **Sens inversé ⇄** : un bouton, et la carte marche aussi dans l'autre sens (réponse → question). Une seule progression, et l'app choisit le sens au hasard pour t'empêcher de réviser en pilote automatique.
 - **Série** : ta flamme monte tant que tu révises. Elle ne casse que si tu as vraiment laissé des cartes en retard.
 - **Statistiques** : ce que tu maîtrises, matière par matière, en un coup d'œil.
 - **Parcourir** : recherche, modifie, partage ou supprime n'importe quelle carte.
@@ -63,6 +61,18 @@ Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si t
 ## 🎨 L'esprit
 
 Une app **fluide, vivante et cohérente**. Tout réagit au toucher : les boutons s'enfoncent comme de vrais boutons en relief, la carte se retourne tout en douceur, et le fond bouge légèrement même au repos. Le style *Pop nuit* mêle un fond sombre à des touches d'orange et de jaune. Réviser doit donner envie de rouvrir l'app, pas de la fuir.
+
+## 🖥️ Sur ordinateur aussi
+
+Même app, même progression, mais en grand : la carte et sa réponse s'affichent côte à côte, le planning de la semaine reste sous tes yeux, et tu génères tes cartes depuis un vrai espace de travail. Pratique pour réviser au bureau ou transformer un cours entier en cartes.
+
+<p align="center">
+  <img src="docs/capture-bureau-accueil.png" width="49%" alt="Version ordinateur : accueil avec la semaine et le compte à rebours du contrôle">
+  <img src="docs/capture-bureau-revision.png" width="49%" alt="Version ordinateur : question et réponse côte à côte">
+</p>
+<p align="center">
+  <img src="docs/capture-bureau-ajouter.png" width="70%" alt="Version ordinateur : générer des cartes à partir d'un cours">
+</p>
 
 ## 📲 Installer l'application
 
