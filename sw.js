@@ -1,0 +1,131 @@
+/* Service worker de Flashcard.
+   - Gère le cache basique (comme avant, pour le fonctionnement PWA hors-ligne).
+   - Gère un rappel quotidien local : le client (index.html) programme un
+     'setTimeout' via une notification différée en storant l'heure voulue ;
+     comme un service worker peut être tué par le système à tout moment,
+     on utilise plutôt un mécanisme de vérification périodique via
+     'periodicSync' quand disponible, et en repli une vérification à
+     chaque activation/ouverture de page (moins fiable mais fonctionne
+     sans permission supplémentaire).
+
+   IMPORTANT : incrémente SW_VERSION à chaque déploiement qui modifie ce
+   fichier. Ça garantit que le navigateur voit un fichier différent et
+   installe la nouvelle version au lieu de garder l'ancienne en cache.
+
+   v3 : plus aucun window.location.reload() automatique n'est déclenché côté
+   client (index.html) suite à une mise à jour de ce service worker — cf.
+   bug remonté où l'app installée (mode standalone) se figeait (plus aucun
+   clic possible) quelques secondes après l'ouverture, probablement à cause
+   d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
+   cache résiduel d'une version antérieure au démarrage, par précaution. */
+const SW_VERSION = 'v46';
+const CACHE_NOM = 'flashcard-' + SW_VERSION;
+
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((noms) => Promise.all(noms.filter((n) => n !== CACHE_NOM).map((n) => caches.delete(n))))
+      .then(() => self.clients.claim())
+  );
+});
+
+/* Réseau d'abord (toujours la dernière version déployée), et on garde une copie
+   des fichiers du site pour le mode hors ligne. Avant, le cache n'était jamais
+   rempli : hors connexion, l'app ne s'ouvrait pas du tout, sans aucune erreur
+   visible. Ne touche pas aux requêtes vers d'autres domaines (Gemini, synchro). */
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if(req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  event.respondWith(
+    fetch(req)
+      .then((res) => {
+        if(res && res.status === 200){
+          const copie = res.clone();
+          caches.open(CACHE_NOM).then((c) => c.put(req, copie)).catch(() => {});
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(req)
+          .then((r) => r || (req.mode === 'navigate' ? caches.match('./index.html') : null))
+          .then((r) => r || Response.error())
+      )
+  );
+});
+
+/* Le client envoie le nombre de cartes dues + l'heure de rappel voulue ;
+   on affiche la notification tout de suite si on est appelés au bon
+   moment (voir périodicité côté client dans registerServiceWorker). */
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if(data.type === 'SHOW_REMINDER'){
+    const count = data.count || 0;
+    if(count <= 0) return;
+    self.registration.showNotification('Flashcard', {
+      body: count === 1
+        ? '1 carte à réviser aujourd\'hui.'
+        : `${count} cartes à réviser aujourd'hui.`,
+      icon: './icon-192x192-any.png',
+      badge: './icon-192x192-any.png',
+      tag: 'revision-rappel',
+      renotify: true
+    });
+  }
+  if(data.type === 'SHOW_REMINDER_RELANCE'){
+    const count = data.count || 0;
+    if(count <= 0) return;
+    self.registration.showNotification('Flashcard', {
+      body: count === 1
+        ? 'Toujours 1 carte en attente aujourd\'hui.'
+        : `Toujours ${count} cartes en attente aujourd'hui.`,
+      icon: './icon-192x192-any.png',
+      badge: './icon-192x192-any.png',
+      tag: 'revision-rappel',
+      renotify: true
+    });
+  }
+});
+
+/* Périodic Background Sync : si le navigateur le permet (Chrome Android,
+   sous condition que l'app soit installée et utilisée régulièrement),
+   on peut vérifier périodiquement en arrière-plan sans que l'app soit
+   ouverte. Ce n'est pas garanti sur tous les appareils. */
+self.addEventListener('periodicsync', (event) => {
+  if(event.tag === 'revision-check'){
+    event.waitUntil(checkAndNotify());
+  }
+});
+
+async function checkAndNotify(){
+  try{
+    const clientsList = await self.clients.matchAll({ type: 'window' });
+    if(clientsList.length > 0){
+      // Une fenêtre est ouverte : on la laisse gérer elle-même via message.
+      return;
+    }
+    // Pas de fenêtre ouverte : on ne peut pas recalculer le nombre de
+    // cartes dues sans accès aux données de l'app (stockées en
+    // localStorage, inaccessible depuis le service worker). On affiche
+    // donc un rappel générique dans ce cas.
+    await self.registration.showNotification('Flashcard', {
+      body: 'Pense à réviser tes cartes aujourd\'hui !',
+      icon: './icon-192x192-any.png',
+      badge: './icon-192x192-any.png',
+      tag: 'revision-rappel',
+      renotify: true
+    });
+  }catch(e){}
+}
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then((clientsList) => {
+      for(const client of clientsList){
+        if('focus' in client) return client.focus();
+      }
+      if(self.clients.openWindow) return self.clients.openWindow('./');
+    })
+  );
+});
