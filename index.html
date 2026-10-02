@@ -7,18 +7,223 @@
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0c0c12">
 <script>
+  /* Apparence (v132) : choix Sombre / Clair / Auto, propre à CET appareil (localStorage, jamais synchronisé).
+     Appliqué ICI, avant le premier rendu, via data-theme sur <html> : pas de flash au démarrage. */
   (function(){
-    // Garde-fou : si jamais l'appareil est en mode clair système, on
-    // resynchronise. Mais la valeur de départ ci-dessus est déjà la bonne
-    // pour l'usage réel (sombre), afin d'éviter tout flash de couleur
-    // claire au premier rendu, avant même que ce script ne s'exécute.
-    var meta = document.querySelector('meta[name="theme-color"]');
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    function sync(){ meta.setAttribute('content', '#0c0c12'); }
-    sync();
-    if(mq.addEventListener) mq.addEventListener('change', sync);
-    else if(mq.addListener) mq.addListener(sync);
+    var K = 'fc-apparence';
+    function lire(){ try{ var v = localStorage.getItem(K); if(v === 'clair' || v === 'sombre' || v === 'auto') return v; }catch(e){} return 'sombre'; }
+    var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+    function resolu(c){ return c === 'clair' ? 'light' : (c === 'auto' && mq && mq.matches) ? 'light' : 'dark'; }
+    window.apparenceChoisie = lire;
+    window.appliquerApparence = function(c){
+      var t = resolu(c || lire());
+      document.documentElement.setAttribute('data-theme', t);
+      var m = document.querySelector('meta[name="theme-color"]');
+      if(m) m.setAttribute('content', t === 'light' ? '#f6efe2' : '#0c0c12');
+    };
+    window.choisirApparence = function(c){
+      try{ localStorage.setItem(K, c); }catch(e){}
+      window.appliquerApparence(c);
+    };
+    window.appliquerApparence();
+    if(mq){
+      var suit = function(){ if(lire() === 'auto') window.appliquerApparence('auto'); };
+      if(mq.addEventListener) mq.addEventListener('change', suit); else if(mq.addListener) mq.addListener(suit);
+    }
   })();
+</script>
+<script>
+/* v134 : Langue (Français / English). Choix local à l'appareil (localStorage 'fc-langue'), appliqué dès le <head>.
+   En français ce bloc ne fait RIEN. En anglais, un traducteur remplace les textes exacts de FC_EN (textes, placeholder, title, aria-label, alt,
+   alert/confirm) au fur et à mesure que l'app dessine l'écran, et met les dates en anglais. Pour traduire un texte de plus : ajouter
+   'texte français exact': 'English text' dans FC_EN. Un texte absent du dictionnaire reste en français. */
+(function(){
+  var K='fc-langue';
+  function lire(){ try{ var v=localStorage.getItem(K); if(v==='en'||v==='fr') return v; }catch(e){} return 'fr'; }
+  window.langueChoisie=lire;
+  window.choisirLangue=function(c){ try{ localStorage.setItem(K,c); }catch(e){} location.reload(); };
+  if(lire()!=='en') return;
+  document.documentElement.setAttribute('lang','en');
+  var D=window.FC_EN={
+    'Réviser':'Study','Planning':'Planning','Ajouter':'Add','Parcourir':'Browse',
+    'Réglages':'Settings','Retour':'Back','Langue':'Language','Apparence':'Appearance','Sombre':'Dark','Clair':'Light','Auto':'Auto',
+    'Rappels':'Reminders','Rappel de révision':'Review reminder','Une notification par jour':'One notification per day',
+    'Heure du rappel':'Reminder time','Relancer si ignoré':'Remind again if ignored','Un second rappel 2 h plus tard':'A second reminder 2 h later',
+    'Notifications bloquées':'Notifications blocked','Réglages du téléphone → Apps → Flashcard → Notifications : autorise-les, puis reviens ici.':'Phone settings → Apps → Flashcard → Notifications: allow them, then come back here.',
+    'Tu reçois la notification à cette heure si des cartes sont à réviser.':'You get the notification at this time if cards are due.',
+    'Génération IA':'AI generation','Clé API Gemini (gratuite)':'Gemini API key (free)','Crée-la sur aistudio.google.com/apikey, colle-la ici. Avec la synchro, elle suit sur tes autres appareils.':'Create it at aistudio.google.com/apikey and paste it here. With sync, it follows you to your other devices.',
+    'Clé Gemini connectée':'Gemini key connected','Changer':'Change','Modifier la clé Gemini':'Edit Gemini key',"Ta clé actuelle reste en place tant que tu n'as pas validé.":'Your current key stays in place until you confirm.',
+    'Valider':'Confirm','Annuler':'Cancel','Retirer la clé':'Remove key',
+    'Synchronisation':'Sync','Synchro entre appareils':'Sync between devices','Pas encore configurée.':'Not set up yet.',
+    'Sauvegarde':'Backup','Exporter la progression':'Export progress','Fichier JSON':'JSON file','Importer une progression':'Import progress',
+    "Exporter l'app à jour":'Export the up-to-date app','Fichier HTML complet':'Full HTML file','Aussi sur le web':'Also on the web',
+    'Flashcard existe aussi en site web':'Flashcard is also available as a website','Retrouve tes cartes sur ton PC avec ton code de synchro.':'Find your cards on your computer with your sync code.',
+    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up'
+  };
+  Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
+    'Renommer la matière':'Rename subject','Nouveau nom':'New name','Renommer':'Rename','Supprimer tout':'Delete all','Une de tes photos :':'One of your photos:','Une autre image…':'Another image…','Fermer':'Close',
+    'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test',
+    'Matières et contrôles':'Subjects and tests','Toutes tes matières sont archivées.':'All your subjects are archived.','Afficher la réponse':'Show answer','Espace':'Space','pour afficher la réponse':'to show the answer',
+    'Suppr':'Del','Maj':'Shift','Entrée':'Enter','Ta première carte':'Your first card','Ajouter des cartes':'Add cards',"Rien à réviser aujourd'hui":'Nothing to review today',
+    'Compte pour la maîtrise':'Counts toward mastery',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
+    "Retour à l'accueil":'Back to home',"Terminé pour aujourd'hui":'Done for today','Par quelle matière tu commences ?':'Which subject do you start with?','Tout enchaîner':'Do everything in a row',
+    'Revoir quoi ?':'Review what?','Tout regrouper':'Combine all','Entraînement terminé · ne compte pas pour la maîtrise':"Practice finished · doesn't count toward mastery",'À revoir':'To review','Tout juste':'Just about',
+    'Retour aux révisions':'Back to reviews','⇄ inversée':'⇄ reversed','Aucune carte trouvée. Essaie un autre mot.':'No cards found. Try another word.',"Aucune carte pour l'instant.":'No cards yet.',
+    'Va dans « Ajouter » pour en créer.':'Go to “Add” to create some.','Fiche':'Sheet','maîtrise en cours':'mastery in progress','prochaine révision':'next review','Modifier':'Edit','Supprimer':'Delete',
+    "Modifier avec l'IA":'Edit with AI','Reformuler ou compléter les cartes':'Reword or complete the cards','Faire une synthèse':'Make a summary','À partir des cartes, fichiers en option':'From the cards, files optional',
+    'Inverser toutes les cartes':'Reverse all cards',"Aussi posées dans l'autre sens":'Also asked the other way around','Partager':'Share','Envoi…':'Sending…','Envoyer':'Send','Matière':'Subject',
+    'Modifier la carte':'Edit card','Question':'Question','Réponse':'Answer','Sens inversé':'Reversed',"La carte est aussi posée dans l'autre sens":'The card is also asked the other way around',
+    'Remettre à zéro':'Reset','Repart en « Nouvelle »':'Goes back to “New”','Enregistrer':'Save','Supprimer cette carte ?':'Delete this card?','À venir':'Upcoming','en cours':'in progress','Matières':'Subjects',
+    'Crée une matière pour pouvoir fixer une date de contrôle.':'Create a subject to set a test date.','Date du contrôle':'Test date','Ajouter un contrôle':'Add a test','+ Matière':'+ Subject',
+    'Retirer la date':'Remove date','Gérer la matière':'Manage subject','Supprimer la matière':'Delete subject','Enregistre pour répartir tes révisions avant cette date.':'Save to spread your reviews before this date.',
+    'Toutes les cartes sont déjà maîtrisées.':'All cards are already mastered.','Nouvelle carte':'New card',"Les cartes sont créées par l'IA, tu les relis avant de les ajouter.":'Cards are created by the AI; you review them before adding.',
+    'Écrire une carte':'Write a card','Ajouter la carte':'Add card','pour avancer, puis pour ajouter':'to move on, then to add','Vérifie tes cartes':'Check your cards','pour':'for',
+    ". Relis, modifie ou complète avant d'ajouter.":'. Review, edit or complete before adding.','Matière :':'Subject:','+ Ajouter une carte manuellement':'+ Add a card manually','Dis-moi ce que tu veux':'Tell me what you want',
+    "Un texte, un fichier ou une demande : l'IA comprend.":'A text, a file or a request: the AI understands.','Ajouter ces cartes':'Add these cards','Nouvelle matière':'New subject','Nom':'Name','Créer':'Create',
+    'Importer des cartes':'Import cards',"· cartes d'un pote ou JSON":"· a friend's cards or JSON",'Importer':'Import','Changements proposés':'Proposed changes',"Décoche ce que tu ne veux pas appliquer.":"Uncheck what you don't want to apply.",
+    "L'IA n'a proposé aucun changement.":'The AI proposed no changes.','Matière déjà existante ?':'Subject already exists?','», déjà dans ta liste.':'”, already in your list.',
+    'Synchronisation…':'Syncing…','Synchronisé':'Synced','Échec, réessayer':'Failed, retry','Enregistrer ce code':'Save this code','Ta progression':'Your progress','Statistiques':'Statistics',
+    'révisions au total':'reviews in total','record de série':'streak record','30 derniers jours':'Last 30 days','Plus la case est claire, plus tu as révisé ce jour-là.':'The lighter the square, the more you reviewed that day.',
+    'Par matière':'By subject','Répartition des paliers':'Level breakdown','Source :':'Source:','. Ton style habituel est déjà intégré.':'. Your usual style is already included.','— Choisir un modèle —':'— Choose a template —',
+    'Fichiers en plus':'Extra files',"Précisions pour l'IA":'Details for the AI','Enregistrer comme modèle':'Save as template','Aperçu':'Preview','Modifier les précisions':'Edit details',
+    'Fermer la synthèse ?':'Close the summary?',"Elle n'est pas enregistrée : pense à l'exporter d'abord.":"It isn't saved: remember to export it first.",'Supprimer ce modèle ?':'Delete this template?',
+    "Rien de prévu pour l'instant. Fixe une date de contrôle ci-dessous : le planning se calcule tout seul.":'Nothing planned for now. Set a test date below: the planning calculates itself.',
+    'Colle un cours à Claude, récupère les questions/réponses générées, et elles apparaîtront ici prêtes à réviser.':'Paste a course into Claude, copy the generated questions/answers, and they will show up here ready to review.',
+    'Le serveur refuse ce code. Utilise uniquement des lettres sans accent, des chiffres, - et _, puis enregistre-le de nouveau.':'The server rejects this code. Use only unaccented letters, digits, - and _, then save it again.'
+  });
+  Object.assign(D,{ /* lot 3 (v136) : messages courts (toasts) et petits textes */
+    'Impossible de lire cette image. Essaie une photo JPG ou PNG.':"Can't read this image. Try a JPG or PNG photo.",'Aucune carte à partager':'No cards to share','Code copié':'Code copied',
+    'Fichier téléchargé : envoie-le à ton pote':'File downloaded: send it to your friend','Chaque côté a besoin d’un texte ou d’une image':'Each side needs text or an image',
+    'Carte modifiée':'Card edited','Carte remise à zéro':'Card reset','Carte supprimée':'Card deleted','Carte ajoutée':'Card added',"Crée d'abord une matière":'Create a subject first','Date retirée':'Date removed',
+    'Écris un message ou joins un fichier':'Write a message or attach a file','Cette matière existe déjà':'This subject already exists','JSON invalide':'Invalid JSON','Code invalide (6 caractères)':'Invalid code (6 characters)',
+    'Pas de connexion':'No connection','Format non reconnu':'Unrecognized format','Aucune carte valide':'No valid cards','Ces cartes sont déjà dans ta matière':'These cards are already in your subject',
+    'Choisis un jour':'Pick a day','Aucune carte dans cette matière':'No cards in this subject','Image illisible':'Unreadable image','Image ajoutée':'Image added',
+    "Ajoute ta clé Gemini dans Réglages d'abord":'Add your Gemini key in Settings first','Adresse copiée':'Address copied',"Copie impossible : recopie l'adresse à la main":'Copy failed: copy the address by hand',
+    'Fichier enregistré':'File saved','Synthèse complétée':'Summary completed','Synthèse ajustée':'Summary adjusted','Ce nom existe déjà':'This name already exists','Modèle supprimé':'Template deleted',
+    'Pas su':"Didn't know",'Difficile':'Hard','Facile':'Easy','Synthèse':'Summary','À la main':'By hand',"Avec l'IA":'With AI','Tout inverser':'Reverse all','Inverser':'Reverse',
+    'Créer une matière':'Create a subject','Ajouter une matière':'Add a subject','Contrôle':'Test','cartes restantes':'cards left','carte restante':'card left','Titre':'Title',
+    'janvier':'January','février':'February','mars':'March','avril':'April','mai':'May','juin':'June','juillet':'July','août':'August','septembre':'September','octobre':'October','novembre':'November','décembre':'December'
+  });
+  /* Textes avec valeurs variables : motifs ANCRÉS (^…$) pour ne jamais toucher au contenu des cartes. $1, $2… = valeurs reprises telles quelles. */
+  var MOIS='janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre';
+  function c(n,m){ return n+' '+(+n===1?m:m+'s'); }           /* 1 card / 2 cards */
+  function f(re,fn){ return [re,function(){ var a=[].slice.call(arguments,1,-2); return fn.apply(null,a); }]; }
+  var RULES=[
+    f(/^(Réviser|Revoir) (\d+) cartes?$/,function(v,n){ return (v==='Réviser'?'Study ':'Review ')+c(n,'card'); }),
+    f(/^Continuer avec (.+) \((\d+) cartes?\)$/,function(m,n){ return 'Continue with '+m+' ('+c(n,'card')+')'; }),
+    f(/^Revoir (\d+) cartes? en erreur$/,function(n){ return 'Review '+c(n,'card')+' you got wrong'; }),
+    f(/^(\d+) cartes?$/,function(n){ return c(n,'card'); }),
+    f(/^(\d+) cartes? générées?$/,function(n){ return c(n,'card')+' generated'; }),
+    f(/^(.+) · (\d+) cartes? · valable (\d+) jours?$/,function(m,n,j){ return m+' · '+c(n,'card')+' · valid for '+c(j,'day'); }),
+    f(/^(\d+) cartes? · (\d+) matières?(?: · (\d+) jours? de suite)?$/,function(n,m,j){ return c(n,'card')+' · '+c(m,'subject')+(j?' · '+c(j,'day')+' in a row':''); }),
+    f(/^(\d+) fichiers?$/,function(n){ return c(n,'file'); }),
+    f(/^(\d+) cartes? révisées?$/,function(n){ return c(n,'card')+' reviewed'; }),
+    f(/^Sauvegarde restaurée : (\d+) matières? vides?$/,function(n){ return 'Backup restored: '+n+' empty '+(+n===1?'subject':'subjects'); }),
+    f(/^dans (\d+) jours?$/,function(n){ return 'in '+c(n,'day'); }),
+    f(/^contrôle dans (\d+) jours?$/,function(n){ return 'test in '+c(n,'day'); }),
+    f(/^sur (\d+) maîtrisées · (\d+) à aller$/,function(a,b){ return 'out of '+a+' mastered · '+b+' to go'; }),
+    f(/^Archivées \((\d+)\)$/,function(n){ return 'Archived ('+n+')'; }),
+    f(/^Appliquer \((\d+)\)$/,function(n){ return 'Apply ('+n+')'; }),
+    f(/^Carte (\d+)$/,function(n){ return 'Card '+n; }),
+    f(/^Maximum (\d+) images$/,function(n){ return 'Maximum '+n+' images'; }),
+    f(/^Supprimer « (.+) » \?$/,function(x){ return 'Delete “'+x+'”?'; }),
+    f(/^Rien à réviser en (.+)$/,function(x){ return 'Nothing to review in '+x; }),
+    f(/^Réviser tout(?: — (.+))?$/,function(x){ return 'Study all'+(x?' — '+x:''); }),
+    f(/^Modifier « (.+) » avec l'IA$/,function(x){ return 'Edit “'+x+'” with AI'; }),
+    f(/^Fusionner dans « (.+) »$/,function(x){ return 'Merge into “'+x+'”'; }),
+    f(/^Non, créer « (.+) » séparément$/,function(x){ return 'No, create “'+x+'” separately'; }),
+    f(/^« (.+) » ne sera plus proposé dans la liste\.$/,function(x){ return '“'+x+'” will no longer be offered in the list.'; }),
+    f(/^Synthèse · (.+)$/,function(x){ return 'Summary · '+x; }),
+    f(/^(Word|PDF) · style pop nuit$/,function(x){ return x+' · Pop Night style'; }),
+    f(/^Contrôle enregistré · (.+)$/,function(x){ return 'Test saved · '+x; }),
+    f(/^Matière « (.+) » créée$/,function(x){ return 'Subject “'+x+'” created'; }),
+    f(/^Matière (désarchivée|archivée) · (.+)$/,function(v,x){ return 'Subject '+(v==='archivée'?'archived':'unarchived')+' · '+x; }),
+    f(/^Sens (normal|inversé) · (.+)$/,function(v,x){ return (v==='normal'?'Normal direction':'Reversed')+' · '+x; }),
+    f(/^Sauvegarde en pause jusqu'à (.+)$/,function(x){ return 'Backup paused until '+x; }),
+    f(new RegExp('^('+MOIS+') (\\d{4})$'),function(m,y){ return D[m]+' '+y; })
+  ];
+  Object.assign(D,{ /* lot 4 (v137) : audit — textes oubliés, erreurs, placeholders */
+    'Copié ✓':'Copied ✓','Ta synthèse':'Your summary','Tout réviser':'Study all','Tout réviser — quelle matière ?':'Study all — which subject?',"S'entraîner — quelle matière ?":'Practice — which subject?',
+    'Sans matière':'No subject','Ton code perso':'Your personal code','Modèle renommé':'Template renamed','Modèle enregistré':'Template saved',"Envoyer à l'IA":'Send to the AI','Mois précédent':'Previous month',
+    '(Synthèse vide)':'(Empty summary)','Date enregistrée':'Date saved','Date de contrôle enregistrée':'Test date saved','Dates de contrôle':'Test dates','Caractères refusés':'Rejected characters',
+    'Renommer le modèle':'Rename template','Revoir les erreurs':'Review mistakes','Jamais synchronisé sur cet appareil':'Never synced on this device','Générer la synthèse':'Generate the summary',
+    'Progression par matière':'Progress by subject','Génération en cours...':'Generating...','Choisis un nouveau nom.':'Choose a new name.','Ton texte est conservé.':'Your text is kept.',"Générer d'autres cartes":'Generate more cards',
+    'Continuer quand même ?':'Continue anyway?',"À réviser aujourd'hui":'To review today',"contrôle aujourd'hui":'test today','contrôle demain':'test tomorrow','Code introuvable ou expiré':'Code not found or expired',
+    'Impossible de récupérer les cartes':"Couldn't retrieve the cards",'Aucune carte dans cette sélection.':'No cards in this selection.','Remet la matière dans les révisions':'Puts the subject back into your reviews',
+    'Permission de notification refusée.':'Notification permission denied.','Ça passe, le jour même du contrôle.':"It works, on the day of the test itself.",'La date de contrôle est déjà passée.':'The test date has already passed.',
+    'Aucun jour de révision planifié à venir.':'No upcoming review days planned.','Colle un cours à Claude pour ajouter des cartes.':'Paste a course into Claude to add cards.','Tes précisions seront réutilisables en un tap.':'Your details will be reusable in one tap.',
+    'Serveur indisponible, réessaie':'Server unavailable, try again','Réponse du serveur illisible, réessaie.':'Unreadable server response, try again.','Molette ou + / − pour zoomer · Échap pour fermer':'Wheel or + / − to zoom · Esc to close',
+    'Pince ou double toucher · glisse vers le bas pour fermer':'Pinch or double-tap · swipe down to close','Colle ton cours ou joins une photo de tes notes…':'Paste your course or attach a photo of your notes…',
+    'Un document modifiable, prêt à ouvrir dans Word.':'An editable document, ready to open in Word.','Reste ouvert pour enchaîner sur la carte suivante':'Stays open to move on to the next card',
+    'Rien à réviser dans cette matière pour le moment.':'Nothing to review in this subject for now.','Trop répétitif : évite de répéter la même séquence.':'Too repetitive: avoid repeating the same sequence.',
+    'Trop répétitif : utilise plus de caractères différents.':'Too repetitive: use more different characters.','Évite les suites de lettres ou de chiffres (abcde, 12345…).':'Avoid runs of letters or digits (abcde, 12345…).',
+    'Trop facile à deviner (mot courant ou suite classique). Choisis-en un autre.':'Too easy to guess (common word or classic sequence). Choose another one.',
+    "Écris d'abord tes précisions avant de les enregistrer.":'Write your details first before saving them.',"Aucune carte révisée aujourd'hui dans cette sélection.":'No cards reviewed today in this selection.',
+    'Trop tard pour espacer les révisions : il faut bachoter.':"Too late to space out the reviews: it's cramming time.","Choisis « Enregistrer en PDF » dans la fenêtre d'impression.":'Choose “Save as PDF” in the print window.',
+    "Quota gratuit dépassé pour l'instant, réessaie dans un moment.":'Free quota exceeded for now, try again in a moment.',"Une copie complète de l'app, utile comme sauvegarde de secours.":'A full copy of the app, useful as a backup.',
+    "Cette date est déjà passée : elle n'influence plus le planning.":'This date has already passed: it no longer affects the planning.',"Tu n'as pas de connexion internet. Reconnecte-toi puis réessaie.":"You're not connected to the internet. Reconnect and try again.",
+    'Clé API invalide ou requête refusée. Vérifie ta clé dans Réglages.':'Invalid API key or request refused. Check your key in Settings.','Clé API refusée ou sans accès à ce modèle. Vérifie ta clé dans Réglages.':'API key refused or without access to this model. Check your key in Settings.',
+    'Ex. Fais un tableau pour comparer les régimes, garde les dates en gras.':'E.g. Make a table to compare the regimes, keep the dates in bold.','Colle un texte de cours, ou écris ex. « plus court », « plus de dates »…':'Paste course text, or write e.g. “shorter”, “more dates”…',
+    'Écris ex. « raccourcis », « ajoute un tableau », ou colle un texte en plus…':'Write e.g. “shorten”, “add a table”, or paste extra text…','Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur… (tu peux aussi coller un texte)':'E.g. shorten the answers, remove duplicates, add 5 cards about… (you can also paste a text)',
+    'Estimation prudente : on compte environ 30 % de cartes à revoir en plus':'Cautious estimate: we count about 30% more cards to review','Certaines cartes neuves sont placées juste avant ton contrôle, faute de place avant.':'Some new cards are placed right before your test, for lack of room earlier.',
+    'Elle se place à l\'endroit du curseur. Pour la retirer, efface sa ligne « ![](img:N) ».':'It is placed at the cursor. To remove it, delete its “![](img:N)” line.',
+    'Impossible de créer le fichier Word. Utilise « Copier » puis colle dans Word.':'Unable to create the Word file. Use “Copy” then paste into Word.','Le cours envoyé est trop volumineux. Retire un fichier ou raccourcis le texte.':'The submitted course is too large. Remove a file or shorten the text.',
+    "Plus de place pour les images sur cet appareil. Retire-en une ancienne d'abord.":'No more room for images on this device. Remove an old one first.',"Erreur inattendue dans l'app. Réessaie, et si ça recommence, ferme puis rouvre l'app.":'Unexpected error in the app. Try again, and if it happens again, close and reopen the app.',
+    "L'IA met trop de temps à répondre. Réessaie dans un moment (ou avec un cours plus court).":'The AI is taking too long to respond. Try again in a moment (or with a shorter course).',"L'IA met trop de temps à répondre. Réessaie dans un moment.":'The AI is taking too long to respond. Try again in a moment.',
+    "Impossible de joindre le serveur de l'IA. Vérifie ta connexion, ou réessaie dans un moment.":"Can't reach the AI server. Check your connection, or try again in a moment.","L'IA a bloqué ou refusé cette demande (contenu filtré). Modifie un peu le texte et réessaie.":'The AI blocked or refused this request (filtered content). Change the text a little and try again.',
+    "Fichiers d'origine trop lourds : l'IA a travaillé seulement à partir de ce qui est déjà à l'écran.":'Original files too large: the AI only worked from what is already on screen.',"Aucun planning pour l'instant. Fixe une date de contrôle ci-dessous, le planning se calcule tout seul.":'No planning yet. Set a test date below, the planning calculates itself.',
+    "Le cours est trop long : la réponse de l'IA a été coupée. Découpe-le en plusieurs parties et réessaie.":'The course is too long: the AI response was cut off. Split it into several parts and try again.',"Le modèle de l'IA est introuvable (il a peut-être été retiré par Google). L'app a besoin d'une mise à jour.":'The AI model cannot be found (Google may have removed it). The app needs an update.',
+    "Le cours n'est plus disponible (cartes créées sans cours). Utilise le bouton « Faire une synthèse » de l'onglet Ajouter.":'The course is no longer available (cards created without a course). Use the “Make a summary” button in the Add tab.',
+    "La synthèse a été coupée parce qu'elle est trop longue. Demande à l'IA de la raccourcir ou de la terminer avec « Ajuster ».":'The summary was cut off because it is too long. Ask the AI to shorten it or finish it with “Adjust”.',
+    "Le service de l'IA est momentanément surchargé. Réessaie dans une minute.":'The AI service is temporarily overloaded. Try again in a minute.',"L'IA n'a pas répondu, réessaie.":"The AI didn't respond, try again.","Écris ce que l'IA doit changer.":'Write what the AI should change.',
+    "L'IA n'a rien renvoyé, réessaie.":'The AI returned nothing, try again.',"Réponse de l'IA illisible, réessaie.":'Unreadable AI response, try again.',"Réponse inattendue de l'IA, réessaie.":'Unexpected AI response, try again.',
+    "Écris un message pour l'IA avant d'envoyer.":'Write a message for the AI before sending.',"Impossible d'exporter : source non capturée.":'Unable to export: source not captured.',"Ajoute ta clé API Gemini dans Réglages d'abord.":'Add your Gemini API key in Settings first.',
+    "Colle d'abord un texte, ou ajoute une photo ou un document.":'Paste some text first, or add a photo or a document.'
+  });
+  Object.assign(D,{ 'Désarchiver':'Unarchive','Archiver':'Archive','La sort des révisions, sans rien supprimer':'Takes it out of your reviews, without deleting anything',
+    'pas de connexion':'no connection','réponse illisible du serveur':'unreadable server response','erreur inconnue':'unknown error' });
+  RULES.push(
+    f(/^Large : (\d+) j de marge avant le contrôle\.$/,function(n){ return 'Comfortable: '+c(n,'day')+' of margin before the test.'; }),
+    f(/^Ça passe de justesse \((\d+) j de marge\)\.$/,function(n){ return 'Just makes it ('+c(n,'day')+' of margin).'; }),
+    f(/^Ça ne rentre pas : il reste (\d+) j, il en faudrait (\d+)\.$/,function(a,b){ return "It doesn't fit: "+c(a,'day')+' left, '+b+' needed.'; }),
+    f(/^Maîtrise complète (.+?)\. (.+)$/,function(d,x){ return 'Full mastery '+d.replace(/^le /,'on ')+'. '+tr(x); }),
+    f(/^(Envoi|Récupération) impossible \((.+)\)$/,function(v,x){ return (v==='Envoi'?"Couldn't send (":"Couldn't retrieve (")+tr(x)+')'; })
+  );
+  var J={"aujourd'hui":'today',hier:'yesterday'};
+  RULES.push(
+    f(/^Dernière synchro : (.+?) à (.+)$/,function(d,h){ return 'Last sync: '+(J[d]||d)+' at '+h; }),
+    f(/^Contrôles? passés? · (.+)$/,function(x){ return 'Past test · '+x; })
+  );
+  var SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,NOSCRIPT:1}, ATTRS=['placeholder','title','aria-label','alt'];
+  function tr(s){
+    if(typeof s!=='string') return s; var t=s.trim(); if(!t) return s;
+    var e=D[t]; if(e!==undefined) return s.replace(t,e);
+    for(var i=0;i<RULES.length;i++){ var r=RULES[i]; if(r[0].test(t)){ return s.replace(t,t.replace(r[0],r[1])); } }
+    return s;
+  }
+  function libre(el){ return !(el.closest&&el.closest('[contenteditable],[data-notr]')); }
+  function txt(n){ var p=n.parentNode; if(!p||SKIP[p.nodeName]) return; var v=tr(n.nodeValue); if(v!==n.nodeValue&&libre(p)) n.nodeValue=v; }
+  function att(el){ for(var i=0;i<ATTRS.length;i++){ var a=el.getAttribute&&el.getAttribute(ATTRS[i]); if(a){ var v=tr(a); if(v!==a&&libre(el)) el.setAttribute(ATTRS[i],v); } } }
+  function arbre(n){
+    if(n.nodeType===3){ txt(n); return; }
+    if(n.nodeType!==1||SKIP[n.nodeName]) return;
+    att(n);
+    var w=document.createTreeWalker(n,5), x; // 5 = éléments + textes
+    while((x=w.nextNode())){ if(x.nodeType===3) txt(x); else if(!SKIP[x.nodeName]) att(x); }
+  }
+  new MutationObserver(function(ms){
+    ms.forEach(function(m){
+      if(m.type==='characterData') txt(m.target);
+      else if(m.type==='attributes') att(m.target);
+      else [].forEach.call(m.addedNodes,arbre);
+    });
+  }).observe(document.documentElement,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:ATTRS});
+  document.addEventListener('DOMContentLoaded',function(){ arbre(document.documentElement); });
+  ['alert','confirm'].forEach(function(f){ var o=window[f]; window[f]=function(m){ return o.call(window,tr(m)); }; });
+  ['toLocaleDateString','toLocaleTimeString','toLocaleString'].forEach(function(m){
+    var o=Date.prototype[m]; Date.prototype[m]=function(l,x){ if(typeof l==='string'&&/^fr/.test(l)) l='en-GB'; return o.call(this,l,x); };
+  });
+})();
 </script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -169,6 +374,10 @@ input, textarea, [contenteditable="true"]{
 @keyframes bootSplashBg{
     to{ background:var(--paper); opacity:0; }
   }
+/* v133 : le faux splash suit l'apparence (data-theme posé dans le <head> avant le premier rendu). Sombre = valeurs d'origine ; clair = fond crème
+   (= --paper clair), texte encre, carte de derrière foncée (mêmes variables --lg-d / --lg-b que le logo de l'en-tête). */
+:root[data-theme="light"] #boot-splash{ background:#f6efe2; }
+:root[data-theme="light"] #boot-splash-word{ color:#231d12; }
 /* v106 : le splash reste FIGÉ sur la pose statique de l'icône tant que la page n'a pas fini de se construire ; le script en fin de fichier
    pose .go une fois l'init terminée et une image dessinée, pour que l'animation (1,35 s) tourne sur un processeur libre au lieu de saccader. */
 #boot-splash:not(.go), #boot-splash:not(.go) *{ animation-play-state:paused !important; }
@@ -1042,13 +1251,70 @@ body{
     --font-sans:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
     color-scheme:dark;
   }
-html{ background:#0c0c12; }
+
+/* ---- v132 : variables de thème (sombre = valeurs d'origine) + palette claire « crème » ---- */
+:root:root:root{ --yellow-t:#ffd93d; --orange-t:#ff6b3d; --yellow-b:#ffd93d; --lg-d:#9c9588; --lg-b:#f5f0e6; --cs:dark; --tm:100%; --c-s1:#252533; --c-s2:#2b2b3b; --c-sheet:#141420; --c-edge:#08080d; --c-disbg:#26262f; --c-disink:#6d6a80; --c-dissh:#14141b; --c-ph:#6b6880; --c-dash:#4a4a60; --c-yicon:#3d3320; --c-ysa:#2a2613; --c-ysb:#27230f; --c-ysc:#2f2a14; --c-ysd:#2a2410; --c-yse:#1d1a0b; --c-ysh:#14120a; --c-aborder:#6b5416; --c-abg:#3a2f18; --c-pborder:#7a2a40; --c-pbg:#3a1a24; --c-pbg2:#3a1a27; --c-dayb:#7a3a2b; --c-osoft:#2a1a17; --c-gsoft:#173a35; --c-bsoft:#17293a; --c-bq:#211f2e; --c-press:#20202f; --c-press2:#1f1f2d; --c-rowgrad:#201c2c; --c-pgrad1:#271b1f; --c-pgrad2:#261b20; --c-ta:#12121b; --c-h1:#5a3a1c; --c-h2:#a8601f; --c-scroll:#3a3a4e; --c-toastsh:#a39a85; --c-mixd:#111; --ov:255,255,255; --yr:255,217,61; --cr:245,240,230; --bgr:12,12,18; }
+:root:root:root[data-theme="light"]{
+  --ink:#231d12; --paper:#f6efe2; --card:#fffbf3; --line:#e2d7c3; --muted:#7d7162;
+  --accent:#ff6b3d; --accent-deep:#b8431d; --accent-ink:#1a0d08;
+  --good:#16966b; --good-soft:#d9f2e8; --bad:#e0356a; --bad-soft:#fde0e8;
+  --bulle:#fffbf3; --bulle-ink:#231d12;
+  --green:#16966b; --orange:#ff6b3d; --yellow:#ffd93d; --yellow-d:#b8921a; --orange-d:#b8431d; --amber:#d98a00;
+  --panel:#fffbf3; --bg:#f6efe2; --cream:#231d12; --pink:#e0356a; --blue:#2b86d6; --purple:#7d5fe0;
+  --yellow-t:#9a6f00; --orange-t:#d4451a; --yellow-b:#e0a800;
+  --lg-d:#14110a; --lg-b:#2a2418; --cs:light; color-scheme:light; --tm:50%;
+  --c-s1:#ebe2d0;
+  --c-s2:#e2d7c2;
+  --c-sheet:#fbf6ea;
+  --c-edge:#d3c6ad;
+  --c-disbg:#e8dfcc;
+  --c-disink:#a39a88;
+  --c-dissh:#d3c7af;
+  --c-ph:#9d947f;
+  --c-dash:#c2b69d;
+  --c-yicon:#f6e6ad;
+  --c-ysa:#f8edc2;
+  --c-ysb:#f8ecbf;
+  --c-ysc:#f6e8b0;
+  --c-ysd:#f8ebb9;
+  --c-yse:#f9efc9;
+  --c-ysh:#dccd9a;
+  --c-aborder:#dcbb55;
+  --c-abg:#fbeccb;
+  --c-pborder:#e8a4b8;
+  --c-pbg:#fce3ea;
+  --c-pbg2:#fde0e8;
+  --c-dayb:#f2c9b8;
+  --c-osoft:#fde6db;
+  --c-gsoft:#d9f2e8;
+  --c-bsoft:#dcebf9;
+  --c-bq:#efe6d3;
+  --c-press:#efe4cf;
+  --c-press2:#efe4cf;
+  --c-rowgrad:#f3ead8;
+  --c-pgrad1:#fbece1;
+  --c-pgrad2:#fbece1;
+  --c-ta:#fffdf7;
+  --c-h1:#f3cd9d;
+  --c-h2:#e8963f;
+  --c-scroll:#cdbfa3;
+  --c-toastsh:#0f0c06;
+  --c-mixd:#4a4030;
+  --ov:70,50,20;
+  --yr:214,160,0;
+  --cr:35,29,18;
+  --bgr:246,239,226;
+}
+:root:root:root[data-theme="light"] #vie-ambiance{ mix-blend-mode:multiply }
+:root:root:root[data-theme="light"] :where(.cc-toast,.pp-toast){ color:#f6efe2 }
+:root:root:root[data-theme="light"] :where(#pp-zoom .pz-x,#pp-zoom .pz-tip){ color:#f5f0e6 }
+html{ background:var(--bg); }
 body{
     background:
-      linear-gradient(#0c0c12, rgba(12,12,18,0) 130px),
+      linear-gradient(var(--bg), rgba(var(--bgr),0) 130px),
       radial-gradient(circle at 90% 0%, rgba(255,107,61,.16), transparent 45%),
-      radial-gradient(circle, rgba(255,255,255,.07) 1px, transparent 1.2px) 0 0/16px 16px,
-      #0c0c12 !important;
+      radial-gradient(circle, rgba(var(--ov),.07) 1px, transparent 1.2px) 0 0/16px 16px,
+      var(--bg) !important;
     background-attachment:fixed !important;
     font-size:15px;
   }
@@ -1057,14 +1323,14 @@ h1,h2,h3{ letter-spacing:-.03em; }
 /* ---- Topbar ---- */
 .topbar{ padding:6px 2px 8px 2px; margin-bottom:10px; }
 .streak{ background:var(--panel); border:1.5px solid var(--line); box-shadow:none; padding:6px 11px; font-size:14px; }
-.streak svg{ stroke:var(--yellow); color:var(--yellow); transform-origin:50% 90%; animation:popFlame 1.6s ease-in-out infinite; }
+.streak svg{ stroke:var(--yellow-t); color:var(--yellow-t); transform-origin:50% 90%; animation:popFlame 1.6s ease-in-out infinite; }
 .streak.is-zero svg{ animation:none; stroke:var(--muted); color:var(--muted); }
 @keyframes popFlame{ 0%,100%{ transform:scale(1) rotate(-3deg) } 50%{ transform:scale(1.14,1.2) rotate(3deg) } }
 .topbar-icon-btn{ width:34px; height:34px; background:var(--panel); border:1.5px solid var(--line); box-shadow:none; color:var(--muted); }
 /* ---- Barre du bas : boutons en relief, l'actif en jaune ---- */
 .tabbar{ padding:0; }
 .tabbar-inner{
-    max-width:none; border-radius:0; background:#0c0c12; border:0; border-top:1.5px solid var(--line);
+    max-width:none; border-radius:0; background:var(--bg); border:0; border-top:1.5px solid var(--line);
     padding:12px 8px calc(8px + env(safe-area-inset-bottom)); box-shadow:none; gap:0;
   }
 .tabbar-item{ height:52px; padding:0; margin:0 3px; border-radius:16px; gap:3px; color:var(--muted); }
@@ -1079,7 +1345,7 @@ h1,h2,h3{ letter-spacing:-.03em; }
   }
 .home-cta:not(:disabled):hover{ filter:none; }
 .home-cta:active, .home-cta.js-press{ transform:translateY(3px); box-shadow:0 1px 0 var(--accent-deep); transition-duration:.07s; }
-.home-cta:disabled{ background:#26262f; color:#6d6a80; box-shadow:0 4px 0 #14141b; opacity:1; cursor:default; }
+.home-cta:disabled{ background:var(--c-disbg); color:var(--c-disink); box-shadow:0 4px 0 var(--c-dissh); opacity:1; cursor:default; }
 /* ---- Accueil : grosse carte « héros » ---- */
 .home-screen{ justify-content:flex-start; padding:4px 0 0; gap:14px; min-height:calc(100dvh - 196px - env(safe-area-inset-bottom)); }
 .home-status{ display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding:0; margin:0; }
@@ -1093,31 +1359,31 @@ h1,h2,h3{ letter-spacing:-.03em; }
     padding:13px; gap:12px; font-family:var(--font-sans);
   }
 .home-progress{ background:var(--panel); border:1.5px solid var(--line); border-radius:15px; box-shadow:none; }
-.home-progress-stat-icon{ background:#3d3320; color:var(--yellow); border-radius:8px; }
-.home-progress-stat-icon.is-streak, :root[data-theme="dark"] .home-progress-stat-icon.is-streak{ background:#3d3320; color:var(--yellow); }
+.home-progress-stat-icon{ background:var(--c-yicon); color:var(--yellow-t); border-radius:8px; }
+.home-progress-stat-icon.is-streak, :root[data-theme="dark"] .home-progress-stat-icon.is-streak{ background:var(--c-yicon); color:var(--yellow-t); }
 .home-progress-stat-icon svg{ stroke:currentColor; }
 .home-progress-stat-num{ color:var(--cream); font-weight:800; }
 .home-progress-stat-label{ color:var(--muted); }
 .home-progress-divider{ background:var(--line); }
-.home-progress-bar{ background:#2b2b3b; border-radius:5px; }
+.home-progress-bar{ background:var(--c-s2); border-radius:5px; }
 .home-progress-bar.has-activity{ background:var(--amber); }
 .home-progress-bar.is-today.has-activity{ background:var(--accent); }
 .home-progress-bar-day{ color:var(--muted); }
 .home-progress-bar-day.is-today{ color:var(--cream); font-weight:800; }
 /* bandeau contrôle (planning-strip) = « ctl » jaune du prototype */
 .planning-strip{
-    background:#27230f; border:1.5px solid color-mix(in srgb, var(--yellow) 45%, transparent); border-radius:19px;
-    box-shadow:0 4px 0 #14120a; color:var(--cream);
+    background:var(--c-ysb); border:1.5px solid color-mix(in srgb, var(--yellow) 45%, transparent); border-radius:19px;
+    box-shadow:0 4px 0 var(--c-ysh); color:var(--cream);
   }
 .planning-strip-icon{ width:40px; height:40px; border-radius:13px; background:var(--yellow); color:#1a1405; box-shadow:0 3px 0 var(--yellow-d); }
 .planning-strip-icon svg{ stroke:#1a1405; }
 .planning-strip-text b{ color:var(--cream); }
-.planning-strip-arrow{ color:var(--yellow); }
+.planning-strip-arrow{ color:var(--yellow-t); }
 .planning-strip:active, .planning-strip.js-press{ transform:translateY(2px); box-shadow:none; }
 /* ---- Session de révision : plein écran, carte « Pop » ---- */
 body.in-session .topbar{ display:none; }
 body.in-session .wrap{ padding-top:calc(env(safe-area-inset-top) + 14px); padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
-.study-mood-bar{ height:8px; border-radius:5px; background:#252533; margin-bottom:16px; }
+.study-mood-bar{ height:8px; border-radius:5px; background:var(--c-s1); margin-bottom:16px; }
 .undo-pill{
     align-self:center; height:32px; padding:0 13px; margin:-2px 0 10px; border-radius:99px; background:var(--panel);
     border:1.5px solid var(--line); color:var(--muted); font-weight:700; font-size:12.5px;
@@ -1137,14 +1403,14 @@ body.in-session .wrap{ padding-top:calc(env(safe-area-inset-top) + 14px); paddin
 .study-actions{ gap:9px; }
 .study-actions button{
     height:68px; border-radius:16px; border:2px solid var(--c); overflow:visible;
-    background:color-mix(in srgb, var(--c) 16%, #1a1a26); box-shadow:0 4px 0 color-mix(in srgb, var(--c) 40%, #111);
+    background:color-mix(in srgb, var(--c) 16%, var(--panel)); box-shadow:0 4px 0 color-mix(in srgb, var(--c) 40%, var(--c-mixd));
   }
 .study-actions button svg{ stroke:var(--c); width:24px; height:24px; opacity:1; }
-.study-actions button:active, .study-actions button.js-press{ transform:translateY(3px); box-shadow:0 1px 0 color-mix(in srgb, var(--c) 40%, #111); filter:none; }
+.study-actions button:active, .study-actions button.js-press{ transform:translateY(3px); box-shadow:0 1px 0 color-mix(in srgb, var(--c) 40%, var(--c-mixd)); filter:none; }
 /* ---- Composants communs : boutons, cartes, champs ---- */
 .copy-btn, .export-btn{
     background:var(--panel); color:var(--cream); border:1.5px solid var(--line); border-radius:14px;
-    box-shadow:0 3px 0 #08080d; font-weight:800; transition:transform .3s var(--spring), box-shadow .25s;
+    box-shadow:0 3px 0 var(--c-edge); font-weight:800; transition:transform .3s var(--spring), box-shadow .25s;
   }
 .copy-btn:active, .copy-btn.js-press, .export-btn:active, .export-btn.js-press{ transform:translateY(2px); box-shadow:none; }
 .export-btn::after{ display:none; }
@@ -1154,26 +1420,26 @@ body.in-session .wrap{ padding-top:calc(env(safe-area-inset-top) + 14px); paddin
   }
 .import-btn:active, .import-btn.js-press, .modal-save:active, .modal-save.js-press{
     transform:translateY(3px); box-shadow:0 1px 0 var(--accent-deep); }
-.import-btn:disabled{ background:#26262f; color:#6d6a80; box-shadow:0 4px 0 #14141b; }
-.manual-btn{ border:1.5px dashed #4a4a60; border-radius:15px; color:var(--muted); font-weight:800; background:transparent; }
-.manual-btn:hover{ border-color:var(--yellow); color:var(--cream); }
-.modal-cancel{ background:var(--panel); color:var(--cream); border:1.5px solid var(--line) !important; border-radius:16px; font-weight:800; box-shadow:0 3px 0 #08080d; }
+.import-btn:disabled{ background:var(--c-disbg); color:var(--c-disink); box-shadow:0 4px 0 var(--c-dissh); }
+.manual-btn{ border:1.5px dashed var(--c-dash); border-radius:15px; color:var(--muted); font-weight:800; background:transparent; }
+.manual-btn:hover{ border-color:var(--yellow-b); color:var(--cream); }
+.modal-cancel{ background:var(--panel); color:var(--cream); border:1.5px solid var(--line) !important; border-radius:16px; font-weight:800; box-shadow:0 3px 0 var(--c-edge); }
 .modal-actions button{ border-radius:16px; }
-.add-choice-btn{ background:var(--panel); border:1.5px solid var(--line); border-radius:17px; box-shadow:0 3px 0 #08080d; color:var(--cream); font-weight:800; }
+.add-choice-btn{ background:var(--panel); border:1.5px solid var(--line); border-radius:17px; box-shadow:0 3px 0 var(--c-edge); color:var(--cream); font-weight:800; }
 .add-choice-btn:active, .add-choice-btn.js-press{ transform:translateY(2px); box-shadow:none; }
 textarea, input[type="text"], input[type="search"], input[type="date"], input[type="time"], input:not([type]), select, .modal-field textarea, .modal-field input, .modal-field select, .cc-field textarea, .cc-field input{
     background:var(--panel); color:var(--cream); border:1.5px solid var(--line); border-radius:15px; font-family:var(--font-sans);
     transition:border-color .2s, box-shadow .25s;
   }
 textarea:focus, input:focus, select:focus, .cc-field textarea:focus, .cc-field input:focus, .modal-field textarea:focus, .modal-field input:focus, .modal-field select:focus{
-    outline:none; border-color:var(--yellow); box-shadow:0 0 0 4px rgba(255,217,61,.16);
+    outline:none; border-color:var(--yellow-b); box-shadow:0 0 0 4px rgba(var(--yr),.16);
   }
-::placeholder{ color:#6b6880; }
-input[type="date"]{ color-scheme:dark; }
+::placeholder{ color:var(--c-ph); }
+input[type="date"]{ color-scheme:inherit; }
 /* ---- Pastilles de filtre ---- */
 .filter-pill{ background:var(--panel); border:1.5px solid var(--line); color:var(--muted); font-weight:700; border-radius:99px; }
-.filter-pill.active{ color:var(--cream); font-weight:800; border-color:var(--yellow); background:#2a2613; }
-.filter-pills .pill-bubble{ background:#2a2613; border:2px solid var(--yellow); box-shadow:none; }
+.filter-pill.active{ color:var(--cream); font-weight:800; border-color:var(--yellow-b); background:var(--c-ysa); }
+.filter-pills .pill-bubble{ background:var(--c-ysa); border:2px solid var(--yellow); box-shadow:none; }
 /* ---- Parcourir ---- */
 .card-row{ background:transparent; border:0; border-top:1.5px solid var(--line); border-radius:0; box-shadow:none; padding:14px 0; margin:0; }
 .card-row:hover{ box-shadow:none; }
@@ -1182,33 +1448,33 @@ input[type="date"]{ color-scheme:dark; }
 .del:active, .del.js-press{ color:var(--pink); }
 /* ---- Fenêtres (feuilles du bas) ---- */
 .modal-overlay{ background:rgba(5,5,10,.7); backdrop-filter:none; }
-.modal-sheet{ background:#141420; border-top:2px solid var(--cream); border-radius:26px 26px 0 0; color:var(--cream); }
+.modal-sheet{ background:var(--c-sheet); border-top:2px solid var(--cream); border-radius:26px 26px 0 0; color:var(--cream); }
 .modal-title{ font-weight:800; font-size:26px; letter-spacing:-.03em; }
 .modal-field label{ color:var(--muted); font-weight:800; letter-spacing:.12em; font-size:11px; text-transform:uppercase; }
 /* ---- Planning ---- */
 .planning-matiere-icon-btn{ color:var(--muted); background:transparent; border-radius:9px; }
 .planning-date-chip{ background:var(--panel); border:1.5px solid var(--line); color:var(--cream); border-radius:12px; font-weight:800; }
 /* ---- Quiz / fin de session ---- */
-.quiz-launch{ background:var(--panel); border:1.5px solid var(--line); border-radius:14px; color:var(--cream); font-weight:800; box-shadow:0 3px 0 #08080d; }
+.quiz-launch{ background:var(--panel); border:1.5px solid var(--line); border-radius:14px; color:var(--cream); font-weight:800; box-shadow:0 3px 0 var(--c-edge); }
 .mastery-banner-back{ background:var(--yellow); color:#1a1405; border:0; border-radius:14px; box-shadow:0 3px 0 var(--yellow-d); }
 .mastery-banner-back svg{ stroke:#1a1405; }
 .home-matiere-due-item{ background:var(--panel); border:1.5px solid var(--line); border-radius:16px; color:var(--cream); font-weight:800; }
-.home-matiere-due-item-grouped{ border:2px solid var(--yellow); background:#2a2613; }
+.home-matiere-due-item-grouped{ border:2px solid var(--yellow); background:var(--c-ysa); }
 .home-matiere-due-count{ color:var(--muted); background:transparent; }
 /* ---- Page « Nouvelle carte » & synthèse ---- */
-.cc-back{ background:var(--panel); border:1.5px solid var(--line); border-radius:11px; box-shadow:0 3px 0 #08080d; color:var(--cream); }
+.cc-back{ background:var(--panel); border:1.5px solid var(--line); border-radius:11px; box-shadow:0 3px 0 var(--c-edge); color:var(--cream); }
 .cc-save{ background:var(--accent); color:var(--accent-ink); border-radius:16px; font-weight:800; box-shadow:0 4px 0 var(--accent-deep); border:0; }
 .cc-matiere-pill{ background:var(--panel); border:1.5px solid var(--line); color:var(--muted); border-radius:99px; font-weight:600; }
-.cc-toast{ background:var(--cream); color:#1a1405; border-radius:12px; box-shadow:0 4px 0 #a39a85; font-weight:800; }
+.cc-toast{ background:var(--cream); color:#1a1405; border-radius:12px; box-shadow:0 4px 0 var(--c-toastsh); font-weight:800; }
 .synth-rendu{ background:var(--panel); border:1.5px solid var(--line); border-radius:20px; color:var(--cream); }
-.synth-rendu strong{ color:var(--yellow); }
-.synth-rendu blockquote{ border-left:3px solid var(--accent); background:#211f2e; }
-.synth-rendu th{ background:#252533; }
+.synth-rendu strong{ color:var(--yellow-t); }
+.synth-rendu blockquote{ border-left:3px solid var(--accent); background:var(--c-bq); }
+.synth-rendu th{ background:var(--c-s1); }
 .synth-rendu th, .synth-rendu td{ border-color:var(--line); }
 .sync-btn{ border-radius:14px; }
 .import-msg.ok{ color:var(--green); }
 .import-msg.err{ color:var(--pink); }
-::selection{ background:rgba(255,217,61,.35); }
+::selection{ background:rgba(var(--yr),.35); }
 /* ---- Animations de la version Pop : respect de « réduire les animations » ---- */
 @media (prefers-reduced-motion: reduce){.streak svg{ animation:none; }}
 /* boutons secondaires de l'écran de fin (style posé en ligne par le JS) */
@@ -1231,7 +1497,7 @@ input[type="date"]{ color-scheme:dark; }
 .pp-logo i svg{width:100%;height:100%;display:block}
 .pp-hr{display:flex;gap:8px;align-items:center}
 .pp-streak{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);font-weight:800;font-size:14px;cursor:pointer}
-.pp-streak svg{color:var(--yellow);transform-origin:50% 90%;animation:ppflame 1.6s ease-in-out infinite}
+.pp-streak svg{color:var(--yellow-t);transform-origin:50% 90%;animation:ppflame 1.6s ease-in-out infinite}
 .pp-streak.is-zero svg{animation:none;color:var(--muted);opacity:.7}
 .pp-streak.bump{animation:streakBump 0.4s cubic-bezier(.34,1.56,.64,1)}
 .pp-gear{width:34px;height:34px;border-radius:50%;background:var(--panel);border:1.5px solid var(--line);display:grid;place-items:center;color:var(--muted);transition:transform .3s var(--pps)}
@@ -1241,14 +1507,14 @@ input[type="date"]{ color-scheme:dark; }
 .pp-sub{color:var(--muted);font-size:15px}
 .pp-sub b{color:var(--cream)}
 .pp-cta{width:100%;height:54px;margin:22px 0 12px;border-radius:17px;background:var(--orange);color:#1a0d08;font-size:18px;font-weight:800;letter-spacing:-.02em;box-shadow:0 4px 0 var(--orange-d);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .3s var(--pps),box-shadow .25s}
-.pp-cta[disabled]{background:#26262f;color:#6d6a80;box-shadow:0 4px 0 #14141b;cursor:default}
+.pp-cta[disabled]{background:var(--c-disbg);color:var(--c-disink);box-shadow:0 4px 0 var(--c-dissh);cursor:default}
 .pp-opts{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
 .pp-row{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:13px;border-radius:17px;background:var(--panel);border:1.5px solid var(--line)}
 .pp-row>div{flex:1}
 .pp-row b{font-size:14.5px;font-weight:800}
 .pp-row>div>span{display:block;color:var(--muted);font-size:13.5px;margin-top:1px}
 .pp-row[disabled]{opacity:.4}
-.pp-row .pp-ri{width:34px;height:34px;border-radius:10px;background:#252533;color:var(--cream);display:grid;place-items:center;flex:none}
+.pp-row .pp-ri{width:34px;height:34px;border-radius:10px;background:var(--c-s1);color:var(--cream);display:grid;place-items:center;flex:none}
 .pp-prog7{width:100%;text-align:left;padding:10px 12px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:9px;cursor:pointer}
 .pp-p7s{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .pp-p7s>div{display:flex;align-items:center;gap:9px;flex:1}
@@ -1259,7 +1525,7 @@ input[type="date"]{ color-scheme:dark; }
 .pp-p7b{display:flex;align-items:flex-end;gap:7px;height:38px}
 .pp-p7b div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%}
 .pp-p7b em{flex:1;width:100%;display:flex;align-items:flex-end;font-style:normal}
-.pp-p7b s{display:block;width:100%;border-radius:5px;background:#2b2b3b;transform-origin:bottom;animation:ppgrowY .6s var(--pps) both;text-decoration:none}
+.pp-p7b s{display:block;width:100%;border-radius:5px;background:var(--c-s2);transform-origin:bottom;animation:ppgrowY .6s var(--pps) both;text-decoration:none}
 .pp-p7b s.a{background:var(--amber)}
 .pp-p7b s.t{background:var(--orange)}
 .pp-p7b span{font-size:10px;color:var(--muted);font-weight:600}
@@ -1267,15 +1533,15 @@ input[type="date"]{ color-scheme:dark; }
 .pp-rappel{color:var(--amber)}
 .pp-home{flex:1;display:flex;flex-direction:column;gap:14px;min-height:calc(100dvh - var(--pp-st) - 157.5px - var(--pp-sb))}
 .pp-home .pp-opts,.pp-home .pp-prog7{margin:0}
-.pp-ctl{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px 12px 12px;border-radius:19px;background:#27230f;border:1.5px solid color-mix(in srgb,var(--yellow) 45%,transparent);box-shadow:0 4px 0 #14120a}
+.pp-ctl{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px 12px 12px;border-radius:19px;background:var(--c-ysb);border:1.5px solid color-mix(in srgb,var(--yellow) 45%,transparent);box-shadow:0 4px 0 var(--c-ysh)}
 .pp-ctl>i{width:40px;height:40px;border-radius:13px;background:var(--yellow);color:#1a1405;display:grid;place-items:center;flex:none;box-shadow:0 3px 0 var(--yellow-d);font-style:normal}
-.pp-ctl>s{color:var(--yellow);flex:none;text-decoration:none}
+.pp-ctl>s{color:var(--yellow-t);flex:none;text-decoration:none}
 .pp-ctl.pp-ctl-add{display:none}
 .pp-ctm{flex:1;min-width:0}
 .pp-ctt{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .pp-ctt b{font-size:15px;font-weight:800;letter-spacing:-.01em}
 .pp-ctt em{font-style:normal;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#1a1405;background:var(--yellow);border-radius:7px;padding:2px 7px;white-space:nowrap}
-.pp-ctb{height:7px;border-radius:4px;background:#3d3320;margin:8px 0 6px;overflow:hidden}
+.pp-ctb{height:7px;border-radius:4px;background:var(--c-yicon);margin:8px 0 6px;overflow:hidden}
 .pp-ctb u{display:block;height:100%;border-radius:4px;background:var(--yellow);text-decoration:none}
 .pp-ctm>span{font-size:12.5px;color:var(--muted)}
 .pp-ctm>span b{color:var(--cream)}
@@ -1304,11 +1570,11 @@ input[type="date"]{ color-scheme:dark; }
 .pp-view>.pp-opts .pp-row .pp-ri{width:30px;height:30px;border-radius:9px}
 .pp-view>.pp-opts .pp-row b{font-size:14px}
 .pp-view>.pp-opts .pp-row>div>span{font-size:12px;margin-top:0}
-.pp-view>.pp-opts .pp-row:nth-child(1) .pp-ri{background:#3d3320;color:var(--yellow)}
-.pp-view>.pp-opts .pp-row:nth-child(2) .pp-ri{background:#173a35;color:var(--green)}
+.pp-view>.pp-opts .pp-row:nth-child(1) .pp-ri{background:var(--c-yicon);color:var(--yellow-t)}
+.pp-view>.pp-opts .pp-row:nth-child(2) .pp-ri{background:var(--c-gsoft);color:var(--green)}
 /* finitions d'animation (v24/v25 du prototype) */
 .pp-row,.pp-prog7,.pp-ctl{transition:transform .22s var(--pps),background .2s,border-color .2s,box-shadow .2s}
-.pp-row:active{background:#20202f}
+.pp-row:active{background:var(--c-press)}
 .pp-view>*:nth-child(2){animation-delay:.04s}
 .pp-view>*:nth-child(3){animation-delay:.08s}
 .pp-view>*:nth-child(4){animation-delay:.12s}
@@ -1321,8 +1587,8 @@ body:not(.splash-done) .pp-home *{animation-play-state:paused}
 /* barre du bas */
 .tabbar{ padding:0; }
 .pp-nav{position:relative;display:flex;width:100%;max-width:480px;pointer-events:auto;padding:12px 8px calc(8px + var(--pp-sb));background:var(--bg);border-top:1.5px solid var(--line)}
-.pp-tab{position:relative;flex:1;height:52px;margin:0 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:16px;color:var(--muted);font-weight:600;font-size:11.5px;background:transparent;box-shadow:0 0 0 0 rgba(168,137,26,0),0 0 0 -8px rgba(255,217,61,0);transition:transform .25s ease-out,background .25s ease-out,color .2s,box-shadow .25s ease-out}
-.pp-tab.on{background:var(--yellow);color:#1a1405;font-weight:800;box-shadow:0 4px 0 var(--yellow-d),0 10px 18px -8px rgba(255,217,61,.4);transform:translateY(-5px)}
+.pp-tab{position:relative;flex:1;height:52px;margin:0 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:16px;color:var(--muted);font-weight:600;font-size:11.5px;background:transparent;box-shadow:0 0 0 0 rgba(168,137,26,0),0 0 0 -8px rgba(var(--yr),0);transition:transform .25s ease-out,background .25s ease-out,color .2s,box-shadow .25s ease-out}
+.pp-tab.on{background:var(--yellow);color:#1a1405;font-weight:800;box-shadow:0 4px 0 var(--yellow-d),0 10px 18px -8px rgba(var(--yr),.4);transform:translateY(-5px)}
 @keyframes ppflame{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.14,1.2) rotate(3deg)}}
 @keyframes ppstick{from{transform:rotate(-14deg) scale(.5);opacity:0}to{transform:rotate(-2deg) scale(1);opacity:1}}
 @keyframes ppslam{from{transform:scale(1.7);opacity:0}to{transform:scale(1);opacity:1}}
@@ -1335,7 +1601,7 @@ body:not(.splash-done) .pp-home *{animation-play-state:paused}
    PORT DU PROTOTYPE v31 — ÉTAPE 2 : session de révision (carte, glissement,
    fin de session, entraînement). Copie des règles du prototype, classes « pp- ».
    ============================================================ */
-#pp-ses{position:fixed;top:0;bottom:0;left:0;right:0;width:100%;max-width:480px;margin:0 auto;display:none;flex-direction:column;overflow:hidden;font-size:15px;line-height:normal;color:var(--cream);padding:calc(var(--pp-st) + 14px) 16px calc(var(--pp-sb) + 18px);background:radial-gradient(circle at 90% 0%,rgba(255,107,61,.16),transparent 45%),radial-gradient(circle,rgba(255,255,255,.07) 1px,transparent 1.2px) 0 0/16px 16px,var(--bg);z-index:45}
+#pp-ses{position:fixed;top:0;bottom:0;left:0;right:0;width:100%;max-width:480px;margin:0 auto;display:none;flex-direction:column;overflow:hidden;font-size:15px;line-height:normal;color:var(--cream);padding:calc(var(--pp-st) + 14px) 16px calc(var(--pp-sb) + 18px);background:radial-gradient(circle at 90% 0%,rgba(255,107,61,.16),transparent 45%),radial-gradient(circle,rgba(var(--ov),.07) 1px,transparent 1.2px) 0 0/16px 16px,var(--bg);z-index:45}
 body.pp-ses-on{overflow:hidden}
 body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 :where(#pp-ses),:where(#pp-ses) *{margin:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1351,23 +1617,23 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-card.pp-out-mid{animation:ppoutD .32s ease-in forwards}
 .pp-ch{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px 0}
 .pp-dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
-.pp-tag{display:flex;align-items:center;gap:7px;padding:6px 13px;border-radius:99px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 20%,var(--panel));color:var(--c);font-weight:800;font-size:13.5px}
+.pp-tag{display:flex;align-items:center;gap:7px;padding:6px 13px;border-radius:99px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 20%,var(--panel));color:color-mix(in srgb,var(--c) var(--tm),var(--ink));font-weight:800;font-size:13.5px}
 .pp-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 18px;overflow-y:auto}
 .pp-qt{font-size:31px;line-height:1.05;font-weight:800;letter-spacing:-.04em}
 .pp-rule{width:38px;height:5px;border-radius:3px;background:var(--orange);margin:24px 0 18px}
-.pp-at{font-size:34px;font-weight:800;color:var(--yellow);letter-spacing:-.035em;line-height:1.1}
+.pp-at{font-size:34px;font-weight:800;color:var(--yellow-t);letter-spacing:-.035em;line-height:1.1}
 .pp-qt{transition:font-size .25s,color .25s}
 /* v120 : respecte les retours à la ligne saisis dans la question / la réponse (cartes déjà créées comprises) */
 .pp-qt,.pp-at{white-space:pre-line}
 /* v121 : images des cartes (question / réponse) */
-.pp-qimg,.pp-aimg{display:block;align-self:flex-start;max-width:100%;max-height:32vh;object-fit:contain;border-radius:28px;border:2px solid rgba(245,240,230,.16);background:var(--panel);box-shadow:0 10px 26px rgba(0,0,0,.38),0 0 0 5px rgba(245,240,230,.05);margin:14px 5px 6px 0;cursor:zoom-in;-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}
+.pp-qimg,.pp-aimg{display:block;align-self:flex-start;max-width:100%;max-height:32vh;object-fit:contain;border-radius:28px;border:2px solid rgba(var(--cr),.16);background:var(--panel);box-shadow:0 10px 26px rgba(0,0,0,.38),0 0 0 5px rgba(var(--cr),.05);margin:14px 5px 6px 0;cursor:zoom-in;-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}
 .pp-body.pp-flipped .pp-qimg{max-height:64px;margin-top:8px;border-radius:18px;box-shadow:0 6px 16px rgba(0,0,0,.32)}
 .pp-aimg{margin-top:16px}
 /* v123 : code de partage (affichage + saisie) */
-.pp-sharecode{margin:6px 0 18px;padding:20px 12px;border-radius:24px;border:2px solid rgba(245,240,230,.16);background:var(--panel);text-align:center;font-size:46px;line-height:1;font-weight:800;letter-spacing:.14em;color:var(--cream);text-shadow:3px 2px 0 var(--orange);user-select:all;-webkit-user-select:all}
+.pp-sharecode{margin:6px 0 18px;padding:20px 12px;border-radius:24px;border:2px solid rgba(var(--cr),.16);background:var(--panel);text-align:center;font-size:46px;line-height:1;font-weight:800;letter-spacing:.14em;color:var(--cream);text-shadow:3px 2px 0 var(--orange);user-select:all;-webkit-user-select:all}
 :root:root .pp-sheet input.pp-codein{width:100%;height:56px;margin:0 0 12px;padding:0 16px;border-radius:18px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:24px;font-weight:800;letter-spacing:.2em;text-align:center;text-transform:uppercase;outline:none;box-shadow:none}
 :root:root .pp-sheet input.pp-codein::placeholder{letter-spacing:.04em;font-size:16px;font-weight:700;text-transform:none;color:var(--muted)}
-:root:root .pp-sheet input.pp-codein:focus{border-color:var(--yellow)}
+:root:root .pp-sheet input.pp-codein:focus{border-color:var(--yellow-b)}
 /* v122 : visionneuse d'image (agrandir au toucher) + images dans les synthèses */
 #pp-zoom{position:fixed;inset:0;z-index:2000;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
 #pp-zoom .pz-bg{position:absolute;inset:0;background:rgba(6,6,12,.95);opacity:0;transition:opacity .28s ease;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
@@ -1404,16 +1670,16 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-foot{border-top:1.5px solid var(--line);padding:12px}
 .pp-show{width:100%;height:54px;border-radius:16px;background:var(--orange);color:#1a0d08;font-size:17px;font-weight:800;box-shadow:0 4px 0 var(--orange-d)}
 .pp-ans3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.pp-ans{height:68px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:800;font-size:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 16%,#1a1a26);color:var(--c);box-shadow:0 4px 0 color-mix(in srgb,var(--c) 40%,#111)}
-.pp-bar1{flex:1;height:8px;border-radius:5px;background:#252533;overflow:hidden;position:relative}
+.pp-ans{height:68px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:800;font-size:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel));color:color-mix(in srgb,var(--c) var(--tm),var(--ink));box-shadow:0 4px 0 color-mix(in srgb,var(--c) 40%,var(--c-mixd))}
+.pp-bar1{flex:1;height:8px;border-radius:5px;background:var(--c-s1);overflow:hidden;position:relative}
 .pp-bar1 i{display:block;width:100%;height:100%;border-radius:5px;transition:background-color .5s cubic-bezier(.22,.9,.3,1)}
 .pp-bar1 u{position:absolute;inset:0;border-radius:inherit;opacity:0;pointer-events:none;background:radial-gradient(ellipse 55% 160% at 50% 50%,var(--dc,transparent) 0%,transparent 72%);transform:scale(.4,1);text-decoration:none}
 .pp-bar1 u.on{animation:ppmoodDrop 3.6s cubic-bezier(.33,1,.68,1) both}
 @keyframes ppmoodDrop{0%{opacity:0;transform:scale(.4,1)}12%{opacity:.4;transform:scale(.85,1)}30%{opacity:.3;transform:scale(1,1)}100%{opacity:0;transform:scale(1.3,1)}}
-.pp-mb{display:flex;align-items:center;gap:12px;flex:none;margin-top:6px;padding:9px 16px 9px 9px;background:var(--panel);border:2px solid var(--line);border-radius:22px;box-shadow:0 4px 0 #08080d;animation:pppop .4s var(--pps) both}
+.pp-mb{display:flex;align-items:center;gap:12px;flex:none;margin-top:6px;padding:9px 16px 9px 9px;background:var(--panel);border:2px solid var(--line);border-radius:22px;box-shadow:0 4px 0 var(--c-edge);animation:pppop .4s var(--pps) both}
 .pp-mb.pp-still{animation:none}
 .pp-mb .pp-bk{width:42px;height:42px;flex:none;border-radius:14px;background:var(--yellow);color:#1a1405;display:grid;place-items:center;box-shadow:0 3px 0 var(--yellow-d)}
-.pp-mb .pp-mi{width:46px;height:46px;flex:none;border-radius:15px;background:#173a35;border:2px solid color-mix(in srgb,var(--green) 55%,transparent);color:var(--green);display:grid;place-items:center}
+.pp-mb .pp-mi{width:46px;height:46px;flex:none;border-radius:15px;background:var(--c-gsoft);border:2px solid color-mix(in srgb,var(--green) 55%,transparent);color:var(--green);display:grid;place-items:center}
 .pp-mb .pp-mt{display:flex;flex-direction:column;line-height:1.05;min-width:0}
 .pp-mb .pp-mt b{font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--cream);display:inline-block;transform-origin:left center}
 .pp-mb .pp-mt b.pp-bump{animation:ppmbump .55s var(--pps)}
@@ -1421,9 +1687,12 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-kh{display:none}
 @keyframes ppmbump{0%{transform:scale(1)}40%{transform:scale(1.4);color:var(--green)}100%{transform:scale(1)}}
 .pp-info{display:flex;align-items:center;gap:8px;margin:-6px 0 12px;font-size:13px;font-weight:600;color:var(--muted)}
-.pp-mp{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--yellow);background:#2f2a14;border-radius:7px;padding:3px 8px}
+.pp-mp{margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--yellow-t);background:var(--c-ysc);border-radius:7px;padding:3px 8px}
 .pp-undo{align-self:center;display:flex;align-items:center;gap:6px;height:32px;padding:0 13px;margin:-2px 0 10px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--muted);font-weight:700;font-size:12.5px;animation:pppop .35s var(--pps) both}
-.pp-pastille{position:absolute;left:50%;top:12px;width:44px;height:44px;margin-left:-22px;border-radius:50%;display:grid;place-items:center;background:var(--pc);color:#151018;opacity:0;transform:scale(.4);transition:opacity .2s var(--pps),transform .3s var(--spring),background .2s var(--pps);pointer-events:none;z-index:3;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+/* v130 : la pastille du geste est un carré arrondi (plus un rond) : fond très léger qui se remplit un peu quand on glisse plus loin (--f, posé par le JS), bordure pleine bien présente, icône dans la couleur pleine */
+.pp-pastille{position:absolute;left:50%;top:12px;width:44px;height:44px;margin-left:-22px;border-radius:13px;display:grid;place-items:center;background:transparent;border:2.5px solid var(--pc);color:color-mix(in srgb,var(--pc) var(--tm),var(--ink));opacity:0;transform:scale(.4);transition:opacity .2s var(--pps),transform .3s var(--spring);pointer-events:none;z-index:3;box-sizing:border-box;overflow:hidden;isolation:isolate}
+.pp-pastille::before{content:"";position:absolute;inset:0;background:var(--pc);opacity:var(--f,.12);transition:opacity .12s linear;z-index:-1}
+.pp-pastille svg{width:22px;height:22px;stroke:currentColor;position:relative}
 .pp-pastille.on{opacity:1;transform:scale(1)}
 .pp-card.armed{border-color:var(--pc)}
 .pp-done{margin:auto;text-align:center;width:100%;position:relative}
@@ -1454,7 +1723,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 @keyframes ppconf{0%{opacity:1;transform:translate(0,60px) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}}
 @keyframes pppop{0%{transform:translateY(8px);opacity:0}60%{transform:translateY(-3px);opacity:1}100%{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){#pp-ses *,#pp-ses *::before,#pp-ses *::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
-.pp-sec{height:44px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 3px 0 #08080d}
+.pp-sec{height:44px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 3px 0 var(--c-edge)}
 :where(.pp-add,.pp-sheet) h2.pp-t{font-size:30px;margin-bottom:14px}
 .pp-dash{width:100%;height:46px;border:1.5px dashed var(--line);border-radius:15px;color:var(--muted);font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px}
 .pp-mode{display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:16px;position:relative}
@@ -1467,23 +1736,23 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-pill.on{border:2px solid var(--c);background:color-mix(in srgb,var(--c) 18%,var(--panel));color:var(--cream);font-weight:800}
 :where(.pp-add,.pp-sheet) label.pp-l{display:block;color:var(--muted);font-weight:800;letter-spacing:.12em;font-size:11px;margin:0 2px 7px;text-transform:uppercase}
 .pp-chip{flex:1;height:40px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel);font-weight:800;color:var(--muted)}
-.pp-chip.on{border-color:var(--orange);color:var(--orange);background:#2a1a17}
+.pp-chip.on{border-color:var(--orange);color:var(--orange-t);background:var(--c-osoft)}
 .pp-note{color:var(--muted);font-size:12.5px;text-align:center;margin-top:-4px}
 .pp-cmp{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:6px 8px 8px;margin-bottom:4px;transition:border-color .2s,box-shadow .2s}
-.pp-cmp:focus-within{border-color:var(--yellow);box-shadow:0 4px 0 var(--yellow-d)}
+.pp-cmp:focus-within{border-color:var(--yellow-b);box-shadow:0 4px 0 var(--yellow-d)}
 :root:root .pp-cmp textarea{border:0;background:transparent;margin:0;height:84px;padding:12px 10px}
 :root:root .pp-cmp textarea.pp-tall{height:150px}
 :root:root .pp-cmp textarea:focus{border:0}
 .pp-fcs{display:flex;gap:8px;overflow-x:auto;padding:2px 6px 8px;scrollbar-width:none}
 .pp-fcs::-webkit-scrollbar{display:none}
 .pp-fcs .pp-fch{flex:none;margin:0;max-width:190px;padding:6px 6px 6px 7px;border-radius:13px;background:var(--bg)}
-.pp-fcs .pp-fch.pp-t-doc i{background:#3a1a27;color:var(--pink)}
-.pp-fcs .pp-fch.pp-t-gal i{background:#17293a;color:var(--blue)}
+.pp-fcs .pp-fch.pp-t-doc i{background:var(--c-pbg2);color:var(--pink)}
+.pp-fcs .pp-fch.pp-t-gal i{background:var(--c-bsoft);color:var(--blue)}
 .pp-cmpb{display:flex;align-items:center;gap:6px;padding:0 2px}
 .pp-ibt{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:var(--muted);background:var(--bg);border:1.5px solid var(--line);flex:none}
 .pp-ibt:active{color:var(--cream)}
-.pp-chip{position:relative;display:flex;align-items:center;gap:6px;height:42px;padding:0 13px;border-radius:14px;background:var(--bg);border:1.5px dashed #4a4a60;color:var(--muted);font-size:13px;font-weight:800;overflow:hidden;margin-left:auto}
-.pp-chip.on{border:1.5px solid var(--yellow);border-style:solid;color:var(--yellow);background:#2f2a14}
+.pp-chip{position:relative;display:flex;align-items:center;gap:6px;height:42px;padding:0 13px;border-radius:14px;background:var(--bg);border:1.5px dashed var(--c-dash);color:var(--muted);font-size:13px;font-weight:800;overflow:hidden;margin-left:auto}
+.pp-chip.on{border:1.5px solid var(--yellow);border-style:solid;color:var(--yellow-t);background:var(--c-ysc)}
 :root:root .pp-chip input{position:absolute;inset:0;opacity:0;width:100%;height:100%;padding:0;margin:0;border:0}
 .pp-snd{width:46px;height:42px;margin-left:auto;border-radius:14px;background:var(--orange);color:#1a0d08;display:grid;place-items:center;box-shadow:0 3px 0 var(--orange-d);flex:none}
 .pp-snd.busy{opacity:.55;pointer-events:none}
@@ -1494,16 +1763,16 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-bk2{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:800;font-size:14px;height:34px;margin:0 0 4px}
 .pp-veil{inset:0;background:rgba(5,5,10,.7);z-index:20;opacity:0;pointer-events:none;transition:opacity .25s}
 .pp-veil.on{opacity:1;pointer-events:auto}
-.pp-sheet{left:0;right:0;bottom:0;max-height:88%;overflow-y:auto;background:#141420;border-top:2px solid var(--cream);border-radius:26px 26px 0 0;padding:10px 16px calc(var(--sb) + 20px);z-index:21;transform:translateY(105%);transition:transform .35s var(--ease-press);box-shadow:0 80px 0 #141420}
+.pp-sheet{left:0;right:0;bottom:0;max-height:88%;overflow-y:auto;background:var(--c-sheet);border-top:2px solid var(--cream);border-radius:26px 26px 0 0;padding:10px 16px calc(var(--sb) + 20px);z-index:21;transform:translateY(105%);transition:transform .35s var(--ease-press);box-shadow:0 80px 0 var(--c-sheet)}
 .pp-sheet.on{transform:none}
 .pp-sheet{overscroll-behavior:contain}
 .pp-grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
 .pp-sheet h2{font-size:26px;margin-bottom:12px}
 .pp-sheet h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 2px 8px;font-weight:800}
-.pp-toast{left:50%;bottom:calc(var(--sb) + 90px);transform:translate(-50%,20px);background:var(--cream);color:#1a1405;font-weight:800;font-size:13px;padding:10px 16px;border-radius:12px;box-shadow:0 4px 0 #a39a85;opacity:0;pointer-events:none;z-index:30;transition:opacity .3s var(--pps),transform .4s var(--spring);white-space:nowrap}
+.pp-toast{left:50%;bottom:calc(var(--sb) + 90px);transform:translate(-50%,20px);background:var(--cream);color:#1a1405;font-weight:800;font-size:13px;padding:10px 16px;border-radius:12px;box-shadow:0 4px 0 var(--c-toastsh);opacity:0;pointer-events:none;z-index:30;transition:opacity .3s var(--pps),transform .4s var(--spring);white-space:nowrap}
 .pp-toast.on{opacity:1;transform:translate(-50%,0)}
 .pp-src{display:flex;gap:11px;align-items:flex-start;padding:13px;border-radius:16px;background:var(--panel);border:1.5px solid var(--line);color:var(--muted);font-size:13.5px;margin-bottom:16px}
-.pp-src i{width:32px;height:32px;border-radius:10px;background:#3d3320;color:var(--yellow);display:grid;place-items:center;flex:none}
+.pp-src i{width:32px;height:32px;border-radius:10px;background:var(--c-yicon);color:var(--yellow-t);display:grid;place-items:center;flex:none}
 .pp-src b{color:var(--cream)}
 .pp-numh{display:flex;align-items:center;gap:9px;font-weight:800;font-size:15px;margin:0 2px 9px}
 .pp-numh b{width:22px;height:22px;border-radius:7px;background:var(--orange);color:#1a0d08;display:grid;place-items:center;font-size:12.5px}
@@ -1514,7 +1783,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-ctt{display:flex;align-items:center;gap:10px;font-size:26px;margin-bottom:4px}
 .pp-ctt .pp-dot{width:14px;height:14px;border-radius:50%;flex:none}
 .pp-cts{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin:0 2px 8px}
-.pp-stt{display:flex;gap:9px;align-items:flex-start;margin:0 0 14px;padding:10px 13px;border-radius:14px;background:rgba(255,255,255,.04);border:1.5px solid var(--line);color:var(--c,var(--muted));font-size:13.5px;font-weight:700;line-height:1.35}
+.pp-stt{display:flex;gap:9px;align-items:flex-start;margin:0 0 14px;padding:10px 13px;border-radius:14px;background:rgba(var(--ov),.04);border:1.5px solid var(--line);color:color-mix(in srgb,var(--c,var(--muted)) var(--tm),var(--ink));font-size:13.5px;font-weight:700;line-height:1.35}
 .pp-stt::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted));flex:none;margin-top:5px}
 .pp-lnk{display:block;margin:6px auto 4px;padding:10px 14px;color:var(--muted);font-weight:800;font-size:14px}
 .pp-sheet h4{margin-top:14px}
@@ -1524,18 +1793,18 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-pvh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .pp-pvh b{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;flex:1}
 .pp-ib{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--muted);flex:none}
-:root:root .pp-pv textarea{height:66px;margin-bottom:8px;padding:10px 12px;border-radius:12px;font-size:15px;background:#12121b}
-:root:root .pp-pv textarea.pp-a{color:var(--yellow);margin-bottom:0}
+:root:root .pp-pv textarea{height:66px;margin-bottom:8px;padding:10px 12px;border-radius:12px;font-size:15px;background:var(--c-ta)}
+:root:root .pp-pv textarea.pp-a{color:var(--yellow-t);margin-bottom:0}
 .pp-invc{display:flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:99px;border:1.5px solid var(--line);background:var(--panel);color:var(--muted);font-weight:800;font-size:12px;flex:none}
-.pp-invc.on{border-color:var(--orange);color:var(--orange);background:#2a1a17}
+.pp-invc.on{border-color:var(--orange);color:var(--orange-t);background:var(--c-osoft)}
 .pp-pvbar{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;font-size:13px;font-weight:800;color:var(--muted)}
 .pp-pvbar b{color:var(--cream)}
 .pp-fch{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:13px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:8px;font-size:13.5px;font-weight:600;animation:pppop .3s var(--pps) both}
-.pp-fch i{width:28px;height:28px;border-radius:8px;background:#3d3320;color:var(--yellow);display:grid;place-items:center;flex:none}
+.pp-fch i{width:28px;height:28px;border-radius:8px;background:var(--c-yicon);color:var(--yellow-t);display:grid;place-items:center;flex:none}
 .pp-fch span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pp-fch button{color:var(--muted);display:grid;place-items:center;width:26px;height:26px}
-:root:root :where(.pp-add,.pp-sheet) input.pp-dt{width:100%;height:48px;padding:0 16px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:16px;margin-bottom:16px;color-scheme:dark;outline:none}
-:root:root :where(.pp-add,.pp-sheet) input.pp-dt:focus{border-color:var(--yellow)}
+:root:root :where(.pp-add,.pp-sheet) input.pp-dt{width:100%;height:48px;padding:0 16px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:16px;margin-bottom:16px;color-scheme:inherit;outline:none}
+:root:root :where(.pp-add,.pp-sheet) input.pp-dt:focus{border-color:var(--yellow-b)}
 :where(.pp-add,.pp-sheet) button.pp-dt{width:100%;height:48px;padding:0 16px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font-size:16px;margin-bottom:16px}
 .pp-sheet .pp-duo .pp-sec{margin:0;height:50px}
 .pp-sheet .pp-hint{margin:0 2px 12px}
@@ -1549,7 +1818,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-sheet.on>*:nth-child(n+5){animation-delay:.2s}
 .pp-toast{transition:opacity .25s,transform .35s var(--pps)}
 :where(.pp-add,.pp-sheet) button.pp-dtb{display:flex;align-items:center;justify-content:space-between;text-align:left;cursor:pointer}
-:where(.pp-add,.pp-sheet) button.pp-dtb svg{color:var(--yellow)}
+:where(.pp-add,.pp-sheet) button.pp-dtb svg{color:var(--yellow-t)}
 .pp-pdh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .pp-pdh h2{font-size:22px;margin:0;text-transform:capitalize}
 .pp-pdn{width:40px;height:40px;border-radius:12px;background:var(--panel);border:1.5px solid var(--line);display:grid;place-items:center}
@@ -1565,10 +1834,10 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 :where(.pp-add,.pp-sheet){ line-height:normal; color:var(--ink,var(--cream)); font-family:inherit; }
 :where(.pp-add,.pp-sheet) button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; padding:0; }
 :root:root :where(.pp-add,.pp-sheet) :where(textarea,input.pp-q){width:100%;padding:14px 16px;border-radius:18px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:16px;resize:none;height:84px;margin-bottom:16px;outline:none;transition:border-color .2s;box-shadow:none;min-height:0}
-:root:root :where(.pp-add,.pp-sheet) :where(textarea,input.pp-q):focus{border-color:var(--yellow);box-shadow:none}
+:root:root :where(.pp-add,.pp-sheet) :where(textarea,input.pp-q):focus{border-color:var(--yellow-b);box-shadow:none}
 :root:root :where(.pp-add,.pp-sheet) textarea.pp-tall{height:130px}
 :root:root :where(.pp-add,.pp-sheet) input.pp-q{height:auto;margin:0 0 14px;padding:13px 18px;border-radius:99px}
-:where(.pp-add,.pp-sheet) ::placeholder{color:#6b6880}
+:where(.pp-add,.pp-sheet) ::placeholder{color:var(--c-ph)}
 .pp-cta.busy{background:linear-gradient(100deg,var(--orange) 30%,#ff9a6e 50%,var(--orange) 70%) 0 0/250% 100%;animation:ppbusyIn .4s var(--pps),ppshine 1.1s linear infinite;pointer-events:none}
 .pp-sheet .pp-cta{margin:6px 0 0}
 .pp-sheet .pp-duo .pp-cta{margin:0;height:50px}
@@ -1602,7 +1871,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-daysw{overflow-x:auto;scrollbar-width:none;margin:-8px -8px -4px;padding:8px 8px 4px}
 .pp-daysw::-webkit-scrollbar{display:none}
 .pp-days{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;text-align:center}
-.pp-d b{display:grid;place-items:center;height:38px;border-radius:9px;font-size:15px;font-weight:800;background:#7a3a2b;margin-bottom:6px;outline:2px solid transparent;outline-offset:1.5px;transition:outline-color .2s;animation:pppop .4s var(--pps) both;animation-delay:calc(var(--i)*45ms)}
+.pp-d b{display:grid;place-items:center;height:38px;border-radius:9px;font-size:15px;font-weight:800;background:var(--c-dayb);margin-bottom:6px;outline:2px solid transparent;outline-offset:1.5px;transition:outline-color .2s;animation:pppop .4s var(--pps) both;animation-delay:calc(var(--i)*45ms)}
 .pp-d.pp-n b{background:none;border:1.5px dashed var(--line)}
 .cb-wc.proj b{opacity:.78}
 .pp-d.pp-today b{background:var(--orange);color:#1a0d08}
@@ -1617,17 +1886,17 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-bar s{width:4px;height:4px;border-radius:50%;background:var(--bc,var(--amber));opacity:.7;flex:none;text-decoration:none}
 .pp-wk{display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1.5px solid var(--line);font-size:14px;font-weight:800}
 .pp-wk span{color:var(--muted);display:flex;align-items:center;gap:5px}
-.pp-wk .pp-m{margin-left:auto;border:1.5px solid #6b5416;background:#3a2f18;color:var(--amber);padding:6px 11px;border-radius:9px;font-size:13px}
-.pp-wk .pp-m.pp-bad{border-color:#7a2a40;background:#3a1a24;color:var(--pink)}
+.pp-wk .pp-m{margin-left:auto;border:1.5px solid var(--c-aborder);background:var(--c-abg);color:var(--amber);padding:6px 11px;border-radius:9px;font-size:13px}
+.pp-wk .pp-m.pp-bad{border-color:var(--c-pborder);background:var(--c-pbg);color:var(--pink)}
 .pp-h3s{font-size:22px;margin:24px 0 12px}
 .pp-mat{padding:15px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:12px;cursor:pointer;transition:transform .3s var(--pps)}
 .pp-mat.pp-arch{opacity:.6}
 .pp-mtop{display:flex;align-items:center;gap:9px;font-size:19px;font-weight:800;margin-bottom:12px;letter-spacing:-.02em}
-.pp-mtop .pp-risk{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--pink);border:1.5px solid #7a2a40;background:#3a1a24;border-radius:7px;padding:2px 6px}
-.pp-mtop .pp-fl2{margin-left:auto;color:var(--yellow);font-size:12.5px;display:flex;gap:5px;align-items:center}
+.pp-mtop .pp-risk{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--pink);border:1.5px solid var(--c-pborder);background:var(--c-pbg);border-radius:7px;padding:2px 6px}
+.pp-mtop .pp-fl2{margin-left:auto;color:var(--yellow-t);font-size:12.5px;display:flex;gap:5px;align-items:center}
 .pp-mtop .pp-fl2.pp-add{color:var(--muted);border:1.5px dashed var(--line);padding:3px 9px;border-radius:9px}
 .pp-seg{display:flex;gap:6px;height:16px;margin-bottom:11px}
-.pp-seg i{height:100%;border-radius:6px;background:#252533;transform-origin:left;animation:ppgrow .7s .2s ease-out both}
+.pp-seg i{height:100%;border-radius:6px;background:var(--c-s1);transform-origin:left;animation:ppgrow .7s .2s ease-out both}
 .pp-seg .pp-a{background:var(--green)}
 .pp-seg .pp-b{background:var(--c)}
 .pp-leg{display:flex;gap:16px;color:var(--muted);font-size:14px}
@@ -1637,8 +1906,8 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-li+.pp-li{border-top:1.5px solid var(--line)}
 .pp-li>span{flex:1}
 .pp-li small{display:block;color:var(--muted);font-weight:400;font-size:12.5px;margin-top:1px}
-.pp-li .pp-ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#252533;flex:none}
-.pp-li:active{background:#1f1f2d}
+.pp-li .pp-ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--c-s1);flex:none}
+.pp-li:active{background:var(--c-press2)}
 .pp-plan-empty{color:var(--muted);text-align:center;padding:22px 8px;font-size:14px;line-height:1.5}
 @keyframes ppgrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 /* ---- ÉTAPE 5 : Parcourir + fiche d'une carte (+ « Modifier avec l'IA » en feuille du bas) ---- */
@@ -1647,8 +1916,8 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 :where(.pp-brw) button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; padding:0; }
 .pp-brw h2.pp-t{font-size:30px;margin-bottom:14px}
 :root:root .pp-brw input.pp-q{width:100%;height:auto;padding:13px 18px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:16px;margin:0 0 14px;outline:none;box-shadow:none;transition:border-color .2s}
-:root:root .pp-brw input.pp-q:focus{border-color:var(--yellow)}
-.pp-brw ::placeholder{color:#6b6880}
+:root:root .pp-brw input.pp-q:focus{border-color:var(--yellow-b)}
+.pp-brw ::placeholder{color:var(--c-ph)}
 .pp-brw .pp-empty{color:var(--muted);text-align:center;padding:30px 0;line-height:1.5}
 .pp-grp{border-radius:20px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:12px;overflow:hidden}
 .pp-gh{display:flex;align-items:center;gap:2px;padding:6px 8px 6px 15px}
@@ -1660,32 +1929,32 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-grp.closed .pp-list{display:none}
 .pp-list{padding:0 15px}
 .pp-it{padding:14px 0;border-top:1.5px solid var(--line);display:flex;gap:10px;cursor:pointer;animation:pppop .3s var(--pps) backwards;transition:transform .22s var(--pps),background .2s}
-.pp-it:active{background:rgba(255,255,255,.03)}
+.pp-it:active{background:rgba(var(--ov),.03)}
 .pp-it>div{flex:1;min-width:0}
 .pp-it b{display:block;font-size:15px;font-weight:800;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere}
 .pp-it p{color:var(--muted);font-size:14px;margin:4px 0 7px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .pp-it em{font-style:normal;font-weight:800;letter-spacing:.1em;font-size:11px;color:var(--muted);text-transform:uppercase}
-.pp-it em.pp-new{color:var(--orange)}
+.pp-it em.pp-new{color:var(--orange-t)}
 .pp-it em.pp-okk{color:var(--green)}
-.pp-it em.pp-invt{color:var(--orange);margin-left:8px}
+.pp-it em.pp-invt{color:var(--orange-t);margin-left:8px}
 /* interrupteur (fiche d'une carte ; resservira aux Réglages) */
-.pp-tg{width:44px;height:26px;border-radius:99px;background:#2b2b3b;position:relative;flex:none;transition:background .2s}
+.pp-tg{width:44px;height:26px;border-radius:99px;background:var(--c-s2);position:relative;flex:none;transition:background .2s}
 .pp-tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--cream);transition:transform var(--t-out) var(--ease-press)}
 .pp-tg.on{background:var(--green)}
 .pp-tg.on::after{transform:translateX(18px)}
 .pp-tag2{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 /* ===== PORT PROTOTYPE v31 — ÉTAPE 6 : Réglages, Statistiques, Synthèse ===== */
-.pp-page{position:fixed;top:0;bottom:0;left:0;right:0;width:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;font-size:15px;line-height:normal;color:var(--cream);padding:calc(var(--pp-st) + 14px) 16px 0;background:radial-gradient(circle at 90% 0%,rgba(255,107,61,.16),transparent 45%),radial-gradient(circle,rgba(255,255,255,.07) 1px,transparent 1.2px) 0 0/16px 16px,var(--bg);z-index:60;animation:ppup .3s ease-out}
+.pp-page{position:fixed;top:0;bottom:0;left:0;right:0;width:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;font-size:15px;line-height:normal;color:var(--cream);padding:calc(var(--pp-st) + 14px) 16px 0;background:radial-gradient(circle at 90% 0%,rgba(255,107,61,.16),transparent 45%),radial-gradient(circle,rgba(var(--ov),.07) 1px,transparent 1.2px) 0 0/16px 16px,var(--bg);z-index:60;animation:ppup .3s ease-out}
 .pp-sh{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .pp-sh small{display:block;color:var(--muted);font-weight:800;font-size:12px;letter-spacing:.02em}
 .pp-sh h2{font-size:24px;line-height:1.05;margin:0;letter-spacing:-.03em;font-weight:800}
-.pp-back{width:38px;height:38px;flex:none;border-radius:11px;background:var(--panel);border:1.5px solid var(--line);display:grid;place-items:center;box-shadow:0 3px 0 #08080d;color:var(--cream)}
+.pp-back{width:38px;height:38px;flex:none;border-radius:11px;background:var(--panel);border:1.5px solid var(--line);display:grid;place-items:center;box-shadow:0 3px 0 var(--c-edge);color:var(--cream)}
 .pp-sb{flex:1;overflow-y:auto;padding:2px 0 calc(var(--pp-sb) + 24px)}
 .pp-page,.pp-page *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* v109 : téléphone — la page Statistiques (et Synthèse) reprend EXACTEMENT le fond de l'accueil : même dégradé de fondu en haut (sous la barre d'état)
    que le <body>, au-dessus de la lueur orange et de la grille de points. Grand écran inchangé. */
 @media (max-width:899px), (max-height:479px){
-  .pp-page{ background:linear-gradient(#0c0c12, rgba(12,12,18,0) 130px), radial-gradient(circle at 90% 0%,rgba(255,107,61,.16),transparent 45%), radial-gradient(circle,rgba(255,255,255,.07) 1px,transparent 1.2px) 0 0/16px 16px, var(--bg); }
+  .pp-page{ background:linear-gradient(var(--bg), rgba(var(--bgr),0) 130px), radial-gradient(circle at 90% 0%,rgba(255,107,61,.16),transparent 45%), radial-gradient(circle,rgba(var(--ov),.07) 1px,transparent 1.2px) 0 0/16px 16px, var(--bg); }
 }
 .pp-page .pp-cmp textarea{display:block;width:100%;resize:none;color:var(--cream);font:inherit;font-size:16px;outline:none}
 .pp-page .pp-still>*{animation:none!important}
@@ -1700,27 +1969,27 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-stat b{display:block;font-size:22px;line-height:1;font-weight:800}
 .pp-stat span{color:var(--muted);font-size:12.5px}
 .pp-heat{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:6px}
-.pp-heat i{aspect-ratio:1;border-radius:6px;background:#252533}
-.pp-heat i.h1{background:#5a3a1c}
-.pp-heat i.h2{background:#a8601f}
+.pp-heat i{aspect-ratio:1;border-radius:6px;background:var(--c-s1)}
+.pp-heat i.h1{background:var(--c-h1)}
+.pp-heat i.h2{background:var(--c-h2)}
 .pp-heat i.h3{background:var(--orange)}
 .pp-hb{margin-bottom:12px}
 .pp-hb .t1{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14.5px;margin-bottom:6px}
 .pp-hb .t1 small{margin-left:auto;color:var(--muted);font-weight:600;font-size:12.5px}
 .pp-hb .dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
-.pp-hb .bb{height:10px;border-radius:6px;background:#252533;overflow:hidden}
+.pp-hb .bb{height:10px;border-radius:6px;background:var(--c-s1);overflow:hidden}
 .pp-hb .bb u{display:block;height:100%;border-radius:6px;background:var(--c);transform-origin:left;animation:ppgrow .8s .2s ease-out both}
 /* réglages */
-.pp-time{font-weight:800;color:var(--yellow);background:#2f2a14;padding:5px 10px;border-radius:9px}
+.pp-time{font-weight:800;color:var(--yellow-t);background:var(--c-ysc);padding:5px 10px;border-radius:9px}
 .pp-fld{width:100%;padding:13px 18px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:16px;outline:none;margin:10px 0 8px;transition:border-color .2s}
-.pp-fld:focus{border-color:var(--yellow)}
+.pp-fld:focus{border-color:var(--yellow-b)}
 .pp-keyrow{display:flex;gap:8px;align-items:center;margin-top:2px}
 .pp-keyrow .pp-fld{margin:10px 0 8px;flex:1;min-width:0}
 .pp-keyrow .pp-sec{padding:0 16px;flex:none}
 .pp-li small.sync-statut{display:flex;margin-top:1px;font-size:12.5px;gap:6px}
 .pp-sheet .sync-btn{width:100%;margin-top:2px}
 .pp-pt{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;height:220px;margin:8px 0 16px}
-.pp-ptb{position:absolute;left:12%;right:12%;top:88px;height:44px;border-radius:14px;background:#2a2613;border:1.5px solid var(--yellow)}
+.pp-ptb{position:absolute;left:12%;right:12%;top:88px;height:44px;border-radius:14px;background:var(--c-ysa);border:1.5px solid var(--yellow)}
 .pp-ptc{position:relative;width:90px;height:220px;overflow-y:auto;scroll-snap-type:y mandatory;padding:88px 0;text-align:center;scrollbar-width:none;overscroll-behavior:contain;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
 .pp-ptc::-webkit-scrollbar{display:none}
 .pp-ptc div{height:44px;line-height:44px;scroll-snap-align:center;font-size:24px;font-weight:800;color:var(--muted);transition:color .15s,transform .25s var(--pps)}
@@ -1731,7 +2000,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-msel select{flex:1;min-width:0;height:44px;border-radius:14px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:14.5px;padding:0 14px;appearance:none;-webkit-appearance:none}
 .pp-mini{height:44px;padding:0 13px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);font-weight:800;font-size:12.5px;color:var(--muted);animation:pppop .3s var(--pps) both}
 .pp-txa{width:100%;padding:14px 16px;border-radius:18px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:16px;resize:none;height:84px;margin-bottom:16px;outline:none;transition:border-color .2s;display:block}
-.pp-txa:focus{border-color:var(--yellow)}
+.pp-txa:focus{border-color:var(--yellow-b)}
 .pp-txa.pp-tall{height:130px}
 .pp-txa.pp-md{height:330px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55;margin-bottom:0}
 .pp-sy3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px}
@@ -1741,24 +2010,24 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-rend h2{display:flex;align-items:center;gap:9px;font-size:16.5px;margin:22px 0 8px;color:var(--cream);letter-spacing:-.03em;font-weight:800}
 .pp-rend h3{font-size:15px;margin:16px 0 6px;color:var(--cream)}
 .pp-rend h2 b{width:22px;height:22px;border-radius:7px;background:var(--orange);color:#1a0d08;display:grid;place-items:center;font-size:12px;flex:none}
-.pp-rend h2 small{margin-left:auto;font-size:11px;color:var(--yellow);font-weight:800;letter-spacing:.02em}
+.pp-rend h2 small{margin-left:auto;font-size:11px;color:var(--yellow-t);font-weight:800;letter-spacing:.02em}
 .pp-rend p{margin:0 0 8px}
 .pp-rend ul,.pp-rend ol{padding-left:0;list-style:none;margin:0}
 .pp-rend ol{counter-reset:ppol}
 .pp-rend li{padding-left:16px;position:relative;margin:3px 0}
 .pp-rend li::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--orange)}
 .pp-rend ol>li{counter-increment:ppol}
-.pp-rend ol>li::before{content:counter(ppol)".";background:none;width:auto;height:auto;top:0;color:var(--orange);font-weight:800}
-.pp-rend strong{color:var(--yellow);font-weight:800}
+.pp-rend ol>li::before{content:counter(ppol)".";background:none;width:auto;height:auto;top:0;color:var(--orange-t);font-weight:800}
+.pp-rend strong{color:var(--yellow-t);font-weight:800}
 .pp-rend em{color:var(--muted)}
 .pp-rend hr{border:0;height:1.5px;background:var(--line);margin:14px 0}
-.pp-rend blockquote{margin:8px 0;padding:9px 12px;border-left:3px solid var(--orange);background:#211f2e;border-radius:0 12px 12px 0;font-weight:600}
+.pp-rend blockquote{margin:8px 0;padding:9px 12px;border-left:3px solid var(--orange);background:var(--c-bq);border-radius:0 12px 12px 0;font-weight:600}
 .pp-rend .synth-table-wrap{overflow-x:auto;margin:10px 0}
 .pp-rend table{border-collapse:collapse;min-width:100%;font-size:13px}
 .pp-rend th,.pp-rend td{border:1.5px solid var(--line);padding:7px 10px;text-align:left;white-space:nowrap}
-.pp-rend th{background:#252533;font-weight:800}
-.pp-rend .ret{margin-top:20px;padding:12px 13px;border-radius:16px;background:#2a2410;border:1.5px solid #6b5416}
-.pp-rend .ret h2{margin-top:0;color:var(--yellow)}
+.pp-rend th{background:var(--c-s1);font-weight:800}
+.pp-rend .ret{margin-top:20px;padding:12px 13px;border-radius:16px;background:var(--c-ysd);border:1.5px solid var(--c-aborder)}
+.pp-rend .ret h2{margin-top:0;color:var(--yellow-t)}
 /* ============================================================
    ÉTAPE C — RÈGLE D'ANIMATION : « toujours un bouton qui s'enfonce »
    Un seul mécanisme pour tout ce qui se touche :
@@ -1775,9 +2044,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 @media (prefers-reduced-motion:reduce){ :root:root:root{ --t-in:.01ms; --t-out:.01ms; } }
 /* profondeur et couleur d'ombre des éléments « relief » (les autres : 2px, sans ombre) */
 .pp-cta,.pp-show{ --d:4px; --sc:var(--orange-d); }
-.pp-ans{ --d:4px; --sc:color-mix(in srgb,var(--c) 40%,#111); }
-.pp-ctl{ --d:4px; --sc:#14120a; }
-.pp-sec,.pp-back{ --d:3px; --sc:#08080d; }
+.pp-ans{ --d:4px; --sc:color-mix(in srgb,var(--c) 40%,var(--c-mixd)); }
+.pp-ctl{ --d:4px; --sc:var(--c-ysh); }
+.pp-sec,.pp-back{ --d:3px; --sc:var(--c-edge); }
 .pp-snd{ --d:3px; --sc:var(--orange-d); }
 .pp-mb .pp-bk{ --d:3px; --sc:var(--yellow-d); }
 .pp-pd.sel{ --d:3px; --sc:var(--orange-d); }
@@ -1786,7 +2055,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .home-cta{ --d:4px; --sc:var(--accent-deep); }
 .home-cta[style*="transparent"]{ --d:2px; }
 .modal-actions .modal-save{ --d:4px; --sc:var(--accent-deep); }
-.modal-actions .modal-cancel{ --d:3px; --sc:#08080d; }
+.modal-actions .modal-cancel{ --d:3px; --sc:var(--c-edge); }
 /* retour (relâchement) : même courbe pour tout le monde */
 :is(.pp-cta,.pp-show,.pp-ans,.pp-ctl,.pp-sec,.pp-back,.pp-snd,.pp-mb .pp-bk,.pp-pd,.pp-row,.pp-prog7,.pp-mat,.pp-li,.pp-it,.pp-ghm,.pp-ib,.pp-pill,.pp-chip,.pp-invc,.pp-dash,.pp-bk2,.pp-ibt,.pp-alt button,.pp-pdn,.pp-d,.pp-mini,.pp-undo,.pp-gear,.pp-streak,.pp-tab:not(.on),.home-cta,.planning-strip,.filter-pill,.home-matiere-due-item,.modal-actions button){ transition:transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press),background .2s,background-color .2s,border-color .2s,color .2s,opacity .2s; }
 /* appui : l'élément descend de --d, l'ombre tombe à 0 */
@@ -1794,7 +2063,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 /* onglet actif : il flotte à -5px ; l'appui le fait redescendre de --d */
 .pp-tab.on{ transition:transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press),background .2s,color .2s; }
 .pp-tab.on:active,.pp-tab.on.js-press{ transform:translateY(calc(-5px + var(--d)));
-  box-shadow:0 0 0 0 var(--sc),0 0 0 -8px rgba(255,217,61,0); transition-duration:var(--t-in); }
+  box-shadow:0 0 0 0 var(--sc),0 0 0 -8px rgba(var(--yr),0); transition-duration:var(--t-in); }
 /* ============================================================
    ÉTAPE D — la carte de révision s'enfonce quand on la retourne.
    Son ombre orange (9px 9px) est diagonale : la carte descend donc de 9px en
@@ -1849,7 +2118,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .pp-body{ cursor:pointer; }
   #pp-ses .pp-body{ -webkit-user-select:none; user-select:none; }
   /* barres de défilement fines et sombres (Chromebook : elles sont visibles) */
-  *{ scrollbar-width:thin; scrollbar-color:#3a3a4e transparent; }
+  *{ scrollbar-width:thin; scrollbar-color:var(--c-scroll) transparent; }
   /* v119 : rappel des touches (souris seulement), à droite de la barre de maîtrise : un point de la couleur du bouton + la touche,
      dans l'ordre des boutons (Pas su · Difficile · Facile). Très discret, plus lisible une fois la carte retournée.
      (L'ancien rappel en ::after ne s'affichait plus : .pp-acts s'est glissé entre .pp-stage et .pp-mb.) */
@@ -1936,23 +2205,23 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   body{ padding:0 30px 0 244px; }
   body .wrap{ max-width:none; padding:14px 0; }
   body .tabbar{ left:24px; top:24px; width:196px; }
-  body .pp-nav{ border:1px solid var(--line); border-radius:28px; background:rgba(12,12,18,.92); }
+  body .pp-nav{ border:1px solid var(--line); border-radius:28px; background:rgba(var(--bgr),.92); }
   #tab-planning,#tab-add,#tab-settings{ max-width:720px; margin:0 auto; }
   /* A · accueil : grande carte + modes à gauche, stats et semaine à droite */
   body .pp-home{ display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); grid-template-rows:auto 1fr auto; column-gap:26px; row-gap:0; height:calc(100vh - 80px); min-height:520px; }
   .pp-home>.pp-hero{ grid-column:1; grid-row:1/3; margin:0 9px 27px 0; padding:30px 32px; box-shadow:9px 9px 0 var(--orange); min-height:0;
-    background:radial-gradient(420px 300px at 92% 0,rgba(255,107,61,.2),transparent 70%),linear-gradient(120deg,var(--panel) 50%,#271b1f); }
+    background:radial-gradient(420px 300px at 92% 0,rgba(255,107,61,.2),transparent 70%),linear-gradient(120deg,var(--panel) 50%,var(--c-pgrad1)); }
   .pp-home .pp-hero .pp-big{ font-size:clamp(110px,28vh,220px); text-shadow:6px 6px 0 var(--orange); margin:0 0 12px 2px; }
   .pp-home .pp-hero .pp-sub{ font-size:16px; }
   .pp-home>.pp-ctl{ grid-column:2; grid-row:1; margin-bottom:18px; }
   /* v119 : « Ajouter une date de contrôle » : même famille que le bandeau contrôle (jaune), mais plus plein et en pointillés = on peut le remplir */
   .pp-home>.pp-ctl.pp-ctl-add{ display:flex; align-items:center; border:2px dashed color-mix(in srgb,var(--yellow) 75%,transparent);
-    background:linear-gradient(110deg,rgba(255,217,61,.2),rgba(255,217,61,.07) 70%),#1d1a0b; }
+    background:linear-gradient(110deg,rgba(var(--yr),.2),rgba(var(--yr),.07) 70%),var(--c-yse); }
   .pp-ctl-add .pp-ctt b{ font-size:16px; color:var(--cream); }
-  .pp-ctl-add>s{ display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:rgba(255,217,61,.18); }
+  .pp-ctl-add>s{ display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:rgba(var(--yr),.18); }
   .pp-home>.pp-opts{ grid-column:1; grid-row:3; margin:0 9px 0 0; gap:16px; }
   .pp-home>.pp-prog7{ display:none; }
-  .pp-view>.pp-opts .pp-row{ padding:18px 20px; border-radius:20px; gap:12px; background:linear-gradient(160deg,var(--panel),#201c2c); }
+  .pp-view>.pp-opts .pp-row{ padding:18px 20px; border-radius:20px; gap:12px; background:linear-gradient(160deg,var(--panel),var(--c-rowgrad)); }
   .pp-view>.pp-opts .pp-row .pp-ri{ width:44px; height:44px; border-radius:13px; }
   .pp-view>.pp-opts .pp-row b{ font-size:21px; }
   .pp-view>.pp-opts .pp-row>div>span{ font-size:14px; }
@@ -1964,7 +2233,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .cb-wc{ flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; }
   .cb-wc>b{ font-size:20px; line-height:1; font-weight:800; }
   .cb-tr{ flex:1; width:100%; display:flex; align-items:flex-end; min-height:0; }
-  .cb-tr i{ display:block; width:100%; border-radius:10px 10px 4px 4px; background:rgba(255,217,61,.26); height:var(--h); min-height:6px; }
+  .cb-tr i{ display:block; width:100%; border-radius:10px 10px 4px 4px; background:rgba(var(--yr),.26); height:var(--h); min-height:6px; }
   .cb-wc.t .cb-tr i{ background:var(--yellow); box-shadow:0 4px 0 var(--yellow-d); }
   .cb-wc small{ color:var(--cream); font-weight:800; font-size:13px; }
   .cb-wc em{ font-style:normal; color:var(--muted); font-size:11.5px; font-weight:600; white-space:nowrap; height:14px; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
@@ -1973,7 +2242,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   /* v91 : 8px de marge de chaque côté (le rebond de la carte et du bouton « Pas su » ne sont plus coupés par le bord) ; la position du contenu ne change pas.
      Fond identique à celui de la page (mêmes couches, attachées à la fenêtre) : plus de bande visible sur les côtés. */
   body #pp-ses{ left:236px; right:22px; width:auto; max-width:none; margin:0; padding:14px 8px;
-    background:linear-gradient(#0c0c12, rgba(12,12,18,0) 130px), radial-gradient(circle at 90% 0%, rgba(255,107,61,.16), transparent 45%), radial-gradient(circle, rgba(255,255,255,.07) 1px, transparent 1.2px) 0 0/16px 16px, #0c0c12; background-attachment:fixed; }
+    background:linear-gradient(var(--bg), rgba(var(--bgr),0) 130px), radial-gradient(circle at 90% 0%, rgba(255,107,61,.16), transparent 45%), radial-gradient(circle, rgba(var(--ov),.07) 1px, transparent 1.2px) 0 0/16px 16px, var(--bg); background-attachment:fixed; }
   #pp-ses .pp-stage{ display:grid; grid-template-columns:1.1fr 1fr; gap:26px; }
   #pp-ses .pp-card .pp-foot,#pp-ses .pp-card .pp-rule,#pp-ses .pp-card .pp-at{ display:none; }
   #pp-ses .pp-qt,#pp-ses .pp-body.pp-flipped .pp-qt{ font-size:clamp(30px,3.3vw,44px); line-height:1.08; letter-spacing:-.04em; color:var(--cream); font-weight:800; }
@@ -1986,7 +2255,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #pp-ses .pp-ra{ display:flex; flex-direction:column; min-height:0; overflow:auto; padding:16px 18px; border:2px solid transparent; border-radius:26px; visibility:hidden; pointer-events:none; position:relative; z-index:1; transform-origin:50% 50%; }
   .pp-rslot .pp-g{ margin:auto; text-align:center; color:var(--muted); }
   .pp-rslot.hid .pp-g{ display:none; }
-  .pp-rslot kbd{ display:inline-block; margin-bottom:8px; font:inherit; font-weight:800; font-size:12px; padding:4px 10px; border-radius:8px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.13); color:var(--cream); }
+  .pp-rslot kbd{ display:inline-block; margin-bottom:8px; font:inherit; font-weight:800; font-size:12px; padding:4px 10px; border-radius:8px; background:rgba(var(--ov),.07); border:1px solid rgba(var(--ov),.13); color:var(--cream); }
   .pp-ra .pp-v{ display:none; flex-direction:column; flex:1; }
   .pp-ra .pp-ch{ padding:0; }
   #pp-ses .pp-sk-p{ display:none; }
@@ -2034,12 +2303,12 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .pp-it{ position:relative; margin:0 -8px; padding:14px 6.5px; border:1.5px solid transparent; border-radius:14px; transition:transform .22s var(--pps), background .2s, border-color .2s; }
   .pp-it::before{ content:""; position:absolute; left:8px; right:8px; top:-1.5px; height:1.5px; background:var(--line); transition:opacity .2s; }
   .pp-it.sel::before, .pp-it.sel + .pp-it::before{ opacity:0; }
-  .pp-it.sel b{ color:var(--yellow); }
-  .pp-it.sel{ background:rgba(255,217,61,.07); border-color:rgba(255,217,61,.5); }
-  @media (hover:hover){ .pp-it:not(.sel):hover{ background:rgba(255,255,255,.035); } }
+  .pp-it.sel b{ color:var(--yellow-t); }
+  .pp-it.sel{ background:rgba(var(--yr),.07); border-color:rgba(var(--yr),.5); }
+  @media (hover:hover){ .pp-it:not(.sel):hover{ background:rgba(var(--ov),.035); } }
   #tab-browse{ position:relative; }
   #tab-browse .pp-fp{ display:block; position:absolute; left:386px; right:9px; top:0; bottom:0; padding-top:48px; pointer-events:none; }
-  .pp-fc{ pointer-events:auto; position:sticky; top:14px; height:calc(100vh - 136px); display:flex; flex-direction:column; gap:14px; padding:22px 24px; overflow:auto; background:linear-gradient(120deg,var(--panel) 55%,#261b20); border:2px solid var(--cream); border-radius:26px; box-shadow:9px 9px 0 var(--orange); }
+  .pp-fc{ pointer-events:auto; position:sticky; top:14px; height:calc(100vh - 136px); display:flex; flex-direction:column; gap:14px; padding:22px 24px; overflow:auto; background:linear-gradient(120deg,var(--panel) 55%,var(--c-pgrad2)); border:2px solid var(--cream); border-radius:26px; box-shadow:9px 9px 0 var(--orange); }
   .pp-fc .pp-qt{ font-size:34px; }
   .pp-fc .pp-at{ font-size:30px; margin:0; }
   .pp-fm2{ display:flex; gap:10px; margin-top:auto; align-items:stretch; flex-wrap:wrap; }
@@ -2060,10 +2329,10 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   /* accueil : semaine cliquable + détail du jour */
   .cb-wk{ margin-top:8px; }
   button.cb-wc{ background:none; border:0; padding:6px 2px 8px; border-radius:14px; cursor:pointer; color:inherit; font:inherit; transition:background .2s; }
-  button.cb-wc:hover{ background:rgba(255,255,255,.04); }
-  .cb-wc.sel{ background:rgba(255,217,61,.08); box-shadow:inset 0 0 0 1.5px rgba(255,217,61,.55); }
+  button.cb-wc:hover{ background:rgba(var(--ov),.04); }
+  .cb-wc.sel{ background:rgba(var(--yr),.08); box-shadow:inset 0 0 0 1.5px rgba(var(--yr),.55); }
   .cb-wc em{ display:flex; align-items:center; gap:3px; justify-content:center; }
-  .cb-wc.ctl em{ color:var(--yellow); }
+  .cb-wc.ctl em{ color:var(--yellow-t); }
   .cb-wc em svg{ width:12px; height:12px; flex:none; }
   .cb-wk.dense{ gap:4px; }
   .cb-wk.dense .cb-wc>b{ font-size:16px; }
@@ -2088,7 +2357,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .cb-wk.can-right{ --fr:26px; }
   .cb-wk .cb-wc{ flex:1 0 40px; }
   .cb-ml.can-down{ -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent); mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent); }
-  .cb-ml .pp-mat{ flex:none; margin:0; padding:9px 12px 10px; border-radius:14px; background:rgba(255,255,255,.025); border-width:1px; }
+  .cb-ml .pp-mat{ flex:none; margin:0; padding:9px 12px 10px; border-radius:14px; background:rgba(var(--ov),.025); border-width:1px; }
   .cb-mr .pp-mtop{ font-size:14.5px; margin-bottom:7px; gap:8px; min-width:0; }
   .cb-mr .cb-mn{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cb-mr .pp-mtop .pp-risk{ font-size:9.5px; padding:1px 5px; flex:none; }
@@ -2131,8 +2400,8 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #tab-add .pp-add:has(>.pp-alt){ display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:0 30px; align-content:start; }
   #tab-add .pp-add:has(>.pp-alt)>*{ grid-column:1/-1; }
   #tab-add .pp-add:has(>.pp-alt)>.pp-cmp{ grid-column:1; grid-row:4 / span 4; align-self:start; margin:0 9px 9px 0; padding:12px 14px 14px;
-    background:linear-gradient(120deg,var(--panel) 55%,#261b20); border:2px solid var(--cream); border-radius:26px; box-shadow:9px 9px 0 var(--orange); }
-  #tab-add .pp-add:has(>.pp-alt)>.pp-cmp:focus-within{ border-color:var(--yellow); box-shadow:9px 9px 0 var(--yellow-d); }
+    background:linear-gradient(120deg,var(--panel) 55%,var(--c-pgrad2)); border:2px solid var(--cream); border-radius:26px; box-shadow:9px 9px 0 var(--orange); }
+  #tab-add .pp-add:has(>.pp-alt)>.pp-cmp:focus-within{ border-color:var(--yellow-b); box-shadow:9px 9px 0 var(--yellow-d); }
   :root:root #tab-add .pp-cmp textarea.pp-tall{ height:clamp(220px,42vh,420px); font-size:17px; }
   #tab-add .pp-add:has(>.pp-alt)>.pp-cta{ grid-column:2; grid-row:4; margin:0!important; height:60px; align-self:start; }
   #tab-add .pp-add:has(>.pp-alt)>.pp-note{ grid-column:2; grid-row:5; margin:12px 0 0!important; text-align:left; align-self:start; }
@@ -2153,6 +2422,12 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #tab-add .pp-add:has(>.pp-pv)>*{ grid-column:1/-1; }
   #tab-add .pp-add:has(>.pp-pv)>.pp-pv{ grid-column:auto; }
 }
+
+/* ---- v132 : Apparence — contrôle à 3 positions (réutilise .pp-mode) ---- */
+.pp-mode.m3{grid-template-columns:1fr 1fr 1fr}
+.pp-mode.m3 i{width:calc((100% - 8px) / 3)}
+.pp-mode.m3.p1 i{transform:translateX(100%)}
+.pp-mode.m3.p2 i{transform:translateX(200%)}
 </style>
 </head>
 <body>
@@ -2161,7 +2436,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
     <svg id="boot-splash-card" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
       <g transform="translate(-6 0.5)">
         <g id="bs-hop">
-          <g transform="rotate(10 250 250) translate(14 -4)"><rect x="177" y="154" width="170" height="216" rx="34" fill="#9c9588"/><rect x="165" y="142" width="170" height="216" rx="34" fill="#f5f0e6"/></g>
+          <g transform="rotate(10 250 250) translate(14 -4)"><rect x="177" y="154" width="170" height="216" rx="34" style="fill:var(--lg-d)"/><rect x="165" y="142" width="170" height="216" rx="34" style="fill:var(--lg-b)"/></g>
           <g transform="rotate(-8 250 250) translate(-6 2)">
             <g>
               <g id="bs-ys"><rect x="177" y="154" width="170" height="216" rx="34" fill="#a8891a"/></g>
@@ -3382,7 +3657,7 @@ function renderTopbarRight(){
   const el = document.getElementById('topbar-right');
   if(!el) return;
   const logo = document.getElementById('pp-logo-icon');
-  if(logo && !logo.innerHTML) logo.innerHTML = '<svg viewBox="139 121 246 269" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g transform="rotate(10 250 250) translate(14 -4)"><rect x="177" y="154" width="170" height="216" rx="34" fill="#9c9588"/><rect x="165" y="142" width="170" height="216" rx="34" fill="#f5f0e6"/></g><g transform="rotate(-8 250 250) translate(-6 2)"><rect x="177" y="154" width="170" height="216" rx="34" fill="#b8431d"/><rect x="165" y="142" width="170" height="216" rx="34" fill="#ff6b3d"/><path d="M204 253 L238 290 L306 210" fill="none" stroke="#f5f0e6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></g></svg>'; // logo de l'app (carte orange + coche), PAS l'icône d'onglet PP_IC.cards
+  if(logo && !logo.innerHTML) logo.innerHTML = '<svg viewBox="139 121 246 269" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g transform="rotate(10 250 250) translate(14 -4)"><rect x="177" y="154" width="170" height="216" rx="34" style="fill:var(--lg-d)"/><rect x="165" y="142" width="170" height="216" rx="34" style="fill:var(--lg-b)"/></g><g transform="rotate(-8 250 250) translate(-6 2)"><rect x="177" y="154" width="170" height="216" rx="34" fill="#b8431d"/><rect x="165" y="142" width="170" height="216" rx="34" fill="#ff6b3d"/><path d="M204 253 L238 290 L306 210" fill="none" stroke="#f5f0e6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></g></svg>'; // logo de l'app (carte orange + coche), PAS l'icône d'onglet PP_IC.cards
   if(!el.dataset.pp){
     el.innerHTML = `<div class="pp-streak" id="streak-pill" role="button" onclick="openStreakModal()">${PP_IC.fire.replace('<svg ', '<svg id="streak-flame" ')}<span id="streak-num">0</span></div><button class="pp-gear" aria-label="Réglages" title="Réglages" onclick="ppSettings()">${PP_IC.gear}</button>`;
     el.dataset.pp = '1';
@@ -3938,7 +4213,7 @@ function ppProgressHtml(){
   }
   const mx = Math.max(1, ...cnt);
   const bars = cnt.map((v, i) => `<div><em><s class="${v ? (i === 6 ? 't' : 'a') : ''}" style="height:${v ? Math.max(22, Math.round(v / mx * 100)) : 6}%;animation-delay:${i * 50}ms"></s></em><span class="${i === 6 ? 't' : ''}">${lab[i]}</span></div>`).join('');
-  return `<div class="pp-prog7" role="button" onclick="openStreakModal()"><div class="pp-p7s"><div><i style="background:#3d3320;color:var(--yellow)">${PP_IC.fire.replace(/18/g,'16')}</i><span style="display:block"><b>${streakN}</b><span>jour${streakN>1?'s':''} de suite</span></span></div><u></u><div><i style="background:#173a35;color:var(--green)">${ppSvg('<path d="M4 12.5l5 5L20 6.5"/>',16)}</i><span style="display:block"><b>${mas}</b><span>maîtrisée${mas>1?'s':''}</span></span></div></div><div class="pp-p7b">${bars}</div></div>`;
+  return `<div class="pp-prog7" role="button" onclick="openStreakModal()"><div class="pp-p7s"><div><i style="background:var(--c-yicon);color:var(--yellow-t)">${PP_IC.fire.replace(/18/g,'16')}</i><span style="display:block"><b>${streakN}</b><span>jour${streakN>1?'s':''} de suite</span></span></div><u></u><div><i style="background:var(--c-gsoft);color:var(--green)">${ppSvg('<path d="M4 12.5l5 5L20 6.5"/>',16)}</i><span style="display:block"><b>${mas}</b><span>maîtrisée${mas>1?'s':''}</span></span></div></div><div class="pp-p7b">${bars}</div></div>`;
 }
 /* Compteur qui monte de 0 au chiffre (500 ms), seulement quand l'accueil vient d'apparaître ;
    attend la fin du splash d'ouverture pour que l'animation soit visible. */
@@ -4019,7 +4294,7 @@ function ppMoodColor(counts){
     w += k[3] * q;
     for(let i = 0; i < 3; i++) c[i] += k[i] * k[3] * q;
   });
-  return w ? 'rgb(' + c.map(v => Math.round(v / w)).join(',') + ')' : '#3a3a4d';
+  return w ? 'rgb(' + c.map(v => Math.round(v / w)).join(',') + ')' : (document.documentElement.getAttribute('data-theme') === 'light' ? '#d9ceb8' : '#3a3a4d');
 }
 function ppSesRoot(){
   let r = document.getElementById('pp-ses');
@@ -4877,6 +5152,7 @@ function sortirCarte(niveau, opts, apres){
     st.dx = dx; st.dy = dy;
     const sc = st.scene;
     sc.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (dx * .05) + 'deg)';
+    if(st.pa) st.pa.style.setProperty('--f', (.10 + Math.min(1, Math.max(0, (d - GESTE_SEUIL) / 110)) * .20).toFixed(3)); // v130 : le fond se remplit doucement avec la distance (10 % → 30 %)
     const n = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'vert' : 'rouge') : 'orange';
     if(d >= GESTE_SEUIL && st.lv !== n){
       st.lv = n;
@@ -5281,7 +5557,7 @@ function ppGrpMenu(m){
 /* v119 : « Partager à un pote » (menu ⋯ d'une matière dans Parcourir).
    On envoie UNIQUEMENT question / réponse / sens inversé : jamais la progression, les dates, la clé Gemini ni le code de synchro.
    Fichier en .txt (type text/plain) : c'est un des types que Chrome Android accepte de partager ; le JSON pur est souvent refusé.
-   Le pote le récupère avec Ajouter → Importer → « Choisir un fichier » (ou colle le texte). */
+   Le pote le récupère avec Ajouter → Importer (colle le texte ; le choix d'un fichier a été retiré en v129). */
 /* v123 : « Partager » envoie les cartes au Worker (POST /partage) et affiche un code de 6 caractères ;
    le pote le tape dans Ajouter → Importer. Mêmes données que le fichier (jamais la progression, les dates, la clé Gemini
    ni le code de synchro). Les images partent telles quelles (déjà réduites à leur création : aucune perte de plus).
@@ -6482,11 +6758,11 @@ function ppSouris(el, scroller, pousser, lacher){
       window.removeEventListener('mousemove', bouge, true); window.removeEventListener('mouseup', fin, true);
       document.body.style.userSelect = '';
       if(!mv) return;
-      /* le relâchement ne doit pas compter comme un clic sur le bouton survolé */
+      lacher();
+      /* le relâchement ne doit pas compter comme un clic sur le bouton survolé (posé APRÈS lacher(), qui peut lui-même cliquer pour fermer) */
       const bloque = c => { c.stopPropagation(); c.preventDefault(); };
       window.addEventListener('click', bloque, { capture:true, once:true });
       setTimeout(() => window.removeEventListener('click', bloque, true), 60);
-      lacher();
     };
     window.addEventListener('mousemove', bouge, true); window.addEventListener('mouseup', fin, true);
   });
@@ -6562,17 +6838,7 @@ function ppImportSheet(){
   ppSheet(`<div class="pp-grab"></div><h2>Importer des cartes</h2><p class="pp-hint">Matière : <b style="color:var(--cream)">${ppEsc(m)}</b> · cartes d'un pote ou JSON</p>
   <input id="pp-ij-code" class="pp-codein" type="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9" placeholder="Code" onkeydown="if(event.key==='Enter'){event.preventDefault();ppDoImport();}">
   <textarea id="pp-ij" class="pp-tall" placeholder='[{"question":"…","reponse":"…"}]'></textarea>
-  <input type="file" id="pp-ij-file" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="ppImportFile(event)">
-  <button class="pp-cta pp-ghost" style="margin:0 0 10px" onclick="document.getElementById('pp-ij-file').click()">${PP_IC.file}Choisir un fichier</button>
   <div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppDoImport()">Importer</button></div>`);
-}
-function ppImportFile(ev){
-  const f = ev.target.files && ev.target.files[0]; ev.target.value = '';
-  if(!f) return;
-  const r = new FileReader();
-  r.onload = () => { const t = document.getElementById('pp-ij'); if(t) t.value = String(r.result || ''); };
-  r.onerror = () => ppToast('Impossible de lire le fichier');
-  r.readAsText(f);
 }
 function ppDoImport(){
   const champ = document.getElementById('pp-ij-code');
@@ -6612,11 +6878,25 @@ function ppImporterDonnees(data){
   const m = ppMatiereSel();
   const liste = Array.isArray(data) ? data : (data && Array.isArray(data.cartes) ? data.cartes : null);
   if(!liste){ ppToast('Format non reconnu'); return; }
-  const items = liste.filter(c => c && (c.question || ppImgValide(c.imageQuestion)) && (c.reponse || ppImgValide(c.imageReponse))).map(c => ({ id:null, matiere:String(c.matiere || (data && !Array.isArray(data) && data.matiere) || m), question:String(c.question || '').trim(), reponse:String(c.reponse || '').trim(), palier:0, prochaineRevision:null, derniereRevision:null, inversible:c.inversible === true, ...ppImgPatch(c) }));
+  const items = liste.filter(c => c && (c.question || ppImgValide(c.imageQuestion)) && (c.reponse || ppImgValide(c.imageReponse))).map(c => ({ id:null, matiere:String((data && data.format === 'flashcard-partage') ? m : (c.matiere || m)), question:String(c.question || '').trim(), reponse:String(c.reponse || '').trim(), palier:0, prochaineRevision:null, derniereRevision:null, inversible:c.inversible === true, ...ppImgPatch(c) }));
   if(!items.length){ ppToast('Aucune carte valide'); return; }
   ppImgPerdues = ppImgAjusterBudget(items);
   ppSheetClose();
-  resolveImportMatieres(items, 0, {}, (renommages) => { finaliserImport(items, renommages); ppApresImport(items.length); });
+  resolveImportMatieres(items, 0, {}, (renommages) => {
+    // Ignore les cartes déjà présentes (même matière, même question, même réponse) :
+    // réimporter le même code ne doit pas doubler les cartes.
+    const cle = (mat, q, r) => (mat || 'Sans matière') + '\u0001' + String(q || '').trim() + '\u0001' + String(r || '').trim();
+    const existantes = new Set(CARDS.map(c => cle(c.matiere, c.question, c.reponse)));
+    const nouvelles = items.filter(it => {
+      const k = cle(renommages[it.matiere] || it.matiere, it.question, it.reponse);
+      if(existantes.has(k)) return false;
+      existantes.add(k);
+      return true;
+    });
+    if(!nouvelles.length){ ppToast('Ces cartes sont déjà dans ta matière'); return; }
+    finaliserImport(nouvelles, renommages);
+    ppApresImport(nouvelles.length);
+  });
 }
 
 /* ---- sélecteur de date maison (prototype v27) ---- */
@@ -8962,7 +9242,7 @@ const PROJECTION_PROBA = { vert: 0.70, orange: 0.20, rouge: 0.10 };
    pour ne jamais dépasser CHARGE_GLOBALE_MAX_PAR_JOUR au total un jour donné. */
 function chargeDejaPresente(jour, compteurGlobalParJour){
   if(compteurGlobalParJour[jour] != null) return compteurGlobalParJour[jour];
-  const n = CARDS.filter(c => (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || jour) === jour).length;
+  const n = CARDS.filter(c => (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
   compteurGlobalParJour[jour] = n;
   return n;
 }
@@ -8980,7 +9260,7 @@ function chargeDejaPresente(jour, compteurGlobalParJour){
 function chargeMatiereDejaPresente(matiere, jour, compteurJourParMatiere){
   if(!compteurJourParMatiere[matiere]) compteurJourParMatiere[matiere] = {};
   if(compteurJourParMatiere[matiere][jour] != null) return compteurJourParMatiere[matiere][jour];
-  const n = CARDS.filter(c => c.matiere === matiere && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || jour) === jour).length;
+  const n = CARDS.filter(c => c.matiere === matiere && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
   compteurJourParMatiere[matiere][jour] = n;
   return n;
 }
@@ -9042,10 +9322,12 @@ function meilleurJourPourCarteNeuve(matiere, today, dateControle, compteurJourPa
   // Sans date de contrôle : comportement inchangé, aucune zone tampon.
   if(!dateControle){
     let jour = today;
-    for(;;){
+    // Garde-fou : jamais plus d'un an de recherche (évite tout gel de l'app).
+    for(let essai = 0; essai < 366; essai++){
       if(aDePlace(jour)) return { jour, repli: false };
       jour = addDays(jour, 1);
     }
+    return { jour: today, repli: false };
   }
 
   // Avec un contrôle, en deux temps.
@@ -9108,8 +9390,8 @@ function plafonnerDateRevision(matiere, jourCandidat, dateControle, excludeId, i
     // carte neuve posée dessus doit donc essayer d'en sortir.
     if(jourCandidat > dateControle) return jourCandidat;
     const aDePlace = (j) => {
-      const dejaMatiere = CARDS.filter(c => c.matiere === matiere && c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || j) === j).length;
-      const dejaGlobal = CARDS.filter(c => c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || j) === j).length;
+      const dejaMatiere = CARDS.filter(c => c.matiere === matiere && c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === j).length;
+      const dejaGlobal = CARDS.filter(c => c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === j).length;
       return dejaMatiere < NOUVELLES_CARTES_MAX_PAR_JOUR && dejaGlobal < CHARGE_GLOBALE_MAX_PAR_JOUR;
     };
     const finZone = finFenetreCartesNeuves(matiere, dateControle); // étape E (même règle que l'import)
@@ -9130,15 +9412,17 @@ function plafonnerDateRevision(matiere, jourCandidat, dateControle, excludeId, i
     return dateControle;
   }
   let jour = jourCandidat;
-  for(;;){
-    const dejaMatiere = CARDS.filter(c => c.matiere === matiere && c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || jour) === jour).length;
-    const dejaGlobal = CARDS.filter(c => c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || jour) === jour).length;
+  // Garde-fou : jamais plus d'un an de recherche (évite tout gel de l'app).
+  for(let essai = 0; essai < 366; essai++){
+    const dejaMatiere = CARDS.filter(c => c.matiere === matiere && c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
+    const dejaGlobal = CARDS.filter(c => c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
     const okMatiere = dejaMatiere < NOUVELLES_CARTES_MAX_PAR_JOUR;
     const okGlobal = dejaGlobal < CHARGE_GLOBALE_MAX_PAR_JOUR;
     if(dateControle && jour >= dateControle) return jour;
     if(okMatiere && okGlobal) return jour;
     jour = addDays(jour, 1);
   }
+  return jourCandidat;
 }
 
 function finaliserImport(items, renommages){
@@ -9502,7 +9786,8 @@ function fusionnerDepuisSync(data){
     if((!question && !ppImgValide(item.imageQuestion)) || (!reponse && !ppImgValide(item.imageReponse))) continue;
     const matiere = (item.matiere || 'Sans matière').toString().trim();
     const palier = Number.isInteger(item.palier) ? Math.max(0, Math.min(item.palier, INTERVALS.length - 1)) : 0;
-    const prochaineRevision = typeof item.prochaineRevision === 'string' ? item.prochaineRevision : null;
+    // Sans date reçue : aujourd'hui (jamais null, sinon la carte compterait comme due tous les jours).
+    const prochaineRevision = typeof item.prochaineRevision === 'string' ? item.prochaineRevision : todayStr();
     const derniereRevision = typeof item.derniereRevision === 'string' ? item.derniereRevision : null;
     const derniereModificationRecue = typeof item.derniereModification === 'string' ? item.derniereModification : null;
     const difficultes = Number.isFinite(item.difficultes) ? Math.max(0, item.difficultes) : 0;
@@ -9995,7 +10280,59 @@ function syncActif(){
      mais respecte quand même le test « rien n'a changé » ;
    - { force:true } (bouton Enregistrer le code) envoie toujours. */
 const SYNC_INTERVALLE_MIN = 30000;
-let syncDernierHash = null;
+/* v131 : l'empreinte du dernier envoi réussi est gardée sur l'appareil (clé locale `sync-dernier-hash`, ni exportée ni
+   synchronisée) : rouvrir l'app sans rien changer n'écrit plus rien. La date d'export (`exporteLe`) n'entre pas dans
+   l'empreinte (sinon chaque nouveau jour déclencherait un envoi sans vraie modification). */
+function syncLireHashPersiste(){ try{ return localStorage.getItem('sync-dernier-hash') || null; }catch(e){ return null; } }
+let syncDernierHash = syncLireHashPersiste();
+function syncPoserHash(h){
+  syncDernierHash = h;
+  try{ localStorage.setItem('sync-dernier-hash', h); }catch(e){}
+}
+function syncEmpreinte(texte){
+  return syncCodePerso() + '|' + syncHashTexte(String(texte).replace(/"exporteLe":"[^"]*",?/, ''));
+}
+/* Après une récupération : si notre état est identique à celui du serveur, il n'y a rien à renvoyer. */
+function syncMarquerSiIdentique(texteDistant){
+  try{
+    const local = JSON.stringify(construireDonneesProgression({ pourSync: true }));
+    const e = syncEmpreinte(local);
+    if(e === syncEmpreinte(texteDistant)) syncPoserHash(e);
+  }catch(e){}
+}
+
+/* v131 : limite d'écritures du jour atteinte (le Worker répond HTTP 429 avec quota:'ecriture'). On arrête d'envoyer
+   jusqu'à minuit UTC (le compteur Cloudflare repart à zéro à ce moment-là), on le dit dans Réglages et on le garde
+   en mémoire (clé locale `sync-pause-jusqua`) pour ne pas réessayer à chaque ouverture. */
+let syncPauseJusqua = 0; // minuit UTC concerné, en ms
+try{ syncPauseJusqua = parseInt(localStorage.getItem('sync-pause-jusqua') || '0', 10) || 0; }catch(e){}
+function syncPauseActive(){
+  if(!syncPauseJusqua) return false;
+  if(Date.now() >= syncPauseJusqua + 60000){
+    syncPauseJusqua = 0;
+    try{ localStorage.removeItem('sync-pause-jusqua'); }catch(e){}
+    return false;
+  }
+  return true;
+}
+function syncHeureLocale(ts){
+  const d = new Date(ts), m = d.getMinutes();
+  return d.getHours() + ' h' + (m ? ' ' + String(m).padStart(2, '0') : '');
+}
+function syncMessagePause(){
+  return 'Sauvegarde en pause : limite du jour atteinte, reprise vers ' + syncHeureLocale(syncPauseJusqua);
+}
+function syncMettreEnPause(){
+  const n = new Date();
+  const dejaEnPause = syncPauseActive();
+  syncPauseJusqua = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1, 0, 0, 0);
+  try{ localStorage.setItem('sync-pause-jusqua', String(syncPauseJusqua)); }catch(e){}
+  clearTimeout(syncTardifTimer);
+  setTimeout(() => { envoyerVersSync(); }, Math.max(5000, syncPauseJusqua + 90000 - Date.now()));
+  if(!dejaEnPause){
+    try{ ppToast('Sauvegarde en pause jusqu\'à ' + syncHeureLocale(syncPauseJusqua)); }catch(e){}
+  }
+}
 let syncDernierEnvoiTs = 0;
 let syncEnvoiEnCours = false;
 let syncEnCoursEmpreinte = null;
@@ -10014,15 +10351,19 @@ function syncMotifErreur(e){
 /* Réponse non-OK du Worker -> erreur lisible. Le Worker renvoie {error:"…"} en JSON :
    on affiche ce texte. Un 400 veut dire « code refusé » (caractère interdit, vide, trop long). */
 async function syncErreurHttp(res){
-  let texte = '';
+  let texte = '', quota = '';
   try{
     const brut = (await res.text()).trim();
-    try{ const j = JSON.parse(brut); if(j && typeof j.error === 'string') texte = j.error; }
+    try{ const j = JSON.parse(brut); if(j && typeof j.error === 'string') texte = j.error; if(j && typeof j.quota === 'string') quota = j.quota; }
     catch(_){ /* page HTML d'erreur Cloudflare, etc. : on ne l'affiche pas */ }
   }catch(_){}
   if(texte.length > 120) texte = texte.slice(0, 117) + '…';
   const err = new Error('HTTP ' + res.status);
-  if(res.status === 400){
+  if(res.status === 429 && quota === 'ecriture'){
+    err.quota = true;
+    syncMettreEnPause();
+    err.motif = syncMessagePause();
+  }else if(res.status === 400){
     syncEtat.codeRefuse = true;
     err.motif = 'code refusé par le serveur (HTTP 400)' + (texte ? ' : ' + texte : '');
   }else{
@@ -10041,9 +10382,14 @@ async function envoyerVersSync(opts){
   if(!syncActif()) return;
   const force = !!(opts && opts.force);
   const urgent = !!(opts && opts.urgent);
+  if(syncPauseActive()){
+    // Limite du jour atteinte : aucune requête tant que le compteur n'est pas reparti (sauf message pour le bouton « Enregistrer »).
+    if(force) syncEtat.derniereErreur = syncMessagePause();
+    return;
+  }
   try{
     const corps = JSON.stringify(construireDonneesProgression({ pourSync: true }));
-    const empreinte = syncCodePerso() + '|' + syncHashTexte(corps);
+    const empreinte = syncEmpreinte(corps);
     if(!force){
       if(empreinte === syncDernierHash) return;                        // rien de neuf
       if(syncEnvoiEnCours && empreinte === syncEnCoursEmpreinte) return; // déjà en route
@@ -10066,25 +10412,28 @@ async function envoyerVersSync(opts){
       keepalive: corps.length < 60000
     });
     if(!res.ok) throw await syncErreurHttp(res);
-    syncDernierHash = empreinte;
+    syncPoserHash(empreinte);
     syncEtat.derniereSynchro = new Date().toISOString();
     syncEtat.derniereErreur = null;
     syncEtat.codeRefuse = false;
     try{ localStorage.setItem('sync-derniere-synchro', syncEtat.derniereSynchro); }catch(e){}
   }catch(e){
-    syncEtat.derniereErreur = 'Envoi impossible (' + syncMotifErreur(e) + ')';
+    syncEtat.derniereErreur = (e && e.quota) ? syncMessagePause() : 'Envoi impossible (' + syncMotifErreur(e) + ')';
   }finally{
     syncEnvoiEnCours = false;
   }
 }
 
-/* Envoi différé : après une réponse en révision, on attend 8 s sans nouvelle
-   réponse puis on pousse (évite un envoi par carte). */
+/* Envoi de sécurité (v131) : pendant une révision on n'envoie plus rien tant qu'on enchaîne les cartes. Le vrai
+   envoi se fait quand on quitte (fin ou sortie de séance, changement d'onglet/de fenêtre, app en arrière-plan,
+   fermeture : voir plus bas). Ce délai ne sert que si on s'arrête 2 minutes sans rien déclencher de tout ça
+   (ex. on pose le téléphone sans quitter l'écran, puis on reprend sur PC). Avant v131 : 8 s. */
+const SYNC_INACTIVITE_MS = 120000;
 let syncDiffereTimer = null;
 function planifierSyncDiffere(){
   if(!syncActif()) return;
   clearTimeout(syncDiffereTimer);
-  syncDiffereTimer = setTimeout(() => { envoyerVersSync(); }, 8000);
+  syncDiffereTimer = setTimeout(() => { envoyerVersSync(); }, SYNC_INACTIVITE_MS);
 }
 
 /* Récupération au retour sur l'app (changement d'onglet / de fenêtre sur PC) :
@@ -10126,8 +10475,10 @@ async function recupererDepuisSync(){
       return;
     }
     if(!res.ok) throw await syncErreurHttp(res);
-    const data = await res.json();
+    const texteDistant = await res.text();
+    const data = JSON.parse(texteDistant);
     fusionnerDepuisSync(data);
+    syncMarquerSiIdentique(texteDistant);
     syncEtat.derniereSynchro = new Date().toISOString();
     syncEtat.derniereErreur = null;
     syncEtat.codeRefuse = false;
@@ -10186,8 +10537,9 @@ function syncErreurCodeHtml(){
 }
 
 function syncStatutInner(){
-  const cls = syncEtat.derniereErreur ? 'err' : (syncDerniereSynchroTs() ? 'ok' : '');
-  const detail = syncEtat.derniereErreur ? ' · ' + syncEtat.derniereErreur : '';
+  const erreur = syncEtat.derniereErreur || (syncPauseActive() ? syncMessagePause() : '');
+  const cls = erreur ? 'err' : (syncDerniereSynchroTs() ? 'ok' : '');
+  const detail = erreur ? ' · ' + erreur : '';
   return `<span class="sync-dot ${cls}"></span><span>${escapeHtml(syncDerniereSynchroLabel() + detail)}</span>`;
 }
 
@@ -10327,17 +10679,19 @@ function ppPageShow(html, id, still){
   root.innerHTML = `<div class="pp-page" id="${id}">${html}</div>`;
   const nouveau = root.querySelector('.pp-sb');
   if(nouveau && still) nouveau.scrollTop = y;
-  if(id === 'pp-stats-page') ppPageSwipe(root.querySelector('.pp-page'));
+  if(id === 'pp-stats-page') ppPageSwipe(root.querySelector('.pp-page'), closeStreakModal);
+  else if(id === 'synth-overlay') ppPageSwipe(root.querySelector('.pp-page'), tryFermerSynthese); /* v127 : même geste, avec la confirmation « Fermer la synthèse ? » */
   return root;
 }
 /* Statistiques : glisser vers le bas pour fermer (même geste que les fenêtres du bas).
    Démarre seulement si la liste est tout en haut ; `translate` se cumule avec le centrage du grand écran. */
-function ppPageSwipe(pg){
+function ppPageSwipe(pg, fermer){
   if(!pg) return;
+  fermer = fermer || closeStreakModal;
   const sb = pg.querySelector('.pp-sb');
   let y0 = 0, dy = 0, on = false, mv = false;
   pg.addEventListener('touchstart', t => {
-    if(pg.classList.contains('pp-pgout')){ on = false; return; }
+    if(pg.classList.contains('pp-pgout') || t.target.closest('input,textarea,select')){ on = false; return; }
     on = !(sb && sb.scrollTop > 0); mv = false; dy = 0; y0 = t.touches[0].clientY;
   }, { passive:true });
   pg.addEventListener('touchmove', t => {
@@ -10352,7 +10706,11 @@ function ppPageSwipe(pg){
   const end = () => {
     if(!on || !mv){ on = false; return; }
     on = false; mv = false;
-    if(dy > 110){ closeStreakModal(); return; }
+    if(dy > 110){
+      fermer();
+      /* fermée (ou en train de l'être) : rien à remettre ; sinon (confirmation demandée, génération en cours) la page revient en place */
+      if(!pg.isConnected || pg.classList.contains('pp-pgout')) return;
+    }
     pg.style.transition = 'translate .3s var(--ease-press), opacity .2s';
     pg.style.translate = ''; pg.style.opacity = '';
     setTimeout(() => { pg.style.transition = ''; }, 320);
@@ -10365,6 +10723,24 @@ function ppPageSwipe(pg){
     pg.style.translate = '0 ' + d + 'px'; pg.style.opacity = Math.max(.2, 1 - d / 600);
   }, end);
 }
+
+/* v127 : les petites fenêtres « Renommer », « Supprimer la matière », « Par quelle matière… », « Revoir quoi ? », « Matière déjà existante ? »
+   (.modal-overlay > .modal-sheet, posées dans #modal-root) se ferment aussi en glissant vers le bas, comme toutes les autres fenêtres du bas.
+   Fermer = cliquer sur le fond : chaque fenêtre a déjà son propre `onclick` de fermeture (annulation propre). */
+(function(){
+  const racine = document.getElementById('modal-root');
+  if(!racine || !window.MutationObserver) return;
+  const brancher = () => {
+    racine.querySelectorAll(':scope > .modal-overlay').forEach(ov => {
+      if(ov._glisse) return; ov._glisse = true;
+      const feuille = ov.querySelector('.modal-sheet'); if(!feuille) return;
+      const voile = { style:{ set opacity(x){ ov.style.background = x === '' ? '' : 'rgba(5,5,10,' + (0.7 * x) + ')'; } } };
+      ppSwipeFeuille(feuille, voile, () => ov.click());
+    });
+  };
+  new MutationObserver(brancher).observe(racine, { childList:true });
+  brancher();
+})();
 
 /* ================= Statistiques ================= */
 function openStreakModal(){ ppPageShow(ppStatsHtml(), 'pp-stats-page'); }
@@ -10387,14 +10763,14 @@ function ppStatsHtml(){
     return { m, tot: l.length, mas: l.filter(c => (c.palier || 0) >= MASTERED_PALIER).length };
   }).filter(x => x.tot > 0);
   const pal = [0, 1, 2, 3, 4].map(l => CARDS.filter(c => Math.min(c.palier || 0, MASTERED_PALIER) === l).length);
-  const cl = ['#4a4a60', 'var(--pink)', 'var(--amber)', 'var(--yellow)', 'var(--green)'];
+  const cl = ['var(--c-dash)', 'var(--pink)', 'var(--amber)', 'var(--yellow)', 'var(--green)'];
   const nm = ['Nouvelles', 'Palier 1', 'Palier 2', 'Palier 3', 'Maîtrisées'];
   return `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="closeStreakModal()">${PP_IC.back}</button><div><small>Ta progression</small><h2>Statistiques</h2></div></div>
   <div class="pp-sb pp-view"><div class="pp-stats">
-    <div class="pp-stat"><i style="background:#3d3320;color:var(--yellow)">${ppIc16(PP_IC.fire)}</i><div><b>${streak}</b><span>jour${streak > 1 ? 's' : ''} de suite</span></div></div>
-    <div class="pp-stat"><i style="background:#173a35;color:var(--green)">${ppIc16(PP_IC.ok)}</i><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span></div></div>
-    <div class="pp-stat"><i style="background:#2a1a17;color:var(--orange)">${ppIc16(PP_IC.cards)}</i><div><b>${ex.total}</b><span>révisions au total</span></div></div>
-    <div class="pp-stat"><i style="background:#252533;color:var(--blue)">${ppIc16(PP_IC.flag)}</i><div><b>${record}</b><span>record de série</span></div></div></div>
+    <div class="pp-stat"><i style="background:var(--c-yicon);color:var(--yellow-t)">${ppIc16(PP_IC.fire)}</i><div><b>${streak}</b><span>jour${streak > 1 ? 's' : ''} de suite</span></div></div>
+    <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${ppIc16(PP_IC.ok)}</i><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span></div></div>
+    <div class="pp-stat"><i style="background:var(--c-osoft);color:var(--orange-t)">${ppIc16(PP_IC.cards)}</i><div><b>${ex.total}</b><span>révisions au total</span></div></div>
+    <div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${ppIc16(PP_IC.flag)}</i><div><b>${record}</b><span>record de série</span></div></div></div>
   <div class="pp-sgA"><p class="pp-sub2" style="margin-top:8px">30 derniers jours</p><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div>
   <p class="pp-hint" style="margin-top:6px">Plus la case est claire, plus tu as révisé ce jour-là.</p></div>
   <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
@@ -10426,6 +10802,26 @@ function renderSettings(){
   // Les Réglages sont une feuille du bas : on ne la redessine (sur place) que si elle est ouverte.
   if(document.querySelector('#pp-sheet.on .pp-setroot')) ppSetDraw(true);
 }
+/* v132 : Apparence — Sombre / Clair / Auto. Choix local à l'appareil (voir le script du <head>). */
+function ppApparenceHtml(){
+  const ordre = ['sombre', 'clair', 'auto'], noms = ['Sombre', 'Clair', 'Auto'];
+  const k = Math.max(0, ordre.indexOf(apparenceChoisie()));
+  return `<div class="pp-mode m3 p${k}" id="pp-app"><i></i>${ordre.map((c, i) => `<button class="${i === k ? 'on' : ''}" onclick="ppChoisirApparence('${c}')">${noms[i]}</button>`).join('')}</div>`;
+}
+/* v134 : Langue — Français / English (voir le script du <head>). Changer recharge l'app (les données restent sur l'appareil). */
+function ppLangueHtml(){
+  const k = langueChoisie() === 'en' ? 1 : 0;
+  return `<div class="pp-mode${k ? ' ia' : ''}" id="pp-lang"><i></i><button class="${k === 0 ? 'on' : ''}" onclick="ppChoisirLangue('fr')">Français</button><button class="${k === 1 ? 'on' : ''}" onclick="ppChoisirLangue('en')">English</button></div>`;
+}
+function ppChoisirLangue(c){ if(c !== langueChoisie()) choisirLangue(c); }
+function ppChoisirApparence(c){
+  choisirApparence(c);
+  const m = document.getElementById('pp-app');
+  if(!m) return;
+  const k = ['sombre', 'clair', 'auto'].indexOf(c);
+  m.className = 'pp-mode m3 p' + k;
+  [].forEach.call(m.querySelectorAll('button'), (b, i) => b.classList.toggle('on', i === k));
+}
 function ppSetHtml(){
   const actif = rappelEstActif();
   const bloque = ('Notification' in window) && Notification.permission === 'denied';
@@ -10445,6 +10841,8 @@ function ppSetHtml(){
       : `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>Crée-la sur aistudio.google.com/apikey, colle-la ici. Avec la synchro, elle suit sur tes autres appareils.</small></span></div></div>
   <div class="pp-keyrow"><input type="password" id="gemini-key-input" class="pp-fld" placeholder="AIza..." autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
+  <h4>Langue</h4>${ppLangueHtml()}
+  <h4>Apparence</h4>${ppApparenceHtml()}
   <h4>Rappels</h4>${rappels}
   <h4>Génération IA</h4>${ia}</div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
@@ -10709,6 +11107,8 @@ function init(){
    sinon quitte la session de révision. Ne fait rien dans un champ de saisie quand rien n'est ouvert. */
 document.addEventListener('keydown', function(e){
   if(e.key !== 'Escape' || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+  const cal = document.getElementById('pp-psheet');
+  if(cal && cal.classList.contains('on')){ e.preventDefault(); ppPickClose(); return; }
   const feuille = document.getElementById('pp-sheet');
   if(feuille && feuille.classList.contains('on')){ e.preventDefault(); ppSheetClose(); return; }
   const cible = e.target, tag = cible && cible.tagName ? cible.tagName.toLowerCase() : '';
@@ -10822,6 +11222,7 @@ init();
     }
     g.setTransform(DPR, 0, 0, DPR, 0, 0);
     g.clearRect(0, 0, W, H);
+    var cp = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(222,84,34,' : 'rgba(255,150,105,';
     var x0 = S / 2 + Math.floor(xmin / S) * S; // reste calé sur la grille du fond (16 px, points au centre des cases)
     for(var y = S / 2; y < ymax; y += S){
       for(var x = x0; x < W + S; x += S){
@@ -10831,7 +11232,7 @@ init();
         var u = dist / R;
         var lit = Math.pow(sn, 1.4) * (1 - .85 * Math.pow(u, 1.6));
         if(lit < .04) continue;
-        g.fillStyle = 'rgba(255,150,105,' + (lit * alpha).toFixed(2) + ')';
+        g.fillStyle = cp + (lit * alpha).toFixed(2) + ')';
         g.beginPath(); g.arc(x, y, r0 + lit * r1, 0, 6.2832); g.fill();
       }
     }
