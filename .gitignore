@@ -1,0 +1,14 @@
+# Clés de signature Android : JAMAIS sur GitHub
+*.keystore
+*.jks
+signing-key-info.txt
+
+# APK : à mettre dans les Releases GitHub, pas dans le dépôt
+*.apk
+*.aab
+
+# Divers
+.env
+.env.*
+.DS_Store
+node_modules/
