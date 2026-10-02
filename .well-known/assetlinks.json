@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.pages.flashcard2_4ra.twa",
+        "sha256_cert_fingerprints": ["F5:9E:5E:02:EA:A0:55:7E:6E:3A:EA:09:8C:63:D5:2A:1F:4E:0C:9B:2C:50:1E:17:43:30:3C:07:25:D2:57:A2"]
+      }
+    }]
