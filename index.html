@@ -2449,9 +2449,10 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
 }
 
 /* ---- v140 : état vide « Ajouter des cartes » — Chromebook (même langage que la carte héros de l'accueil) ---- */
+/* v145 : carte un peu plus large (560 → 720 px) pour mieux remplir l'écran, sans rien ajouter autour */
 .home-empty-sticker.pp-sticker{display:none}
 @media (min-width:900px) and (min-height:480px){
-  #tab-study .home-empty-state{position:relative;overflow:hidden;max-width:560px;margin:max(14px,calc((100vh - 540px)/2 - 70px)) auto 0;padding:40px 44px 44px;border-radius:26px;background:radial-gradient(circle at 100% 0%,rgba(255,107,61,.14),transparent 55%),var(--panel);border:2px solid var(--cream);box-shadow:9px 9px 0 var(--orange)}
+  #tab-study .home-empty-state{position:relative;overflow:hidden;max-width:720px;margin:max(14px,calc((100vh - 540px)/2 - 70px)) auto 0;padding:44px 56px 48px;border-radius:26px;background:radial-gradient(circle at 100% 0%,rgba(255,107,61,.14),transparent 55%),var(--panel);border:2px solid var(--cream);box-shadow:9px 9px 0 var(--orange)}
   #tab-study .home-empty-state::before,#tab-study .home-empty-state::after{content:"";position:absolute;pointer-events:none;z-index:0;border-radius:11% / 8%;aspect-ratio:2/3;height:auto}
   #tab-study .home-empty-state::before{right:-8%;top:-6%;width:38%;transform:rotate(8deg);background:linear-gradient(160deg,rgba(255,107,61,.2),rgba(255,107,61,.1))}
   #tab-study .home-empty-state::after{right:10%;top:6%;width:34%;transform:rotate(-8deg);border:1px solid rgba(255,107,61,.38);border-radius:12% / 9%}
@@ -2460,7 +2461,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #tab-study .home-empty-icon{display:none}
   #tab-study .home-empty-state{text-align:left}
   #tab-study .home-empty-title{font-family:var(--font-sans);font-weight:800;font-size:clamp(34px,5.6vh,46px);line-height:1.04;letter-spacing:-.03em;margin:22px 0 12px;text-shadow:3px 3px 0 var(--orange)}
-  #tab-study .home-empty-sub{font-size:16px;line-height:1.5;max-width:380px;margin:0 0 6px}
+  #tab-study .home-empty-sub{font-size:17px;line-height:1.5;max-width:440px;margin:0 0 6px}
   #tab-study .home-empty-state .home-cta{width:auto;min-width:270px;height:56px;padding:0 34px;margin:24px 0 0}
   #tab-study .home-empty-state .home-cta::before{content:"+";font-size:28px;font-weight:700;line-height:1;margin-top:-2px}
 }
@@ -2508,7 +2509,6 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
 #fci .fi-ghost{width:100%;display:flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:14px;border:1.5px solid var(--line);font-weight:800;font-size:15px;--d:3px}
 /* fenêtre */
 #fci .fi-stage{position:relative;width:100%;height:100%;max-width:480px;display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom));overflow:clip;touch-action:pan-y}
-@media(min-width:900px) and (min-height:480px){#fci .stage{height:min(720px,calc(100vh - 56px));max-width:520px;border-radius:28px;background:var(--panel);border:2px solid var(--ink);box-shadow:9px 9px 0 var(--orange);padding:22px 28px 26px}}
 #fci .fi-top{display:flex;align-items:center;gap:12px;height:44px;flex:none}
 #fci .fi-pills{flex:1;display:flex;gap:6px;justify-content:center}
 #fci .fi-pills i{height:7px;width:7px;border-radius:9px;background:var(--line);transition:width .45s var(--sp),background .3s}
@@ -2617,6 +2617,43 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
 #fci .fi-ans .fi-a3{--c:var(--green)}
 #fci .fi-fan i svg.fi-logo{width:62px;height:auto;stroke:none;fill:none}
 #fci .fi-res .fi-badge{background:var(--green);color:#06281e}
+/* v144 : champs de saisie — on masque la clé à l'écran sans type="password" (ce type fait afficher la barre
+   « mots de passe / cartes / adresses » du téléphone au-dessus du clavier) */
+.pp-masque{-webkit-text-security:disc;text-security:disc}
+/* v144 : Introduction sur Chromebook / grand écran — même seuil que le reste (900 × 480).
+   Fenêtre centrée au style des autres écrans larges (bord encre + ombre orange décalée), texte à gauche, illustration à droite.
+   Le téléphone n'est pas touché. */
+#fci .fi-vs{display:flex;flex-direction:column;gap:14px}
+@media (min-width:900px) and (min-height:480px){
+  #fci .fi-stage{max-width:none;width:min(1040px,calc(100% - 64px));height:min(640px,calc(100% - 56px));border-radius:28px;background:var(--panel);border:2px solid var(--ink);box-shadow:9px 9px 0 var(--orange);padding:24px 44px 28px}
+  #fci .fi-box{background:var(--bg)}
+  #fci .fi-top{height:48px}
+  #fci .fi-pills i{height:8px;width:8px}
+  #fci .fi-pills i.fi-on{width:36px}
+  #fci .fi-top .fi-bk:hover,#fci .fi-top .fi-sk:hover{color:var(--ink)}
+  #fci h1{font-size:clamp(40px,7vh,56px)}
+  #fci .fi-sub{font-size:18px;max-width:420px}
+  #fci .fi-stk{font-size:12px}
+  #fci .fi-sl:not([data-i=ia]),#fci .fi-sl.fi-b .fi-v.fi-b,#fci .fi-sl:not(.fi-b) .fi-v.fi-a{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-rows:1fr repeat(5,auto) 1fr;gap:0 64px;align-items:center}
+  #fci .fi-sl:not([data-i=ia])::before,#fci .fi-v::before{content:"";grid-column:1;grid-row:1}
+  #fci .fi-sl:not([data-i=ia])::after,#fci .fi-v::after{content:"";grid-column:1;grid-row:7}
+  #fci .fi-sl:not([data-i=ia])>*,#fci .fi-v>*{grid-column:1;margin-top:16px}
+  #fci .fi-sl>.fi-stk,#fci .fi-v>.fi-stk{margin-top:0;justify-self:start}
+  #fci .fi-sl:not([data-i=ia])>.fi-fan,#fci .fi-sl:not([data-i=ia])>.fi-box,#fci .fi-sl:not([data-i=ia])>.fi-dev,#fci .fi-sl:not([data-i=ia])>.fi-vs{grid-column:2;grid-row:1 / 8;margin-top:0;align-self:center}
+  #fci .fi-fan{height:clamp(180px,34vh,260px);margin:0}
+  #fci .fi-wk{height:200px}
+  #fci .fi-dev{height:200px}
+  /* écrans sans illustration (IA, fin) : une seule colonne centrée */
+  #fci .fi-sl.fi-b .fi-v.fi-b,#fci .fi-sl:not(.fi-b) .fi-v.fi-a,#fci .fi-sl:last-child{grid-template-columns:minmax(0,520px);justify-content:center}
+  #fci .fi-sl:last-child{text-align:center}
+  #fci .fi-sl:last-child>.fi-stk{justify-self:center}
+  #fci .fi-sl:last-child .fi-sub{margin-left:auto;margin-right:auto}
+  #fci .fi-v .fi-sub{max-width:none}
+  #fci .fi-stp{padding:14px 16px}
+  #fci .fi-foot{align-items:center}
+  #fci .fi-foot .fi-cta,#fci .fi-foot .fi-ghost{width:min(100%,380px)}
+  #fci .fi-bt:hover:not([disabled]):not(:active){filter:brightness(1.07)}
+}
 </style>
 </head>
 <body>
@@ -11030,7 +11067,7 @@ function ppSetHtml(){
   <div class="pp-keyrow"><button class="pp-sec" onclick="annulerEditionGeminiKey()">Annuler</button><button class="pp-sec" onclick="oublierGeminiKey()">Retirer la clé</button></div>`
       : `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.</small></span></div></div>
   <div class="pp-keyrow"><button class="pp-sec" style="flex:1" onclick="window.open('https://aistudio.google.com/apikey','_blank','noopener')">Obtenir ma clé</button></div>
-  <div class="pp-keyrow"><input type="password" id="gemini-key-input" class="pp-fld" placeholder="AIza..." autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
+  <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld pp-masque" placeholder="AIza..." autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
   <h4>Langue</h4>${ppLangueHtml()}
   <h4>Apparence</h4>${ppApparenceHtml()}
@@ -11057,7 +11094,19 @@ function ppUrlSiteWeb(){
   }catch(e){}
   return '';
 }
+/* v143 : ce rappel n'a de sens que dans l'application installée (téléphone). Sur Chromebook / grand écran, ou dans un
+   onglet de navigateur, on est déjà sur le site : rien n'est affiché. */
+function ppEnAppInstallee(){
+  try{
+    if(window.navigator && window.navigator.standalone) return true;
+    if(window.matchMedia){
+      return ['standalone','fullscreen','minimal-ui'].some(m => window.matchMedia('(display-mode: ' + m + ')').matches);
+    }
+  }catch(e){}
+  return false;
+}
 function ppWebHtml(){
+  if(ppGrandEcran() || !ppEnAppInstallee()) return '';
   const url = ppUrlSiteWeb();
   if(!url) return '';
   const affiche = url.replace(/^https?:\/\//, '');
@@ -11504,6 +11553,39 @@ init();
 </script>
 
 <script>
+/* v144 : aucun champ ne doit déclencher la barre « mots de passe / cartes / adresses » du téléphone.
+   On marque TOUS les champs texte (présents et futurs) : pas de remplissage automatique, pas de gestionnaire de mots de passe.
+   Les champs de fichier, cases et champs cachés ne sont pas concernés. */
+(function(){
+  var SKIP={file:1,hidden:1,checkbox:1,radio:1,button:1,submit:1,range:1,color:1};
+  var n=0;
+  function marque(el){
+    try{
+      var t=el.tagName;
+      if(t==='INPUT'){ var ty=(el.getAttribute('type')||'text').toLowerCase(); if(SKIP[ty]) return;
+        if(ty==='password'){ el.setAttribute('type','text'); el.classList.add('pp-masque'); } }
+      else if(t!=='TEXTAREA') return;
+      if(el.dataset.fcNoAf) return; el.dataset.fcNoAf='1';
+      el.setAttribute('autocomplete','off');
+      el.setAttribute('data-lpignore','true'); el.setAttribute('data-1p-ignore','true'); el.setAttribute('data-bwignore','true'); el.setAttribute('data-form-type','other');
+      el.setAttribute('aria-autocomplete','none');
+      el.setAttribute('name','fc-champ-'+(++n));
+    }catch(e){}
+  }
+  function scan(r){
+    if(!r||r.nodeType!==1) return;
+    if(r.matches&&r.matches('input,textarea')) marque(r);
+    var l=r.querySelectorAll?r.querySelectorAll('input,textarea'):[]; for(var k=0;k<l.length;k++) marque(l[k]);
+  }
+  function init(){
+    scan(document.body);
+    try{ new MutationObserver(function(ms){ ms.forEach(function(m){ [].forEach.call(m.addedNodes,scan); }); }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+  }
+  if(document.body) init(); else document.addEventListener('DOMContentLoaded',init);
+})();
+</script>
+
+<script>
 /* v141 : Introduction (6 écrans) — s'affiche une seule fois, au tout premier lancement (aucune carte, pas de clé Gemini, pas de code de synchro).
    Langue : elle lit langueChoisie() (script du <head>) — fr/en suivent la langue de l'appareil tant qu'aucun choix n'est fait dans Réglages → Langue.
    Les textes de l'intro sont ici (objet S) : data-notr sur #fci empêche le traducteur de l'app d'y toucher.
@@ -11564,8 +11646,8 @@ init();
     +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.mas+'</span><h1 class="fi-rv">'+T.h1+'</h1><div class="fi-box fi-rv"><div class="fi-qs">'+T.q1+'</div><div class="fi-lad" data-i="lad"></div>'
       +'<div class="fi-ans"><button class="fi-bt fi-a1" data-v="-1">'+ic('x')+T.miss+'</button><button class="fi-bt fi-a2" data-v="0">'+ic('wave')+T.hard+'</button><button class="fi-bt fi-a3" data-v="1">'+ic('ok')+T.easy+'</button></div>'
       +'<div class="fi-res"><span data-i="rj">'+T.tryit+'</span><b data-i="rb"></b></div></div><p class="fi-sub fi-rv">'+T.s1+'</p></section>'
-    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.pla+'</span><h1 class="fi-rv">'+T.h2+'</h1><div class="fi-chips fi-rv" data-i="ch"><button class="fi-bt fi-on" data-n="5">'+T.d5+'</button><button class="fi-bt" data-n="10">'+T.d10+'</button><button class="fi-bt" data-n="14">'+T.d14+'</button></div>'
-      +'<div class="fi-box fi-rv"><div class="fi-wk" data-i="wk"></div></div><div class="fi-lg fi-rv"><span><s></s>'+T.lgR+'</span><span><s class="fi-o"></s>'+T.lgB+'</span></div></section>'
+    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.pla+'</span><h1 class="fi-rv">'+T.h2+'</h1><div class="fi-vs"><div class="fi-chips fi-rv" data-i="ch"><button class="fi-bt fi-on" data-n="5">'+T.d5+'</button><button class="fi-bt" data-n="10">'+T.d10+'</button><button class="fi-bt" data-n="14">'+T.d14+'</button></div>'
+      +'<div class="fi-box fi-rv"><div class="fi-wk" data-i="wk"></div></div><div class="fi-lg fi-rv"><span><s></s>'+T.lgR+'</span><span><s class="fi-o"></s>'+T.lgB+'</span></div></div></section>'
     +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.syn+'</span><h1 class="fi-rv">'+T.h3+'</h1><div class="fi-dev fi-rv"><div class="fi-ph" data-i="dp"><em data-i="c1"></em></div><div class="fi-trk"><b data-i="fl"></b></div><div class="fi-lp" data-i="dl"><em data-i="c2"></em></div></div>'
       +'<p class="fi-sub fi-rv">'+T.s3+'</p><div class="fi-where fi-rv"><i>\u2699</i>'+T.where+'</div></section>'
     +'<section class="fi-sl" data-i="ia"><div class="fi-v fi-a"><span class="fi-stk fi-rv">'+T.ia+'</span><h1 class="fi-rv">'+T.h4+'</h1><p class="fi-sub fi-rv">'+T.s4+'</p>'
