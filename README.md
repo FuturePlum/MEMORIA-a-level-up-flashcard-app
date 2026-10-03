@@ -1,8 +1,10 @@
 # 🃏 Memoria
 
-### Ton cours entre dans l'app. Il reste dans ta tête.
+## Memoria. Le level au-dessus des flashcards.
 
-**Colle ton cours, prends-le en photo ou glisse ton PDF : l'IA en fait des cartes en quelques secondes. Ensuite, l'app te dit exactement quoi réviser aujourd'hui, et te prévient quand un contrôle approche.** Plus de « je commence par quoi ? », plus de révisions de dernière minute : tu arrives au contrôle avec de la marge.
+**Ton prof particulier de révision.** Photo, PDF ou texte collé : l'IA crée tes cartes et tes synthèses en quelques secondes. Tu donnes la date de ton contrôle, et chaque jour Memoria te dit quoi réviser, seulement ce que tu risques d'oublier. Un retard ? Une alerte « À risque » te prévient à temps, et tu arrives au contrôle avec de la marge.
+
+**Gratuit · Sans compte · Hors ligne**
 
 <p align="center">
   <a href="https://memoria-card.pages.dev"><b>👉 Ouvrir l'app : memoria-card.pages.dev</b></a>
