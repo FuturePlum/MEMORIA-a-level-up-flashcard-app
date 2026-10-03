@@ -1772,10 +1772,39 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
   .pp-done h2{font-size:30px}
   .pp-done .pp-bil>div{background:var(--bg)}
 }
+/* v168 : écran de fin d'entraînement dans le thème (même carte centrée que « Terminé pour aujourd'hui »), score dans une tuile colorée, liste « À revoir » défilante dans la carte */
+.pp-qdone{display:flex;flex-direction:column;max-height:100%;min-height:0}
+.pp-qdone .pp-score{align-self:center;margin:0 auto 14px;padding:14px 30px 16px;border-radius:26px;font-size:64px;background:color-mix(in srgb,var(--sc) 14%,transparent);border:2px solid color-mix(in srgb,var(--sc) 60%,transparent);box-shadow:0 4px 0 color-mix(in srgb,var(--sc) 28%,transparent)}
+.pp-qdone .pp-score.good{--sc:var(--green)}
+.pp-qdone .pp-score.mid{--sc:var(--amber)}
+.pp-qdone .pp-score.bad{--sc:var(--pink)}
+.pp-qdone .pp-small{color:var(--muted);font-weight:600;font-size:13.5px;margin:0}
+.pp-qdone .pp-qok{color:var(--green);font-weight:800;font-size:20px;margin:14px 0 0}
+.pp-qdone .pp-errs{display:flex;flex-direction:column;min-height:0;margin:16px 0 0}
+.pp-qdone .pp-errl{overflow-y:auto;min-height:0;max-height:38vh;padding-right:2px}
+.pp-qdone .pp-btns{flex:none}
+/* Grand écran : l'écran de fin est centré sur TOUT l'écran (pas sur l'espace à droite de la barre) et plus grand */
+@media (min-width:900px) and (min-height:480px){
+  body #pp-ses.pp-end{left:0;right:0;width:auto;margin:0;padding-left:var(--side);padding-right:var(--side)}
+  .pp-done{max-width:580px;padding:44px 42px 36px;border-radius:32px}
+  .pp-done h2{font-size:38px;margin-bottom:10px}
+  .pp-done p{font-size:17px}
+  .pp-okm{width:84px;height:84px;border-radius:26px;margin-bottom:20px}
+  .pp-okm svg{width:40px;height:40px}
+  .pp-done .pp-bil{gap:12px;margin:20px 0 6px}
+  .pp-done .pp-bil>div{padding:14px 15px;border-radius:18px}
+  .pp-done .pp-bil b{font-size:26px}
+  .pp-done .pp-bil span{font-size:13.5px}
+  .pp-done .pp-btns{gap:11px;margin-top:22px}
+  .pp-done .pp-btns .pp-cta{height:58px;font-size:18px;border-radius:18px}
+  .pp-qdone .pp-score{font-size:78px;padding:16px 40px 18px}
+  .pp-qdone .pp-small{font-size:15px}
+  .pp-qdone .pp-errl{max-height:34vh}
+  .pp-ei b{font-size:15.5px}
+  .pp-ei span{font-size:14.5px}
+}
 .pp-cta.pp-ghost{background:transparent;color:var(--cream);border:1.5px solid var(--line);box-shadow:none}
 .pp-cta.pp-quiet{background:transparent;color:var(--muted);border:1.5px solid var(--line);box-shadow:none}
-.pp-qres{text-align:center;width:100%;overflow-y:auto}
-.pp-qres .pp-small{color:var(--muted);font-weight:600;font-size:13.5px}
 .pp-score{font-size:76px;font-weight:800;letter-spacing:-.05em;line-height:1;margin:10px 0 4px;animation:ppslam .55s var(--pps) both}
 .pp-score.good{color:var(--green)}
 .pp-score.mid{color:var(--amber)}
@@ -5320,7 +5349,7 @@ function ppSesRoot(){
   if(!r){ r = document.createElement('div'); r.id = 'pp-ses'; document.body.appendChild(r); }
   return r;
 }
-function ppSesShow(html){ const r = ppSesRoot(); r.classList.remove('ecr', 'ecr-fl'); document.body.classList.remove('kb', 'kb-xs'); r.style.removeProperty('--kbh'); r.innerHTML = html; document.body.classList.add('pp-ses-on'); }
+function ppSesShow(html){ const r = ppSesRoot(); r.classList.remove('ecr', 'ecr-fl'); r.classList.toggle('pp-end', /class="pp-done[" ]/.test(html)); document.body.classList.remove('kb', 'kb-xs'); r.style.removeProperty('--kbh'); r.innerHTML = html; document.body.classList.add('pp-ses-on'); }
 function ppSesHide(){
   document.body.classList.remove('pp-ses-on');
   const r = document.getElementById('pp-ses');
@@ -6486,8 +6515,10 @@ function renderQuiz(){
     const cls = pct >= 80 ? 'good' : pct >= 50 ? 'mid' : 'bad';
     const nx = quizMatiereSuivante();
     ppMood.anim = '';
-    ppSesShow(`<div class="pp-qres"><p class="pp-small">Entraînement terminé · ne compte pas pour la maîtrise</p><div class="pp-score ${cls}">${score}/${quizSet.length}</div>
-  ${quizErrors.length ? `<div class="pp-errs"><h5>À revoir</h5>${quizErrors.map(e => `<div class="pp-ei"><b>${ppRichHtml(e.question)}</b><span>${ppRichHtml(e.reponse)}</span></div>`).join('')}</div>` : `<p style="color:var(--green);font-weight:800;margin-top:12px">Tout juste</p>`}
+    const nbE = quizErrors.length;
+    ppSesShow(`<div class="pp-done pp-qdone">${nbE ? '' : ppConfetti()}<div class="pp-score ${cls}">${score}/${quizSet.length}</div>
+  <p class="pp-small">Entraînement terminé · ne compte pas pour la maîtrise</p>
+  ${nbE ? `<div class="pp-errs"><h5>À revoir</h5><div class="pp-errl">${quizErrors.map(e => `<div class="pp-ei"><b>${ppRichHtml(e.question)}</b><span>${ppRichHtml(e.reponse)}</span></div>`).join('')}</div></div>` : `<p class="pp-qok">Tout juste</p>`}
   <div class="pp-btns">${nx ? `<button class="pp-cta" onclick="quizContinuer('${escapeJsAttr(nx.matiere)}')">Continuer avec ${escapeHtml(nx.matiere)} (${nx.count} carte${nx.count>1?'s':''})</button>` : ''}
   <button class="pp-cta${nx ? ' pp-quiet' : ''}" onclick="exitQuiz()">Retour aux révisions</button></div></div>`);
     return;
