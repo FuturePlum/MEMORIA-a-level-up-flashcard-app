@@ -9,6 +9,25 @@
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0c0c12">
 <script>
+/* v173 : données de départ d'une app exportée (Réglages → Sauvegarde → Exporter l'app à jour).
+   Dans l'app d'origine ce bloc est vide. Dans un fichier exporté, « donnees » contient les valeurs brutes du stockage
+   (série, statistiques, séances, matières vides, modèles de synthèse, réglages). Elles sont posées UNE seule fois par
+   export, seulement pour les clés encore absentes, avant tout le reste (le thème et la langue sont lus juste après).
+   La clé Gemini et le code de synchro n'en font jamais partie. */
+const CLES_STOCKAGE_SEED = ['cartes-streak','cartes-stats-extra','cartes-seances','cartes-matieres-vides','cartes-matieres-vides-dates','cartes-matieres-supprimees','cartes-supprimees-tombstones','cartes-datecontrole-maj','synthese-modeles','rappel-heure-preferee','rappel-relance-active','fc-langue','fc-apparence'];
+const SEED_STOCKAGE = { "id": "", "donnees": {} };
+(function(){
+  try{
+    if(!SEED_STOCKAGE.id || localStorage.getItem('seed-stockage-id') === SEED_STOCKAGE.id) return;
+    CLES_STOCKAGE_SEED.forEach(function(k){
+      var v = SEED_STOCKAGE.donnees[k];
+      if(typeof v === 'string' && localStorage.getItem(k) === null) localStorage.setItem(k, v);
+    });
+    localStorage.setItem('seed-stockage-id', SEED_STOCKAGE.id);
+  }catch(e){}
+})();
+</script>
+<script>
   /* Apparence (v132) : choix Sombre / Clair / Auto, propre à CET appareil (localStorage, jamais synchronisé).
      Appliqué ICI, avant le premier rendu, via data-theme sur <html> : pas de flash au démarrage. */
   (function(){
@@ -78,7 +97,7 @@
     'Images trouvées sur Wikimedia Commons : vérifie-les avant d\u2019enregistrer.':'Images found on Wikimedia Commons: check them before saving.',
     'Aucune image trouvée pour les mots-clés de l\u2019IA.':'No image found for the AI keywords.',
     'Recherche des images...':'Searching for images...',
-    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
+    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','1. Touche ici · 2. « Créer une clé API » · 3. Colle-la ci-dessous.':'1. Tap here · 2. “Create API key” · 3. Paste it below.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
     'Renommer la matière':'Rename subject','Nouveau nom':'New name','Renommer':'Rename','Supprimer tout':'Delete all','Une de tes photos :':'One of your photos:','Une autre image…':'Another image…','Fermer':'Close',
@@ -246,6 +265,19 @@
     'Remettre la maîtrise de cette carte à zéro ?':'Reset this card\'s mastery?','Elle repart en « Nouvelle » : son avancement est perdu.':'It goes back to “New”: its progress is lost.','Image de la question':'Question image','Image de la réponse':'Answer image','Ta réponse…':'Your answer…','Ta réponse':'Your answer','Ta réponse · verrouillée':'Your answer · locked','Pas de réponse':'No answer'
   });
   RULES.push( f(/^Réponse (normale|écrite) · (.+)$/,function(v,x){ return (v==='normale'?'Normal answer':'Written answer')+' · '+x; }) );
+  /* v173 : messages du code de synchro qui contiennent un nombre (donc absents du dictionnaire) */
+  RULES.push(
+    f(/^(\d+) caractères minimum, avec majuscule, minuscule et chiffre\.$/,function(n){ return n+' characters minimum, with an uppercase letter, a lowercase letter and a digit.'; }),
+    f(/^Trop court : (\d+) caractères minimum\.$/,function(n){ return 'Too short: '+n+' characters minimum.'; }),
+    f(/^Trop long : (\d+) caractères maximum\.$/,function(n){ return 'Too long: '+n+' characters maximum.'; }),
+    f(/^Mélange au moins 3 types : minuscules, majuscules, chiffres, tiret - ou _ \(ou (\d+) caractères et plus\)\.$/,function(n){ return 'Mix at least 3 types: lowercase, uppercase, digits, hyphen - or _ (or '+n+' characters and more).'; }),
+    f(/^Caractères refusés(?: \((.+)\))? : uniquement lettres sans accent, chiffres, tiret - et tiret bas _\.$/,function(c){ return 'Rejected characters'+(c?' ('+c.replace(/\bespace\b/g,'space')+')':'')+': only letters without accents, digits, hyphen - and underscore _.'; })
+  );
+  Object.assign(D,{
+    'Version à jour':'Latest version',
+    'Cartes, paliers, dates de contrôle, série, statistiques, séances et réglages : tout est dans un seul fichier.':'Cards, levels, test dates, streak, statistics, sessions and settings: everything is in a single file.',
+    "Une copie complète de l'app avec tes cartes, ta progression, tes statistiques et tes réglages. Sans ta clé Gemini ni ton code de synchro.":'A full copy of the app with your cards, progress, statistics and settings. Without your Gemini key or sync code.'
+  });
   var J={"aujourd'hui":'today',hier:'yesterday'};
   RULES.push(
     f(/^Dernière synchro : (.+?) à (.+)$/,function(d,h){ return 'Last sync: '+(J[d]||d)+' at '+h; }),
@@ -2164,6 +2196,15 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-keyrow .pp-sec{padding:0 16px;flex:none}
 .pp-li small.sync-statut{display:flex;margin-top:1px;font-size:12.5px;gap:6px}
 .pp-sheet .sync-btn{width:100%;margin-top:2px}
+/* v172 : Réglages — les éléments d'un MÊME paramètre (carte + champ + aide + bouton) sont resserrés ; l'espace entre deux paramètres ne change pas. */
+.pp-sheet .pp-set + .pp-hint{margin:7px 2px 6px}
+.pp-sheet #sync-code-erreur:empty{display:none}
+.pp-sheet #sync-code-input{margin:4px 0 2px}
+.pp-sheet #sync-code-input + .pp-hint{margin:0 2px 8px}
+.pp-sheet .pp-set + .pp-keyrow,.pp-sheet .pp-keyrow + .pp-keyrow{margin-top:8px}
+.pp-sheet .pp-keyrow .pp-fld{margin:0}
+.pp-sheet .pp-keyrow .pp-sec{height:46px}
+.pp-sheet .pp-set + .pp-keyrow .pp-fld,.pp-sheet .pp-keyrow + .pp-keyrow .pp-fld{height:46px}
 .pp-pt{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;height:220px;margin:8px 0 16px}
 .pp-ptb{position:absolute;left:12%;right:12%;top:88px;height:44px;border-radius:14px;background:var(--c-ysa);border:1.5px solid var(--yellow)}
 .pp-ptc{position:relative;width:90px;height:220px;overflow-y:auto;scroll-snap-type:y mandatory;padding:88px 0;text-align:center;scrollbar-width:none;overscroll-behavior:contain;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
@@ -7996,7 +8037,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v160';
+const PP_APP_VERSION = 'v173';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -10512,8 +10553,59 @@ function construireDonneesProgression(options){
     streak,
     geminiApiKey,
     geminiApiKeyMaj,
-    modelesSynthese
+    modelesSynthese,
+    // v173 : données propres à l'appareil. Absentes de la synchro (pourSync : le contenu envoyé au serveur ne change pas),
+    // présentes dans la sauvegarde pour que « Exporter la progression » soit complet.
+    ...((options && options.pourSync) ? {} : {
+      statsExtra: ppStatExtra(),
+      seances: ppSeancesLire(),
+      reglages: ppLireReglagesSauvegarde()
+    })
   };
+}
+
+/* Réglages qui voyagent avec la sauvegarde (heure et relance du rappel, apparence, langue). Rien n'est enregistré
+   tant que l'utilisateur n'a rien choisi : on ne sauvegarde que les clés présentes. */
+function ppLireReglagesSauvegarde(){
+  const r = {};
+  try{ const v = localStorage.getItem('rappel-heure-preferee'); if(v) r.rappelHeure = v; }catch(e){}
+  try{ const v = localStorage.getItem('rappel-relance-active'); if(v === '0' || v === '1') r.rappelRelance = v === '1'; }catch(e){}
+  try{ const v = localStorage.getItem('fc-apparence'); if(v === 'clair' || v === 'sombre' || v === 'auto') r.apparence = v; }catch(e){}
+  try{ const v = localStorage.getItem('fc-langue'); if(v === 'fr' || v === 'en') r.langue = v; }catch(e){}
+  return r;
+}
+
+/* Restaure statistiques, séances et réglages d'une sauvegarde (v173). Une restauration ne fait jamais reculer :
+   compteurs = le plus grand des deux ; séances = fusion sans doublon (60 dernières) ; réglages = seulement ceux
+   que l'appareil n'a pas déjà choisis. */
+function ppRestaurerAnnexes(a){
+  if(!ppEstObjet(a)) return;
+  if(ppEstObjet(a.statsExtra)){
+    const loc = ppStatExtra();
+    ppStatSave({
+      record: Math.max(loc.record, Math.max(0, Math.floor(+a.statsExtra.record) || 0)),
+      total: Math.max(loc.total, Math.max(0, Math.floor(+a.statsExtra.total) || 0))
+    });
+  }
+  if(Array.isArray(a.seances)){
+    const cle = s => [s.d, s.ms, s.n, s.v, s.m, s.e].join('|');
+    const locales = ppSeancesLire(), vues = new Set(locales.map(cle));
+    const ajout = ppSeancesNettoyer(a.seances).filter(s => !vues.has(cle(s)));
+    if(ajout.length){
+      const fusion = locales.concat(ajout).map((s, i) => ({ s, i }))
+        .sort((x, y) => x.s.d < y.s.d ? -1 : x.s.d > y.s.d ? 1 : x.i - y.i)
+        .map(o => o.s).slice(-60);
+      ppEcrire(PP_SEANCES_KEY, JSON.stringify(fusion));
+    }
+  }
+  const r = a.reglages;
+  if(ppEstObjet(r)){
+    const absent = k => { try{ return localStorage.getItem(k) === null; }catch(e){ return false; } };
+    if(typeof r.rappelHeure === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.rappelHeure) && absent('rappel-heure-preferee')) ppEcrire('rappel-heure-preferee', r.rappelHeure);
+    if(typeof r.rappelRelance === 'boolean' && absent('rappel-relance-active')) ppEcrire('rappel-relance-active', r.rappelRelance ? '1' : '0');
+    if((r.apparence === 'clair' || r.apparence === 'sombre' || r.apparence === 'auto') && absent('fc-apparence')) ppEcrire('fc-apparence', r.apparence);
+    if((r.langue === 'fr' || r.langue === 'en') && absent('fc-langue')) ppEcrire('fc-langue', r.langue);
+  }
 }
 
 function exportProgression(){
@@ -10553,7 +10645,7 @@ function handleImportFile(event){
 function importerProgression(data){
   // Compatible avec deux formats : le nouveau ({format, cartes, datesControle, ...})
   // et l'ancien export simple (un tableau brut de cartes, sans metadata).
-  let cartes, datesControle = {}, matieresVides = [], streak = null, matieresArchivees = [], geminiApiKey = null, modelesSynthese = [];
+  let cartes, datesControle = {}, matieresVides = [], streak = null, matieresArchivees = [], geminiApiKey = null, modelesSynthese = [], annexes = null, cleMsg = '';
   if(Array.isArray(data)){
     cartes = data;
   } else if(data && Array.isArray(data.cartes)){
@@ -10564,6 +10656,7 @@ function importerProgression(data){
     matieresArchivees = Array.isArray(data.matieresArchivees) ? data.matieresArchivees : [];
     geminiApiKey = typeof data.geminiApiKey === 'string' ? data.geminiApiKey : null;
     modelesSynthese = Array.isArray(data.modelesSynthese) ? data.modelesSynthese : [];
+    annexes = { statsExtra: data.statsExtra, seances: data.seances, reglages: data.reglages };
   } else {
     settingsImportMsg = { type:'err', text:'Format de fichier non reconnu.' };
     renderSettings();
@@ -10599,6 +10692,7 @@ function importerProgression(data){
       return;
     }
     videsAjoutees.forEach(m => addEmptyMatiere(m.trim()));
+    ppRestaurerAnnexes(annexes);
     settingsImportMsg = { type:'ok', text:`Sauvegarde restaurée : ${videsAjoutees.length} matière${videsAjoutees.length>1?'s':''} vide${videsAjoutees.length>1?'s':''} ajoutée${videsAjoutees.length>1?'s':''} (aucune carte dans le fichier).` };
     if(cleMsg) settingsImportMsg.text += cleMsg;
     renderSettings();
@@ -10638,7 +10732,7 @@ function importerProgression(data){
     }
     // v153 (constat 37) : une clé venue d'un fichier ne remplace JAMAIS la clé locale ; elle n'est reprise
     // que s'il n'y en a pas, et l'utilisateur en est prévenu (les cours partent vers le projet Google de cette clé).
-    let cleMsg = '';
+    cleMsg = '';
     if(geminiApiKey){
       let cleLocale = '';
       try{ cleLocale = (localStorage.getItem('gemini_api_key') || '').trim(); }catch(e){}
@@ -10649,6 +10743,7 @@ function importerProgression(data){
       }
     }
     fusionnerModelesSynthese(modelesSynthese);
+    ppRestaurerAnnexes(annexes);
     recalcPlanning();
     saveLocalPlanning();
 
@@ -11538,18 +11633,43 @@ function captureSourceHtml(){
   SOURCE_HTML = document.documentElement.outerHTML;
 }
 
+/* v173 : remplace le littéral (tableau ou objet JSON) qui suit « const NOM = » en lisant le texte caractère par
+   caractère, chaînes entre guillemets comprises. Avant, une regex non gourmande s'arrêtait au premier « ]; » ou « }; » :
+   une carte contenant ce motif (code, formule) cassait le fichier exporté. */
+function ppRemplacerBloc(html, nom, json){
+  const amorce = 'const ' + nom + ' = ';
+  const debut = html.indexOf(amorce);
+  if(debut < 0) return null;
+  const ouvre = debut + amorce.length, o = html[ouvre], f = o === '[' ? ']' : o === '{' ? '}' : null;
+  if(!f) return null;
+  let prof = 0, chaine = false, i = ouvre;
+  for(; i < html.length; i++){
+    const c = html[i];
+    if(chaine){ if(c === '\\') i++; else if(c === '"') chaine = false; continue; }
+    if(c === '"') chaine = true;
+    else if(c === o) prof++;
+    else if(c === f){ prof--; if(prof === 0) break; }
+  }
+  if(prof !== 0) return null;
+  return html.slice(0, ouvre) + json + html.slice(i + 1);
+}
+
+/* Exporter l'app à jour : le fichier contient l'app + TOUT ce qui se voit dans l'app (cartes avec leurs paliers et
+   dates, matières, dates de contrôle, archives, planning, série, statistiques, séances, modèles de synthèse, réglages).
+   Les cartes, matières et planning remplacent les blocs de départ ; le reste part dans SEED_STOCKAGE (voir le <head>).
+   Jamais dedans : clé Gemini et code de synchro (ce fichier peut être partagé). */
 function exportAll(){
   if(!SOURCE_HTML){ alert('Impossible d\'exporter : source non capturée.'); return; }
+  const json = v => JSON.stringify(v, null, 2).replace(/</g, '\\u003c');
+  const donnees = {};
+  CLES_STOCKAGE_SEED.forEach(k => { try{ const v = localStorage.getItem(k); if(v !== null) donnees[k] = v; }catch(e){} });
   let html = SOURCE_HTML;
-
-  const seedBlock = 'const SEED_CARDS = ' + JSON.stringify(CARDS, null, 2).replace(/</g, '\\u003c') + ';';
-  const configBlock = 'const MATIERES_CONFIG = ' + JSON.stringify(matieresConfig, null, 2).replace(/</g, '\\u003c') + ';';
-  const planningBlock = 'const PLANNING = ' + JSON.stringify(planning, null, 2).replace(/</g, '\\u003c') + ';';
-
-  html = html.replace(/const SEED_CARDS = \[[\s\S]*?\];/, seedBlock.replace(/\$/g, '$$$$'));
-  html = html.replace(/const MATIERES_CONFIG = \{[\s\S]*?\};/, configBlock.replace(/\$/g, '$$$$'));
-  html = html.replace(/const PLANNING = \[[\s\S]*?\];/, planningBlock.replace(/\$/g, '$$$$'));
-
+  const blocs = [['SEED_CARDS', CARDS], ['MATIERES_CONFIG', matieresConfig], ['PLANNING', planning], ['SEED_STOCKAGE', { id: new Date().toISOString(), donnees }]];
+  for(const [nom, valeur] of blocs){
+    const suite = ppRemplacerBloc(html, nom, json(valeur));
+    if(suite === null){ alert('Impossible d\'exporter : le fichier source n\'a pas la forme attendue (' + nom + ').'); return; }
+    html = suite;
+  }
   const blob = new Blob([html], { type: 'text/html' });
   telechargerBlob(blob, 'memoria.html');
 }
@@ -12448,13 +12568,14 @@ function ppStatUndo(){
    `cartes-seances` = liste des 60 dernières séances { d: jour, ms: temps actif, n: cartes, v: « Facile », m: nouvelles maîtrisées, e: 1 si « Revoir les erreurs » }.
    Temps actif : à chaque réponse on ajoute le temps écoulé depuis la précédente, plafonné à 2 min (app laissée ouverte = pas comptée). */
 const PP_SEANCES_KEY = 'cartes-seances';
+function ppSeancesNettoyer(a){
+  if(!Array.isArray(a)) return [];
+  return a.filter(x => x && typeof x === 'object' && typeof x.d === 'string' && Number.isFinite(+x.n) && +x.n > 0)
+    .map(x => ({ d:x.d, ms:Math.max(0, +x.ms || 0), n:Math.floor(+x.n), v:Math.max(0, Math.floor(+x.v) || 0), m:Math.max(0, Math.floor(+x.m) || 0), e:x.e ? 1 : 0 })).slice(-60);
+}
 function ppSeancesLire(){
-  try{
-    const a = JSON.parse(localStorage.getItem(PP_SEANCES_KEY) || '[]');
-    if(!Array.isArray(a)) return [];
-    return a.filter(x => x && typeof x === 'object' && typeof x.d === 'string' && Number.isFinite(+x.n) && +x.n > 0)
-      .map(x => ({ d:x.d, ms:Math.max(0, +x.ms || 0), n:Math.floor(+x.n), v:Math.max(0, Math.floor(+x.v) || 0), m:Math.max(0, Math.floor(+x.m) || 0), e:x.e ? 1 : 0 })).slice(-60);
-  }catch(err){ return []; }
+  try{ return ppSeancesNettoyer(JSON.parse(localStorage.getItem(PP_SEANCES_KEY) || '[]')); }
+  catch(err){ return []; }
 }
 function ppSeanceRaz(){ ppSeance = { ms: 0, last: Date.now(), saved: false, bilan: null }; }
 function ppSeanceTick(){
@@ -12704,8 +12825,7 @@ function ppSetHtml(){
       ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Modifier la clé Gemini</span></div></div>
   <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld" value="${attrEchappe(key)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>
   <div class="pp-keyrow"><button class="pp-sec" onclick="annulerEditionGeminiKey()">Annuler</button><button class="pp-sec" onclick="oublierGeminiKey()">Retirer la clé</button></div>`
-      : `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.</small></span></div></div>
-  <div class="pp-keyrow"><button class="pp-sec" style="flex:1" onclick="window.open('https://aistudio.google.com/apikey','_blank','noopener')">Obtenir ma clé</button></div>
+      : `<div class="pp-set"><button class="pp-li" onclick="window.open('https://aistudio.google.com/apikey','_blank','noopener')"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>1. Touche ici · 2. « Créer une clé API » · 3. Colle-la ci-dessous.</small></span></button></div>
   <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld pp-masque" placeholder="AIza..." oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
   <h4>Langue</h4>${ppLangueHtml()}
@@ -12801,7 +12921,7 @@ function ppSyncHtml(){
   const codeAffiche = verifierSoliditeCode(code) ? '' : code;
   return `<div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
   <p class="pp-hint">Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.</p>
-  <div id="sync-code-erreur" style="margin-top:10px">${syncErreurCodeHtml()}</div>
+  <div id="sync-code-erreur" style="margin-top:6px">${syncErreurCodeHtml()}</div>
   <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
   <p class="pp-hint">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>
   <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>`;
@@ -12827,8 +12947,8 @@ function ppTimeOk(){
 function ppExportSheet(k){
   const j = k === 'json';
   const info = j ? `${CARDS.length} carte${CARDS.length > 1 ? 's' : ''} · ${getMatieres().length} matière${getMatieres().length > 1 ? 's' : ''} · ${getStreakAffichee()} jour${getStreakAffichee() > 1 ? 's' : ''} de suite` : 'Version à jour';
-  ppSheet(`<div class="pp-grab"></div><h2>${j ? 'Exporter la progression' : "Exporter l'app à jour"}</h2><p class="pp-hint">${j ? 'Cartes, paliers, dates de contrôle et série : tout est dans un seul fichier.' : "Une copie complète de l'app, utile comme sauvegarde de secours."}</p>${j && getGeminiKey() ? '<p class="pp-hint">Ce fichier contient aussi ta clé Gemini : ne l\'envoie à personne.</p>' : ''}
-  <div class="pp-fcard"><i>${j ? PP_IC.code : PP_IC.file}</i><div><b>${j ? 'memoria-progression.json' : 'index.html'}</b><span>${info}</span></div></div>
+  ppSheet(`<div class="pp-grab"></div><h2>${j ? 'Exporter la progression' : "Exporter l'app à jour"}</h2><p class="pp-hint">${j ? 'Cartes, paliers, dates de contrôle, série, statistiques, séances et réglages : tout est dans un seul fichier.' : "Une copie complète de l'app avec tes cartes, ta progression, tes statistiques et tes réglages. Sans ta clé Gemini ni ton code de synchro."}</p>${j && getGeminiKey() ? '<p class="pp-hint">Ce fichier contient aussi ta clé Gemini : ne l\'envoie à personne.</p>' : ''}
+  <div class="pp-fcard"><i>${j ? PP_IC.code : PP_IC.file}</i><div><b>${j ? 'revisions-sauvegarde-' + todayStr() + '.json' : 'memoria.html'}</b><span>${info}</span></div></div>
   <div class="pp-duo"><button class="pp-sec" onclick="ppSettings(true)">Retour</button><button class="pp-cta" style="margin:0" onclick="ppExportGo('${k}')">Télécharger</button></div>`);
 }
 function ppExportGo(k){
