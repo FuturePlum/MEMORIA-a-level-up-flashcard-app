@@ -19,11 +19,15 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v50 : cadre « champ + bouton Image », confirmation avant « Remettre à zéro », message de côté vide : index.html change, donc nouvelle version du cache.
+
+   v49 : cartes « réponse à écrire » complètes (clavier réel, quiz) : index.html change, donc nouvelle version du cache.
+
    v48 : renommage Flashcard → Memoria (nom du cache et titre des notifications).
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v48';
+const SW_VERSION = 'v50';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

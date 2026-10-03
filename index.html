@@ -211,6 +211,16 @@
     f(/^Maîtrise complète (.+?)\. (.+)$/,function(d,x){ return 'Full mastery '+d.replace(/^le /,'on ')+'. '+tr(x); }),
     f(/^(Envoi|Récupération) impossible \((.+)\)$/,function(v,x){ return (v==='Envoi'?"Couldn't send (":"Couldn't retrieve (")+tr(x)+')'; })
   );
+  Object.assign(D,{ /* réponse à écrire (étape 1) */
+    'Réponse à écrire':'Written answer','Tu tapes ta réponse avant de la voir':'You type your answer before seeing it','Réponse longue : peu pratique à écrire':'Long answer: impractical to type',
+    'Tout en réponse écrite':'All as written answers','À écrire':'Write','Tout à écrire':'Write all','Réponse en image : impossible à écrire':'Image answer: cannot be written',
+    'Question en image : impossible à inverser':'Image question: cannot be reversed','Cartes à écrire : pas de sens inversé':'Written-answer cards: no reversed direction',
+    'Aucune réponse à écrire possible ici':'No written answer possible here'
+  });
+  Object.assign(D,{ /* réponse à écrire (étape 2) */
+    'Remettre cette carte à zéro ?':'Reset this card?','Elle repart en « Nouvelle » : son avancement est perdu.':'It goes back to “New”: its progress is lost.','Image de la question':'Question image','Image de la réponse':'Answer image','Ta réponse…':'Your answer…','Ta réponse':'Your answer','Ta réponse · verrouillée':'Your answer · locked','Pas de réponse':'No answer'
+  });
+  RULES.push( f(/^Réponse (normale|écrite) · (.+)$/,function(v,x){ return (v==='normale'?'Normal answer':'Written answer')+' · '+x; }) );
   var J={"aujourd'hui":'today',hier:'yesterday'};
   RULES.push(
     f(/^Dernière synchro : (.+?) à (.+)$/,function(d,h){ return 'Last sync: '+(J[d]||d)+' at '+h; }),
@@ -1669,9 +1679,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .synth-fig figcaption{font-size:.8rem;color:var(--muted);margin-top:6px;font-style:italic}
 .pp-imgadd{margin:10px 0 0}
 .pp-imgadd .pp-sec{width:100%;height:42px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px}
-.pp-imgrow{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px}
 .pp-imgslot{margin:0 0 14px}
-.pp-imgrow .pp-imgslot{margin:0}
 .pp-imgchip{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 13px;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font-family:var(--font-sans);font-weight:700;font-size:13px;cursor:pointer}
 .pp-imgchip.has{border-style:solid;padding:4px 6px 4px 4px;color:var(--cream);background:var(--panel)}
 .pp-imgchip svg{flex:none}
@@ -1962,6 +1970,10 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-it em.pp-new{color:var(--orange-t)}
 .pp-it em.pp-okk{color:var(--green)}
 .pp-it em.pp-invt{color:var(--orange-t);margin-left:8px}
+.pp-it em.pp-ecrt svg{width:13px;height:13px;vertical-align:-2px}
+.pp-li.pp-off{opacity:.5}
+.pp-pvbar{flex-wrap:wrap;gap:8px}
+.pp-pvbar .pp-pvg{display:flex;gap:6px}
 /* interrupteur (fiche d'une carte ; resservira aux Réglages) */
 .pp-tg{width:44px;height:26px;border-radius:99px;background:var(--c-s2);position:relative;flex:none;transition:background .2s}
 .pp-tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--cream);transition:transform var(--t-out) var(--ease-press)}
@@ -2286,7 +2298,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #pp-ses .pp-sk-p{ display:none; }
   #pp-ses .pp-sk-w{ display:inline; }
   #pp-ses .pp-ra.on,#pp-ses .pp-ra.out{ visibility:visible; border-color:var(--cream); background:var(--panel); box-shadow:9px 9px 0 var(--yellow-d); cursor:default; }
-  #pp-ses .pp-ra.on{ pointer-events:auto; animation:ppraIn .36s var(--ease-press) both; }
+  #pp-ses .pp-ra.on{ pointer-events:auto; cursor:pointer; animation:ppraIn .36s var(--ease-press) both; }
   #pp-ses .pp-ra.out{ animation:ppraOut .34s cubic-bezier(.3,.7,.4,1) both; }
   .pp-ra.out .pp-v{ display:flex; }
   .pp-ra.on .pp-g{ display:none; }
@@ -2436,13 +2448,11 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #tab-add .pp-add:has(>.pp-alt):has(>.pp-warn)>.pp-note{ grid-row:6; }
   #tab-add .pp-add:has(>.pp-alt):has(>.pp-warn)>.pp-alt{ grid-row:7; }
   #tab-add .pp-alt button{ height:52px; border-radius:16px; justify-content:flex-start; padding:0 18px; font-size:15px; color:var(--cream); }
-  #tab-add .pp-add:has(>#pp-nq){ display:grid; grid-template-columns:1fr 1fr; gap:0 30px; align-content:start; }
-  #tab-add .pp-add:has(>#pp-nq)>*{ grid-column:1/-1; }
-  #tab-add .pp-add:has(>#pp-nq)>:nth-child(4){ grid-column:1; grid-row:4; }
-  #tab-add .pp-add:has(>#pp-nq)>#pp-nq{ grid-column:1; grid-row:5; }
-  #tab-add .pp-add:has(>#pp-nq)>:nth-child(6){ grid-column:2; grid-row:4; }
-  #tab-add .pp-add:has(>#pp-nq)>#pp-na{ grid-column:2; grid-row:5; }
-  :root:root #tab-add #pp-nq,:root:root #tab-add #pp-na{ min-height:clamp(180px,34vh,340px); font-size:17px; }
+  #tab-add .pp-add:has(>.pp-side){ display:grid; grid-template-columns:1fr 1fr; gap:0 30px; align-content:start; }
+  #tab-add .pp-add:has(>.pp-side)>*{ grid-column:1/-1; }
+  #tab-add .pp-add:has(>.pp-side)>.pp-side-q{ grid-column:1; grid-row:4; }
+  #tab-add .pp-add:has(>.pp-side)>.pp-side-r{ grid-column:2; grid-row:4; }
+  :root:root #tab-add .pp-side .pp-fieldbox textarea{ min-height:clamp(180px,34vh,340px); font-size:17px; }
   #tab-add .pp-add:has(>.pp-pv){ display:grid; grid-template-columns:1fr 1fr; gap:0 20px; align-content:start; }
   #tab-add .pp-add:has(>.pp-pv)>*{ grid-column:1/-1; }
   #tab-add .pp-add:has(>.pp-pv)>.pp-pv{ grid-column:auto; }
@@ -2494,6 +2504,116 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
 .pp-mode.m3 i{width:calc((100% - 8px) / 3)}
 .pp-mode.m3.p1 i{transform:translateX(100%)}
 .pp-mode.m3.p2 i{transform:translateX(200%)}
+
+/* ===== RÉPONSE À ÉCRIRE (étape 2) : tout est scopé #pp-ses.ecr (classe posée seulement quand la carte affichée est à écrire) ou sur des classes nouvelles ===== */
+:root{--kbe:cubic-bezier(.2,.8,.2,1)}
+.pp-ecrbox{background:var(--panel);border:2px solid var(--line);border-radius:18px;box-shadow:inset 0 3px 0 rgba(0,0,0,.16);padding:2px 4px;transition:border-color .2s;display:flex}
+[data-theme=light] .pp-ecrbox{box-shadow:inset 0 3px 0 rgba(120,90,40,.12)}
+.pp-ecrbox:focus-within{border-color:var(--yellow-b)}
+.pp-card .pp-ecr-ta,.pp-card .pp-ecr-ta *{-webkit-user-select:text;user-select:text;touch-action:auto}
+.pp-ecr-ta{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--cream);font:inherit;font-weight:700;font-size:17px;line-height:1.3;padding:11px 10px;resize:none;overflow-y:auto;max-height:var(--ecr-max,112px);min-height:46px;border-radius:14px}
+.pp-ecr-ta::placeholder{color:var(--muted);font-weight:600}
+.pp-ecr-ok{margin-top:10px}
+body.kb #pp-ses.ecr .pp-ecr-ok{margin-top:8px;height:48px}
+body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
+.pp-c2w{display:flex;flex-direction:column;gap:12px;text-align:left}
+.pp-c2 small{display:block;color:var(--muted);font-weight:800;letter-spacing:.12em;font-size:11px;text-transform:uppercase;margin:0 0 5px}
+.pp-c2 p{overflow-wrap:anywhere;word-break:break-word;margin:0;white-space:pre-line;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.pp-c2.mine{border-left:4px solid var(--line);padding-left:12px}
+.pp-c2.mine p{font-size:19px;color:var(--cream);font-weight:700}
+.pp-c2.mine p i{color:var(--muted);font-weight:600}
+.pp-c2.good p{font-size:28px;color:var(--yellow-t)}
+.pp-c2.good p.l{font-size:19px}
+.pp-c2w.B{flex-direction:row;gap:0}
+.pp-c2w.B .pp-c2{flex:1;min-width:0}
+.pp-c2w.B .pp-c2.mine{border-left:0;padding:0 14px 0 0;border-right:2px dashed var(--line)}
+.pp-c2w.B .pp-c2.good{padding-left:14px}
+.pp-c2w.B .pp-c2.mine p{font-size:16px}
+.pp-c2w.B .pp-c2.good p,.pp-c2w.B .pp-c2.good p.l{font-size:18px}
+.pp-ecl{color:var(--muted);font-weight:800;letter-spacing:.12em;font-size:11px;text-transform:uppercase;margin:0 2px 8px}
+.pp-ecw-h{margin-top:12px;text-align:center;color:var(--muted);font-size:13px}
+.pp-ecw-h kbd{font:inherit;font-weight:800;font-size:12px;padding:3px 8px;border-radius:7px;background:rgba(var(--ov),.07);border:1px solid rgba(var(--ov),.13);color:var(--cream)}
+.pp-ecrslot,.pp-ecw{cursor:default!important}
+@media (min-width:900px) and (min-height:480px){
+  .pp-ecw{display:flex;flex-direction:column;flex:1;min-height:0}
+  .pp-ecw .pp-ecrbox{flex:1;min-height:0}
+  .pp-ecw .pp-ecr-ta{max-height:none;font-size:clamp(20px,2vw,26px);padding:14px 14px}
+  .pp-ecw .pp-ecr-ok{height:56px;flex:none}
+  .pp-c2.good p{font-size:clamp(28px,3vw,40px)}
+  .pp-c2.good p.l{font-size:24px}
+  .pp-c2.mine p{font-size:22px}
+  .pp-c2w.B .pp-c2.mine p{font-size:18px}
+  .pp-c2w.B .pp-c2.good p{font-size:22px}
+}
+@media not all and (min-width:900px) and (min-height:480px){
+  /* le clavier (hauteur --kbh) fait monter le bas de l'écran en douceur ; tout ce qui se replie le fait avec la même courbe */
+  #pp-ses.ecr{bottom:var(--kbh,0px);transition:bottom .34s var(--kbe),padding-bottom .34s var(--kbe)}
+  body.kb #pp-ses.ecr{padding-bottom:10px}
+  #pp-ses.ecr .pp-mb{max-height:90px;overflow:hidden;transition:max-height .34s var(--kbe),margin .34s var(--kbe),padding .34s var(--kbe),border-width .34s var(--kbe),box-shadow .34s var(--kbe)}
+  body.kb #pp-ses.ecr .pp-mb{max-height:0;margin-top:0;padding-top:0;padding-bottom:0;border-top-width:0;border-bottom-width:0;box-shadow:none}
+  #pp-ses.ecr .pp-undo{max-height:44px;overflow:hidden;transition:max-height .34s var(--kbe),margin .34s var(--kbe),border-width .34s var(--kbe),transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press),background .2s,border-color .2s,color .2s}
+  body.kb #pp-ses.ecr .pp-undo{max-height:0;margin-top:0;margin-bottom:0;border-width:0}
+  #pp-ses.ecr .pp-info{max-height:30px;overflow:hidden;transition:max-height .34s var(--kbe),margin .34s var(--kbe)}
+  body.kb #pp-ses.ecr .pp-info{max-height:0;margin-top:0;margin-bottom:0}
+  #pp-ses.ecr .pp-top,#pp-ses.ecr .pp-rcard .pp-ch,#pp-ses.ecr .pp-rb,#pp-ses.ecr .pp-foot{transition:padding .34s var(--kbe),margin .34s var(--kbe)}
+  #pp-ses.ecr .pp-ecr-ok{transition:height .34s var(--kbe),margin-top .34s var(--kbe),transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press),background .2s}
+  .pp-ecr-ta{transition:max-height .34s var(--kbe)}
+  /* « Ta réponse » : 2 lignes maximum (le reste est remplacé par « … »), on touche pour tout voir */
+  .pp-c2.mine{cursor:pointer}
+  .pp-c2.mine p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+  .pp-c2.mine.open p{display:block;-webkit-line-clamp:unset;line-clamp:unset}
+  /* carte retournée : la question se compacte, la carte réponse prend la place, et son contenu défile (le doigt peut le faire glisser) */
+  #pp-ses.ecr.ecr-fl .pp-stage>.pp-card:not(.pp-rcard){flex:0 1 auto;max-height:38vh}
+  #pp-ses.ecr.ecr-fl .pp-stage>.pp-card:not(.pp-rcard) .pp-body{padding:12px 18px 20px}
+  #pp-ses.ecr.ecr-fl .pp-stage>.pp-card:not(.pp-rcard) .pp-qt{line-height:1.25}
+  #pp-ses.ecr.ecr-fl .pp-stage>.pp-rcard{flex:1 1 0;min-height:0}
+  #pp-ses.ecr.ecr-fl .pp-rb{flex:1 1 0;min-height:0;max-height:none}
+  body.kb #pp-ses.ecr .pp-top{margin-bottom:10px}
+  body.kb-xs #pp-ses.ecr .pp-rcard .pp-ch{display:none}
+  body.kb-xs #pp-ses.ecr .pp-top{display:none}
+  body.kb .pp-ecr-ta{max-height:var(--ecr-max,84px)}
+}
+
+.pp-lock{background:transparent;border-style:dashed;box-shadow:none;opacity:.85}
+.pp-lk{overflow-wrap:anywhere;word-break:break-word;flex:1;padding:12px 12px;font-weight:700;font-size:17px;line-height:1.3;color:var(--cream);white-space:pre-line;max-height:112px;overflow-y:auto}
+.pp-lk i{color:var(--muted);font-weight:600}
+#pp-ses.ecr .pp-foot>.pp-ecl{margin-top:2px}
+#pp-ses.ecr .pp-foot>.pp-show{margin-top:10px}
+@media (min-width:900px) and (min-height:480px){ .pp-ecw .pp-lock{flex:1;min-height:0} .pp-ecw .pp-lk{font-size:clamp(20px,2vw,26px);max-height:none} }
+
+/* La carte réponse a le même format que la carte question (étiquette en haut, corps, pied avec bouton) */
+.pp-rb{flex:none;display:flex;flex-direction:column;padding:6px 16px 14px;max-height:42vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.pp-card .pp-rb,.pp-card .pp-rb *{touch-action:pan-y}
+.pp-rb.ov{-webkit-mask-image:linear-gradient(#000 calc(100% - 30px),transparent);mask-image:linear-gradient(#000 calc(100% - 30px),transparent)}
+.pp-rcard{cursor:default!important;box-shadow:9px 9px 0 var(--yellow-d)}
+.pp-rcard.pp-sink{box-shadow:0 0 0 0 var(--yellow-d)}
+.pp-rcard .pp-ecr-ok{margin-top:0}
+.pp-rb .pp-ecl{margin:4px 2px 8px}
+.pp-rb .pp-c2w{padding-top:6px}
+.pp-rb .pp-aimg{max-height:90px;margin-top:10px;border-radius:14px}
+@media not all and (min-width:900px) and (min-height:480px){
+  #pp-ses.ecr .pp-stage{flex-direction:column;gap:18px}
+  #pp-ses.ecr .pp-stage>.pp-card:not(.pp-rcard){flex:1 1 0;min-height:0}
+  #pp-ses.ecr .pp-stage>.pp-rcard{flex:none}
+  body.kb #pp-ses.ecr .pp-rb{padding:2px 12px 8px}
+  body.kb #pp-ses.ecr .pp-rcard .pp-ch{padding-top:10px}
+}
+@media (min-width:900px) and (min-height:480px){
+  #pp-ses.ecr .pp-rslot,#pp-ses.ecr .pp-ra{border-radius:24px}
+  #pp-ses .pp-rslot.pp-ecrslot{padding:0;border:2px solid var(--cream);background:var(--panel);box-shadow:9px 9px 0 var(--yellow-d);overflow:hidden;cursor:default;transition:transform .44s var(--ease-press),box-shadow .44s var(--ease-press)}
+  #pp-ses .pp-rslot.pp-ecrslot.pp-sink{transform:translate(9px,9px);box-shadow:0 0 0 0 var(--yellow-d);transition-duration:var(--t-in),var(--t-in)}
+  #pp-ses .pp-ecrslot .pp-rb{flex:1;min-height:0;max-height:none;padding:14px 22px 18px}
+  #pp-ses .pp-ecrslot .pp-ecrbox{flex:1;min-height:0}
+  #pp-ses .pp-ecrslot .pp-ecr-ta{max-height:none;font-size:clamp(20px,2vw,26px);padding:14px}
+  #pp-ses .pp-ecrslot .pp-lock{flex:1;min-height:0}
+  #pp-ses .pp-ecrslot .pp-lk{font-size:clamp(20px,2vw,26px);max-height:none}
+  #pp-ses .pp-ecrslot .pp-ecr-ok{height:56px;margin-top:0}
+  #pp-ses.ecr .pp-rslot:not(.pp-ecrslot){border-color:transparent}
+  #pp-ses.ecr .pp-ra{padding:0}
+  #pp-ses.ecr .pp-ra .pp-ch{padding:14px 16px 0}
+  #pp-ses.ecr .pp-ra .pp-v>div:last-child{padding:0 22px 18px}
+}
+.pp-invc.pp-off{opacity:.5}
 </style>
 <style id="fci-css">
 /* v141 : Introduction — tout est sous #fci et préfixé fi- (aucune collision avec le reste de l'app) */
@@ -2656,6 +2776,17 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #fci .fi-foot .fi-cta,#fci .fi-foot .fi-ghost{width:min(100%,380px)}
   #fci .fi-bt:hover:not([disabled]):not(:active){filter:brightness(1.07)}
 }
+
+/* ---- v149 : cadre « champ + bouton Image » (.pp-fieldbox) ---- */
+.pp-fieldbox{display:flex;flex-direction:column;border-radius:18px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:16px;transition:border-color .2s}
+.pp-fieldbox:focus-within{border-color:var(--yellow-b)}
+:root:root .pp-fieldbox textarea,:root:root .pp-fieldbox textarea:focus{border:0;background:transparent;margin:0;border-radius:18px 18px 0 0;box-shadow:none;padding:14px 16px 6px}
+.pp-fieldbox .pp-fbar{padding:0 10px 10px}
+.pp-fieldbox .pp-imgslot{margin:0}
+.pp-fieldbox .pp-imgchip{min-height:32px;font-size:12.5px}
+.pp-fieldbox+.pp-imgpanel{margin:-6px 0 14px}
+:root:root .pp-pv .pp-fieldbox{border-radius:12px;background:var(--c-ta);margin-bottom:8px}
+:root:root .pp-pv .pp-fieldbox textarea{height:66px;padding:10px 12px 4px;font-size:15px;border-radius:12px 12px 0 0}
 </style>
 </head>
 <body>
@@ -3136,9 +3267,9 @@ function ppImgChamp(cote){ return cote === 'q' ? 'imageQuestion' : 'imageReponse
 function ppImgId(ctx){ return String(ctx).replace(/[^a-zA-Z0-9]/g, '-'); }
 function ppImgSlotInner(ctx, cote){
   const cible = ppImgCible(ctx); if(!cible) return '';
-  const img = cible[ppImgChamp(cote)] || '', nom = cote === 'q' ? 'question' : 'réponse';
-  if(!img) return `<button type="button" class="pp-imgchip" onclick="ppImgChoisir('${ctx}','${cote}')">${PP_IMG_IC}Image ${nom}</button>`;
-  return `<span class="pp-imgchip has"><img class="pp-imgth" src="${img}" alt="" onclick="ppImgChoisir('${ctx}','${cote}')"><span onclick="ppImgChoisir('${ctx}','${cote}')">Image ${nom}</span><button type="button" class="pp-imgx" aria-label="Retirer l'image" onclick="ppImgRetirer('${ctx}','${cote}')">×</button></span>`;
+  const img = cible[ppImgChamp(cote)] || '', nom = cote === 'q' ? 'de la question' : 'de la réponse';
+  if(!img) return `<button type="button" class="pp-imgchip" aria-label="Image ${nom}" onclick="ppImgChoisir('${ctx}','${cote}')">${PP_IMG_IC}Image</button>`;
+  return `<span class="pp-imgchip has"><img class="pp-imgth" src="${img}" alt="" onclick="ppImgChoisir('${ctx}','${cote}')"><span onclick="ppImgChoisir('${ctx}','${cote}')">Image</span><button type="button" class="pp-imgx" aria-label="Retirer l'image" onclick="ppImgRetirer('${ctx}','${cote}')">×</button></span>`;
 }
 function ppImgPanneauHtml(ctx, cote){
   const cible = ppImgCible(ctx), img = cible ? (cible[ppImgChamp(cote)] || '') : '';
@@ -3150,8 +3281,10 @@ function ppImgPanelWrap(ctx, cote){
   const ouvert = ppImgOuvert === ctx + '|' + cote;
   return `<div class="pp-imgpanel" id="pp-imgp-${ppImgId(ctx)}-${cote}" style="${ouvert ? '' : 'display:none'}">${ouvert ? ppImgPanneauHtml(ctx, cote) : ''}</div>`;
 }
-function ppImgBloc(ctx, cote){ return ppImgSlotWrap(ctx, cote) + ppImgPanelWrap(ctx, cote); }
-function ppImgRangee(ctx){ return `<div class="pp-imgrow">${ppImgSlotWrap(ctx, 'q')}${ppImgSlotWrap(ctx, 'r')}</div>${ppImgPanelWrap(ctx, 'q')}${ppImgPanelWrap(ctx, 'r')}`; }
+/* Cadre d'un côté de carte : le champ texte ET le bouton « Image » dans le même cadre, panneau « Une de tes photos » dessous. Utilisé par 'man', 'fi' et 'pv:<i>'. */
+function ppChampImg(ctx, cote, textareaHtml){
+  return `<div class="pp-fieldbox">${textareaHtml}<div class="pp-fbar">${ppImgSlotWrap(ctx, cote)}</div></div>${ppImgPanelWrap(ctx, cote)}`;
+}
 function ppImgRafraichir(ctx, cote){
   const sl = document.getElementById('pp-imgs-' + ppImgId(ctx) + '-' + cote);
   if(sl) sl.innerHTML = ppImgSlotInner(ctx, cote);
@@ -3190,6 +3323,7 @@ function ppImgPoser(ctx, cote, url, fermer){
   cible[champ] = url || '';
   if(fermer && ppImgOuvert === ctx + '|' + cote) ppImgOuvert = null;
   ppImgRafraichir(ctx, cote);
+  if(cote === 'q') ppIvGris(ctx);
 }
 function ppImgRetirer(ctx, cote){ ppImgPoser(ctx, cote, '', true); }
 function ppImgDeBanque(ctx, cote, k){ const url = iaImgBanque[k]; if(url) ppImgPoser(ctx, cote, url, true); }
@@ -4531,11 +4665,13 @@ function ppSesRoot(){
   if(!r){ r = document.createElement('div'); r.id = 'pp-ses'; document.body.appendChild(r); }
   return r;
 }
-function ppSesShow(html){ ppSesRoot().innerHTML = html; document.body.classList.add('pp-ses-on'); }
+function ppSesShow(html){ const r = ppSesRoot(); r.classList.remove('ecr', 'ecr-fl'); document.body.classList.remove('kb', 'kb-xs'); r.style.removeProperty('--kbh'); r.innerHTML = html; document.body.classList.add('pp-ses-on'); }
 function ppSesHide(){
   document.body.classList.remove('pp-ses-on');
   const r = document.getElementById('pp-ses');
-  if(r) r.innerHTML = '';
+  document.body.classList.remove('kb', 'kb-xs');
+  if(r){ r.classList.remove('ecr', 'ecr-fl'); r.style.removeProperty('--kbh'); r.innerHTML = ''; }
+  ecrReset();
 }
 function ppConfetti(){
   const cl = ['var(--orange)','var(--yellow)','var(--green)','var(--pink)','var(--blue)','var(--purple)'];
@@ -4569,7 +4705,7 @@ function ppSesDraw(o){
   const foot = fl ? ans3 : `<button class="pp-show" onclick="${o.fnFlip}">Afficher la réponse</button>`;
   /* Chromebook (v84) : panneau « réponse » à droite + boutons sous les deux panneaux (display:none sur téléphone) */
   const raOut = !fl && anim === 'flip' && ppWide();  // retour à la question : le panneau rentre dans son emplacement
-  const ra = `<div class="pp-rslot${fl ? ' hid' : ''}" onclick="${o.fnFlip}"><div class="pp-g"><kbd>Espace</kbd><br>pour afficher la réponse</div></div><div class="pp-ra${fl ? ' on' : (raOut ? ' out' : '')}"><div class="pp-v"><div class="pp-ch"><span class="pp-sticker" style="animation:none">${f.libArriere}</span></div><div style="margin:auto 0"><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at${back.length > 90 ? ' pp-l' : ''}">${escapeHtml(back)}</p>${f.imgArriere ? `<img class="pp-aimg" src="${f.imgArriere}" alt="" draggable="false">` : ''}</div></div></div>`;
+  const ra = `<div class="pp-rslot${fl ? ' hid' : ''}" onclick="${o.fnFlip}"><div class="pp-g"><kbd>Espace</kbd><br>pour afficher la réponse</div></div><div class="pp-ra${fl ? ' on' : (raOut ? ' out' : '')}" onclick="${o.fnFlip}"><div class="pp-v"><div class="pp-ch"><span class="pp-sticker" style="animation:none">${f.libArriere}</span></div><div style="margin:auto 0"><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at${back.length > 90 ? ' pp-l' : ''}">${escapeHtml(back)}</p>${f.imgArriere ? `<img class="pp-aimg" src="${f.imgArriere}" alt="" draggable="false">` : ''}</div></div></div>`;
   const acts = `<div class="pp-acts${fl ? '' : ' dim'}${(!fl && anim === 'flip') ? ' down' : ''}">${ans3}</div>`;  // .down = retour à la question : même animation que le 1er retournement, à l'envers
   ppSesShow(`<div class="pp-top"><div class="pp-bar1"><i style="background-color:${start}"></i><u></u></div></div>
   ${o.mp ? `<div class="pp-info"><span class="pp-mp">${o.mp}</span></div>` : ''}
@@ -4635,6 +4771,8 @@ function renderStudy(){
    de carte, re-render, annulation) ; dès qu'on passe à la suivante, ou qu'une
    carte ratée est réinsérée plus loin (autre position), il est retiré au sort. */
 let sensAffiche = { cle: null, inverse: false };
+/* Réponse à écrire : réponse tapée, verrou, instant du retournement. Mémoire de session uniquement (voir le bloc « RÉPONSE À ÉCRIRE »). */
+let ecr = { cle: null, typed: '', locked: false, flipT: 0 };
 function sensPourAffichage(c, position, canal){
   if(!c || c.inversible !== true) return false;
   const cle = canal + ':' + position + ':' + c.id;
@@ -4776,6 +4914,7 @@ function renderStudyInner(){
     // après une session sur UNE matière (pas après « Tout réviser » / « Revoir »).
     const suivante = ((studyMode === 'due' || studyMode === 'errors') && matiereFilter !== 'toutes')
       ? (getMatieresDuesTriees(matiereFilter)[0] || null) : null;
+    ecrReset();
     const many = !!(suivante || nbErr);
     const btnSuite = suivante
       ? `<button class="pp-cta" onclick="continuerAvecMatiere('${escapeJsAttr(suivante.matiere)}')">Continuer avec ${escapeHtml(suivante.matiere)} (${suivante.count} carte${suivante.count>1?'s':''})</button>`
@@ -4791,12 +4930,22 @@ function renderStudyInner(){
   }
   const c = queue[currentIndex];
   const faces = facesCarte(c, sensPourAffichage(c, currentIndex, 'etude'));
-  ppSesDraw({
+  const o = {
     c, faces, flipped, counts: sessionMoodCounts, undo: !!lastAnswer,
     mp: { all:'tout', today:'revoir', errors:'erreurs' }[studyMode],
     ids: { card:'anki-card', body:'anki-card-body' },
     fnFlip: 'flipCard()', fnAns: 'answer', fnBack: 'exitStudySession()'
-  });
+  };
+  /* Réponse à écrire : l'animation est lue AVANT ppSesDraw (qui la remet à ''), le focus du champ aussi (le redessin le supprime). */
+  const ecrOn = ecrActive(o), ecrAnim = ppMood.anim, ecrFoc = ecrOn ? ecrFocusCapture() : null;
+  if(ecrOn) ecrEtat('study:' + currentIndex + ':' + c.id); else ecrReset();
+  ppSesDraw(o);
+  if(ecrOn){
+    const root = ppSesRoot();
+    root.classList.add('ecr'); root.classList.toggle('ecr-fl', !!flipped);
+    ecrHabiller(o, ecrAnim, ecrFoc);
+  }
+  ecrMesure();
   justAdvanced = false;
 }
 
@@ -5216,6 +5365,8 @@ function exitStudySession(){
 const PP_ENFONCE_MS = 80;
 let ppFlipEnCours = false;
 function ppRetournerApresEnfoncement(fn){
+  /* carte « à écrire » : la carte réponse (téléphone) / le panneau de droite (grand écran) s'enfoncent avec la carte question */
+  document.querySelectorAll('#pp-ses .pp-rcard,#pp-ses .pp-ecrslot').forEach(e => { e.style.animation = 'none'; e.classList.add('pp-sink'); });
   const card = document.querySelector('.pp-card');
   const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(!card || reduit){ fn(); return; }
@@ -5231,6 +5382,7 @@ function ppRetournerApresEnfoncement(fn){
 }
 function flipCard(){
   if(carteEnSortie) return;
+  ecrBascule(flipped);
   ppRetournerApresEnfoncement(() => {
     if(carteEnSortie) return;
     flipped = !flipped;
@@ -5336,8 +5488,11 @@ function sortirCarte(niveau, opts, apres){
   const scene = document.querySelector('.pp-card');
   lastAdvanceDir = null;
   if(!scene){ ppMood.anim = 'in'; apres(); carteEnSortie = false; return; }
+  const sortie = niveau === 'orange' ? (opts.dy < 0 ? 'pp-out-up' : 'pp-out-mid') : (niveau === 'vert' ? 'pp-out-ok' : 'pp-out-ko');
   scene.style.animation = ''; scene.style.transition = '';
-  scene.classList.add(niveau === 'orange' ? (opts.dy < 0 ? 'pp-out-up' : 'pp-out-mid') : (niveau === 'vert' ? 'pp-out-ok' : 'pp-out-ko'));
+  scene.classList.add(sortie);
+  const rc = document.querySelector('#pp-ses .pp-rcard');   // carte « à écrire » (téléphone) : la carte réponse sort avec la carte question
+  if(rc){ rc.style.animation = ''; rc.style.transition = ''; rc.classList.add(sortie); }
   setTimeout(() => { ppMood.anim = 'in'; apres(); carteEnSortie = false; }, 320);
 }
 
@@ -5353,6 +5508,7 @@ function sortirCarte(niveau, opts, apres){
     s.scene.style.transform = '';
     if(s.pa) s.pa.classList.remove('on');
     s.scene.classList.remove('armed');
+    if(s.partner){ s.partner.style.transition = 'transform .4s var(--pps)'; s.partner.style.transform = ''; s.partner.classList.remove('armed'); }
   }
 
   document.addEventListener('pointerdown', e => {
@@ -5362,13 +5518,20 @@ function sortirCarte(niveau, opts, apres){
     const t = e.target;
     const scene = t && t.closest ? t.closest('.pp-card') : null;
     if(!scene || t.closest('button, a, input, textarea, select')) return;
+    if(t.closest('.pp-ecrbox, .pp-ecr-ta, .pp-lock, .pp-rb')) return; // carte à écrire : champ, texte verrouillé, corps défilant → ni glissement ni retournement
     const modal = document.getElementById('modal-root');
     if(modal && modal.innerHTML.trim() !== '') return;
     const ctx = raccourciContexte();
     if(!ctx) return;
-    st = { id:e.pointerId, x:e.clientX, y:e.clientY, dx:0, dy:0, moved:false, lv:null, scene, ctx, pa:scene.querySelector('.pp-pastille') };
+    if(ecrAffichee() && !ctx.flipped && !ecr.locked) return; // carte à écrire pas encore validée : on ne la note pas d'un glissement, il faut écrire puis Valider
+    // carte « à écrire » (téléphone) : la carte question et la carte réponse bougent ensemble
+    const rcE = document.querySelector('#pp-ses .pp-rcard');
+    const partner = rcE ? (scene === rcE ? document.querySelector('#pp-ses .pp-card:not(.pp-rcard)') : rcE) : null;
+    st = { id:e.pointerId, x:e.clientX, y:e.clientY, dx:0, dy:0, moved:false, lv:null, scene, partner, ctx, pa:scene.querySelector('.pp-pastille') || (partner && partner.querySelector('.pp-pastille')) };
     scene.style.animation = 'none'; scene.style.transition = ''; // la transition reste celle du CSS (enfoncement) jusqu'au début d'un glissement
-    if(t.closest('.pp-body')){ scene.classList.add('pp-sink'); scene._sinkT0 = Date.now(); } // étape D
+    if(partner) partner.style.animation = 'none';
+    const bd = t.closest('.pp-body');
+    if(bd && bd.hasAttribute('onclick')){ scene.classList.add('pp-sink'); scene._sinkT0 = Date.now(); } // étape D (pas sur une carte à écrire dont le corps ne retourne rien)
   }, { passive:true });
 
   document.addEventListener('pointermove', e => {
@@ -5378,11 +5541,13 @@ function sortirCarte(niveau, opts, apres){
       if(d < 8) return;
       st.moved = true;
       st.scene.style.transition = 'none'; st.scene.classList.remove('pp-sink'); // c'est un glissement, pas un tap : la carte suit le doigt
+      if(st.partner){ st.partner.style.transition = 'none'; st.partner.classList.remove('pp-sink'); }
       try{ st.scene.setPointerCapture(e.pointerId); }catch(err){}
     }
     st.dx = dx; st.dy = dy;
     const sc = st.scene;
     sc.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (dx * .05) + 'deg)';
+    if(st.partner) st.partner.style.transform = sc.style.transform;
     if(st.pa) st.pa.style.setProperty('--f', (.10 + Math.min(1, Math.max(0, (d - GESTE_SEUIL) / 110)) * .20).toFixed(3)); // v130 : le fond se remplit doucement avec la distance (10 % → 30 %)
     const n = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'vert' : 'rouge') : 'orange';
     if(d >= GESTE_SEUIL && st.lv !== n){
@@ -5390,11 +5555,13 @@ function sortirCarte(niveau, opts, apres){
       sc.style.setProperty('--pc', PP_NV[n][0]);
       if(st.pa){ st.pa.style.setProperty('--pc', PP_NV[n][0]); st.pa.innerHTML = PP_IC[PP_NV[n][1]]; st.pa.classList.add('on'); }
       sc.classList.add('armed');
+      if(st.partner){ st.partner.style.setProperty('--pc', PP_NV[n][0]); st.partner.classList.add('armed'); }
       haptique(8);
     } else if(st.lv && d < GESTE_DESARME){
       st.lv = null;
       if(st.pa) st.pa.classList.remove('on');
       sc.classList.remove('armed');
+      if(st.partner) st.partner.classList.remove('armed');
     }
   });
 
@@ -5527,6 +5694,7 @@ function answer(niveau, opts){
 
 function undoLastAnswer(){
   if(!lastAnswer) return;
+  ecrReset(); // carte à écrire : elle revient « à écrire », champ vide, verrou levé
   ppStatUndo();
   const c = queue[lastAnswer.index];
   if(c && c.id === lastAnswer.cardId){
@@ -5581,6 +5749,7 @@ function undoLastAnswer(){
 function startQuiz(cards){
   quizSet = cards.slice();
   quizIndex = 0; quizFlipped = false; quizErrors = []; quizActive = true;
+  ecrReset();
   quizMoodCounts = { rouge:0, orange:0, vert:0 };
   ppMoodReset();
   document.getElementById('tab-study').style.display = 'none';
@@ -5646,11 +5815,21 @@ function renderQuiz(){
   }
   const c = quizSet[quizIndex];
   const faces = facesCarte(c, sensPourAffichage(c, quizIndex, 'quiz'));
-  ppSesDraw({
+  const o = {
     c, faces, flipped: quizFlipped, counts: quizMoodCounts, undo: false, mp: '',
     ids: { card:'quiz-anki-card', body:'quiz-anki-card-body' },
     fnFlip: 'quizFlip()', fnAns: 'quizAnswer', fnBack: 'exitQuiz()'
-  });
+  };
+  /* Réponse à écrire (même composant que la révision) : aucun effet sur le planning ni sur la synchro, quizAnswer ne change pas. */
+  const ecrOn = ecrActive(o), ecrAnim = ppMood.anim, ecrFoc = ecrOn ? ecrFocusCapture() : null;
+  if(ecrOn) ecrEtat('quiz:' + quizIndex + ':' + c.id); else ecrReset();
+  ppSesDraw(o);
+  if(ecrOn){
+    const root = ppSesRoot();
+    root.classList.add('ecr'); root.classList.toggle('ecr-fl', !!quizFlipped);
+    ecrHabiller(o, ecrAnim, ecrFoc);
+  }
+  ecrMesure();
   justAdvanced = false;
 }
 
@@ -5658,6 +5837,7 @@ function renderQuiz(){
    le corps de la carte joue son petit fondu (flipIn). */
 function quizFlip(){
   if(carteEnSortie) return;
+  ecrBascule(quizFlipped);
   ppRetournerApresEnfoncement(() => {
     if(carteEnSortie) return;
     quizFlipped = !quizFlipped;
@@ -5730,7 +5910,7 @@ function ppBrowseGroupsHtml(){
     const items = cartes.map((c, i) => {
       const lbl = ppBrwLabel(c);
       const cl = lbl === 'Nouvelle' ? 'pp-new' : (lbl === 'Maîtrisée' ? 'pp-okk' : '');
-      return `<div class="pp-it" data-id="${escapeHtml(c.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms" onclick="ppItClick('${escapeJsAttr(c.id)}')"><div><b>${escapeHtml(c.question || '🖼 Image')}</b><p>${escapeHtml(c.reponse || '🖼 Image')}</p><em class="${cl}">${lbl}</em>${c.inversible ? '<em class="pp-invt">⇄ inversée</em>' : ''}</div></div>`;
+      return `<div class="pp-it" data-id="${escapeHtml(c.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms" onclick="ppItClick('${escapeJsAttr(c.id)}')"><div><b>${escapeHtml(c.question || '🖼 Image')}</b><p>${escapeHtml(c.reponse || '🖼 Image')}</p><em class="${cl}">${lbl}</em>${c.inversible ? '<em class="pp-invt">⇄ inversée</em>' : ''}${c.ecrite === true ? '<em class="pp-invt pp-ecrt" title="Réponse à écrire" aria-label="Réponse à écrire">' + PP_IC.edit + '</em>' : ''}</div></div>`;
     }).join('');
     return `<div class="pp-grp${ppBrowseClosed[m] ? ' closed' : ''}" style="--c:${couleurMatiere(m)}"><div class="pp-gh"><button class="pp-ghm" onclick="ppBrowseToggle(this,'${mA}')"><span class="pp-dot"></span>${escapeHtml(m)}<small>${n} carte${n > 1 ? 's' : ''}</small></button><button class="pp-ib" aria-label="Options" onclick="ppGrpMenu('${mA}')">${PP_DOTS_H}</button><button class="pp-ib pp-chv" aria-label="Replier" onclick="ppBrowseToggle(this,'${mA}')">${PP_IC.up}</button></div><div class="pp-list">${items}</div></div>`;
   }).join('');
@@ -5782,7 +5962,7 @@ function ppBrowseToggle(btn, m){
 /* Menu ⋯ d'une matière (prototype : grpMenu) */
 function ppGrpMenu(m){
   const mA = escapeJsAttr(m);
-  ppSheet(`<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppSheetClose();ppInvMatiere('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>Aussi posées dans l'autre sens</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppSheetClose();ppInvMatiere('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>Aussi posées dans l'autre sens</span></div></button><button class="pp-row" onclick="ppSheetClose();ppEcrMatiere('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>Tu tapes ta réponse avant de la voir</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`);
 }
 
 /* v119 : « Partager à un pote » (menu ⋯ d'une matière dans Parcourir).
@@ -5799,7 +5979,7 @@ let ppPartageEnCours = false;
 function ppPartageDonnees(m){
   const cartes = CARDS.filter(c => (c.matiere || 'Sans matière') === m && (c.question || c.imageQuestion) && (c.reponse || c.imageReponse));
   if(!cartes.length) return null;
-  const data = { format:'flashcard-partage', version:1, matiere:m, cartes: cartes.map(c => ({ question:c.question, reponse:c.reponse, inversible: c.inversible === true, ...(ppImgValide(c.imageQuestion) ? { imageQuestion:c.imageQuestion } : {}), ...(ppImgValide(c.imageReponse) ? { imageReponse:c.imageReponse } : {}) })) };
+  const data = { format:'flashcard-partage', version:1, matiere:m, cartes: cartes.map(c => ({ question:c.question, reponse:c.reponse, inversible: c.inversible === true, ecrite: c.ecrite === true, ...(ppImgValide(c.imageQuestion) ? { imageQuestion:c.imageQuestion } : {}), ...(ppImgValide(c.imageReponse) ? { imageReponse:c.imageReponse } : {}) })) };
   return { data, json: JSON.stringify(data), n: cartes.length };
 }
 async function ppPartagerMatiere(m){
@@ -5855,11 +6035,18 @@ function ppPartagerFichier(m, d){
   ppToast('Fichier téléchargé : envoie-le à ton pote');
 }
 function ppInvMatiere(m){
-  const l = CARDS.filter(c => (c.matiere || 'Sans matière') === m);
-  if(!l.length) return;
+  const l = CARDS.filter(c => (c.matiere || 'Sans matière') === m && !c.ecrite);   // « Tout inverser » saute les cartes à écrire
+  if(!l.length){ ppToast('Cartes à écrire : pas de sens inversé'); return; }
   const tout = l.every(c => c.inversible);
   toggleInversibleMatiere(m);
   ppToast((tout ? 'Sens normal · ' : 'Sens inversé · ') + m);
+}
+function ppEcrMatiere(m){
+  const l = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
+  if(!l.length){ ppToast('Aucune réponse à écrire possible ici'); return; }
+  const tout = l.every(c => c.ecrite === true);
+  toggleEcriteMatiere(m);
+  ppToast((tout ? 'Réponse normale · ' : 'Réponse écrite · ') + m);
 }
 
 /* ---- fiche d'une carte (prototype : cardEdit / cardSave / cardReset / cardAsk / cardDel) ---- */
@@ -5868,15 +6055,18 @@ function ppFiche(id){
   const c = CARDS.find(x => x.id === id);
   if(!c) return;
   const actives = getMatieresActives(), cur = c.matiere || '';
-  ppFi = { id, m: cur, l: (cur && !actives.includes(cur)) ? [cur, ...actives] : actives.slice(), iv: !!c.inversible, imageQuestion: c.imageQuestion || '', imageReponse: c.imageReponse || '' };
+  ppFi = { id, m: cur, l: (cur && !actives.includes(cur)) ? [cur, ...actives] : actives.slice(), iv: !!c.inversible, ec: c.ecrite === true, imageQuestion: c.imageQuestion || '', imageReponse: c.imageReponse || '' };
   const pills = ppFi.l.length > 1
     ? `<label class="pp-l">Matière</label><div class="pp-pills pp-fm" style="margin-bottom:14px">${ppFi.l.map((x, i) => `<button class="pp-pill${x === cur ? ' on' : ''}" style="--c:${couleurMatiere(x)}" onclick="ppFichePickM(${i})"><span class="pp-dot" style="background:${couleurMatiere(x)}"></span>${escapeHtml(x)}</button>`).join('')}</div>`
     : '';
   const iA = escapeJsAttr(id);
+  const ivOff = !!(ppFi.ec && !(c.question || '').trim() && ppFi.imageQuestion);
+  const ecOk = ppEcritePossible(c), ecLong = (c.reponse || '').length > 80 || (c.reponse || '').indexOf('\n') >= 0;
   ppSheet(`<div class="pp-grab"></div><h2>Modifier la carte</h2><p class="pp-hint"><span id="pp-fi-m">${escapeHtml(cur || 'Sans matière')}</span> · ${ppBrwLabel(c)}</p>
-  ${pills}<label class="pp-l" for="pp-eq">Question</label><textarea id="pp-eq">${escapeHtml(c.question || '')}</textarea>${ppImgBloc('fi', 'q')}<label class="pp-l" for="pp-ea">Réponse</label><textarea id="pp-ea">${escapeHtml(c.reponse || '')}</textarea>${ppImgBloc('fi', 'r')}
-  <div class="pp-set" style="margin-bottom:14px"><div class="pp-li"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
-  <button class="pp-li" onclick="ppFicheReset('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre à zéro<small>Repart en « Nouvelle »</small></span></button></div>
+  ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi')">${escapeHtml(c.question || '')}</textarea>`)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea">${escapeHtml(c.reponse || '')}</textarea>`)}
+  <div class="pp-set" style="margin-bottom:14px"><div class="pp-li${ivOff ? ' pp-off' : ''}"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
+  <div class="pp-li${ecOk ? '' : ' pp-off'}"><i class="pp-ico">${PP_IC.edit}</i><span>Réponse à écrire<small>${ecLong ? 'Réponse longue : peu pratique à écrire' : 'Tu tapes ta réponse avant de la voir'}</small></span><button class="pp-tg${ppFi.ec ? ' on' : ''}" aria-label="Réponse à écrire" onclick="ppFicheEc(this)"></button></div>
+  <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre à zéro<small>Repart en « Nouvelle »</small></span></button></div>
   <div class="pp-duo"><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button><button class="pp-cta" onclick="ppFicheSave('${iA}')">Enregistrer</button></div>`);
 }
 function ppFichePickM(i){
@@ -5885,8 +6075,39 @@ function ppFichePickM(i){
   document.querySelectorAll('#pp-sheet .pp-fm .pp-pill').forEach((b, j) => b.classList.toggle('on', j === i));
   const s = document.getElementById('pp-fi-m'); if(s) s.textContent = ppFi.m || 'Sans matière';
 }
+/* Une carte « à écrire » dont la réponse n'est qu'une image ne peut pas l'être ; et ⇄ est refusé si la question est une image seule (on ne peut pas « écrire » une image). */
+function ppEcritePossible(c){ return !!(c && c.reponse && String(c.reponse).trim()); }
+function ppFicheEc(b){
+  if(!ppFi) return;
+  const a = (document.getElementById('pp-ea') || {}).value || '';
+  if(!ppFi.ec && !a.trim()){ ppToast('Réponse en image : impossible à écrire'); return; }
+  ppFi.ec = !ppFi.ec;
+  b.classList.toggle('on', ppFi.ec);
+  if(ppFi.ec && ppFi.iv){
+    ppFi.iv = false;
+    const t = document.querySelector('#pp-sheet button[onclick="ppFicheIv(this)"]'); if(t) t.classList.remove('on');
+  }
+  ppIvGris('fi');
+}
+/* ⇄ grisé quand « à écrire » est actif et que la question n'est qu'une image (on ne peut pas « écrire » une image) : fiche ('fi') et formulaire à la main ('man'). */
+function ppIvGris(ctx){
+  if(ctx === 'man'){
+    const b = document.getElementById('pp-man-inv'); if(!b) return;
+    const q = (document.getElementById('pp-nq') || {}).value || '';
+    b.classList.toggle('pp-off', !!(ppMan.ec && !q.trim() && ppMan.imageQuestion));
+  } else if(ctx === 'fi'){
+    const t = document.querySelector('#pp-sheet button[onclick="ppFicheIv(this)"]'), li = t && t.closest('.pp-li'); if(!li || !ppFi) return;
+    const q = (document.getElementById('pp-eq') || {}).value || '';
+    li.classList.toggle('pp-off', !!(ppFi.ec && !q.trim() && ppFi.imageQuestion));
+  }
+}
+function ppManIv(b){
+  if(!ppMan.inv && ppMan.ec && !((document.getElementById('pp-nq') || {}).value || '').trim() && ppMan.imageQuestion){ ppToast('Question en image : impossible à inverser'); return; }
+  ppMan.inv = !ppMan.inv; b.classList.toggle('on', ppMan.inv);
+}
 function ppFicheIv(b){
   if(!ppFi) return;
+  if(!ppFi.iv && ppFi.ec){ const q = (document.getElementById('pp-eq') || {}).value || ''; if(!q.trim()){ ppToast('Question en image : impossible à inverser'); return; } }
   ppFi.iv = !ppFi.iv;
   b.classList.toggle('on', ppFi.iv);
 }
@@ -5895,7 +6116,7 @@ function ppFicheSave(id){
   if(!c || !ppFi){ ppSheetClose(); return; }
   const q = document.getElementById('pp-eq').value.trim(), a = document.getElementById('pp-ea').value.trim();
   if((!q && !ppFi.imageQuestion) || (!a && !ppFi.imageReponse)){ ppToast('Chaque côté a besoin d’un texte ou d’une image'); return; }
-  const matiere = ppFi.m, ancienne = c.matiere, iv = !!ppFi.iv;
+  const matiere = ppFi.m, ancienne = c.matiere, iv = !!ppFi.iv, ec = !!ppFi.ec && !!a;
   const iq = ppFi.imageQuestion || '', ir = ppFi.imageReponse || '';
   if(ancienne && matiere && ancienne !== matiere && matieresConfig[ancienne] && matieresConfig[ancienne].dateControle){
     const confirme = confirm(
@@ -5905,11 +6126,11 @@ function ppFicheSave(id){
     );
     if(!confirme) return;
   }
-  const change = q !== c.question || a !== c.reponse || matiere !== (c.matiere || '') || iv !== !!c.inversible || iq !== (c.imageQuestion || '') || ir !== (c.imageReponse || '');
+  const change = q !== c.question || a !== c.reponse || matiere !== (c.matiere || '') || iv !== !!c.inversible || ec !== (c.ecrite === true) || iq !== (c.imageQuestion || '') || ir !== (c.imageReponse || '');
   if(change){
     const derniereModification = new Date().toISOString();
-    c.matiere = matiere; c.question = q; c.reponse = a; c.inversible = iv; c.derniereModification = derniereModification;
-    saveLocalOverlay(id, { matiere, question: q, reponse: a, inversible: iv, derniereModification });
+    c.matiere = matiere; c.question = q; c.reponse = a; c.inversible = iv; c.ecrite = ec; c.derniereModification = derniereModification;
+    saveLocalOverlay(id, { matiere, question: q, reponse: a, inversible: iv, ecrite: ec, derniereModification });
     c.imageQuestion = iq || null; c.imageReponse = ir || null;
     ppImgEnregistrer(id, iq, ir);
   }
@@ -5926,6 +6147,12 @@ function ppFicheSave(id){
 }
 /* Remise à zéro : la carte redevient « Nouvelle » (palier 0, jamais révisée), due aujourd'hui
    sous réserve des plafonds de nouvelles cartes (mêmes règles qu'un ajout). */
+function ppFicheResetAsk(id){
+  const c = CARDS.find(x => x.id === id);
+  if(!c) return;
+  const iA = escapeJsAttr(id);
+  ppSheet(`<div class="pp-grab"></div><h2>Remettre cette carte à zéro ?</h2><p class="pp-hint"><span data-notr>${escapeHtml(c.question || '')}</span></p><p class="pp-hint">Elle repart en « Nouvelle » : son avancement est perdu.</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}')">Annuler</button><button class="pp-cta" onclick="ppFicheReset('${iA}')">Remettre à zéro</button></div>`);
+}
 function ppFicheReset(id){
   const c = CARDS.find(x => x.id === id);
   if(!c) return;
@@ -5969,8 +6196,29 @@ function majEtatInversionBrowse(){ if(activeTab === 'browse') renderBrowse(); }
    -> tout passe en sens inversé. Agit sur TOUTES les cartes de la matière,
    même si la recherche en masque une partie. Seules les cartes qui changent
    réellement sont marquées modifiées (pour la synchro). */
+/* « Tout en réponse écrite » (menu ⋯ d'une matière) : même logique que l'inversion. Activer met aussi inversible = false
+   (y compris sur les cartes cumulées à la main) ; désactiver ne touche pas au sens. Les cartes dont la réponse est une image seule sont ignorées. */
+function toggleEcriteMatiere(m){
+  const cartes = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
+  if(cartes.length === 0) return;
+  const cible = !cartes.every(c => c.ecrite === true);
+  const maintenant = new Date().toISOString();
+  const imported = loadImportedCards();
+  let importedChange = false;
+  for(const c of cartes){
+    const iv = cible ? false : !!c.inversible;
+    if((c.ecrite === true) === cible && !!c.inversible === iv) continue;
+    c.ecrite = cible; c.inversible = iv; c.derniereModification = maintenant;
+    const ci = imported.find(x => x.id === c.id);
+    if(ci){ ci.ecrite = cible; ci.inversible = iv; ci.derniereModification = maintenant; importedChange = true; }
+    saveLocalOverlay(c.id, { ecrite: cible, inversible: iv, derniereModification: maintenant });
+  }
+  if(importedChange) saveImportedCards(imported);
+  majEtatInversionBrowse();
+  envoyerVersSync();
+}
 function toggleInversibleMatiere(m){
-  const cartes = CARDS.filter(c => (c.matiere || 'Sans matière') === m);
+  const cartes = CARDS.filter(c => (c.matiere || 'Sans matière') === m && !c.ecrite);   // les cartes à écrire ne sont ni inversées ni comptées
   if(cartes.length === 0) return;
   const cible = !cartes.every(c => c.inversible);
   const maintenant = new Date().toISOString();
@@ -6772,7 +7020,7 @@ PP_IC.file = ppSvg('<path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h6M9 17h6"/>',18);
 PP_IC.cam = ppSvg('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',20);
 
 let ppAddMode = 'ia';               // 'ia' | 'man'
-let ppMan = { inv:false, imageQuestion:'', imageReponse:'' };           // « Sens inversé » du formulaire à la main
+let ppMan = { inv:false, ec:false, imageQuestion:'', imageReponse:'' };           // « Sens inversé » du formulaire à la main
 let ppAddedN = 0;                    // cartes ajoutées à la main depuis l'ouverture de l'onglet
 let ppMsgApercu = '';                // texte du composeur de l'aperçu
 let ppApercuBusy = false;            // envoi en cours depuis le composeur de l'aperçu
@@ -6861,17 +7109,21 @@ function ppViewIA(){
 
 function ppViewMan(){
   return `<button class="pp-bk2" onclick="ppSetMode('ia')">${PP_IC.back}Avec l'IA</button><h2 class="pp-t">Écrire une carte</h2>${ppPillsHtml()}
-  <div class="pp-numh"><b>1</b>Question<button class="pp-invc ${ppMan.inv ? 'on' : ''}" style="margin-left:auto" onclick="ppMan.inv=!ppMan.inv;this.classList.toggle('on',ppMan.inv)">${PP_IC.swap}Sens inversé</button></div>
-  <textarea id="pp-nq" enterkeyhint="next" onkeydown="ppEnter(event,'q')" placeholder="Saisis le texte ici"></textarea>
-  ${ppImgBloc('man', 'q')}
-  <div class="pp-numh"><b>2</b>Réponse</div>
-  <textarea id="pp-na" enterkeyhint="done" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici"></textarea>
-  ${ppImgBloc('man', 'r')}
+  <div class="pp-side pp-side-q"><div class="pp-numh"><b>1</b>Question<button class="pp-invc ${ppMan.inv ? 'on' : ''}${ppMan.ec && ppMan.imageQuestion ? ' pp-off' : ''}" id="pp-man-inv" style="margin-left:auto" onclick="ppManIv(this)">${PP_IC.swap}Sens inversé</button></div>
+  ${ppChampImg('man', 'q', `<textarea id="pp-nq" enterkeyhint="next" oninput="ppIvGris('man')" onkeydown="ppEnter(event,'q')" placeholder="Saisis le texte ici"></textarea>`)}</div>
+  <div class="pp-side pp-side-r"><div class="pp-numh"><b>2</b>Réponse<button class="pp-invc ${ppMan.ec ? 'on' : ''}" style="margin-left:auto" onclick="ppManEc(this)">${PP_IC.edit.replace(/17/g, '14')}À écrire</button></div>
+  ${ppChampImg('man', 'r', `<textarea id="pp-na" enterkeyhint="done" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici"></textarea>`)}</div>
   <button class="pp-cta" style="margin-top:0" onclick="ppAddCard()">Ajouter la carte</button>
   <div class="pp-kbd"><kbd>Entrée</kbd> pour avancer, puis pour ajouter</div>
   <p class="pp-note" id="pp-addn">${ppAddedN ? ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert' : 'Reste ouvert pour enchaîner sur la carte suivante'}</p>`;
 }
 
+/* « À écrire » du formulaire à la main : l'activer éteint ⇄ (exclusifs par défaut) ; toucher ⇄ ensuite les cumule volontairement. */
+function ppManEc(b){
+  ppMan.ec = !ppMan.ec; b.classList.toggle('on', ppMan.ec);
+  if(ppMan.ec && ppMan.inv){ ppMan.inv = false; const t = document.getElementById('pp-man-inv'); if(t) t.classList.remove('on'); }
+  ppIvGris('man');
+}
 function ppSetMode(m){ sauverBrouillonIA(); ppAddMode = m; importMsg = null; ppMan.imageQuestion = ppMan.imageReponse = ''; ppImgOuvert = null; renderAdd(); }
 function ppEnter(e, w){
   if(e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
@@ -6883,10 +7135,11 @@ function ppAddCard(){
   const nq = document.getElementById('pp-nq'), na = document.getElementById('pp-na');
   const q = nq.value.trim(), a = na.value.trim();
   const hq = q || ppMan.imageQuestion, ha = a || ppMan.imageReponse;
-  if(!hq || !ha){ (hq ? na : nq).focus(); return; }
+  if(!hq || !ha){ ppToast('Chaque côté a besoin d’un texte ou d’une image'); (hq ? na : nq).focus(); return; }
   const m = ppMatiereSel();
   if(!m){ ppToast("Crée d'abord une matière"); return; }
   createInversible = !!ppMan.inv;
+  createEcrite = !!ppMan.ec && !!a;   // une réponse en image seule ne peut pas être « à écrire »
   const imgs = { q: ppMan.imageQuestion || '', r: ppMan.imageReponse || '' };
   if(!createCardWithMatiere(m, q, a, false, imgs)) return;
   ppMan.imageQuestion = ppMan.imageReponse = ''; ppImgOuvert = null;
@@ -6900,7 +7153,7 @@ function ppAddCard(){
 /* ---- aperçu des cartes générées ---- */
 function ppViewApercu(){
   const { matiere: s, cartes: cs } = iaCartesPreview;
-  const all = cs.length > 0 && cs.every(c => c.inversible), n = cs.length;
+  const elig = cs.filter(c => !c.ecrite), all = elig.length > 0 && elig.every(c => c.inversible), allEc = cs.length > 0 && cs.every(c => c.ecrite), n = cs.length;
   const busy = ppApercuBusy || iaSuppEnCours || iaAjustementEnCours;
   const fin = `<input type="file" id="sup-apercu-cam" accept="image/*" capture="environment" style="display:none;" onchange="handleFichiersSupp(event,'apercu')">
     <input type="file" id="sup-apercu-gal" accept="image/*" multiple style="display:none;" onchange="handleFichiersSupp(event,'apercu')">
@@ -6908,8 +7161,8 @@ function ppViewApercu(){
   return `<h2 class="pp-t">Vérifie tes cartes</h2>
   <div class="pp-src"><i>${PP_IC.spark}</i><span><b>${n} carte${n > 1 ? 's' : ''} générée${n > 1 ? 's' : ''}</b> pour <b>${ppEsc(s)}</b>. Relis, modifie ou complète avant d'ajouter.</span></div>
   ${ppMsgBlock()}
-  <div class="pp-pvbar"><span>Matière : <b>${ppEsc(s)}</b></span><button class="pp-invc ${all ? 'on' : ''}" onclick="toggleToutInverserPreview()">${PP_IC.swap}Tout inverser</button></div>
-  ${cs.map((c, i) => `<div class="pp-pv"><div class="pp-pvh"><b>Carte ${i + 1}</b><button class="pp-invc ${c.inversible ? 'on' : ''}" onclick="toggleInversiblePreview(${i})">${PP_IC.swap}Inverser</button><button class="pp-ib" aria-label="Supprimer" onclick="supprimerCartePreview(${i})">${PP_IC.trash}</button></div><textarea oninput="modifierCartePreview(${i}, 'question', this.value)">${ppEsc(c.question)}</textarea><textarea class="pp-a" oninput="modifierCartePreview(${i}, 'reponse', this.value)">${ppEsc(c.reponse)}</textarea>${ppImgRangee('pv:' + i)}</div>`).join('')}
+  <div class="pp-pvbar"><span>Matière : <b>${ppEsc(s)}</b></span><span class="pp-pvg"><button class="pp-invc ${all ? 'on' : ''}" onclick="toggleToutInverserPreview()">${PP_IC.swap}Tout inverser</button><button class="pp-invc ${allEc ? 'on' : ''}" onclick="toggleToutEcritePreview()">${PP_IC.edit.replace(/17/g, '14')}Tout à écrire</button></span></div>
+  ${cs.map((c, i) => `<div class="pp-pv"><div class="pp-pvh"><b>Carte ${i + 1}</b><button class="pp-invc ${c.inversible ? 'on' : ''}" onclick="toggleInversiblePreview(${i})">${PP_IC.swap}Inverser</button><button class="pp-invc ${c.ecrite ? 'on' : ''}" onclick="toggleEcritePreview(${i})">${PP_IC.edit.replace(/17/g, '14')}À écrire</button><button class="pp-ib" aria-label="Supprimer" onclick="supprimerCartePreview(${i})">${PP_IC.trash}</button></div>${ppChampImg('pv:' + i, 'q', `<textarea oninput="modifierCartePreview(${i}, 'question', this.value)">${ppEsc(c.question)}</textarea>`)}${ppChampImg('pv:' + i, 'r', `<textarea class="pp-a" oninput="modifierCartePreview(${i}, 'reponse', this.value)">${ppEsc(c.reponse)}</textarea>`)}</div>`).join('')}
   <button class="pp-dash" onclick="ajouterCartePreviewVide()">+ Ajouter une carte manuellement</button>
   <hr class="pp-hr1"><p class="pp-sub2">Dis-moi ce que tu veux</p><p class="pp-hint">Un texte, un fichier ou une demande : l'IA comprend.</p>
   ${ppCmpBox({ id:'ia-supp-textarea', ph:"Colle un texte de cours, ou écris ex. « plus court », « plus de dates »…", inp:'ppMsgApercu=this.value', val:ppEsc(ppMsgApercu), zone:'sup-apercu-zone', zoneHtml:renderZoneFichiersSupp('apercu'), cam:'sup-apercu-cam', gal:'sup-apercu-gal', doc:'sup-apercu-doc', send:'ppAiSend()', busy })}${fin}
@@ -6971,7 +7224,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v146';
+const PP_APP_VERSION = 'v149';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -7125,7 +7378,7 @@ function ppImporterDonnees(data){
   const m = ppMatiereSel();
   const liste = Array.isArray(data) ? data : (data && Array.isArray(data.cartes) ? data.cartes : null);
   if(!liste){ ppToast('Format non reconnu'); return; }
-  const items = liste.filter(c => c && (c.question || ppImgValide(c.imageQuestion)) && (c.reponse || ppImgValide(c.imageReponse))).map(c => ({ id:null, matiere:String((data && data.format === 'flashcard-partage') ? m : (c.matiere || m)), question:String(c.question || '').trim(), reponse:String(c.reponse || '').trim(), palier:0, prochaineRevision:null, derniereRevision:null, inversible:c.inversible === true, ...ppImgPatch(c) }));
+  const items = liste.filter(c => c && (c.question || ppImgValide(c.imageQuestion)) && (c.reponse || ppImgValide(c.imageReponse))).map(c => ({ id:null, matiere:String((data && data.format === 'flashcard-partage') ? m : (c.matiere || m)), question:String(c.question || '').trim(), reponse:String(c.reponse || '').trim(), palier:0, prochaineRevision:null, derniereRevision:null, inversible:c.inversible === true, ecrite:c.ecrite === true, ...ppImgPatch(c) }));
   if(!items.length){ ppToast('Aucune carte valide'); return; }
   ppImgPerdues = ppImgAjusterBudget(items);
   ppSheetClose();
@@ -7743,9 +7996,25 @@ function toggleInversiblePreview(i){
 /* "Tout inverser" : si toutes les cartes le sont déjà, on désactive tout ;
    sinon on active tout. Un seul geste, dans les deux sens. */
 function toggleToutInverserPreview(){
+  if(!iaCartesPreview) return;
+  const elig = iaCartesPreview.cartes.filter(c => !c.ecrite);   // les cartes à écrire sont ignorées
+  if(elig.length === 0) return;
+  const toutesActives = elig.every(c => c.inversible);
+  elig.forEach(c => { c.inversible = !toutesActives; });
+  renderAdd();
+}
+/* « À écrire » dans l'aperçu : l'activer éteint ⇄ de la carte ; ⇄ reste touchable ensuite (cumul volontaire). */
+function toggleEcritePreview(i){
+  const c = iaCartesPreview && iaCartesPreview.cartes[i];
+  if(!c) return;
+  c.ecrite = !c.ecrite;
+  if(c.ecrite) c.inversible = false;
+  renderAdd();
+}
+function toggleToutEcritePreview(){
   if(!iaCartesPreview || iaCartesPreview.cartes.length === 0) return;
-  const toutesActives = iaCartesPreview.cartes.every(c => c.inversible);
-  iaCartesPreview.cartes.forEach(c => { c.inversible = !toutesActives; });
+  const toutes = iaCartesPreview.cartes.every(c => c.ecrite);
+  iaCartesPreview.cartes.forEach(c => { c.ecrite = !toutes; if(c.ecrite) c.inversible = false; });
   renderAdd();
 }
 
@@ -7757,7 +8026,7 @@ function supprimerCartePreview(i){
 
 function ajouterCartePreviewVide(){
   if(!iaCartesPreview) return;
-  iaCartesPreview.cartes.push({ question: '', reponse: '', inversible: false });
+  iaCartesPreview.cartes.push({ question: '', reponse: '', inversible: false, ecrite: false });
   renderAdd();
 }
 
@@ -7776,7 +8045,7 @@ function validerIaPreview(){
   const { matiere, dateControle, cartes } = iaCartesPreview;
   const items = cartes
     .filter(c => c.question.trim() && c.reponse.trim())
-    .map(c => ({ id: null, matiere, question: c.question.trim(), reponse: c.reponse.trim(), palier: 0, prochaineRevision: null, derniereRevision: null, inversible: c.inversible === true, imageQuestion: c.imageQuestion || null, imageReponse: c.imageReponse || null }));
+    .map(c => ({ id: null, matiere, question: c.question.trim(), reponse: c.reponse.trim(), palier: 0, prochaineRevision: null, derniereRevision: null, inversible: c.inversible === true, ecrite: c.ecrite === true, imageQuestion: c.imageQuestion || null, imageReponse: c.imageReponse || null }));
 
   if(items.length === 0){
     importMsg = { type:'err', text:'Ajoute au moins une carte avec question et réponse avant de valider.' };
@@ -7876,7 +8145,7 @@ Réponds avec le tableau JSON complet et final des cartes à afficher (reprends 
   iaCartesPreview.cartes.forEach(c => { const k = c.question.trim(); if(!avantParQuestion.has(k)) avantParQuestion.set(k, c); });
   const cartesAvecSens = ppImgResoudre(cartes).map(c => {
     const avant = avantParQuestion.get(c.question.trim());
-    const out = { ...c, inversible: !!(avant && avant.inversible) };
+    const out = { ...c, inversible: !!(avant && avant.inversible), ecrite: !!(avant && avant.ecrite) };
     const iq = (avant && avant.imageQuestion) || c.imageQuestion, ir = (avant && avant.imageReponse) || c.imageReponse;
     if(iq) out.imageQuestion = iq; else delete out.imageQuestion;
     if(ir) out.imageReponse = ir; else delete out.imageReponse;
@@ -9275,6 +9544,7 @@ function construireDonneesProgression(options){
     facileConsecutif: c.facileConsecutif || 0,
     facilite: facilitePour(c),
     inversible: c.inversible === true,
+    ecrite: c.ecrite === true,
     ...(ppImgValide(c.imageQuestion) ? { imageQuestion: c.imageQuestion } : {}),
     ...(ppImgValide(c.imageReponse) ? { imageReponse: c.imageReponse } : {})
   }));
@@ -9374,12 +9644,12 @@ function importerProgression(data){
     const difficultes = Number.isFinite(item.difficultes) ? Math.max(0, item.difficultes) : 0;
     const facileConsecutif = Number.isFinite(item.facileConsecutif) ? Math.max(0, item.facileConsecutif) : 0;
     const facilite = facilitePour({ facilite: item.facilite }); // absent (ancien export) => 1
-    const inversible = item.inversible === true;
+    const inversible = item.inversible === true, ecrite = item.ecrite === true;
     const imgs = ppImgPatch(item);
     // Absent sur un vieux payload version 2 (ou export sans champ) : null,
     // traité comme "très ancien" partout où c'est comparé (voir fusionnerDepuisSync).
     const derniereModification = typeof item.derniereModification === 'string' ? item.derniereModification : null;
-    items.push({ id: item.id ? String(item.id) : null, matiere, question, reponse, palier, prochaineRevision, derniereRevision, derniereModification, difficultes, facileConsecutif, facilite, inversible, ...imgs });
+    items.push({ id: item.id ? String(item.id) : null, matiere, question, reponse, palier, prochaineRevision, derniereRevision, derniereModification, difficultes, facileConsecutif, facilite, inversible, ecrite, ...imgs });
   }
   if(items.length === 0){
     // Une sauvegarde peut ne contenir que des matières vides (aucune carte) : on les restaure quand même.
@@ -9784,7 +10054,8 @@ function finaliserImport(items, renommages){
       difficultes: it.difficultes || 0,
       facileConsecutif: it.facileConsecutif || 0,
       facilite: facilitePour(it),
-      inversible: it.inversible === true
+      inversible: it.inversible === true,
+      ecrite: it.ecrite === true
     };
     if(ppImgValide(it.imageQuestion)) carte.imageQuestion = it.imageQuestion;
     if(ppImgValide(it.imageReponse)) carte.imageReponse = it.imageReponse;
@@ -9800,7 +10071,8 @@ function finaliserImport(items, renommages){
       difficultes: carte.difficultes,
       facileConsecutif: carte.facileConsecutif,
       facilite: carte.facilite,
-      inversible: carte.inversible
+      inversible: carte.inversible,
+      ecrite: carte.ecrite
     });
     matieresTouchees.add(matiere);
     ajoutees++;
@@ -10039,7 +10311,7 @@ function fusionnerDepuisSync(data){
     const derniereModificationRecue = typeof item.derniereModification === 'string' ? item.derniereModification : null;
     const difficultes = Number.isFinite(item.difficultes) ? Math.max(0, item.difficultes) : 0;
     const facileConsecutif = Number.isFinite(item.facileConsecutif) ? Math.max(0, item.facileConsecutif) : 0;
-    const inversible = item.inversible === true;
+    const inversible = item.inversible === true, ecrite = item.ecrite === true;
     const imgs = ppImgPatch(item);
     // Absent (autre appareil pas encore à jour) : on ne touche pas à la facilité locale.
     const faciliteRecue = Number.isFinite(item.facilite) ? facilitePour({ facilite: item.facilite }) : null;
@@ -10055,7 +10327,7 @@ function fusionnerDepuisSync(data){
     const localCarte = cardsParId.get(id);
     const patch = {
       matiere, question, reponse, palier, prochaineRevision, derniereRevision,
-      derniereModification: derniereModificationRecue, difficultes, facileConsecutif, inversible
+      derniereModification: derniereModificationRecue, difficultes, facileConsecutif, inversible, ecrite
     };
     if(faciliteRecue !== null) patch.facilite = faciliteRecue;
 
@@ -10137,6 +10409,7 @@ function fusionnerDepuisSync(data){
    reste ouvert pour enchaîner) — c'est le comportement voulu pour "tout
    inverser" : on règle une fois, toutes les cartes saisies ensuite suivent. */
 let createInversible = false;
+let createEcrite = false;   // « réponse à écrire » de la carte en cours de création (comme createInversible)
 
 /* Ordre de tabulation logique de l'écran de création, en tenant compte
    du champ "nouvelle matière" qui n'existe que si besoin. */
@@ -10192,7 +10465,7 @@ function createCardWithMatiere(matiere, question, reponse, keepOpen, images){
   const dateControleCreate = (cfgMatiereCreate && cfgMatiereCreate.dateControle && cfgMatiereCreate.dateControle >= today) ? cfgMatiereCreate.dateControle : null;
   // Carte créée = toujours neuve : elle évite la zone tampon avant le contrôle.
   const prochaineRevision = plafonnerDateRevision(matiere, today, dateControleCreate, id, true);
-  const newCard = { id, matiere, question, reponse, palier: 0, prochaineRevision, derniereRevision: null, derniereModification: new Date().toISOString(), inversible: createInversible === true };
+  const newCard = { id, matiere, question, reponse, palier: 0, prochaineRevision, derniereRevision: null, derniereModification: new Date().toISOString(), inversible: createInversible === true, ecrite: createEcrite === true };
   if(images && images.q) newCard.imageQuestion = images.q;
   if(images && images.r) newCard.imageReponse = images.r;
   imported.push(newCard);
@@ -10850,6 +11123,186 @@ function validerCodePerso(){
    (sinon un 2e appui répondrait deux fois à la même carte). */
 let raccourciVerrouJusqu = 0;
 
+/* ===== RÉPONSE À ÉCRIRE (étape 2) =====
+   Une carte `ecrite` (c.ecrite === true) dont la face à écrire contient du texte se révise ainsi : un champ + « Valider »
+   à la place de la réponse, puis, une fois la carte retournée, « Ta réponse » et « Réponse » l'une sous l'autre.
+   La réponse tapée vit uniquement dans `ecr` (mémoire de session) : jamais dans la carte, jamais sauvegardée, jamais synchronisée.
+   answer(), les paliers et le planning ne changent pas : seul l'avant-retournement est différent.
+   Noms préfixés « ecr » (le prototype disait cible / valider / grandir / deplier / habiller) pour ne pas entrer en collision
+   avec les variables locales de l'app (ex. `cible` dans gererRaccourcisClavier).
+   Le quiz « S'entraîner » n'est pas encore branché (étape 3). */
+function ecrVide(cle){ return { cle: cle || null, typed: '', locked: false, flipT: 0 }; }
+function ecrEtat(cle){ if(ecr.cle !== cle) ecr = ecrVide(cle); return ecr; }
+function ecrReset(){ ecr = ecrVide(null); }
+/* La carte affichée est-elle « à écrire » pour ce tirage ? Face à écrire = face cachée telle qu'affichée (réponse, ou question si ⇄).
+   Repli : face à écrire = image seule → carte normale pour ce tirage. */
+function ecrActive(o){
+  return !!(o && o.c && o.c.ecrite === true && o.faces && String(o.faces.arriere || '').trim() !== '');
+}
+function ecrAffichee(){ const r = document.getElementById('pp-ses'); return !!(r && r.classList.contains('ecr')); }
+/* Clavier du téléphone : posé UNIQUEMENT quand une carte à écrire est affichée, sur téléphone (ecrMesure ci-dessous le pilote).
+   body.kb + --kbh ; tout ce qui se replie le fait en .34 s avec --kbe (voir le CSS « RÉPONSE À ÉCRIRE »). */
+function ecrClavier(ouvert, hauteurPx){
+  const root = document.getElementById('pp-ses');
+  const ok = !!(ouvert && root && root.classList.contains('ecr') && !ppWide());
+  document.body.classList.toggle('kb', ok);
+  /* très peu de place (paysage + clavier) : l'étiquette de la carte réponse se masque pour que le champ et « Valider » restent visibles */
+  document.body.classList.toggle('kb-xs', ok && (window.visualViewport ? window.visualViewport.height : window.innerHeight) < 340);
+  if(root) root.style.setProperty('--kbh', (ok ? (hauteurPx || 0) : 0) + 'px');
+}
+/* Hauteur du champ selon la place réellement libre dans la carte (min 72 px, max 220 px) : il grandit avec le texte jusque-là, puis défile en interne. */
+function ecrChampMax(){
+  const r = document.getElementById('pp-ses'), t = ecrChamp();
+  if(!r || !t || ppWide()) return;
+  const stage = r.querySelector('.pp-stage'), q = r.querySelector('.pp-card:not(.pp-rcard)'), rc = r.querySelector('.pp-rcard');
+  if(!stage || !q || !rc) return;
+  const libre = stage.clientHeight - 18 /* gap */ - 96 /* question : place minimale */ - (rc.offsetHeight - t.offsetHeight);
+  r.style.setProperty('--ecr-max', Math.max(72, Math.min(220, Math.floor(libre))) + 'px');
+}
+/* Mesure du clavier : vient UNIQUEMENT du viewport (jamais de focus/blur : avec le geste « retour » d'Android le champ garde le focus alors que le clavier a disparu). */
+const ecrKb = { ref: window.innerHeight, w: window.innerWidth, ouvert: false, dernier: false, raf: 0, tm: 0 };
+function ecrMesure(){
+  if(ecrKb.raf) return;
+  ecrKb.raf = requestAnimationFrame(() => { ecrKb.raf = 0; ecrMesureVrai(); });
+}
+function ecrMesureVrai(){
+  const vv = window.visualViewport;
+  if(!ecrAffichee() || ppWide()){
+    if(ecrKb.ouvert || document.body.classList.contains('kb')){ ecrKb.ouvert = false; ecrClavier(false, 0); }
+    return;
+  }
+  const h = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0, ih = window.innerHeight;
+  if(vv && vv.scale > 1.02) return;                                   /* pincement pour zoomer ≠ clavier */
+  if(window.innerWidth !== ecrKb.w){ ecrKb.w = window.innerWidth; ecrKb.ref = Math.max(ih, h + top); }   /* rotation : nouvelle référence */
+  else if(h + top >= ecrKb.ref - 2 || ih > ecrKb.ref) ecrKb.ref = Math.max(ecrKb.ref, ih, h + top);       /* clavier fermé : la plus grande hauteur vue */
+  const kb = Math.max(0, ecrKb.ref - h - top);
+  if(!ecrKb.ouvert && kb > 100) ecrKb.ouvert = true;                  /* hystérésis : ouvre > 100 px, ferme < 60 px */
+  else if(ecrKb.ouvert && kb < 60) ecrKb.ouvert = false;
+  /* si le viewport de mise en page a déjà rétréci, #pp-ses{position:fixed;bottom:0} suit tout seul : --kbh = 0 */
+  const reste = Math.max(0, kb - Math.max(0, ecrKb.ref - ih));
+  const change = ecrKb.dernier !== ecrKb.ouvert; ecrKb.dernier = ecrKb.ouvert;
+  ecrClavier(ecrKb.ouvert, ecrKb.ouvert ? reste : 0);
+  if(ecrKb.ouvert && top > 0) window.scrollTo(0, 0);                  /* contre le panoramique du navigateur */
+  ecrChampMax();
+  if(change){ clearTimeout(ecrKb.tm); ecrKb.tm = setTimeout(() => { ecrChampMax(); const t = ecrChamp(); if(t && ecr.typed) ecrGrandir(t); }, 380); }   /* la mise en page finit de bouger après .34 s : on remesure la place du champ */
+}
+(function(){
+  const vv = window.visualViewport;
+  if(vv){ vv.addEventListener('resize', ecrMesure); vv.addEventListener('scroll', ecrMesure); }
+  window.addEventListener('resize', ecrMesure);
+  window.addEventListener('orientationchange', () => setTimeout(ecrMesure, 250));
+})();
+/* Le champ avait-il le focus juste avant le redessin ? (renderStudy est appelé par la synchro, minuit, le retour d'arrière-plan…) */
+function ecrFocusCapture(){
+  const a = document.activeElement;
+  if(a && a.classList && a.classList.contains('pp-ecr-ta')) return { a: a.selectionStart, b: a.selectionEnd };
+  return null;
+}
+function ecrChamp(){ return [...document.querySelectorAll('#pp-ses .pp-ecr-ta')].find(t => t.offsetParent) || null; }
+function ecrValider(){
+  const cx = raccourciContexte();
+  if(!cx || cx.flipped || carteEnSortie || !ecrAffichee()) return;
+  const t = ecrChamp(); if(t) ecr.typed = t.value;
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();   /* le clavier se ferme : l'écran se réadapte (visualViewport) */
+  haptique(10);
+  cx.flip();
+}
+/* Verrou d'1 s (décision 8), commun à la révision et au quiz : appelé AVANT de retourner. */
+function ecrBascule(flippedNow){
+  if(ecrAffichee() && !ppFlipEnCours){
+    if(!flippedNow) ecr.flipT = Date.now();                       // question → réponse : l'élève a 1 s pour revenir et corriger
+    else if(Date.now() - ecr.flipT > 1000) ecr.locked = true;      // retour à la question après plus d'1 s : texte verrouillé
+  }
+}
+function ecrGrandir(t){
+  ecr.typed = t.value;
+  document.querySelectorAll('#pp-ses .pp-ecr-ta').forEach(x => { if(x !== t) x.value = ecr.typed; });
+  if(!ppWide()){ ecrChampMax(); t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
+}
+/* « Ta réponse » : toucher = tout afficher / replier */
+function ecrDeplier(el){
+  el.classList.toggle('open');
+  document.querySelectorAll('#pp-ses .pp-rb').forEach(r => r.dispatchEvent(new Event('scroll')));
+}
+/* petit fondu en bas tant qu'il reste du texte à faire défiler */
+function ecrSuivreScroll(rb){
+  const upd = () => rb.classList.toggle('ov', rb.scrollHeight - rb.scrollTop - rb.clientHeight > 4);
+  rb.addEventListener('scroll', upd, { passive:true });
+  if(window.ResizeObserver) new ResizeObserver(upd).observe(rb);
+  upd();
+}
+/* la « carte réponse » (téléphone) : même format que la carte question */
+function ecrCarteRep(titre, corps, pied, anim){
+  return '<div class="pp-card pp-rcard' + (anim === 'in' ? ' pp-in' : '') + '"><div class="pp-ch"><span class="pp-sticker" style="animation:none">' + titre + '</span></div><div class="pp-rb">' + corps + '</div><div class="pp-foot">' + pied + '</div></div>';
+}
+/* Appelée juste après ppSesDraw pour une carte à écrire : habille l'écran. anim = ppMood.anim lu AVANT ppSesDraw ; foc = focus du champ avant le redessin. */
+function ecrHabiller(o, anim, foc){
+  const r = document.getElementById('pp-ses'), wide = ppWide();
+  const q = r.querySelector('.pp-card'), qb = q.querySelector('.pp-body'), qf = q.querySelector('.pp-foot');
+  if(!o.flipped){
+    qb.removeAttribute('onclick'); qb.style.cursor = 'default';
+    let corps, pied;
+    if(ecr.locked){
+      const nom = ecr.typed.trim() ? '<span data-notr>' + escapeHtml(ecr.typed.trim()) + '</span>' : '<i>Pas de réponse</i>';
+      corps = '<div class="pp-ecl">Ta réponse · verrouillée</div><div class="pp-ecrbox pp-lock"><div class="pp-lk">' + nom + '</div></div>';
+      pied = '<button class="pp-show" onclick="' + o.fnFlip + '">Afficher la réponse</button>' + (wide ? '<div class="pp-ecw-h"><kbd>Espace</kbd> pour afficher la réponse</div>' : '');
+      qb.setAttribute('onclick', o.fnFlip); qb.style.cursor = 'pointer';
+    } else {
+      const ta = '<textarea class="pp-ecr-ta" rows="1" placeholder="Ta réponse…" aria-label="Ta réponse" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="sentences" enterkeyhint="enter" oninput="ecrGrandir(this)"></textarea>';
+      /* « Valider » est déjà traduit « Confirm » dans le dictionnaire (réglage Gemini) : sur la carte, on dit « Check » en anglais */
+      const ok = '<span data-notr>' + ((window.langueChoisie && window.langueChoisie() === 'en') ? 'Check' : 'Valider') + '</span>';
+      corps = '<div class="pp-ecrbox">' + ta + '</div>';
+      pied = '<button class="pp-show pp-ecr-ok" onclick="ecrValider()">' + ok + '</button>';
+    }
+    if(wide){
+      const s = r.querySelector('.pp-rslot');
+      if(!ecr.locked) s.removeAttribute('onclick');
+      s.classList.add('pp-ecrslot'); s.classList.remove('hid');
+      s.innerHTML = '<div class="pp-ch"><span class="pp-sticker" style="animation:none">Ta réponse</span></div><div class="pp-rb">' + corps + '</div><div class="pp-foot">' + pied + '</div>';
+      if(anim === 'in') s.style.animation = 'ppcardIn .45s var(--pps) both';
+    } else {
+      if(qf) qf.remove();
+      q.insertAdjacentHTML('afterend', ecrCarteRep('Ta réponse', corps, pied, anim));
+      const rc = q.nextElementSibling;
+      if(anim === 'flip'){ rc.classList.add('pp-sink'); requestAnimationFrame(() => requestAnimationFrame(() => rc.classList.remove('pp-sink'))); }
+    }
+    r.querySelectorAll('.pp-rb').forEach(ecrSuivreScroll);
+    r.querySelectorAll('.pp-ecr-ta').forEach(t => { t.value = ecr.typed; });
+    const t = ecrChamp();
+    if(t){
+      if(ecr.typed) ecrGrandir(t);
+      if(anim === 'in') setTimeout(() => { if(t.isConnected && !ecr.locked) t.focus({ preventScroll:true }); }, 480);
+      else if(!anim && foc){ t.focus({ preventScroll:true }); try{ t.setSelectionRange(foc.a, foc.b); }catch(e){} }
+    }
+    ecrChampMax();
+  } else {
+    const mine = ecr.typed.trim() ? '<span data-notr>' + escapeHtml(ecr.typed.trim()) + '</span>' : '<i>Pas de réponse</i>';
+    const bonne = o.faces.arriere || '';
+    const cmp = '<div class="pp-c2w A"><div class="pp-c2 mine" onclick="ecrDeplier(this)"><small>Ta réponse</small><p>' + mine + '</p></div><div class="pp-c2 good"><small>' + escapeHtml(o.faces.libArriere) + '</small><p class="' + (bonne.length > 90 ? 'l' : '') + '">' + escapeHtml(bonne) + '</p></div></div>';
+    if(wide){
+      r.querySelectorAll('.pp-ra .pp-at').forEach(p => { p.outerHTML = cmp; });
+      r.querySelectorAll('.pp-ra').forEach(x => x.removeAttribute('onclick'));   /* carte à écrire : le clic sur le panneau de droite ne retourne rien (il sert à lire / replier) */
+    } else {
+      const notes = qf ? qf.innerHTML : '';
+      if(qf) qf.remove();
+      qb.querySelectorAll('.pp-rule,.pp-at,.pp-aimg').forEach(e => e.remove());
+      const sk = q.querySelector('.pp-sk-p'); if(sk) sk.textContent = o.faces.libAvant;
+      const img = o.faces.imgArriere ? '<img class="pp-aimg" src="' + o.faces.imgArriere + '" alt="" draggable="false">' : '';
+      q.insertAdjacentHTML('afterend', ecrCarteRep(o.faces.libArriere, cmp + img, notes, ''));
+      const rc = q.nextElementSibling;
+      if(anim === 'flip'){ rc.classList.add('pp-sink'); requestAnimationFrame(() => requestAnimationFrame(() => rc.classList.remove('pp-sink'))); }
+      ecrSuivreScroll(rc.querySelector('.pp-rb'));
+    }
+  }
+}
+/* Espace sur une carte à écrire (non verrouillée, avant retournement) : met le focus dans le champ au lieu de retourner. */
+function ecrEspace(ctx){
+  if(ctx.flipped || ecr.locked || !ecrAffichee()) return false;
+  const t = ecrChamp(); if(!t) return false;
+  t.focus({ preventScroll:true });
+  return true;
+}
+
 function raccourciContexte(){
   if(quizActive && document.getElementById('quiz-anki-card-body')){
     return { flipped: quizFlipped, flip: quizFlip, answer: quizAnswer };
@@ -10875,6 +11328,7 @@ function gererRaccourcisClavier(e){
   let niveau = null;
   if(e.key === ' ' || e.code === 'Space'){
     e.preventDefault(); // sinon la page défile
+    if(ecrEspace(ctx)) return; // carte à écrire (avant retournement) : Espace met le focus dans le champ
     ctx.flip();
     return;
   }
