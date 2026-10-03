@@ -5216,6 +5216,8 @@ function ppCbPick(date){
 function ppCbHtml(dueTotal){
   if(!ppWide()) return '';
   const D = ppPlanCompute(); ppCbData = D;
+  /* v171 : tant qu'on n'a pas touché un jour, le cadre est sur AUJOURD'HUI (avant : le 1er jour avec des cartes, donc parfois la semaine suivante). */
+  if(D && !aVenirJourSel) D.sel = D.today;
   let week;
   if(!D){
     week = `<div class="cb-wl"><div class="cb-h2">Cette semaine<small>cartes à revoir par jour</small></div><div class="cb-empty">Rien de prévu pour l'instant. Fixe une date de contrôle ci-dessous : le planning se calcule tout seul.</div></div>`;
@@ -5227,7 +5229,7 @@ function ppCbHtml(dueTotal){
       const nomJour = ppCap(d.toLocaleDateString('fr-FR', { weekday:'short' }).replace(/\.$/, ''));
       const ks = Object.keys(j.parMatiere).sort((a, b) => j.parMatiere[b] - j.parMatiere[a]);
       const sub = ctrl ? ctrl.join(', ') : (!j.total ? 'Repos' : (ks.length > 1 && auj ? 'Tout' : ks[0]));
-      const lab = auj ? 'Auj.' : (dense ? `${nomJour}<br>${d.getDate()}` : nomJour);
+      const lab = auj ? (dense ? `Auj.<br>${d.getDate()}` : 'Auj.') : (dense ? `${nomJour}<br>${d.getDate()}` : nomJour); /* v171 : en mode dense, « Auj. » prend aussi 2 lignes (sinon sa barre descendait d'une ligne) */
       const titre = formatDateFr(j.date) + ' : ' + (j.total ? (j.reel === 0 ? '≈ ' + j.total + ' rappel' + (j.total > 1 ? 's' : '') + ' prévu' + (j.total > 1 ? 's' : '') : j.total + ' carte' + (j.total > 1 ? 's' : '') + (j.proj ? ' dont ≈ ' + j.proj + ' rappel' + (j.proj > 1 ? 's' : '') + ' prévu' + (j.proj > 1 ? 's' : '') : '')) : 'rien') + (ctrl ? ' — contrôle ' + ctrl.join(', ') : '');
       return `<button class="cb-wc${auj ? ' t' : ''}${j.date === D.sel ? ' sel' : ''}${j.total ? '' : ' rest'}${ctrl ? ' ctl' : ''}${j.total && j.reel === 0 ? ' proj' : ''}" data-date="${j.date}" title="${escapeHtml(titre)}" onclick="ppCbPick('${j.date}')"><b>${j.reel === 0 && j.total ? '≈' : ''}${j.total}</b><div class="cb-tr"><i style="--h:${Math.round(j.total / mx * 100)}%"></i></div><small>${lab}</small><em>${ctrl ? PP_IC.flag : ''}${escapeHtml(sub)}</em></button>`;
     }).join('');
