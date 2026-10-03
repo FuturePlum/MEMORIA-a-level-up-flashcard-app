@@ -51,6 +51,8 @@ Un code, un copier-coller, et ton pote a toutes tes cartes. Aussi simple que ça
 ### 🔔 Un rappel qui sait insister (gentiment)
 Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si tu l'ignores, un second rappel arrive 2 h plus tard. De temps en temps, l'app glisse aussi quelques cartes déjà maîtrisées pour qu'elles ne s'oublient pas.
 
+> ℹ️ Les rappels ne sont pas proposés sur iPhone, iPad et Safari (Mac) : ces appareils n'autorisent pas l'envoi de notifications en arrière-plan à ce type d'app. Sur ces appareils, le bloc « Rappels » est simplement absent des Réglages.
+
 ---
 
 ## 🎮 Et au quotidien
@@ -89,6 +91,12 @@ Même app, même progression, mais en grand : la carte et sa réponse s'affichen
 **Depuis le navigateur (PWA)**
 1. Ouvre [**memoria-card.pages.dev**](https://memoria-card.pages.dev) dans Chrome.
 2. Menu ⋮ → **Installer l'application** (ou **Ajouter à l'écran d'accueil**).
+
+**Sur iPhone / iPad (Safari)**
+1. Ouvre [**memoria-card.pages.dev**](https://memoria-card.pages.dev) dans **Safari**.
+2. Touche **Partager** (le carré avec une flèche vers le haut), puis **Sur l'écran d'accueil**, puis **Ajouter**.
+
+Pense à l'ajouter à l'écran d'accueil plutôt que de la garder dans un onglet : Safari peut effacer les données d'un site peu visité (après 7 jours sans l'ouvrir), alors qu'une app installée est épargnée. Active aussi la synchronisation dans les Réglages pour garder une copie de tes cartes.
 
 Et ça marche **sans connexion** : métro, train, salle sans réseau, tes cartes sont là.
 
