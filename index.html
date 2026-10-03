@@ -102,7 +102,7 @@
     "Un texte, un fichier ou une demande : l'IA comprend.":'A text, a file or a request: the AI understands.','Ajouter ces cartes':'Add these cards','Nouvelle matière':'New subject','Nom':'Name','Créer':'Create',
     'Importer des cartes':'Import cards',"· cartes d'un pote ou JSON":"· a friend's cards or JSON",'Importer':'Import','Changements proposés':'Proposed changes',"Décoche ce que tu ne veux pas appliquer.":"Uncheck what you don't want to apply.",
     "L'IA n'a proposé aucun changement.":'The AI proposed no changes.','Matière déjà existante ?':'Subject already exists?','», déjà dans ta liste.':'”, already in your list.',
-    'Synchronisation…':'Syncing…','Synchronisé':'Synced','Échec, réessayer':'Failed, retry','Enregistrer ce code':'Save this code','Ta progression':'Your progress','Statistiques':'Statistics',
+    'Synchronisation…':'Syncing…','Synchronisé':'Synced','Échec, réessayer':'Failed, retry','Enregistrer ce code':'Save this code','Ta progression':'Your progress','Statistiques':'Statistics','temps':'time','réussite':'success','cette semaine':'this week','objectif du jour':'daily goal',"aujourd'hui":'today','Objectif du jour':'Daily goal','Objectif atteint':'Goal reached','Cartes par jour':'Cards per day','Facultatif':'Optional','Aucun':'None','Diminuer':'Decrease','Augmenter':'Increase','Écrire des formules':'Writing formulas','Gras, listes, maths, chimie':'Bold, lists, maths, chemistry',"Dans une question ou une réponse. L'IA les écrit aussi toute seule.":'In a question or an answer. The AI writes them too.','Un vrai dollar : ':'A real dollar sign: ',
     'révisions au total':'reviews in total','record de série':'streak record','30 derniers jours':'Last 30 days','Plus la case est claire, plus tu as révisé ce jour-là.':'The lighter the square, the more you reviewed that day.',
     'Par matière':'By subject','Répartition des paliers':'Level breakdown','Source :':'Source:','. Ton style habituel est déjà intégré.':'. Your usual style is already included.','— Choisir un modèle —':'— Choose a template —',
     'Fichiers en plus':'Extra files',"Précisions pour l'IA":'Details for the AI','Enregistrer comme modèle':'Save as template','Aperçu':'Preview','Modifier les précisions':'Edit details',
@@ -1770,6 +1770,69 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-ei{padding:11px 13px;border-radius:14px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:8px}
 .pp-ei b{display:block;font-size:14px}
 .pp-ei span{color:var(--muted);font-size:13.5px}
+/* v160 — mise en forme et formules dans les cartes (ppRichHtml) */
+.pp-fb{font-weight:800;background:linear-gradient(transparent 62%,color-mix(in srgb,var(--orange) 40%,transparent) 62%);border-radius:2px}
+.pp-fi{font-style:italic}
+.pp-mt{font-family:'Cambria Math','STIX Two Math','Latin Modern Math','Times New Roman',Georgia,serif;font-weight:500;letter-spacing:0;font-size:1.04em;white-space:normal;line-height:1.25}
+.pp-mt i{font-style:italic}
+.pp-mt b{font-weight:800}
+.pp-mt .ro,.pp-mt .t{font-style:normal}
+.pp-mtb{display:block;text-align:center;margin:.35em 0;overflow-x:auto;overflow-y:hidden;max-width:100%}
+.pp-mt .o{margin:0 .2em}
+.pp-mt .r{margin:0 .28em}
+.pp-mt .c{display:inline-block;width:.17em}
+.pp-mt .c.q{width:1em}
+.pp-mt .f{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .1em;font-size:.94em;line-height:1.2}
+.pp-mt .fn{padding:0 .22em .08em;border-bottom:.075em solid currentColor}
+.pp-mt .fd{padding:.1em .22em 0}
+.pp-mt .f.nb .fn{border-bottom:0}
+.pp-mt .s{display:inline-flex;align-items:stretch;vertical-align:middle}
+.pp-mt .sg{align-self:flex-end;line-height:1;padding-right:.04em}
+.pp-mt .sb{border-top:.075em solid currentColor;padding:.08em .1em 0 .08em;margin-top:.1em}
+.pp-mt .si{font-size:.58em;align-self:flex-start;margin-right:-.4em;margin-top:.25em}
+.pp-mt .s.g .sg{font-size:1.5em}
+.pp-mt .ms{font-size:.7em;line-height:0;margin:0 .04em}
+.pp-mt .ms.up{vertical-align:.62em}
+.pp-mt .ms.dn{vertical-align:-.32em}
+.pp-mt .ss{display:inline-flex;flex-direction:column;vertical-align:.55em;font-size:.7em;line-height:1.1;margin:0 .04em;text-align:left}
+.pp-mt .ss.is{min-height:2.3em;justify-content:space-between;vertical-align:.9em;margin-left:-.2em}
+.pp-mt .u{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 .06em}
+.pp-mt .us{font-size:.7em;white-space:nowrap}
+.pp-mt .bo{font-size:1.5em;line-height:1}
+.pp-mt .ib{font-size:1.7em;line-height:1;display:inline-block;vertical-align:-.12em}
+.pp-mt .dl{display:inline-block}
+.pp-mt .dl.g{font-size:2em;line-height:.75;font-weight:300;vertical-align:-.12em}
+.pp-mt .ac{position:relative;display:inline-block}
+.pp-mt .ac::before{content:attr(data-a);position:absolute;left:0;right:0;top:-.55em;text-align:center;font-size:.8em;line-height:1;font-style:normal}
+.pp-mt .ov{border-top:.075em solid currentColor}
+.pp-mt .ul{border-bottom:.075em solid currentColor}
+.pp-mt sub.cs,.pp-mt sup.cs{font-size:.7em;line-height:0}
+.pp-rv{margin:6px 2px 10px;padding:9px 12px;border-radius:12px;background:var(--c-s1);color:var(--cream);font-size:15px;line-height:1.4;white-space:pre-line}
+.pp-rv[hidden]{display:none}
+.pp-fx{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:8px}
+.pp-fx code{font:600 12.5px ui-monospace,Menlo,Consolas,monospace;color:var(--muted);white-space:pre-line;min-width:0;overflow-wrap:anywhere}
+.pp-fx span{font-size:17px;text-align:right;flex:none;max-width:48%;white-space:pre-line}
+/* v160 — bilan de fin de séance et objectif du jour */
+.pp-bil{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 4px;text-align:left}
+.pp-bil>div{padding:10px 11px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);animation:pppop .35s var(--pps) both}
+.pp-bil>div:nth-child(2){animation-delay:60ms}
+.pp-bil>div:nth-child(3){animation-delay:120ms}
+.pp-bil b{display:block;font-size:19px;line-height:1.05;font-weight:800;letter-spacing:-.03em}
+.pp-bil span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.pp-bil em{display:block;font-style:normal;font-size:11.5px;font-weight:800;color:var(--green);margin-top:1px}
+.pp-bil em.dn{color:var(--muted)}
+.pp-obj{margin:12px 0 2px;text-align:left}
+.pp-obj .t1{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.pp-obj .t1 b{color:var(--cream);font-weight:800}
+.pp-obj .bar{height:8px;border-radius:99px;background:var(--c-s1);overflow:hidden}
+.pp-obj .bar i{display:block;height:100%;width:var(--p);border-radius:99px;background:var(--orange);transform-origin:left;animation:ppobj .7s var(--pps) .15s both}
+.pp-obj.ok .bar i{background:var(--green)}
+.pp-obj.ok .t1 span{color:var(--green)}
+@keyframes ppobj{from{transform:scaleX(0)}}
+.pp-objstep{display:flex;align-items:center;gap:6px;flex:none}
+.pp-objstep button{width:30px;height:30px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);color:var(--cream);font:800 16px/1 inherit;display:grid;place-items:center;cursor:pointer}
+.pp-objstep button:active{transform:translateY(1px)}
+.pp-objstep b{min-width:52px;text-align:center;font-size:14px;font-weight:800}
 @keyframes ppcardIn{0%{transform:translateY(40px) rotate(4deg) scale(.94);opacity:0}60%{transform:translateY(-7px) rotate(-1deg) scale(1.01);opacity:1}100%{transform:none;opacity:1}}
 @keyframes ppflipIn{0%{opacity:0;transform:translateY(12px)}60%{opacity:1;transform:translateY(-3px)}100%{opacity:1;transform:none}}
 @keyframes ppoutR{to{transform:translateX(130%) rotate(12deg);opacity:0}}
@@ -3823,6 +3886,8 @@ let sessionErrors = [];
    trois comptes, jamais comme un delta appliqué pas-à-pas — ça évite toute
    dérive et reste cohérent après un undo (voir undoLastAnswer). */
 let sessionMoodCounts = { rouge: 0, orange: 0, vert: 0 };
+/* v160 : temps actif de la séance en cours (bilan de fin de séance, voir ppSeanceFin) */
+let ppSeance = { ms: 0, last: 0, saved: false, bilan: null };
 
 let quizActive = false;
 let quizSet = [];
@@ -3943,6 +4008,240 @@ function addDays(dateStr, n){
 function escapeHtml(str){
   // v153 (constat 33) : échappe aussi " et ' pour pouvoir servir dans un attribut entre guillemets.
   return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+/* ============================================================
+   v160 — MISE EN FORME ET FORMULES DANS LES CARTES
+   Syntaxe dans le texte d'une carte (question ou réponse) :
+     **gras**   *italique*   lignes « - texte » = puces
+     $formule$  (dans la ligne)   $$formule$$  (centrée, seule)   \$ = un vrai dollar
+   Formules : sous-ensemble de LaTeX (\frac{a}{b}, x^2, x_1, \sqrt{x}, \sum_{i=1}^{n}, \int, lettres grecques, ≤ ≥ ≠ …)
+   rendu en HTML/CSS (aucune librairie, marche hors ligne). CSS : bloc « v160 formules » du <style>.
+   RÈGLE : tout le texte est échappé (escapeHtml) AVANT d'être mis en forme. Un texte de carte ne peut jamais produire de HTML.
+   Un texte sans $ ni * ni puce « - » est rendu exactement comme avant (simple escapeHtml).
+   ============================================================ */
+const PP_M_GREC = { alpha:'α', beta:'β', gamma:'γ', delta:'δ', epsilon:'ε', varepsilon:'ε', zeta:'ζ', eta:'η', theta:'θ', vartheta:'ϑ', iota:'ι', kappa:'κ', lambda:'λ', mu:'μ', nu:'ν', xi:'ξ', pi:'π', rho:'ρ', sigma:'σ', tau:'τ', upsilon:'υ', phi:'φ', varphi:'φ', chi:'χ', psi:'ψ', omega:'ω' };
+const PP_M_GREC_MAJ = { Gamma:'Γ', Delta:'Δ', Theta:'Θ', Lambda:'Λ', Xi:'Ξ', Pi:'Π', Sigma:'Σ', Upsilon:'Υ', Phi:'Φ', Psi:'Ψ', Omega:'Ω' };
+const PP_M_OPS = { times:'×', cdot:'·', pm:'±', mp:'∓', div:'÷', ast:'∗', star:'⋆', circ:'∘', bullet:'•', cup:'∪', cap:'∩', land:'∧', lor:'∨', wedge:'∧', vee:'∨', oplus:'⊕', otimes:'⊗', setminus:'∖' };
+const PP_M_RELS = { leq:'≤', le:'≤', geq:'≥', ge:'≥', neq:'≠', ne:'≠', approx:'≈', equiv:'≡', sim:'∼', simeq:'≃', cong:'≅', propto:'∝', ll:'≪', gg:'≫', in:'∈', notin:'∉', ni:'∋', subset:'⊂', subseteq:'⊆', supset:'⊃', supseteq:'⊇', to:'→', rightarrow:'→', leftarrow:'←', gets:'←', leftrightarrow:'↔', Rightarrow:'⇒', Leftarrow:'⇐', Leftrightarrow:'⇔', implies:'⇒', iff:'⇔', mapsto:'↦', uparrow:'↑', downarrow:'↓', rightleftharpoons:'⇌', perp:'⊥', parallel:'∥', mid:'∣' };
+const PP_M_SYMS = { infty:'∞', partial:'∂', nabla:'∇', forall:'∀', exists:'∃', emptyset:'∅', varnothing:'∅', degree:'°', hbar:'ℏ', ell:'ℓ', angle:'∠', ldots:'…', cdots:'⋯', dots:'…', vdots:'⋮', prime:'′', neg:'¬', aleph:'ℵ', Re:'ℜ', Im:'ℑ', triangle:'△', square:'□', checkmark:'✓', langle:'⟨', rangle:'⟩', lbrace:'{', rbrace:'}', lceil:'⌈', rceil:'⌉', lfloor:'⌊', rfloor:'⌋' };
+const PP_M_GRANDS = { sum:'∑', prod:'∏', coprod:'∐', bigcup:'⋃', bigcap:'⋂', bigoplus:'⨁', bigotimes:'⨂' };
+const PP_M_INTS = { int:'∫', iint:'∬', iiint:'∭', oint:'∮' };
+const PP_M_FONCTIONS = ['sin','cos','tan','cot','sec','csc','arcsin','arccos','arctan','sinh','cosh','tanh','coth','ln','log','lg','exp','det','dim','ker','gcd','deg','arg','mod','Pr','min','max','sup','inf','lim','limsup','liminf'];
+const PP_M_FONC_LIM = ['min','max','sup','inf','lim','limsup','liminf'];
+const PP_M_BB = { R:'ℝ', N:'ℕ', Z:'ℤ', Q:'ℚ', C:'ℂ', P:'ℙ', E:'𝔼' };
+const PP_M_ACC = { vec:'→', overrightarrow:'→', hat:'^', widehat:'^', tilde:'~', widetilde:'~', dot:'˙', ddot:'¨', check:'ˇ', acute:'´', grave:'`' };
+
+function ppMathTok(s){
+  const T = [], re = /\\([A-Za-z]+)|\\([\s\S])|([{}^_&])|(\d+(?:[.,]\d+)?)|(\s+)|([\s\S])/g;
+  let m;
+  while((m = re.exec(s)) && T.length < 900){
+    if(m[1]) T.push({ k:'c', v:m[1], r:m[0] });
+    else if(m[2] !== undefined) T.push({ k:'e', v:m[2], r:m[0] });
+    else if(m[3]) T.push({ k:m[3], r:m[3] });
+    else if(m[4]) T.push({ k:'n', v:m[4], r:m[4] });
+    else if(m[5]) T.push({ k:' ', r:m[5] });
+    else T.push({ k:'h', v:m[6], r:m[6] });
+  }
+  return T;
+}
+/* Mini-chimie : \ce{H2O}, \ce{CO2}, \ce{Fe^{3+}}, \ce{A -> B} */
+function ppMathCe(brut){
+  let h = escapeHtml(brut);
+  h = h.replace(/&lt;=&gt;|&lt;-&gt;/g, '⇌').replace(/-&gt;/g, '→');
+  h = h.replace(/([A-Za-z)\]])(\d+)/g, '$1<sub class="cs">$2</sub>');
+  h = h.replace(/\^\{?([0-9]*[+-])\}?/g, '<sup class="cs">$1</sup>');
+  return '<span class="t">' + h + '</span>';
+}
+/* Renvoie le HTML d'une formule, ou null si elle est trop longue / illisible (l'appelant affiche alors le texte tel quel). */
+function ppMathHtml(src){
+  const T = ppMathTok(src);
+  if(!T.length || T.length >= 900) return null;
+  let i = 0, prof = 0, droit = 0;
+  const esc = escapeHtml;
+  const esp = () => { while(T[i] && T[i].k === ' ') i++; };
+  const lettre = (c) => droit ? '<span class="ro">' + esc(c) + '</span>' : '<i>' + esc(c) + '</i>';
+  function seq(fin){
+    let h = '';
+    for(;;){
+      esp(); const t = T[i]; if(!t) break;
+      if(t.k === '}'){ if(fin === 'acc') break; i++; continue; }
+      if(fin === 'right' && t.k === 'c' && t.v === 'right') break;
+      h += scripted();
+    }
+    return h;
+  }
+  function groupe(){
+    esp(); const t = T[i]; if(!t) return '';
+    if(t.k === '{'){
+      i++; if(++prof > 24) throw new Error('prof');
+      const h = seq('acc'); if(T[i] && T[i].k === '}') i++;
+      prof--; return h;
+    }
+    const a = atome(); return a ? a.h : '';
+  }
+  function brut(){
+    esp(); const t = T[i]; if(!t) return '';
+    if(t.k !== '{'){ i++; return t.r; }
+    i++; let d = 1, s = '';
+    while(T[i]){
+      const u = T[i++];
+      if(u.k === '{') d++;
+      else if(u.k === '}' && --d === 0) break;
+      s += u.r;
+    }
+    return s;
+  }
+  function delim(){
+    esp(); const t = T[i++]; if(!t) return '';
+    if(t.k === 'h') return t.v === '.' ? '' : esc(t.v);
+    if(t.k === 'e') return t.v === '|' ? '‖' : (t.v === '{' || t.v === '}' ? t.v : '');
+    if(t.k === 'c'){ if(t.v === 'lvert' || t.v === 'rvert') return '|'; if(t.v === 'lVert' || t.v === 'rVert') return '‖'; return PP_M_SYMS[t.v] || ''; }
+    return '';
+  }
+  function atome(){
+    esp(); const t = T[i]; if(!t) return null;
+    if(t.k === '^' || t.k === '_') return { h:'' };
+    i++;
+    if(t.k === '{'){ i--; return { h:groupe() }; }
+    if(t.k === '&') return { h:' ' };
+    if(t.k === 'n') return { h:esc(t.v) };
+    if(t.k === 'h'){
+      const c = t.v;
+      if(c === '+') return { h:'<span class="o">+</span>' };
+      if(c === '-') return { h:'<span class="o">−</span>' };
+      if(c === '*') return { h:'<span class="o">∗</span>' };
+      if(c === '=' || c === '<' || c === '>') return { h:'<span class="r">' + esc(c) + '</span>' };
+      if(c === ',') return { h:',<span class="c"></span>' };
+      if(c === "'") return { h:'′' };
+      if(/\p{L}/u.test(c)) return { h:lettre(c) };
+      return { h:esc(c) };
+    }
+    if(t.k === 'e'){
+      const c = t.v;
+      if(c === ',' || c === ';' || c === ':' || c === '!' || c === ' ' || c === '\\') return { h:'<span class="c"></span>' };
+      if(c === '|') return { h:'‖' };
+      if(c === '(' || c === ')' || c === '[' || c === ']' || c === '-') return { h:'' };
+      return { h:esc(c) };
+    }
+    /* commandes */
+    const v = t.v;
+    if(v === 'frac' || v === 'dfrac' || v === 'tfrac'){ const a = groupe(), b = groupe(); return { h:'<span class="f"><span class="fn">' + a + '</span><span class="fd">' + b + '</span></span>' }; }
+    if(v === 'binom'){ const a = groupe(), b = groupe(); return { h:'<span class="dl g">(</span><span class="f nb"><span class="fn">' + a + '</span><span class="fd">' + b + '</span></span><span class="dl g">)</span>' }; }
+    if(v === 'sqrt'){
+      esp(); let idx = '';
+      if(T[i] && T[i].k === 'h' && T[i].v === '['){ i++; while(T[i] && !(T[i].k === 'h' && T[i].v === ']')) idx += scripted(); if(T[i]) i++; }
+      const b = groupe();
+      return { h:'<span class="s' + (/class="(f|s|bo|ib)[ "]/.test(b) ? ' g' : '') + '">' + (idx ? '<span class="si">' + idx + '</span>' : '') + '<span class="sg">√</span><span class="sb">' + b + '</span></span>' };
+    }
+    if(v === 'text' || v === 'textrm' || v === 'mbox' || v === 'textit' || v === 'textbf' || v === 'operatorname') return { h:'<span class="t">' + esc(brut()) + '</span>' };
+    if(v === 'ce') return { h:ppMathCe(brut()) };
+    if(v === 'mathrm' || v === 'rm'){ droit++; try{ return { h:groupe() }; }finally{ droit--; } }
+    if(v === 'mathbf' || v === 'boldsymbol' || v === 'bf' || v === 'bm') return { h:'<b>' + groupe() + '</b>' };
+    if(v === 'mathbb'){ const b = brut(); return { h:esc(PP_M_BB[b] || b) }; }
+    if(v === 'mathcal' || v === 'mathscr' || v === 'mathit' || v === 'displaystyle' || v === 'textstyle' || v === 'scriptstyle') return { h:(v === 'mathcal' || v === 'mathscr' || v === 'mathit') ? groupe() : '' };
+    if(PP_M_ACC[v]) return { h:'<span class="ac" data-a="' + PP_M_ACC[v] + '">' + groupe() + '</span>' };
+    if(v === 'overline' || v === 'bar') return { h:'<span class="ov">' + groupe() + '</span>' };
+    if(v === 'underline') return { h:'<span class="ul">' + groupe() + '</span>' };
+    if(v === 'left'){
+      const d = delim(), inner = seq('right');
+      if(T[i] && T[i].k === 'c' && T[i].v === 'right') i++;
+      const d2 = delim(), g = /class="(f|s|bo|ib)[ "]/.test(inner) ? ' g' : '';
+      return { h:'<span class="dl' + g + '">' + d + '</span>' + inner + '<span class="dl' + g + '">' + d2 + '</span>' };
+    }
+    if(v === 'right') return { h:'<span class="dl">' + delim() + '</span>' };
+    if(v === 'quad' || v === 'qquad' || v === 'enspace' || v === 'hspace') return { h:'<span class="c q"></span>' };
+    if(v === 'thinspace' || v === 'medspace' || v === 'thickspace') return { h:'<span class="c"></span>' };
+    if(v === 'lim' || PP_M_FONCTIONS.indexOf(v) >= 0){
+      const lim = PP_M_FONC_LIM.indexOf(v) >= 0;
+      return { h:'<span class="t">' + v + '</span>' + (lim ? '' : '<span class="c"></span>'), lim:lim };
+    }
+    if(PP_M_GRANDS[v]) return { h:'<span class="bo">' + PP_M_GRANDS[v] + '</span>', lim:true };
+    if(PP_M_INTS[v]) return { h:'<span class="ib">' + PP_M_INTS[v] + '</span>', integ:true };
+    if(PP_M_GREC[v]) return { h:lettre(PP_M_GREC[v]) };
+    if(PP_M_GREC_MAJ[v]) return { h:PP_M_GREC_MAJ[v] };
+    if(PP_M_OPS[v]) return { h:'<span class="o">' + PP_M_OPS[v] + '</span>' };
+    if(PP_M_RELS[v]) return { h:'<span class="r">' + PP_M_RELS[v] + '</span>' };
+    if(PP_M_SYMS[v]) return { h:PP_M_SYMS[v] };
+    return { h:esc(t.r) };   // commande inconnue : affichée telle quelle (rien n'est perdu)
+  }
+  function scripted(){
+    const a = atome(); if(!a) return '';
+    let sb = null, sp = null;
+    for(;;){
+      esp(); const t = T[i];
+      if(t && t.k === '_' && sb === null){ i++; sb = groupe(); }
+      else if(t && t.k === '^' && sp === null){ i++; sp = groupe(); }
+      else break;
+    }
+    if(sb === null && sp === null) return a.h;
+    if(a.lim) return '<span class="u"><span class="us">' + (sp === null ? '&nbsp;' : sp) + '</span><span class="ub">' + a.h + '</span><span class="us">' + (sb === null ? '&nbsp;' : sb) + '</span></span>';
+    if(a.integ) return a.h + '<span class="ss is"><span>' + (sp === null ? '&nbsp;' : sp) + '</span><span>' + (sb === null ? '&nbsp;' : sb) + '</span></span>';
+    if(sb === null) return a.h + '<span class="ms up">' + sp + '</span>';
+    if(sp === null) return a.h + '<span class="ms dn">' + sb + '</span>';
+    return a.h + '<span class="ss"><span>' + sp + '</span><span>' + sb + '</span></span>';
+  }
+  try{ return seq(null); }catch(e){ return null; }
+}
+/* Découpe un texte : sort les formules $…$ / $$…$$, remplace \$ . Règles de Pandoc : le $ ouvrant est collé au texte,
+   le $ fermant aussi et n'est pas suivi d'un chiffre → « 5 $ et 6 $ » ou « $5 et $6 » ne sont jamais pris pour une formule. */
+function ppRichMaths(t, mem){
+  let out = '', i = 0;
+  while(i < t.length){
+    const c = t[i];
+    if(c === '\\' && t[i + 1] === '$'){ out += '\u0003'; i += 2; continue; }
+    if(c === '$'){
+      if(t[i + 1] === '$'){
+        const j = t.indexOf('$$', i + 2);
+        if(j > i + 2 && t.slice(i + 2, j).indexOf('\n') < 0){ mem.push({ src:t.slice(i + 2, j), bloc:true }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = j + 2; continue; }
+      }
+      const n = t[i + 1];
+      if(n !== undefined && !/\s/.test(n) && n !== '$'){
+        let j = i + 1, f = -1;
+        while(j < t.length){
+          const d = t[j];
+          if(d === '\n') break;
+          if(d === '\\'){ j += 2; continue; }
+          if(d === '$'){ if(!/\s/.test(t[j - 1]) && !/\d/.test(t[j + 1] || '')) f = j; break; }
+          j++;
+        }
+        if(f > i + 1){ mem.push({ src:t.slice(i + 1, f), bloc:false }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = f + 1; continue; }
+      }
+    }
+    out += c; i++;
+  }
+  return out;
+}
+/* Vrai si le texte contient quelque chose à mettre en forme (sert à n'afficher l'aperçu que quand c'est utile). */
+function ppRichMarque(t){ return /\$[^\s$]|\*[^\s*]|(^|\n)[ \t]*- [^\s\d]/.test(String(t || '')); }
+function ppRichHtml(texte){
+  const t = String(texte == null ? '' : texte);
+  if(t.indexOf('$') < 0 && t.indexOf('*') < 0 && !/(^|\n)[ \t]*- /.test(t)) return escapeHtml(t);
+  const mem = [];
+  let h = escapeHtml(ppRichMaths(t, mem));
+  h = h.replace(/(^|\n)([ \t]*)- (?=[^\s\d])/g, '$1$2• ');
+  h = h.replace(/\*\*([^\s*](?:[^*\n]*[^\s*])?)\*\*/g, '<span class="pp-fb" data-notr>$1</span>');
+  h = h.replace(/(^|[^\w*])\*([^\s*](?:[^*\n]*[^\s*])?)\*(?![\w*])/g, '$1<span class="pp-fi" data-notr>$2</span>');
+  h = h.replace(/\u0001(\d+)\u0002/g, (m, k) => {
+    const f = mem[+k]; if(!f) return '';
+    const m1 = ppMathHtml(f.src);
+    if(m1 === null) return escapeHtml((f.bloc ? '$$' : '$') + f.src + (f.bloc ? '$$' : '$'));
+    return '<span class="pp-mt' + (f.bloc ? ' pp-mtb' : '') + '" data-notr>' + m1 + '</span>';
+  });
+  return h.replace(/\u0003/g, '$');
+}
+/* Réparation des textes venus de l'IA : si le modèle écrit « \frac » avec UN seul antislash dans son JSON, JSON.parse le lit
+   comme \f (saut de page), « \beta » comme \b, « \times » comme \t… On les remet. (Le cas \alpha, \sqrt, \pi… qui fait échouer
+   JSON.parse est traité avant, dans appelerGeminiPourCartes : ppJsonAntislashs.) */
+function ppJsonAntislashs(brut){
+  return String(brut).replace(/\\(["\\\/bfnrt]|u[0-9a-fA-F]{4})|\\/g, (m, ok) => ok ? m : '\\\\');
+}
+function ppRepareTexteIA(s){
+  let t = String(s == null ? '' : s);
+  if(!/[\u000c\u0008\t\r\n]/.test(t) || t.indexOf('$') < 0) return t;
+  t = t.replace(/\u000c/g, '\\f').replace(/\u0008/g, '\\b');
+  t = t.replace(/(\$[^$\n]*)\t/g, '$1\\t').replace(/(\$[^$\n]*)\r/g, '$1\\r');
+  t = t.replace(/(\$[^$\n]*)\n(abla|eq(?![a-z])|otin|ot(?![a-z])|u(?![a-z])|e(?![a-z])|i(?![a-z]))/g, '$1\\n$2');
+  return t;
 }
 function escapeJsAttr(str){
   // v153 (constat 32) : 1) chaîne JavaScript sûre, 2) puis échappement HTML, car le navigateur décode
@@ -4949,13 +5248,13 @@ function ppSesDraw(o){
   const foot = fl ? ans3 : `<button class="pp-show" onclick="${o.fnFlip}">Afficher la réponse</button>`;
   /* Chromebook (v84) : panneau « réponse » à droite + boutons sous les deux panneaux (display:none sur téléphone) */
   const raOut = !fl && anim === 'flip' && ppWide();  // retour à la question : le panneau rentre dans son emplacement
-  const ra = `<div class="pp-rslot${fl ? ' hid' : ''}" onclick="${o.fnFlip}"><div class="pp-g"><kbd>Espace</kbd><br>pour afficher la réponse</div></div><div class="pp-ra${fl ? ' on' : (raOut ? ' out' : '')}" onclick="${o.fnFlip}"><div class="pp-v"><div class="pp-ch"><span class="pp-sticker" style="animation:none">${f.libArriere}</span></div><div style="margin:auto 0"><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at${back.length > 90 ? ' pp-l' : ''}">${escapeHtml(back)}</p>${f.imgArriere ? `<img class="pp-aimg" src="${f.imgArriere}" alt="" draggable="false">` : ''}</div></div></div>`;
+  const ra = `<div class="pp-rslot${fl ? ' hid' : ''}" onclick="${o.fnFlip}"><div class="pp-g"><kbd>Espace</kbd><br>pour afficher la réponse</div></div><div class="pp-ra${fl ? ' on' : (raOut ? ' out' : '')}" onclick="${o.fnFlip}"><div class="pp-v"><div class="pp-ch"><span class="pp-sticker" style="animation:none">${f.libArriere}</span></div><div style="margin:auto 0"><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at${back.length > 90 ? ' pp-l' : ''}">${ppRichHtml(back)}</p>${f.imgArriere ? `<img class="pp-aimg" src="${f.imgArriere}" alt="" draggable="false">` : ''}</div></div></div>`;
   const acts = `<div class="pp-acts${fl ? '' : ' dim'}${(!fl && anim === 'flip') ? ' down' : ''}">${ans3}</div>`;  // .down = retour à la question : même animation que le 1er retournement, à l'envers
   ppSesShow(`<div class="pp-top"><div class="pp-bar1"><i style="background-color:${start}"></i><u></u></div></div>
   ${o.mp ? `<div class="pp-info"><span class="pp-mp">${o.mp}</span></div>` : ''}
   ${o.undo ? `<button class="pp-undo" onclick="undoLastAnswer()">${ppSvg('<path d="M3 10h10a5 5 0 0 1 5 5v1M3 10l4-4M3 10l4 4"/>',14)}Annuler la dernière réponse</button>` : ''}
   <div class="pp-stage"><div class="pp-card${anim === 'in' ? ' pp-in' : ''}" id="${o.ids.card}"><div class="pp-ch"><span class="pp-sticker" style="animation:none"><span class="pp-sk-p">${fl ? f.libArriere : f.libAvant}</span><span class="pp-sk-w">${f.libAvant}</span></span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || '')}</span></div>
-  <div class="pp-body${fl ? ' pp-flipped' : ''}" id="${o.ids.body}" onclick="${o.fnFlip}"><h1 class="pp-qt">${escapeHtml(f.avant)}</h1>${f.imgAvant ? `<img class="pp-qimg" src="${f.imgAvant}" alt="" draggable="false">` : ''}${fl ? `<div class="pp-rule"></div><p class="pp-at${back.length > 90 ? ' pp-l' : ''}">${escapeHtml(back)}</p>${f.imgArriere ? `<img class="pp-aimg" src="${f.imgArriere}" alt="" draggable="false">` : ''}` : ''}</div>
+  <div class="pp-body${fl ? ' pp-flipped' : ''}" id="${o.ids.body}" onclick="${o.fnFlip}"><h1 class="pp-qt">${ppRichHtml(f.avant)}</h1>${f.imgAvant ? `<img class="pp-qimg" src="${f.imgAvant}" alt="" draggable="false">` : ''}${fl ? `<div class="pp-rule"></div><p class="pp-at${back.length > 90 ? ' pp-l' : ''}">${ppRichHtml(back)}</p>${f.imgArriere ? `<img class="pp-aimg" src="${f.imgArriere}" alt="" draggable="false">` : ''}` : ''}</div>
   <div class="pp-foot">${foot}</div><div class="pp-pastille"></div></div>${ra}</div>
   ${acts}
   <div class="pp-mb${anim === 'flip' ? ' pp-still' : ''}"><button class="pp-bk" aria-label="Retour à l'accueil" onclick="${o.fnBack}">${PP_IC.back}</button><span class="pp-mi">${ppSvg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',24)}</span><span class="pp-mt"><b class="${bump ? 'pp-bump' : ''}">${mas}</b><span>carte${mas > 1 ? 's' : ''} déjà maîtrisée${mas > 1 ? 's' : ''}</span></span><span class="pp-kh" aria-hidden="true"><span><i style="--c:var(--pink)"></i>Suppr</span><span><i style="--c:var(--amber)"></i>Maj</span><span><i style="--c:var(--green)"></i>Entrée</span></span></div>`);
@@ -5169,7 +5468,7 @@ function renderStudyInner(){
     const btnRetour = `<button class="pp-cta${many ? ' pp-quiet' : ''}" onclick="exitStudySession()">Retour à l'accueil</button>`;
     ppMood.anim = '';
     ppSesShow(`<div class="pp-done">${ppConfetti()}<h2>Terminé pour aujourd'hui</h2><p>${sessionReviewed} carte${sessionReviewed>1?'s':''} révisée${sessionReviewed>1?'s':''}${sessionMastered ? ` · ${sessionMastered} nouvelle${sessionMastered>1?'s':''} maîtrisée${sessionMastered>1?'s':''}` : ''}.</p>
- <div class="pp-btns">${btnSuite}${btnErreurs}${btnRetour}</div></div>`);
+ ${ppBilanHtml()}<div class="pp-btns">${btnSuite}${btnErreurs}${btnRetour}</div></div>`);
     return;
   }
   const c = queue[currentIndex];
@@ -5372,6 +5671,7 @@ function startStudySession(mode){
   sessionErrors = [];
   lastAnswer = null;
   sessionMoodCounts = { rouge: 0, orange: 0, vert: 0 };
+  ppSeanceRaz();
   ppMoodReset();
   buildQueue(true);
   justAdvanced = true;
@@ -5397,6 +5697,7 @@ function startReviewSessionErrors(){
   sessionErrors = [];
   lastAnswer = null;
   sessionMoodCounts = { rouge: 0, orange: 0, vert: 0 };
+  ppSeanceRaz();
   ppMoodReset();
   queue = errCards;
   rappelsSession = new Set();
@@ -5589,6 +5890,7 @@ function startQuizOnMatiere(matiere){
   startQuizFromHome();
 }
 function exitStudySession(){
+  ppSeanceFin();   // v160 : une séance quittée avant la fin compte aussi (temps, objectif du jour)
   studySessionActive = false;
   studyMode = 'due';
   lastAnswer = null;
@@ -5892,6 +6194,7 @@ function answer(niveau, opts){
   c.derniereRevision = derniereRevision;
   c.derniereModification = derniereModification;
   sessionReviewed++;
+  const dtSeance = ppSeanceTick();
   sessionMoodCounts[niveau] = (sessionMoodCounts[niveau] || 0) + 1;
   const nowMastered = (palier || 0) >= MASTERED_PALIER;
   const becameMastered = nowMastered && !prevMastered;
@@ -5934,7 +6237,7 @@ function answer(niveau, opts){
   // Sens vu pour cette carte (⇄) : gardé pour qu'un "Annuler" la remette dans
   // le MÊME sens (sinon le tirage serait refait et l'écran changerait).
   const sensVu = (sensAffiche.cle === 'etude:' + currentIndex + ':' + c.id) ? sensAffiche.inverse : false;
-  lastAnswer = { cardId: c.id, index: currentIndex, sensVu, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute, prevSerie };
+  lastAnswer = { cardId: c.id, index: currentIndex, dt: dtSeance, sensVu, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute, prevSerie };
   recalcPlanning();
   saveLocalPlanning();
   planifierSyncDiffere();
@@ -5996,6 +6299,7 @@ function undoLastAnswer(){
   // Remet la carte dans le sens où elle était affichée avant la réponse annulée.
   sensAffiche = { cle: 'etude:' + lastAnswer.index + ':' + lastAnswer.cardId, inverse: lastAnswer.sensVu === true };
   sessionReviewed = Math.max(0, sessionReviewed - 1);
+  if(lastAnswer.dt) ppSeance.ms = Math.max(0, ppSeance.ms - lastAnswer.dt);
   if(lastAnswer.niveau) sessionMoodCounts[lastAnswer.niveau] = Math.max(0, (sessionMoodCounts[lastAnswer.niveau] || 0) - 1);
   if(lastAnswer.becameMastered) sessionMastered = Math.max(0, sessionMastered - 1);
   flipped = true;
@@ -6071,7 +6375,7 @@ function renderQuiz(){
     const nx = quizMatiereSuivante();
     ppMood.anim = '';
     ppSesShow(`<div class="pp-qres"><p class="pp-small">Entraînement terminé · ne compte pas pour la maîtrise</p><div class="pp-score ${cls}">${score}/${quizSet.length}</div>
-  ${quizErrors.length ? `<div class="pp-errs"><h5>À revoir</h5>${quizErrors.map(e => `<div class="pp-ei"><b>${escapeHtml(e.question)}</b><span>${escapeHtml(e.reponse)}</span></div>`).join('')}</div>` : `<p style="color:var(--green);font-weight:800;margin-top:12px">Tout juste</p>`}
+  ${quizErrors.length ? `<div class="pp-errs"><h5>À revoir</h5>${quizErrors.map(e => `<div class="pp-ei"><b>${ppRichHtml(e.question)}</b><span>${ppRichHtml(e.reponse)}</span></div>`).join('')}</div>` : `<p style="color:var(--green);font-weight:800;margin-top:12px">Tout juste</p>`}
   <div class="pp-btns">${nx ? `<button class="pp-cta" onclick="quizContinuer('${escapeJsAttr(nx.matiere)}')">Continuer avec ${escapeHtml(nx.matiere)} (${nx.count} carte${nx.count>1?'s':''})</button>` : ''}
   <button class="pp-cta${nx ? ' pp-quiet' : ''}" onclick="exitQuiz()">Retour aux révisions</button></div></div>`);
     return;
@@ -6174,7 +6478,7 @@ function ppBrowseGroupsHtml(){
     const items = cartes.map((c, i) => {
       const lbl = ppBrwLabel(c);
       const cl = lbl === 'Nouvelle' ? 'pp-new' : (lbl === 'Maîtrisée' ? 'pp-okk' : '');
-      return `<div class="pp-it" data-id="${escapeHtml(c.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms" onclick="ppItClick('${escapeJsAttr(c.id)}')"><div><b>${escapeHtml(c.question || '🖼 Image')}</b><p>${escapeHtml(c.reponse || '🖼 Image')}</p><em class="${cl}">${lbl}</em>${c.inversible ? '<em class="pp-invt">⇄ inversée</em>' : ''}${c.ecrite === true ? '<em class="pp-invt pp-ecrt" title="Réponse à écrire" aria-label="Réponse à écrire">' + PP_IC.edit + '</em>' : ''}</div></div>`;
+      return `<div class="pp-it" data-id="${escapeHtml(c.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms" onclick="ppItClick('${escapeJsAttr(c.id)}')"><div><b>${ppRichHtml(c.question || '🖼 Image')}</b><p>${ppRichHtml(c.reponse || '🖼 Image')}</p><em class="${cl}">${lbl}</em>${c.inversible ? '<em class="pp-invt">⇄ inversée</em>' : ''}${c.ecrite === true ? '<em class="pp-invt pp-ecrt" title="Réponse à écrire" aria-label="Réponse à écrire">' + PP_IC.edit + '</em>' : ''}</div></div>`;
     }).join('');
     return `<div class="pp-grp${ppBrowseClosed[m] ? ' closed' : ''}" style="--c:${couleurMatiere(m)}"><div class="pp-gh"><button class="pp-ghm" onclick="ppBrowseToggle(this,'${mA}')"><span class="pp-dot"></span>${escapeHtml(m)}<small>${n} carte${n > 1 ? 's' : ''}</small></button><button class="pp-ib" aria-label="Options" onclick="ppGrpMenu('${mA}')">${PP_DOTS_H}</button><button class="pp-ib pp-chv" aria-label="Replier" onclick="ppBrowseToggle(this,'${mA}')">${PP_IC.up}</button></div><div class="pp-list">${items}</div></div>`;
   }).join('');
@@ -6207,7 +6511,7 @@ function ppFp(id){
   document.querySelectorAll('#tab-browse .pp-it').forEach(n => n.classList.toggle('sel', n.dataset.id === id));
   const t = todayStr(), d = c.prochaineRevision, iA = escapeJsAttr(id);
   const nx = (!d || d <= t) ? "Aujourd'hui" : (d === addDays(t, 1) ? 'Demain' : new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'short' }));
-  el.innerHTML = `<div class="pp-fc"><div class="pp-ch" style="padding:0"><span class="pp-sticker" style="animation:none">Fiche</span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || 'Sans matière')}</span></div><h1 class="pp-qt" style="margin-top:12px">${escapeHtml(c.question)}</h1>${c.imageQuestion ? `<img class="pp-qimg" src="${c.imageQuestion}" alt="">` : ''}<div><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at">${escapeHtml(c.reponse)}</p>${c.imageReponse ? `<img class="pp-aimg" src="${c.imageReponse}" alt="">` : ''}</div><div class="pp-fm2"><div class="cb-st"><strong>${ppBrwLabel(c)}</strong><small>maîtrise en cours</small></div><div class="cb-st"><strong>${nx}</strong><small>prochaine révision</small></div><button class="pp-sec" onclick="ppFiche('${iA}')">Modifier</button><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button></div></div>`;
+  el.innerHTML = `<div class="pp-fc"><div class="pp-ch" style="padding:0"><span class="pp-sticker" style="animation:none">Fiche</span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || 'Sans matière')}</span></div><h1 class="pp-qt" style="margin-top:12px">${ppRichHtml(c.question)}</h1>${c.imageQuestion ? `<img class="pp-qimg" src="${c.imageQuestion}" alt="">` : ''}<div><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at">${ppRichHtml(c.reponse)}</p>${c.imageReponse ? `<img class="pp-aimg" src="${c.imageReponse}" alt="">` : ''}</div><div class="pp-fm2"><div class="cb-st"><strong>${ppBrwLabel(c)}</strong><small>maîtrise en cours</small></div><div class="cb-st"><strong>${nx}</strong><small>prochaine révision</small></div><button class="pp-sec" onclick="ppFiche('${iA}')">Modifier</button><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button></div></div>`;
 }
 function ppFpAuto(){
   if(!ppWide()) return;
@@ -6330,7 +6634,7 @@ function ppFiche(id, retour){
   const ivOff = !!(ppFi.ec && !qv.trim() && ppFi.imageQuestion);
   const ecOk = ppEcritePossible({ reponse: av }), ecLong = av.length > 80 || av.indexOf('\n') >= 0;
   ppSheet(`<div class="pp-grab"></div><h2>Modifier la carte</h2><p class="pp-hint"><span id="pp-fi-m">${escapeHtml(ppFi.m || 'Sans matière')}</span> · ${ppBrwLabel(c)}</p>
-  ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi')">${escapeHtml(qv)}</textarea>`)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea">${escapeHtml(av)}</textarea>`)}
+  ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi');ppRvMaj('pp-eq')">${escapeHtml(qv)}</textarea>`)}${ppRvDiv('pp-eq-rv', qv)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea" oninput="ppRvMaj('pp-ea')">${escapeHtml(av)}</textarea>`)}${ppRvDiv('pp-ea-rv', av)}
   <div class="pp-set" style="margin-bottom:14px"><div class="pp-li${ivOff ? ' pp-off' : ''}"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
   <div class="pp-li${ecOk ? '' : ' pp-off'}"><i class="pp-ico">${PP_IC.edit}</i><span>Réponse à écrire<small>${ecLong ? 'Réponse longue : peu pratique à écrire' : 'Tu tapes ta réponse avant de la voir'}</small></span><button class="pp-tg${ppFi.ec ? ' on' : ''}" aria-label="Réponse à écrire" onclick="ppFicheEc(this)"></button></div>
   <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre à zéro<small>Repart en « Nouvelle »</small></span></button></div>
@@ -6425,7 +6729,7 @@ function ppFicheResetAsk(id){
   if(!c) return;
   ppFicheGarder();
   const iA = escapeJsAttr(id);
-  ppSheet(`<div class="pp-grab"></div><h2>Remettre cette carte à zéro ?</h2><p class="pp-hint"><span data-notr>${escapeHtml(c.question || '')}</span></p><p class="pp-hint">Elle repart en « Nouvelle » : son avancement est perdu.</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" onclick="ppFicheReset('${iA}')">Remettre à zéro</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Remettre cette carte à zéro ?</h2><p class="pp-hint"><span data-notr>${ppRichHtml(c.question || '')}</span></p><p class="pp-hint">Elle repart en « Nouvelle » : son avancement est perdu.</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" onclick="ppFicheReset('${iA}')">Remettre à zéro</button></div>`);
 }
 function ppFicheReset(id){
   const c = CARDS.find(x => x.id === id);
@@ -6450,7 +6754,7 @@ function ppFicheAsk(id){
   if(!c) return;
   ppFicheGarder();
   const iA = escapeJsAttr(id);
-  ppSheet(`<div class="pp-grab"></div><h2>Supprimer cette carte ?</h2><p class="pp-hint">${escapeHtml(c.question)}</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" style="background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="ppFicheDel('${iA}')">Supprimer</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Supprimer cette carte ?</h2><p class="pp-hint">${ppRichHtml(c.question)}</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" style="background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="ppFicheDel('${iA}')">Supprimer</button></div>`);
 }
 function ppFicheDel(id){
   ppSheetClose();
@@ -7404,9 +7708,9 @@ function ppViewIA(){
 function ppViewMan(){
   return `<button class="pp-bk2" onclick="ppSetMode('ia')">${PP_IC.back}Avec l'IA</button><h2 class="pp-t">Écrire une carte</h2>${ppPillsHtml()}
   <div class="pp-side pp-side-q"><div class="pp-numh"><b>1</b>Question<button class="pp-invc ${ppMan.inv ? 'on' : ''}${ppMan.ec && ppMan.imageQuestion ? ' pp-off' : ''}" id="pp-man-inv" style="margin-left:auto" onclick="ppManIv(this)">${PP_IC.swap}Sens inversé</button></div>
-  ${ppChampImg('man', 'q', `<textarea id="pp-nq" enterkeyhint="next" oninput="ppMan.tq=this.value;ppIvGris('man')" onkeydown="ppEnter(event,'q')" placeholder="Saisis le texte ici">${ppEsc(ppMan.tq || '')}</textarea>`)}</div>
+  ${ppChampImg('man', 'q', `<textarea id="pp-nq" enterkeyhint="next" oninput="ppMan.tq=this.value;ppIvGris('man');ppRvMaj('pp-nq')" onkeydown="ppEnter(event,'q')" placeholder="Saisis le texte ici">${ppEsc(ppMan.tq || '')}</textarea>`)}${ppRvDiv('pp-nq-rv', ppMan.tq)}</div>
   <div class="pp-side pp-side-r"><div class="pp-numh"><b>2</b>Réponse<button class="pp-invc ${ppMan.ec ? 'on' : ''}" style="margin-left:auto" onclick="ppManEc(this)">${PP_IC.edit.replace(/17/g, '14')}À écrire</button></div>
-  ${ppChampImg('man', 'r', `<textarea id="pp-na" enterkeyhint="done" oninput="ppMan.ta=this.value" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici">${ppEsc(ppMan.ta || '')}</textarea>`)}</div>
+  ${ppChampImg('man', 'r', `<textarea id="pp-na" enterkeyhint="done" oninput="ppMan.ta=this.value;ppRvMaj('pp-na')" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici">${ppEsc(ppMan.ta || '')}</textarea>`)}${ppRvDiv('pp-na-rv', ppMan.ta)}</div>
   <button class="pp-cta" style="margin-top:0" onclick="ppAddCard()">Ajouter la carte</button>
   <div class="pp-kbd"><kbd>Entrée</kbd> pour avancer, puis pour ajouter</div>
   <p class="pp-note" id="pp-addn">${ppAddedN ? ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert' : 'Reste ouvert pour enchaîner sur la carte suivante'}</p>`;
@@ -7530,7 +7834,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v159';
+const PP_APP_VERSION = 'v160';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -7717,7 +8021,7 @@ function ppDoImport(){
   const code = champ ? champ.value.replace(/[\s-]+/g, '').toUpperCase() : '';
   if(code){ ppImportParCode(code); return; }
   let data;
-  try{ data = JSON.parse(document.getElementById('pp-ij').value); }catch(e){ ppToast('JSON invalide'); return; }
+  try{ data = JSON.parse(ppJsonAntislashs(document.getElementById('pp-ij').value)); }catch(e){ ppToast('JSON invalide'); return; }
   ppImporterDonnees(data);
 }
 /* v123 : récupère un partage par son code (GET /partage) puis passe par le même import que le fichier. */
@@ -8170,6 +8474,7 @@ Règles pour chaque carte :
 - Si le cours est une fiche de synthèse condensée (style télégraphique, symboles comme → ⇒ = ≠ ↑ ↓, mots-clés en gras), interprète les symboles et écris des questions et des réponses en phrases claires et complètes, jamais avec les symboles : « → » = définition ou lien, « ⇒ » = conséquence, « = » = égale ou signifie, « ≠ » = différent de ou opposé à, « ↑ » = augmente, « ↓ » = diminue. Une ligne de fiche donne une ou plusieurs cartes ; chaque carte reste compréhensible sans la fiche. Tu peux mettre en mots ce que la fiche exprime en symboles, mais n'ajoute aucune information absente de la fiche.
 - Photos de cours manuscrit : ignore ratures, marges, gribouillis et passages illisibles (ne devine pas un mot illisible).
 - Couvre les notions importantes du cours (définitions, dates, causes et conséquences, formules, exemples clés) sans cartes triviales ni doublons. Pas de nombre imposé : autant de cartes que nécessaire.
+- Maths, physique, chimie : écris chaque formule entre $ et $ en LaTeX simple (\\frac{a}{b}, x^2, x_1, \\sqrt{x}, \\sum, \\int, \\alpha, \\Delta, \\ce{H2O} pour une formule chimique), par exemple « $E = mc^2$ ». Le signe $ ne sert qu'aux formules (écris « 5 euros »). Dans le JSON, double chaque antislash : \\\\frac. Un mot clé peut être mis en **gras**, rarement.
 - Si des consignes plus précises suivent (ajuster, modifier, ajouter des cartes), elles passent avant ces règles.
 
 Réponds UNIQUEMENT avec un tableau JSON brut, rien d'autre autour (pas de texte, pas de balises markdown). Chaque carte doit avoir exactement ces champs :
@@ -8355,7 +8660,7 @@ async function appelerGeminiPourCartes(parts, options){
     try{
       // v153 (constat 43) : on retire d'éventuelles balises ``` et on accepte un objet { cartes: [...] }
       const brutNet = rawText.trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```[ \t]*$/, '').trim();
-      cards = JSON.parse(brutNet);
+      cards = JSON.parse(ppJsonAntislashs(brutNet));
       if(!Array.isArray(cards) && cards && Array.isArray(cards.cartes)) cards = cards.cartes;
     }catch(e){
       importMsg = { type:'err', text: (cand && cand.finishReason === 'MAX_TOKENS')
@@ -8375,8 +8680,8 @@ async function appelerGeminiPourCartes(parts, options){
       .filter(c => c && c.question && c.reponse)
       .map(c => {
         const base = opts.garderNumero
-          ? { n: numeroDe(c.n), question: String(c.question).trim(), reponse: String(c.reponse).trim() }
-          : { question: String(c.question).trim(), reponse: String(c.reponse).trim() };
+          ? { n: numeroDe(c.n), question: ppRepareTexteIA(String(c.question).trim()), reponse: ppRepareTexteIA(String(c.reponse).trim()) }
+          : { question: ppRepareTexteIA(String(c.question).trim()), reponse: ppRepareTexteIA(String(c.reponse).trim()) };
         if(opts.garderImages){
           base.nImgQ = numeroDe(c.imageQuestion); base.nImgR = numeroDe(c.imageReponse);
           base.zQ = c.zoneImageQuestion; base.zR = c.zoneImageReponse;   // v156 : zones de découpage (validées plus tard par ppZoneValide)
@@ -11882,7 +12187,7 @@ function ecrHabiller(o, anim, foc){
   } else {
     const mine = ecr.typed.trim() ? '<span data-notr>' + escapeHtml(ecr.typed.trim()) + '</span>' : '<i>Pas de réponse</i>';
     const bonne = o.faces.arriere || '';
-    const cmp = '<div class="pp-c2w A"><div class="pp-c2 mine" onclick="ecrDeplier(this)"><small>Ta réponse</small><p>' + mine + '</p></div><div class="pp-c2 good"><small>' + escapeHtml(o.faces.libArriere) + '</small><p class="' + (bonne.length > 90 ? 'l' : '') + '">' + escapeHtml(bonne) + '</p></div></div>';
+    const cmp = '<div class="pp-c2w A"><div class="pp-c2 mine" onclick="ecrDeplier(this)"><small>Ta réponse</small><p>' + mine + '</p></div><div class="pp-c2 good"><small>' + escapeHtml(o.faces.libArriere) + '</small><p class="' + (bonne.length > 90 ? 'l' : '') + '">' + ppRichHtml(bonne) + '</p></div></div>';
     if(wide){
       r.querySelectorAll('.pp-ra .pp-at').forEach(p => { p.outerHTML = cmp; });
       r.querySelectorAll('.pp-ra').forEach(x => x.removeAttribute('onclick'));   /* carte à écrire : le clic sur le panneau de droite ne retourne rien (il sert à lire / replier) */
@@ -11973,6 +12278,102 @@ function ppStatUndo(){
   const o = ppStatExtra();
   o.total = Math.max(0, o.total - 1);
   ppStatSave(o);
+}
+
+/* ---- v160 : bilan de fin de séance + objectif du jour (données locales à l'appareil, jamais synchronisées) ----
+   `cartes-seances` = liste des 60 dernières séances { d: jour, ms: temps actif, n: cartes, v: « Facile », m: nouvelles maîtrisées, e: 1 si « Revoir les erreurs » }.
+   Temps actif : à chaque réponse on ajoute le temps écoulé depuis la précédente, plafonné à 2 min (app laissée ouverte = pas comptée). */
+const PP_SEANCES_KEY = 'cartes-seances', PP_OBJ_KEY = 'cartes-objectif-jour';
+const PP_OBJ_PAS = [0, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200];
+function ppSeancesLire(){
+  try{
+    const a = JSON.parse(localStorage.getItem(PP_SEANCES_KEY) || '[]');
+    if(!Array.isArray(a)) return [];
+    return a.filter(x => x && typeof x === 'object' && typeof x.d === 'string' && Number.isFinite(+x.n) && +x.n > 0)
+      .map(x => ({ d:x.d, ms:Math.max(0, +x.ms || 0), n:Math.floor(+x.n), v:Math.max(0, Math.floor(+x.v) || 0), m:Math.max(0, Math.floor(+x.m) || 0), e:x.e ? 1 : 0 })).slice(-60);
+  }catch(err){ return []; }
+}
+function ppObjectif(){ try{ const n = Math.floor(+localStorage.getItem(PP_OBJ_KEY)); return (n > 0 && n <= 500) ? n : 0; }catch(err){ return 0; } }
+function ppObjPas(sens){
+  const cur = ppObjectif();
+  let k = PP_OBJ_PAS.findIndex(x => x >= cur); if(k < 0) k = PP_OBJ_PAS.length - 1;
+  k = Math.max(0, Math.min(PP_OBJ_PAS.length - 1, k + sens));
+  ppEcrire(PP_OBJ_KEY, String(PP_OBJ_PAS[k]));
+  ppSetDraw(true);
+}
+function ppSeanceRaz(){ ppSeance = { ms: 0, last: Date.now(), saved: false, bilan: null }; }
+function ppSeanceTick(){
+  const t = Date.now();
+  const dt = Math.max(0, Math.min(t - (ppSeance.last || t), 120000));
+  ppSeance.ms += dt; ppSeance.last = t;
+  return dt;
+}
+/* Enregistre la séance (une seule fois) et renvoie son bilan, ou null s'il n'y a eu aucune réponse. */
+function ppSeanceFin(){
+  const s = ppSeance;
+  if(s.saved) return s.bilan;
+  if(sessionReviewed <= 0) return null;
+  s.saved = true;
+  const liste = ppSeancesLire();
+  const prev = studyMode === 'errors' ? null : ([...liste].reverse().find(x => !x.e && x.n >= 5) || null);
+  const e = { d: todayStr(), ms: Math.round(s.ms), n: sessionReviewed, v: sessionMoodCounts.vert || 0, m: sessionMastered, e: studyMode === 'errors' ? 1 : 0 };
+  liste.push(e);
+  ppEcrire(PP_SEANCES_KEY, JSON.stringify(liste.slice(-60)));
+  s.bilan = { e, prev, aujourdhui: liste.filter(x => x.d === e.d).reduce((a, x) => a + x.n, 0) };
+  return s.bilan;
+}
+function ppDuree(ms){
+  const s = Math.round(ms / 1000);
+  if(s < 60) return s + ' s';
+  const m = Math.round(s / 60);
+  return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + ppP2(m % 60);
+}
+/* Écran « Terminé » : 3 repères (temps, réussite avec l'écart à la séance précédente, maîtrisées) + barre d'objectif seulement si un objectif est réglé. */
+function ppBilanHtml(){
+  const b = ppSeanceFin();
+  if(!b) return '';
+  const e = b.e, taux = Math.round(100 * e.v / Math.max(1, e.n));
+  let evo = '';
+  if(b.prev && e.n >= 5){
+    const d = taux - Math.round(100 * b.prev.v / b.prev.n);
+    evo = d > 0 ? `<em>+${d} pts</em>` : (d < 0 ? `<em class="dn">−${-d} pts</em>` : `<em class="dn">=</em>`);
+  }
+  const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
+  const obj = ppObjectif();
+  let objHtml = '';
+  if(obj){
+    const ok = b.aujourdhui >= obj, p = Math.min(100, Math.round(100 * b.aujourdhui / obj));
+    objHtml = `<div class="pp-obj${ok ? ' ok' : ''}"><div class="t1"><span>${ok ? 'Objectif atteint' : 'Objectif du jour'}</span><b>${b.aujourdhui} / ${obj}</b></div><div class="bar"><i style="--p:${p}%"></i></div></div>`;
+  }
+  return `<div class="pp-bil"><div><b>${ppDuree(e.ms)}</b><span>temps</span></div><div><b>${taux} %</b><span>réussite</span>${evo}</div><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span>${e.m > 0 ? `<em>+${e.m}</em>` : ''}</div></div>${objHtml}`;
+}
+/* Statistiques : 2 repères en plus (temps des 7 derniers jours, cartes du jour / objectif). */
+function ppStatsSeancesHtml(){
+  const l = ppSeancesLire(), today = todayStr(), debut = addDays(today, -6);
+  const ms = l.filter(x => x.d >= debut && x.d <= today).reduce((a, x) => a + x.ms, 0);
+  const auj = l.filter(x => x.d === today).reduce((a, x) => a + x.n, 0), obj = ppObjectif();
+  const clock = ppSvg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 16), cible = ppSvg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>', 16);
+  return `<div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${clock}</i><div><b>${ms ? ppDuree(ms) : '–'}</b><span>cette semaine</span></div></div>
+    <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${cible}</i><div><b>${obj ? auj + ' / ' + obj : auj}</b><span>${obj ? 'objectif du jour' : "aujourd'hui"}</span></div></div>`;
+}
+function ppObjHtml(){
+  const n = ppObjectif();
+  return `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${ppSvg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>', 18)}</i><span>Cartes par jour<small>Facultatif</small></span><span class="pp-objstep"><button aria-label="Diminuer" onclick="ppObjPas(-1)">−</button><b>${n ? n : 'Aucun'}</b><button aria-label="Augmenter" onclick="ppObjPas(1)">+</button></span></div></div>`;
+}
+/* ---- v160 : aperçu en direct sous les champs de texte (visible seulement s'il y a une mise en forme) + aide ---- */
+function ppRvDiv(id, val){
+  const m = ppRichMarque(val);
+  return `<div class="pp-rv" id="${id}"${m ? '' : ' hidden'} data-notr>${m ? ppRichHtml(val) : ''}</div>`;
+}
+function ppRvMaj(srcId){
+  const s = document.getElementById(srcId), r = document.getElementById(srcId + '-rv');
+  if(!s || !r) return;
+  const m = ppRichMarque(s.value);
+  r.hidden = !m; r.innerHTML = m ? ppRichHtml(s.value) : '';
+}
+function ppFormatAide(){
+  const ex = ['**gras**', '*italique*', '- une puce\n- une autre', '$x^2 + y_1$', '$\\frac{a}{b}$', '$\\sqrt{x}$', '$\\sum_{i=1}^{n} i$', '$\\Delta x \\leq \\alpha$', '$\\ce{H2O}$', '$$E = mc^2$$'];
+  ppSheet(`<div class="pp-grab"></div><h2>Écrire des formules</h2><p class="pp-hint">Dans une question ou une réponse. L'IA les écrit aussi toute seule.</p>${ex.map(s => `<div class="pp-fx"><code>${escapeHtml(s)}</code><span data-notr>${ppRichHtml(s)}</span></div>`).join('')}<p class="pp-hint">Un vrai dollar : <code>\\$</code></p><div class="pp-duo"><button class="pp-cta" style="margin:0;grid-column:1/-1" onclick="ppSettings(true)">Retour</button></div>`);
 }
 
 /* ---- pages plein écran (Statistiques, Synthèse) : posées dans #modal-root ---- */
@@ -12075,7 +12476,7 @@ function ppStatsHtml(){
     <div class="pp-stat"><i style="background:var(--c-yicon);color:var(--yellow-t)">${ppIc16(PP_IC.fire)}</i><div><b>${streak}</b><span>jour${streak > 1 ? 's' : ''} de suite</span></div></div>
     <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${ppIc16(PP_IC.ok)}</i><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span></div></div>
     <div class="pp-stat"><i style="background:var(--c-osoft);color:var(--orange-t)">${ppIc16(PP_IC.cards)}</i><div><b>${ex.total}</b><span>révisions au total</span></div></div>
-    <div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${ppIc16(PP_IC.flag)}</i><div><b>${record}</b><span>record de série</span></div></div></div>
+    <div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${ppIc16(PP_IC.flag)}</i><div><b>${record}</b><span>record de série</span></div></div>${ppStatsSeancesHtml()}</div>
   <div class="pp-sgA"><p class="pp-sub2" style="margin-top:8px">30 derniers jours</p><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div>
   <p class="pp-hint" style="margin-top:6px">Plus la case est claire, plus tu as révisé ce jour-là.</p></div>
   <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
@@ -12166,8 +12567,9 @@ function ppSetHtml(){
   <h4>Apparence</h4>${ppApparenceHtml()}
   <h4>Rappels</h4>${rappels}${ppRappelsAppleHtml()}
   ${ppAppleHtml()}
+  <h4>Objectif du jour</h4>${ppObjHtml()}
   <h4>Génération IA</h4>${ia}
-  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button></div></div><div>
+  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button></div></div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
   ${ppWebHtml()}
   ${ppMobilesHtml()}
