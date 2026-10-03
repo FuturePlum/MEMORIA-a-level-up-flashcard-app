@@ -11,7 +11,7 @@
 ![PWA](https://img.shields.io/badge/PWA-installable-ff8a2b)
 ![Hors ligne](https://img.shields.io/badge/hors%20ligne-oui-ffd23f)
 ![Sans compte](https://img.shields.io/badge/sans%20compte-oui-2b2b3a)
-![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-2b2b3a)
+![Langue](https://img.shields.io/badge/langue-FR%20%C2%B7%20EN-2b2b3a)
 
 <p align="center">
   <img src="docs/capture-accueil.png" width="23%" alt="Écran d'accueil : les cartes à réviser aujourd'hui et le compte à rebours avant le contrôle">
@@ -27,6 +27,9 @@
 
 ### 📸 Photographie ton cours, l'IA fait les cartes
 Texte collé, photo du tableau, PDF, Word, fichier texte : tu déposes, l'IA génère les cartes. Tu relis, tu corriges, tu valides. Fini les heures à recopier. Tu peux même demander à l'IA de **retoucher toute une matière** : elle te propose les changements, et c'est toi qui acceptes ou refuses carte par carte.
+
+### 🖼️ L'IA trouve aussi les images de tes cartes
+Dis-le simplement dans ton cours (« ajoute un schéma du cœur », « une carte de l'Europe ») : l'IA cherche une **image libre sur Wikimedia Commons** et la place sur la carte, côté question ou côté réponse. Avant de valider, tu la gardes, tu la remplaces par ta propre photo ou tu la retires. Jusqu'à 6 images par génération, et rien n'est ajouté si tu n'en demandes pas.
 
 ### 🧠 Révise uniquement ce que tu risques d'oublier
 Chaque réponse (rouge, orange, vert) décide quand la carte reviendra : demain, dans 3 jours, 1 semaine, 2 semaines… jusqu'à 3 mois. Ce que tu sais déjà s'efface de ta file. Ce qui te résiste revient. Tu passes ton temps sur ce qui compte vraiment.
@@ -61,11 +64,15 @@ Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si t
 - **Série** : ta flamme monte tant que tu révises. Elle ne casse que si tu as vraiment laissé des cartes en retard.
 - **Statistiques** : ce que tu maîtrises, matière par matière, en un coup d'œil.
 - **Parcourir** : recherche, modifie, partage ou supprime n'importe quelle carte.
-- **Cartes illustrées** : ajoute tes photos à tes cartes (schémas, cartes, formules).
+- **Cartes illustrées** : ajoute tes photos à tes cartes (schémas, cartes, formules), ou laisse l'IA en trouver pour toi.
 
 ## 🎨 L'esprit
 
 Une app **fluide, vivante et cohérente**. Tout réagit au toucher : les boutons s'enfoncent comme de vrais boutons en relief, la carte se retourne tout en douceur, et le fond bouge légèrement même au repos. Le style *Pop nuit* mêle un fond sombre à des touches d'orange et de jaune. Réviser doit donner envie de rouvrir l'app, pas de la fuir.
+
+**Deux ambiances, à ton goût.** Le sombre *Pop nuit*, ou le clair *Pop jour* (papier blanc, encre indigo). Dans Réglages → Apparence, choisis **Sombre**, **Clair** ou **Auto** pour suivre ton appareil.
+
+**En français ou en anglais.** L'interface (notifications comprises) choisit sa langue d'après celle de ton appareil, et tu peux la changer à tout moment dans Réglages → Langue.
 
 ## 🖥️ Sur ordinateur aussi
 
@@ -90,6 +97,15 @@ Même app, même progression, mais en grand : la carte et sa réponse s'affichen
 1. Ouvre [**memoria-card.pages.dev**](https://memoria-card.pages.dev) dans Chrome.
 2. Menu ⋮ → **Installer l'application** (ou **Ajouter à l'écran d'accueil**).
 
+**Sur iPhone / iPad**
+1. Ouvre [**memoria-card.pages.dev**](https://memoria-card.pages.dev) dans **Safari**.
+2. Touche **Partager**, puis **Sur l'écran d'accueil**.
+
+> ℹ️ Ajoute bien l'app à l'écran d'accueil : sinon Safari peut effacer tes cartes après 7 jours sans visite. Active aussi la synchronisation, ou exporte ta progression de temps en temps. Sur iPhone et Mac, le rappel de révision s'affiche seulement quand l'app est ouverte, car Apple ne permet pas l'envoi en arrière-plan.
+
+**Sur Mac**
+Ouvre [**memoria-card.pages.dev**](https://memoria-card.pages.dev) dans Safari ou Chrome. Même précaution sous Safari : il peut effacer les données d'un site peu visité, donc pense à la synchro ou à l'export.
+
 Et ça marche **sans connexion** : métro, train, salle sans réseau, tes cartes sont là.
 
 ## 🔒 Tes données
@@ -100,6 +116,8 @@ Pas de compte, pas de pub, pas de pistage. Tes cartes et ta progression restent 
 
 J'ai développé cette appli pour moi, et je la publie pour que d'autres puissent en profiter. Je n'ai aucune intention de consulter, d'utiliser ou de revendre tes données, et je n'y ai aucun intérêt. Si tu préfères ne rien me confier, n'active pas la synchro : l'appli marche très bien sans.
 
+**Quand tu utilises l'IA**, le texte et les photos de ton cours sont envoyés à **Google (Gemini)**, avec ta propre clé, pour générer les cartes ou la fiche. Si tu demandes des images, les mots-clés de la recherche sont envoyés à **Wikimedia Commons**. Sans IA, rien de tout ça ne sort de ton appareil.
+
 > 🔑 Choisis un code perso **long et unique**, et ne le partage pas.
 
 ## 🛠️ Technique
@@ -108,6 +126,8 @@ J'ai développé cette appli pour moi, et je la publie pour que d'autres puissen
 - HTML, CSS et JavaScript, sans framework
 - Fonctionne hors ligne grâce au cache du service worker
 - Génération IA avec ta propre clé Gemini (à renseigner dans les Réglages)
+- Images libres via l'API publique de Wikimedia Commons
+- Interface en français et en anglais, thème sombre et clair
 - Dossier `worker/` : partie serveur légère (synchronisation et génération IA)
 - Hébergement : Cloudflare Pages
 
