@@ -61,14 +61,14 @@
     'Sauvegarde':'Backup','Exporter la progression':'Export progress','Fichier JSON':'JSON file','Importer une progression':'Import progress',
     "Exporter l'app à jour":'Export the up-to-date app','Fichier HTML complet':'Full HTML file','Aussi sur le web':'Also on the web',
     'Memoria existe aussi en site web':'Memoria is also available as a website','Retrouve tes cartes sur ton PC avec ton code de synchro.':'Find your cards on your computer with your sync code.',
-    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
+    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
     'Renommer la matière':'Rename subject','Nouveau nom':'New name','Renommer':'Rename','Supprimer tout':'Delete all','Une de tes photos :':'One of your photos:','Une autre image…':'Another image…','Fermer':'Close',
     'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test',
     'Matières et contrôles':'Subjects and tests','Toutes tes matières sont archivées.':'All your subjects are archived.','Afficher la réponse':'Show answer','Espace':'Space','pour afficher la réponse':'to show the answer',
     'Suppr':'Del','Maj':'Shift','Entrée':'Enter','Aucune carte':'No cards','Ta première carte':'Your first card','Ajouter des cartes':'Add cards',"Rien à réviser aujourd'hui":'Nothing to review today',
-    'Compte pour la maîtrise':'Counts toward mastery',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
+    'Compte pour la maîtrise des cartes':'Counts toward card mastery',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
     "Retour à l'accueil":'Back to home',"Terminé pour aujourd'hui":'Done for today','Par quelle matière tu commences ?':'Which subject do you start with?','Tout enchaîner':'Do everything in a row',
     'Revoir quoi ?':'Review what?','Tout regrouper':'Combine all','Entraînement terminé · ne compte pas pour la maîtrise':"Practice finished · doesn't count toward mastery",'À revoir':'To review','Tout juste':'Just about',
     'Retour aux révisions':'Back to reviews','⇄ inversée':'⇄ reversed','Aucune carte trouvée. Essaie un autre mot.':'No cards found. Try another word.',"Aucune carte pour l'instant.":'No cards yet.',
@@ -2478,14 +2478,15 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
     var(--bg) !important;
   background-attachment:fixed !important;
 }
-:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-grp,.pp-sec,.cb-wl,.cb-mats,.pp-streak,.pp-gear){ border-color:var(--ink); }
-:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec){ --d:3px; --sc:var(--ink); box-shadow:0 3px 0 var(--ink); }
-:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec):is(:active,.js-press){ box-shadow:0 0 0 0 var(--ink); }
-:root:root:root[data-theme="light"] :is(.pp-grp,.cb-wl,.cb-mats){ box-shadow:4px 4px 0 var(--ink); }
-:root:root:root[data-theme="light"] .pp-ctl{ border-color:var(--ink); }
+/* v146 : clair adouci — bordures et ombres chaudes au lieu du contour noir (le clair ne ressemble plus à un sombre « inversé »). */
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-grp,.pp-sec,.cb-wl,.cb-mats,.pp-streak,.pp-gear){ border-color:var(--c-edge); }
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec){ --d:3px; --sc:var(--c-edge); box-shadow:0 3px 0 var(--c-edge), 0 10px 22px rgba(var(--ov),.10); }
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec):is(:active,.js-press){ box-shadow:0 0 0 0 var(--c-edge); }
+:root:root:root[data-theme="light"] :is(.pp-grp,.cb-wl,.cb-mats){ box-shadow:0 4px 0 var(--c-edge), 0 12px 26px rgba(var(--ov),.12); }
+:root:root:root[data-theme="light"] .pp-ctl{ border-color:var(--c-edge); }
 :root:root:root[data-theme="light"] .pp-home .pp-hero .pp-big{ text-shadow:6px 6px 0 var(--orange); }
 @media (min-width:900px) and (min-height:480px){
-  :root:root:root[data-theme="light"] body .pp-nav{ border:2px solid var(--ink); background:var(--panel); box-shadow:4px 4px 0 var(--ink); }
+  :root:root:root[data-theme="light"] body .pp-nav{ border:2px solid var(--c-edge); background:var(--panel); box-shadow:0 4px 0 var(--c-edge), 0 12px 26px rgba(var(--ov),.12); }
 }
 
 /* ---- v132 : Apparence — contrôle à 3 positions (réutilise .pp-mode) ---- */
@@ -3765,6 +3766,8 @@ function icon(name){ return ICONS[name] || ''; }
 const ppSvg=(p,w=22,extra='')=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" ${extra}>${p}</svg>`;
 /* Icônes du prototype (copiées telles quelles). */
 const PP_IC={
+ mail:ppSvg('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7.5l8.5 6 8.5-6"/>'),
+ bug:ppSvg('<path d="M12 20a5 5 0 0 1-5-5v-3a5 5 0 0 1 10 0v3a5 5 0 0 1-5 5zM12 7V4M7 12H3.5M20.5 12H17M7.5 17l-3 2M16.5 17l3 2M8 6l1.5 1.5M16 6l-1.5 1.5"/>'),
  cards:ppSvg('<rect x="3.5" y="7.5" width="12" height="13.5" rx="2.5"/><path d="M8 7.5V5.5A2.5 2.5 0 0 1 10.5 3H18a2.5 2.5 0 0 1 2.5 2.5v9A2.5 2.5 0 0 1 18 17h-2.5"/>'),
  cal:ppSvg('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 11h18"/>'),
  plus:ppSvg('<path d="M12 4v16M4 12h16"/>'),
@@ -4740,7 +4743,7 @@ function renderStudyInner(){
     const ppStill = !(ppFresh || !prevHomeView);
     ppFresh = false;
     const multi = matieres.length > 1 && matiereFilter === 'toutes';
-    const rowAll = `<button class="pp-row" ${totalFiltered===0?'disabled':''} onclick="${multi ? 'openChooseMatiereForAll()' : "startStudySession('all')"}"><i class="pp-ri">${PP_IC.all.replace(/16/g,'18')}</i><div><b>Réviser tout${matiereFilter!=='toutes' ? ' — ' + escapeHtml(matiereFilter) : ''}</b><span>Compte pour la maîtrise</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
+    const rowAll = `<button class="pp-row" ${totalFiltered===0?'disabled':''} onclick="${multi ? 'openChooseMatiereForAll()' : "startStudySession('all')"}"><i class="pp-ri">${PP_IC.all.replace(/16/g,'18')}</i><div><b>Réviser tout${matiereFilter!=='toutes' ? ' — ' + escapeHtml(matiereFilter) : ''}</b><span>Compte pour la maîtrise des cartes</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
     const rowQuiz = `<button class="pp-row" ${totalFiltered<2?'disabled':''} onclick="${multi ? 'openChooseMatiereForQuiz()' : 'startQuizFromHome()'}"><i class="pp-ri">${PP_IC.quiz.replace(/16/g,'18')}</i><div><b>S'entraîner</b><span>Un score, sans pression</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
     el.innerHTML = `<div class="pp-view pp-home${ppStill ? ' pp-still' : ''}">${ppCtlHtml() || ppCtlAddHtml()}
   <div class="pp-hero"><div><span class="pp-sticker">${dueTotal > 0 ? "À réviser aujourd'hui" : 'Tout est à jour'}</span></div><div class="pp-hmid"><div class="pp-big" id="bigN" data-n="${dueTotal}">${dueTotal}</div>
@@ -6966,6 +6969,22 @@ function ppSheetClose(){
   document.getElementById('pp-veil').classList.remove('on'); document.getElementById('pp-sheet').classList.remove('on');
 }
 let ppToastT;
+/* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
+const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
+const PP_APP_VERSION = 'v146';
+function ppAideMail(type){
+  let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
+  const bug = type === 'bug';
+  const th = document.documentElement.getAttribute('data-theme') || '';
+  const infos = 'Memoria ' + PP_APP_VERSION + ' · ' + th + ' · ' + (en ? 'en' : 'fr') + ' · ' + (navigator.userAgent || '') + ' · ' + screen.width + 'x' + screen.height;
+  const sujet = bug ? (en ? 'Memoria: bug report' : 'Memoria : bug') : (en ? 'Memoria: message' : 'Memoria : message');
+  const corps = bug
+    ? (en ? 'What happened?\n\n\nWhat did you expect?\n\n\nSteps to reproduce:\n\n\n---\n' : "Que s'est-il passé ?\n\n\nQu'attendais-tu ?\n\n\nComment le reproduire ?\n\n\n---\n") + infos
+    : (en ? 'Hi,\n\n\n' : 'Salut,\n\n\n');
+  ppToast((en ? 'Write to: ' : 'Écris à : ') + PP_CONTACT_MAIL);
+  try{ window.location.href = 'mailto:' + PP_CONTACT_MAIL + '?subject=' + encodeURIComponent(sujet) + '&body=' + encodeURIComponent(corps); }catch(e){}
+}
+
 function ppToast(m){
   ppEnsureSheets();
   const t = document.getElementById('pp-toast'); t.textContent = m; t.classList.add('on');
@@ -11074,7 +11093,7 @@ function ppSetHtml(){
   <h4>Apparence</h4>${ppApparenceHtml()}
   <h4>Rappels</h4>${rappels}
   <h4>Génération IA</h4>${ia}
-  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button></div></div><div>
+  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button></div></div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
   ${ppWebHtml()}
   ${ppMobilesHtml()}
