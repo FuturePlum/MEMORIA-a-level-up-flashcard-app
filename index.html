@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- v153 (constat 34) : CSP. Les scripts restent inline (onclick=, blocs script), mais les requêtes réseau ne peuvent partir que vers le Worker de synchro et Google (Gemini), et les images ne peuvent venir que de l'app, de data: ou de blob:. Si SYNC_WORKER_URL change, mettre à jour connect-src. -->
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; connect-src 'self' https://flashcard-sync-kv.cmpsloic.workers.dev https://generativelanguage.googleapis.com https://commons.wikimedia.org https://upload.wikimedia.org; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Memoria</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0c0c12">
@@ -19,7 +21,7 @@
       var t = resolu(c || lire());
       document.documentElement.setAttribute('data-theme', t);
       var m = document.querySelector('meta[name="theme-color"]');
-      if(m) m.setAttribute('content', t === 'light' ? '#f6efe2' : '#0c0c12');
+      if(m) m.setAttribute('content', t === 'light' ? '#f1f0fb' : '#0c0c12');
     };
     window.choisirApparence = function(c){
       try{ localStorage.setItem(K, c); }catch(e){}
@@ -48,7 +50,7 @@
   if(lire()!=='en') return;
   document.documentElement.setAttribute('lang','en');
   var D=window.FC_EN={
-    'Réviser':'Study','Planning':'Planning','Ajouter':'Add','Parcourir':'Browse',
+    'Réviser':'Study','Prendre la photo':'Take photo','Caméra indisponible : choisis un fichier.':'Camera unavailable: pick a file.','Planning':'Planning','Ajouter':'Add','Parcourir':'Browse',
     'Réglages':'Settings','Retour':'Back','Langue':'Language','Apparence':'Appearance','Sombre':'Dark','Clair':'Light','Auto':'Auto',
     'Rappels':'Reminders','Rappel de révision':'Review reminder','Une notification par jour':'One notification per day',
     'Heure du rappel':'Reminder time','Relancer si ignoré':'Remind again if ignored','Un second rappel 2 h plus tard':'A second reminder 2 h later',
@@ -61,6 +63,21 @@
     'Sauvegarde':'Backup','Exporter la progression':'Export progress','Fichier JSON':'JSON file','Importer une progression':'Import progress',
     "Exporter l'app à jour":'Export the up-to-date app','Fichier HTML complet':'Full HTML file','Aussi sur le web':'Also on the web',
     'Memoria existe aussi en site web':'Memoria is also available as a website','Retrouve tes cartes sur ton PC avec ton code de synchro.':'Find your cards on your computer with your sync code.',
+    'Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.':'Your cards, progress and Gemini key are stored on the developer\'s Cloudflare server, protected only by this code.',
+    "Ce fichier contient aussi ta clé Gemini : ne l'envoie à personne.":'This file also contains your Gemini key: do not send it to anyone.',
+    'Stockage plein : le code n\u2019a pas pu être enregistré.':'Storage full: the code could not be saved.',
+    "Ajoute Memoria à l'écran d'accueil":'Add Memoria to your Home Screen',
+    "Dans Safari : Partager, puis « Sur l'écran d'accueil ». Sinon Safari peut effacer tes cartes après 7 jours sans ouvrir l'app. Active aussi la synchronisation.":'In Safari: Share, then "Add to Home Screen". Otherwise Safari may erase your cards after 7 days without opening the app. Also turn on sync.',
+    'Pense à sauvegarder':'Remember to back up',
+    "Safari peut effacer les données d'un site peu visité. Active la synchronisation ou exporte ta progression de temps en temps.":'Safari may erase the data of a rarely visited site. Turn on sync or export your progress from time to time.',
+    "Sur iPhone et Mac, le rappel s'affiche seulement quand Memoria est ouverte (pas d'envoi en arrière-plan).":'On iPhone and Mac, the reminder only shows while Memoria is open (no background delivery).',
+    'Rappels indisponibles':'Reminders unavailable',
+    "Ajoute d'abord Memoria à l'écran d'accueil pour pouvoir activer les rappels.":'First add Memoria to your Home Screen to turn on reminders.',
+    'Ce navigateur ne permet pas les notifications.':'This browser does not support notifications.',
+    'Safari (Mac)':'Safari (Mac)',
+    'Images trouvées sur Wikimedia Commons : vérifie-les avant d\u2019enregistrer.':'Images found on Wikimedia Commons: check them before saving.',
+    'Aucune image trouvée pour les mots-clés de l\u2019IA.':'No image found for the AI keywords.',
+    'Recherche des images...':'Searching for images...',
     'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
@@ -106,6 +123,14 @@
     'Pas su':"Didn't know",'Difficile':'Hard','Facile':'Easy','Synthèse':'Summary','À la main':'By hand',"Avec l'IA":'With AI','Tout inverser':'Reverse all','Inverser':'Reverse',
     'Créer une matière':'Create a subject','Ajouter une matière':'Add a subject','Contrôle':'Test','cartes restantes':'cards left','carte restante':'card left','Titre':'Title',
     'janvier':'January','février':'February','mars':'March','avril':'April','mai':'May','juin':'June','juillet':'July','août':'August','septembre':'September','octobre':'October','novembre':'November','décembre':'December'
+  });
+  Object.assign(D,{ /* lot 4 (v150) : stockage plein, import interrompu */
+    'Stockage plein : changement non enregistré':'Storage full: change not saved',
+    'Stockage plein : import annulé, aucune carte ajoutée. Supprime des images ou des cartes.':'Storage full: import cancelled, no card added. Delete some images or cards.',
+    'Stockage plein : restauration annulée, aucune carte ajoutée.':'Storage full: restore cancelled, no card added.',
+    'Restauration incomplète : stockage plein, une partie des données n’a pas été enregistrée.':'Incomplete restore: storage full, some data was not saved.',
+    'Import interrompu : fichier mal formé.':'Import interrupted: malformed file.',
+    'ajouts annulés : stockage plein':'additions cancelled: storage full'
   });
   /* Textes avec valeurs variables : motifs ANCRÉS (^…$) pour ne jamais toucher au contenu des cartes. $1, $2… = valeurs reprises telles quelles. */
   var MOIS='janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre';
@@ -408,8 +433,8 @@ input, textarea, [contenteditable="true"]{
   }
 /* v133 : le faux splash suit l'apparence (data-theme posé dans le <head> avant le premier rendu). Sombre = valeurs d'origine ; clair = fond crème
    (= --paper clair), texte encre, carte de derrière foncée (mêmes variables --lg-d / --lg-b que le logo de l'en-tête). */
-:root[data-theme="light"] #boot-splash{ background:#f6efe2; }
-:root[data-theme="light"] #boot-splash-word{ color:#231d12; }
+:root[data-theme="light"] #boot-splash{ background:#f1f0fb; }
+:root[data-theme="light"] #boot-splash-word{ color:#1d1b3a; }
 /* v106 : le splash reste FIGÉ sur la pose statique de l'icône tant que la page n'a pas fini de se construire ; le script en fin de fichier
    pose .go une fois l'init terminée et une image dessinée, pour que l'animation (1,35 s) tourne sur un processeur libre au lieu de saccader. */
 #boot-splash:not(.go), #boot-splash:not(.go) *{ animation-play-state:paused !important; }
@@ -1287,58 +1312,59 @@ body{
 /* ---- v132 : variables de thème (sombre = valeurs d'origine) + palette claire « crème » ---- */
 :root:root:root{ --yellow-t:#ffd93d; --orange-t:#ff6b3d; --yellow-b:#ffd93d; --lg-d:#9c9588; --lg-b:#f5f0e6; --cs:dark; --tm:100%; --c-s1:#252533; --c-s2:#2b2b3b; --c-sheet:#141420; --c-edge:#08080d; --c-disbg:#26262f; --c-disink:#6d6a80; --c-dissh:#14141b; --c-ph:#6b6880; --c-dash:#4a4a60; --c-yicon:#3d3320; --c-ysa:#2a2613; --c-ysb:#27230f; --c-ysc:#2f2a14; --c-ysd:#2a2410; --c-yse:#1d1a0b; --c-ysh:#14120a; --c-aborder:#6b5416; --c-abg:#3a2f18; --c-pborder:#7a2a40; --c-pbg:#3a1a24; --c-pbg2:#3a1a27; --c-dayb:#7a3a2b; --c-osoft:#2a1a17; --c-gsoft:#173a35; --c-bsoft:#17293a; --c-bq:#211f2e; --c-press:#20202f; --c-press2:#1f1f2d; --c-rowgrad:#201c2c; --c-pgrad1:#271b1f; --c-pgrad2:#261b20; --c-ta:#12121b; --c-h1:#5a3a1c; --c-h2:#a8601f; --c-scroll:#3a3a4e; --c-toastsh:#a39a85; --c-mixd:#111; --ov:255,255,255; --yr:255,217,61; --cr:245,240,230; --bgr:12,12,18; }
 :root:root:root[data-theme="light"]{
-  --ink:#231d12; --paper:#f6efe2; --card:#fffbf3; --line:#e2d7c3; --muted:#7d7162;
-  --accent:#ff6b3d; --accent-deep:#b8431d; --accent-ink:#1a0d08;
-  --good:#16966b; --good-soft:#d9f2e8; --bad:#e0356a; --bad-soft:#fde0e8;
-  --bulle:#fffbf3; --bulle-ink:#231d12;
-  --green:#16966b; --orange:#ff6b3d; --yellow:#ffd93d; --yellow-d:#b8921a; --orange-d:#b8431d; --amber:#d98a00;
-  --panel:#fffbf3; --bg:#f6efe2; --cream:#231d12; --pink:#e0356a; --blue:#2b86d6; --purple:#7d5fe0;
-  --yellow-t:#9a6f00; --orange-t:#d4451a; --yellow-b:#e0a800;
-  --lg-d:#14110a; --lg-b:#2a2418; --cs:light; color-scheme:light; --tm:50%;
-  --c-s1:#ebe2d0;
-  --c-s2:#e2d7c2;
-  --c-sheet:#fbf6ea;
-  --c-edge:#d3c6ad;
-  --c-disbg:#e8dfcc;
-  --c-disink:#a39a88;
-  --c-dissh:#d3c7af;
-  --c-ph:#9d947f;
-  --c-dash:#c2b69d;
-  --c-yicon:#f6e6ad;
-  --c-ysa:#f8edc2;
-  --c-ysb:#f8ecbf;
-  --c-ysc:#f6e8b0;
-  --c-ysd:#f8ebb9;
-  --c-yse:#f9efc9;
-  --c-ysh:#dccd9a;
-  --c-aborder:#dcbb55;
-  --c-abg:#fbeccb;
-  --c-pborder:#e8a4b8;
-  --c-pbg:#fce3ea;
-  --c-pbg2:#fde0e8;
-  --c-dayb:#f2c9b8;
-  --c-osoft:#fde6db;
-  --c-gsoft:#d9f2e8;
-  --c-bsoft:#dcebf9;
-  --c-bq:#efe6d3;
-  --c-press:#efe4cf;
-  --c-press2:#efe4cf;
-  --c-rowgrad:#f3ead8;
-  --c-pgrad1:#fbece1;
-  --c-pgrad2:#fbece1;
-  --c-ta:#fffdf7;
-  --c-h1:#f3cd9d;
-  --c-h2:#e8963f;
-  --c-scroll:#cdbfa3;
-  --c-toastsh:#0f0c06;
-  --c-mixd:#4a4030;
-  --ov:70,50,20;
-  --yr:214,160,0;
-  --cr:35,29,18;
-  --bgr:246,239,226;
+  /* v157 : « Pop jour » — papier blanc légèrement lavande, encre indigo, accents vifs (orange, jaune, violet, bleu, menthe, rose). */
+  --ink:#1d1b3a; --paper:#f1f0fb; --card:#ffffff; --line:#dcd9f0; --muted:#66638a;
+  --accent:#ff6b3d; --accent-deep:#c2410c; --accent-ink:#1a0d08;
+  --good:#0f9d6e; --good-soft:#d3f5e6; --bad:#e8387a; --bad-soft:#ffe1ec;
+  --bulle:#ffffff; --bulle-ink:#1d1b3a;
+  --green:#0f9d6e; --orange:#ff6b3d; --yellow:#ffd93d; --yellow-d:#b88a00; --orange-d:#c2410c; --amber:#e08a00;
+  --panel:#ffffff; --bg:#f1f0fb; --cream:#1d1b3a; --pink:#e8387a; --blue:#2f7cf0; --purple:#7a5af8;
+  --yellow-t:#b45309; --orange-t:#d4451a; --yellow-b:#f0b400;
+  --lg-d:#1d1b3a; --lg-b:#2f2d5c; --cs:light; color-scheme:light; --tm:50%;
+  --c-s1:#ebe9fa;
+  --c-s2:#e2dff6;
+  --c-sheet:#ffffff;
+  --c-edge:#b9b3e8;
+  --c-disbg:#e6e4f3;
+  --c-disink:#9794b8;
+  --c-dissh:#d3d0ea;
+  --c-ph:#9794b8;
+  --c-dash:#bbb7e0;
+  --c-yicon:#ffe9a0;
+  --c-ysa:#fff3bf;
+  --c-ysb:#fff1b5;
+  --c-ysc:#ffeda0;
+  --c-ysd:#fff0b0;
+  --c-yse:#fff6cf;
+  --c-ysh:#e8d278;
+  --c-aborder:#f0c63c;
+  --c-abg:#fff0c4;
+  --c-pborder:#f2a0c0;
+  --c-pbg:#ffe3ee;
+  --c-pbg2:#ffdfeb;
+  --c-dayb:#ffc9b3;
+  --c-osoft:#ffe6db;
+  --c-gsoft:#d3f5e6;
+  --c-bsoft:#dbe9ff;
+  --c-bq:#ebe8fb;
+  --c-press:#e9e6fa;
+  --c-press2:#e9e6fa;
+  --c-rowgrad:#f7f5ff;
+  --c-pgrad1:#ffe9df;
+  --c-pgrad2:#ece6ff;
+  --c-ta:#ffffff;
+  --c-h1:#ffcf8f;
+  --c-h2:#ff8a3d;
+  --c-scroll:#c5c0e8;
+  --c-toastsh:#14122b;
+  --c-mixd:#3b3a5e;
+  --ov:70,55,150;
+  --yr:240,170,0;
+  --cr:29,27,58;
+  --bgr:241,240,251;
 }
 :root:root:root[data-theme="light"] #vie-ambiance{ mix-blend-mode:multiply }
-:root:root:root[data-theme="light"] :where(.cc-toast,.pp-toast){ color:#f6efe2 }
+:root:root:root[data-theme="light"] :where(.cc-toast,.pp-toast){ color:#f1f0fb }
 :root:root:root[data-theme="light"] :where(#pp-zoom .pz-x,#pp-zoom .pz-tip){ color:#f5f0e6 }
 html{ background:var(--bg); }
 body{
@@ -2478,13 +2504,14 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
 }
 
 /* ---- v140 : mode clair — identité propre (papier + traits d'encre + ombres dures), plus une simple inversion du sombre ---- */
-:root:root:root[data-theme="light"]{ --line:#d8c9ad; }
+:root:root:root[data-theme="light"]{ --line:#d6d2ee; }
 :root:root:root[data-theme="light"] body{
   background:
     linear-gradient(var(--bg), rgba(var(--bgr),0) 130px),
-    radial-gradient(circle at 90% 0%, rgba(255,107,61,.22), transparent 45%),
-    radial-gradient(circle at 0% 100%, rgba(255,217,61,.2), transparent 40%),
-    radial-gradient(circle, rgba(var(--ov),.17) 1px, transparent 1.3px) 0 0/16px 16px,
+    radial-gradient(circle at 92% 0%, rgba(122,90,248,.20), transparent 46%),
+    radial-gradient(circle at 0% 100%, rgba(255,107,61,.14), transparent 42%),
+    radial-gradient(circle at 50% 55%, rgba(47,124,240,.07), transparent 55%),
+    radial-gradient(circle, rgba(var(--ov),.16) 1px, transparent 1.3px) 0 0/16px 16px,
     var(--bg) !important;
   background-attachment:fixed !important;
 }
@@ -2498,6 +2525,19 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
 @media (min-width:900px) and (min-height:480px){
   :root:root:root[data-theme="light"] body .pp-nav{ border:2px solid var(--c-edge); background:var(--panel); box-shadow:0 4px 0 var(--c-edge), 0 12px 26px rgba(var(--ov),.12); }
 }
+
+/* v157 : touches de couleur du clair (le sombre n'est pas touché) — carte principale en dégradé pêche/lavande, panneaux et pastilles teintés. */
+:root:root:root[data-theme="light"] .pp-home .pp-hero{
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,107,61,.22), transparent 52%),
+    radial-gradient(circle at 0% 100%, rgba(122,90,248,.16), transparent 55%),
+    linear-gradient(160deg, #ffffff 0%, #fff6f0 55%, #f3efff 100%);
+}
+:root:root:root[data-theme="light"] :is(.pp-grp,.cb-wl,.cb-mats){ background:linear-gradient(180deg, #ffffff 0%, #f8f6ff 100%); }
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-mat):hover{ background:#f6f3ff; }
+:root:root:root[data-theme="light"] .pp-nav{ background:linear-gradient(180deg,#ffffff,#f5f2ff); }
+:root:root:root[data-theme="light"] .pp-ctl{ background:#ffffff; }
+:root:root:root[data-theme="light"] ::selection{ background:rgba(122,90,248,.25); }
 
 /* ---- v132 : Apparence — contrôle à 3 positions (réutilise .pp-mode) ---- */
 .pp-mode.m3{grid-template-columns:1fr 1fr 1fr}
@@ -2618,7 +2658,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 <style id="fci-css">
 /* v141 : Introduction — tout est sous #fci et préfixé fi- (aucune collision avec le reste de l'app) */
 #fci{--bg:#0c0c12;--panel:#1a1a26;--ink:#f5f0e6;--line:#2a2a3a;--muted:#8d8aa3;--orange:#ff6b3d;--orange-d:#b8431d;--yellow:#ffd93d;--yellow-d:#a8891a;--green:#2ed8a3;--pink:#ff4d7a;--edge:#08080d;--dis:#26262f;--ov:255,255,255;--sp:cubic-bezier(.34,1.56,.64,1);--f:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif}
-:root[data-theme=light] #fci{--bg:#f6efe2;--panel:#fffbf3;--ink:#231d12;--line:#d8c9ad;--muted:#7d7162;--yellow-d:#b8921a;--edge:#d3c6ad;--dis:#e8dfcc;--ov:70,50,20}
+:root[data-theme=light] #fci{--bg:#f1f0fb;--panel:#ffffff;--ink:#1d1b3a;--line:#d6d2ee;--muted:#66638a;--yellow-d:#b88a00;--edge:#b9b3e8;--dis:#e6e4f3;--ov:70,55,150}
 #fci,#fci *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 #fci{font:500 16px/1.4 var(--f);color:var(--ink);background:radial-gradient(circle at 90% 0,rgba(255,107,61,.18),transparent 45%),radial-gradient(circle,rgba(var(--ov),.08) 1px,transparent 1.3px) 0 0/16px 16px,var(--bg);display:grid;place-items:center;overflow:hidden;position:fixed;inset:0;z-index:9000;width:100%;height:100%}
 #fci button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
@@ -2896,16 +2936,47 @@ let CARDS = SEED_CARDS.map(c => ({ ...c }));
 let matieresConfig = JSON.parse(JSON.stringify(MATIERES_CONFIG));
 let planning = JSON.parse(JSON.stringify(PLANNING));
 
-function applyLocalOverlay(){
-  let overlay = {};
-  let deleted = [];
+/* ---------------- Lecture / écriture sûres du stockage local ----------------
+   ppEcrire : écrit et dit si ça a marché. Stockage plein (~5 Mo) = un message clair (au plus un toutes les 6 s)
+   au lieu d'un échec silencieux ; ppEcritureEchecs permet à un import de ne pas annoncer « ok » à tort.
+   ppLireJSON : lit une clé en vérifiant le TYPE (tableau, objet…) ; sinon valeur par défaut, et si le texte
+   était illisible il est copié dans « <clé>-illisible » (une seule fois) avant que la prochaine écriture l'écrase. */
+let ppEcritureEchecs = 0, ppEcritureAvisTs = 0;
+function ppEcrire(cle, texte){
+  try{ localStorage.setItem(cle, texte); return true; }
+  catch(e){
+    ppEcritureEchecs++;
+    const t = Date.now();
+    if(t - ppEcritureAvisTs > 6000){
+      ppEcritureAvisTs = t;
+      try{
+        ppToast('Stockage plein : changement non enregistré');
+        clearTimeout(ppToastT);
+        ppToastT = setTimeout(() => { const el = document.getElementById('pp-toast'); if(el) el.classList.remove('on'); }, 4500);
+      }catch(_){}
+    }
+    return false;
+  }
+}
+function ppEstObjet(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+function ppLireJSON(cle, defaut, ok){
+  let brut = null;
+  try{ brut = localStorage.getItem(cle); }catch(e){ return defaut; }
+  if(brut === null) return defaut;
   try{
-    overlay = JSON.parse(localStorage.getItem('cartes-overlay') || '{}');
-    deleted = JSON.parse(localStorage.getItem('cartes-deleted') || '[]');
+    const v = JSON.parse(brut);
+    if(ok(v)) return v;
   }catch(e){}
+  try{ if(localStorage.getItem(cle + '-illisible') === null) localStorage.setItem(cle + '-illisible', brut); }catch(e){}
+  return defaut;
+}
+
+function applyLocalOverlay(){
+  const overlay = ppLireJSON('cartes-overlay', {}, ppEstObjet);
+  const deleted = ppLireJSON('cartes-deleted', [], Array.isArray);
   CARDS = CARDS.concat(loadImportedCards());
   CARDS = CARDS.filter(c => !deleted.includes(c.id));
-  CARDS = CARDS.map(c => overlay[c.id] ? { ...c, ...overlay[c.id] } : c);
+  CARDS = CARDS.map(c => ppEstObjet(overlay[c.id]) ? { ...c, ...overlay[c.id] } : c);
   applyLocalDateControleOverlay();
   applyLocalEmptyMatieres();
   applyLocalArchiveOverlay();
@@ -2913,16 +2984,36 @@ function applyLocalOverlay(){
   if(planningLocal) planning = planningLocal;
 }
 function saveLocalOverlay(id, patch){
-  let overlay = {};
-  try{ overlay = JSON.parse(localStorage.getItem('cartes-overlay') || '{}'); }catch(e){}
-  overlay[id] = { ...(overlay[id] || {}), ...patch };
-  try{ localStorage.setItem('cartes-overlay', JSON.stringify(overlay)); }catch(e){}
+  const overlay = ppLireJSON('cartes-overlay', {}, ppEstObjet);
+  overlay[id] = { ...(ppEstObjet(overlay[id]) ? overlay[id] : {}), ...patch };
+  ppEcrire('cartes-overlay', JSON.stringify(overlay));
 }
-function saveLocalDelete(id){
-  let deleted = [];
-  try{ deleted = JSON.parse(localStorage.getItem('cartes-deleted') || '[]'); }catch(e){}
-  if(!deleted.includes(id)) deleted.push(id);
-  try{ localStorage.setItem('cartes-deleted', JSON.stringify(deleted)); }catch(e){}
+/* Plusieurs cartes d'un coup (une seule lecture / écriture) : patches = { id: patch, … } */
+function saveLocalOverlayLot(patches){
+  const ids = Object.keys(patches || {});
+  if(!ids.length) return;
+  const overlay = ppLireJSON('cartes-overlay', {}, ppEstObjet);
+  for(const id of ids) overlay[id] = { ...(ppEstObjet(overlay[id]) ? overlay[id] : {}), ...patches[id] };
+  ppEcrire('cartes-overlay', JSON.stringify(overlay));
+}
+function saveLocalDelete(id){ saveLocalDeleteLot([id]); }
+function saveLocalDeleteLot(ids){
+  const deleted = ppLireJSON('cartes-deleted', [], Array.isArray);
+  const deja = new Set(deleted);
+  let change = false;
+  for(const id of ids){ if(!deja.has(id)){ deja.add(id); deleted.push(id); change = true; } }
+  if(change) ppEcrire('cartes-deleted', JSON.stringify(deleted));
+}
+/* Retire des ids de « cartes-deleted » et des tombstones locaux (carte revenue par la synchro, plus récente ailleurs). */
+function retirerSuppressionsLocales(ids){
+  const set = new Set(ids);
+  if(!set.size) return;
+  const deleted = ppLireJSON('cartes-deleted', [], Array.isArray);
+  const reste = deleted.filter(id => !set.has(id));
+  if(reste.length !== deleted.length) ppEcrire('cartes-deleted', JSON.stringify(reste));
+  const tombs = loadTombstones();
+  const resteT = tombs.filter(t => !set.has(t.id));
+  if(resteT.length !== tombs.length) saveTombstones(resteT);
 }
 /* ---------------- Tombstones (suppressions à propager via la synchro) ----------------
    Liste locale des cartes supprimées, avec horodatage, pour que la fusion
@@ -2931,51 +3022,63 @@ function saveLocalDelete(id){
    de cartes-deleted ci-dessus (qui sert uniquement au filtrage local via
    applyLocalOverlay, sans horodatage ni notion de "plus récent que"). */
 function loadTombstones(){
-  try{ return JSON.parse(localStorage.getItem('cartes-supprimees-tombstones') || '[]'); }catch(e){ return []; }
+  return ppLireJSON('cartes-supprimees-tombstones', [], Array.isArray).filter(t => ppEstObjet(t) && t.id);
 }
 function saveTombstones(list){
-  try{ localStorage.setItem('cartes-supprimees-tombstones', JSON.stringify(list)); }catch(e){}
+  ppEcrire('cartes-supprimees-tombstones', JSON.stringify(list));
 }
-function saveTombstone(id){
+function saveTombstone(id){ saveTombstonesLot([id]); }
+function saveTombstonesLot(ids){
   const tombstones = loadTombstones();
-  const existant = tombstones.find(t => t.id === id);
+  const parId = new Map(tombstones.map(t => [t.id, t]));
   const supprimeLe = new Date().toISOString();
-  if(existant){ existant.supprimeLe = supprimeLe; }
-  else{ tombstones.push({ id, supprimeLe }); }
+  for(const id of ids){
+    const existant = parId.get(id);
+    if(existant){ existant.supprimeLe = supprimeLe; }
+    else{ const t = { id, supprimeLe }; tombstones.push(t); parId.set(id, t); }
+  }
   saveTombstones(tombstones);
 }
 function applyLocalDateControleOverlay(){
-  let overlay = {};
-  try{ overlay = JSON.parse(localStorage.getItem('cartes-datecontrole-overlay') || '{}'); }catch(e){}
+  const overlay = ppLireJSON('cartes-datecontrole-overlay', {}, ppEstObjet);
   for(const m in overlay){
     if(!matieresConfig[m]) matieresConfig[m] = {};
     matieresConfig[m].dateControle = overlay[m];
   }
 }
 function saveLocalDateControle(matiere, dateControle, majIso){
-  let overlay = {};
-  try{ overlay = JSON.parse(localStorage.getItem('cartes-datecontrole-overlay') || '{}'); }catch(e){}
+  const overlay = ppLireJSON('cartes-datecontrole-overlay', {}, ppEstObjet);
   overlay[matiere] = dateControle;
-  try{ localStorage.setItem('cartes-datecontrole-overlay', JSON.stringify(overlay)); }catch(e){}
+  ppEcrire('cartes-datecontrole-overlay', JSON.stringify(overlay));
   // Date du dernier changement, par matière : sert à la synchro pour savoir
   // quel appareil a la version la plus récente (majIso = horodatage reçu de
   // l'autre appareil quand la date vient de la synchro, sinon « maintenant »).
-  try{
-    const maj = loadDatesControleMaj();
-    maj[matiere] = majIso || new Date().toISOString();
-    localStorage.setItem('cartes-datecontrole-maj', JSON.stringify(maj));
-  }catch(e){}
+  const maj = loadDatesControleMaj();
+  maj[matiere] = majIso || new Date().toISOString();
+  ppEcrire('cartes-datecontrole-maj', JSON.stringify(maj));
 }
 function loadDatesControleMaj(){
-  try{ return JSON.parse(localStorage.getItem('cartes-datecontrole-maj') || '{}') || {}; }catch(e){ return {}; }
+  return ppLireJSON('cartes-datecontrole-maj', {}, ppEstObjet);
 }
 /* Matières créées manuellement sans carte encore dedans — juste leur nom,
    pour qu'elles apparaissent dans getMatieres() et persistent au rechargement. */
 function loadEmptyMatieres(){
-  try{ return JSON.parse(localStorage.getItem('cartes-matieres-vides') || '[]'); }catch(e){ return []; }
+  return ppLireJSON('cartes-matieres-vides', [], Array.isArray).filter(m => typeof m === 'string' && m);
 }
 function saveEmptyMatieres(list){
-  try{ localStorage.setItem('cartes-matieres-vides', JSON.stringify(list)); }catch(e){}
+  ppEcrire('cartes-matieres-vides', JSON.stringify(list));
+}
+/* Pour la synchro des matières vides : date de création de chaque matière vide, et « pierres tombales » des
+   matières supprimées (ou renommées), nom -> date. Une matière vide reçue n'est reprise que si elle a été créée
+   APRÈS la suppression locale ; une suppression reçue retire notre matière vide si elle est plus ancienne. */
+function loadMatieresVidesDates(){ return ppLireJSON('cartes-matieres-vides-dates', {}, ppEstObjet); }
+function loadMatieresSupprimees(){ return ppLireJSON('cartes-matieres-supprimees', {}, ppEstObjet); }
+function noterMatiereSupprimee(nom){
+  const sup = loadMatieresSupprimees();
+  sup[nom] = new Date().toISOString();
+  ppEcrire('cartes-matieres-supprimees', JSON.stringify(sup));
+  const dates = loadMatieresVidesDates();
+  if(nom in dates){ delete dates[nom]; ppEcrire('cartes-matieres-vides-dates', JSON.stringify(dates)); }
 }
 function applyLocalEmptyMatieres(){
   const vides = loadEmptyMatieres();
@@ -2983,11 +3086,16 @@ function applyLocalEmptyMatieres(){
     if(!matieresConfig[m]) matieresConfig[m] = {};
   }
 }
-function addEmptyMatiere(nom){
+function addEmptyMatiere(nom, creeLe){
   const vides = loadEmptyMatieres();
   if(!vides.includes(nom)) vides.push(nom);
   saveEmptyMatieres(vides);
   if(!matieresConfig[nom]) matieresConfig[nom] = {};
+  const dates = loadMatieresVidesDates();
+  dates[nom] = creeLe || new Date().toISOString();
+  ppEcrire('cartes-matieres-vides-dates', JSON.stringify(dates));
+  const sup = loadMatieresSupprimees();
+  if(nom in sup){ delete sup[nom]; ppEcrire('cartes-matieres-supprimees', JSON.stringify(sup)); }
 }
 /* Une matière cesse d'être "vide" dès qu'elle a une carte : on la retire
    de la liste dédiée (elle continue d'exister via ses cartes). */
@@ -3008,19 +3116,25 @@ function renameMatiere(ancienNom, nouveauNom){
   // Cartes du fichier + importées : on met à jour en mémoire et on écrit
   // un overlay pour chaque carte du fichier source (les cartes importées
   // sont réécrites directement dans leur stockage local).
+  // Renommer est une vraie action de l'utilisateur : chaque carte reçoit un nouvel horodatage, sinon la synchro
+  // ne transmet jamais le nouveau nom (l'autre appareil renverrait l'ancien et la matière se scinderait).
+  const iso = new Date().toISOString();
   const imported = loadImportedCards();
   let importedTouched = false;
   for(const c of imported){
-    if((c.matiere || 'Sans matière') === ancienNom){ c.matiere = nouveauNom; importedTouched = true; }
+    if((c.matiere || 'Sans matière') === ancienNom){ c.matiere = nouveauNom; c.derniereModification = iso; importedTouched = true; }
   }
   if(importedTouched) saveImportedCards(imported);
 
+  const patches = {};
   for(const c of CARDS){
     if((c.matiere || 'Sans matière') === ancienNom){
       c.matiere = nouveauNom;
-      saveLocalOverlay(c.id, { matiere: nouveauNom });
+      c.derniereModification = iso;
+      patches[c.id] = { matiere: nouveauNom, derniereModification: iso };
     }
   }
+  saveLocalOverlayLot(patches);
 
   // Config (date de contrôle) : transfère l'entrée existante vers le nouveau nom.
   if(matieresConfig[ancienNom]){
@@ -3030,10 +3144,9 @@ function renameMatiere(ancienNom, nouveauNom){
       saveLocalDateControle(nouveauNom, matieresConfig[nouveauNom].dateControle);
     }
     saveLocalDateControle(ancienNom, null);
-    let overlay = {};
-    try{ overlay = JSON.parse(localStorage.getItem('cartes-datecontrole-overlay') || '{}'); }catch(e){}
+    const overlay = ppLireJSON('cartes-datecontrole-overlay', {}, ppEstObjet);
     delete overlay[ancienNom];
-    try{ localStorage.setItem('cartes-datecontrole-overlay', JSON.stringify(overlay)); }catch(e){}
+    ppEcrire('cartes-datecontrole-overlay', JSON.stringify(overlay));
   }
 
   // Archivage : l'overlay local est indexé par nom, il doit suivre le renommage
@@ -3044,16 +3157,22 @@ function renameMatiere(ancienNom, nouveauNom){
     if(ov[ancienNom]){
       delete ov[ancienNom];
       ov[nouveauNom] = true;
-      try{ localStorage.setItem('cartes-archive-overlay', JSON.stringify(ov)); }catch(e){}
+      ppEcrire('cartes-archive-overlay', JSON.stringify(ov));
     }
   }
 
-  // Matière vide (sans carte) : renomme l'entrée si présente.
+  // Matière vide (sans carte) : renomme l'entrée si présente (l'ancien nom compte comme supprimé pour la synchro).
   const vides = loadEmptyMatieres();
   const idxVide = vides.indexOf(ancienNom);
   if(idxVide !== -1){
     vides[idxVide] = nouveauNom;
     saveEmptyMatieres([...new Set(vides)]);
+    noterMatiereSupprimee(ancienNom);
+    const dates = loadMatieresVidesDates();
+    dates[nouveauNom] = new Date().toISOString();
+    ppEcrire('cartes-matieres-vides-dates', JSON.stringify(dates));
+    const sup = loadMatieresSupprimees();
+    if(nouveauNom in sup){ delete sup[nouveauNom]; ppEcrire('cartes-matieres-supprimees', JSON.stringify(sup)); }
   }
 
   if(matiereFilter === ancienNom) matiereFilter = nouveauNom;
@@ -3065,7 +3184,10 @@ function renameMatiere(ancienNom, nouveauNom){
    et son entrée "vide" éventuelle. */
 function deleteMatiereCompletement(nom){
   const idsASupprimer = CARDS.filter(c => (c.matiere || 'Sans matière') === nom).map(c => c.id);
-  for(const id of idsASupprimer) saveLocalDelete(id);
+  saveLocalDeleteLot(idsASupprimer);
+  // Sans tombstone, l'autre appareil garderait les cartes et les renverrait : elles reviendraient ici.
+  saveTombstonesLot(idsASupprimer);
+  noterMatiereSupprimee(nom);
   CARDS = CARDS.filter(c => (c.matiere || 'Sans matière') !== nom);
 
   const imported = loadImportedCards().filter(c => (c.matiere || 'Sans matière') !== nom);
@@ -3073,10 +3195,9 @@ function deleteMatiereCompletement(nom){
 
   delete matieresConfig[nom];
   saveLocalDateControle(nom, null);
-  let overlay = {};
-  try{ overlay = JSON.parse(localStorage.getItem('cartes-datecontrole-overlay') || '{}'); }catch(e){}
+  const overlay = ppLireJSON('cartes-datecontrole-overlay', {}, ppEstObjet);
   delete overlay[nom];
-  try{ localStorage.setItem('cartes-datecontrole-overlay', JSON.stringify(overlay)); }catch(e){}
+  ppEcrire('cartes-datecontrole-overlay', JSON.stringify(overlay));
 
   const vides = loadEmptyMatieres().filter(m => m !== nom);
   saveEmptyMatieres(vides);
@@ -3156,22 +3277,18 @@ function confirmDeleteMatiere(nom){
   if(activeTab === 'planning') renderPlanning();
 }
 function saveLocalPlanning(){
-  try{ localStorage.setItem('cartes-planning', JSON.stringify(planning)); }catch(e){}
+  ppEcrire('cartes-planning', JSON.stringify(planning));
 }
 function loadLocalPlanning(){
-  try{
-    const raw = localStorage.getItem('cartes-planning');
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
+  return ppLireJSON('cartes-planning', null, Array.isArray);
 }
 function loadImportedCards(){
-  try{
-    const raw = localStorage.getItem('cartes-imported');
-    return raw ? JSON.parse(raw) : [];
-  }catch(e){ return []; }
+  // Valeur illisible ou de mauvais type : liste vide, et le texte d'origine est mis de côté (« cartes-imported-illisible »).
+  return ppLireJSON('cartes-imported', [], Array.isArray).filter(c => ppEstObjet(c) && typeof c.id === 'string' && c.id);
 }
+/* Renvoie false si l'écriture a échoué (stockage plein : ppEcrire a déjà prévenu l'utilisateur). */
 function saveImportedCards(cards){
-  try{ localStorage.setItem('cartes-imported', JSON.stringify(cards)); return true; }catch(e){ return false; }
+  return ppEcrire('cartes-imported', JSON.stringify(cards));
 }
 
 /* ---------------- Images des cartes (v121) ----------------
@@ -3248,10 +3365,10 @@ function ppImgEnregistrer(id, iq, ir){
 }
 function ppOverlayRetirerImages(id){
   try{
-    const ov = JSON.parse(localStorage.getItem('cartes-overlay') || '{}');
-    if(ov[id] && ('imageQuestion' in ov[id] || 'imageReponse' in ov[id])){
+    const ov = ppLireJSON('cartes-overlay', {}, ppEstObjet);
+    if(ppEstObjet(ov[id]) && ('imageQuestion' in ov[id] || 'imageReponse' in ov[id])){
       delete ov[id].imageQuestion; delete ov[id].imageReponse;
-      localStorage.setItem('cartes-overlay', JSON.stringify(ov));
+      ppEcrire('cartes-overlay', JSON.stringify(ov));
     }
   }catch(e){}
 }
@@ -3337,25 +3454,133 @@ function ppPartsFichiers(liste, debut){
   });
   return { parts, total: n };
 }
-const PROMPT_IMAGES = `Images jointes : elles sont numérotées (« Image 1 », « Image 2 »…). Tu peux illustrer une carte avec l'une d'elles, mais SEULEMENT si l'image est une vraie illustration (carte géographique, schéma, figure, graphique, photo, tableau) utile ou nécessaire à cette carte. Jamais pour une photo de simple texte, de notes ou de cours écrit : celles-ci servent uniquement à lire le contenu. Pour illustrer une carte, ajoute le champ facultatif "imageQuestion" (l'image s'affiche avec la question) ou "imageReponse" (elle s'affiche avec la réponse), avec le NUMÉRO de l'image (un entier). Exemple : { "question": "Quel pays est entouré en rouge sur cette carte ?", "reponse": "La Bulgarie", "imageQuestion": 2 }. Quand une image est attachée à la question, la question peut y renvoyer (« sur cette carte », « sur ce schéma »). N'ajoute ces champs que si tu es sûr de toi ; sinon ne les mets pas. Cette consigne complète le format JSON demandé plus haut.`;
+const PROMPT_IMAGES = `Images jointes : elles sont numérotées (« Image 1 », « Image 2 »…). Tu peux illustrer une carte avec l'une d'elles, mais SEULEMENT si l'image est une vraie illustration (carte géographique, schéma, figure, graphique, photo, tableau) utile ou nécessaire à cette carte. Jamais pour une photo de simple texte, de notes ou de cours écrit : celles-ci servent uniquement à lire le contenu. Pour illustrer une carte, ajoute le champ facultatif "imageQuestion" (l'image s'affiche avec la question) ou "imageReponse" (elle s'affiche avec la réponse), avec le NUMÉRO de l'image (un entier). Exemple de forme : { "question": "<question qui renvoie à l'illustration>", "reponse": "<réponse>", "imageQuestion": 2 }. Quand une image est attachée à la question, la question peut y renvoyer (« sur cette carte », « sur ce schéma »). N'ajoute ces champs que si tu es sûr de toi ; sinon ne les mets pas. Initiative : quand une image jointe montre une illustration que la carte exploite (la question porte sur ce qu'on y voit, ou la réponse est cette illustration), joins-la de ton propre chef, sans que l'utilisateur ait à le demander. En revanche, si le contenu évoque quelque chose qui aurait besoin d'une image mais qu'AUCUNE image jointe ne la montre, n'ajoute rien : ne cherche jamais d'image toi-même. Découpage : une photo est souvent une page de cours avec du texte autour. Si l'illustration n'en occupe qu'une partie, ajoute en plus "zoneImageQuestion" (ou "zoneImageReponse", selon le côté) : [ymin, xmin, ymax, xmax], quatre entiers de 0 à 1000 (0,0 = coin haut-gauche de la photo ; 1000,1000 = coin bas-droit). Cadre SERRÉ sur l'illustration seule, avec ses étiquettes, flèches et légende si elles en font partie, mais SANS le texte du cours, les titres, les marges ni les autres figures. Si la photo EST l'illustration (elle la remplit déjà), n'ajoute pas de zone. Si la photo contient plusieurs illustrations, donne la zone de celle qui correspond à la carte. Cette consigne complète le format JSON demandé plus haut.`;
 async function ppImgBanqueAjouter(files){
+  if(!iaImgBanque.src) iaImgBanque.src = [];   // v156 : photos d'origine (même numéro que la banque), pour pouvoir y découper une illustration
   for(const f of (files || [])){
     if(!ppEstPhoto(f)) continue;
     let url = '';
     try{ url = await ppImgReduire(ppBlobDepuisBase64(f.dataBase64, f.mimeType)); }catch(e){}
     iaImgBanque.push(url);
+    iaImgBanque.src[iaImgBanque.length - 1] = f;
   }
 }
+/* v156 : zone [ymin, xmin, ymax, xmax] sur 0-1000 renvoyée par l'IA -> zone valide, ou null (photo entière). */
+function ppZoneValide(z){
+  if(!Array.isArray(z) || z.length !== 4) return null;
+  const n = z.map(Number);
+  if(n.some(v => !isFinite(v))) return null;
+  const [y0, x0, y1, x1] = n.map(v => Math.max(0, Math.min(1000, v)));
+  if(y1 - y0 < 40 || x1 - x0 < 40) return null;          // trop petite : sans doute une erreur
+  if((y1 - y0) * (x1 - x0) > 920000) return null;        // presque toute la photo : on garde la photo entière
+  return [y0, x0, y1, x1];
+}
+/* Découpe la zone dans la photo d'origine (marge de 1,5 %), puis réduit comme une photo. */
+async function ppImgRogner(f, zone){
+  const bmp = await createImageBitmap(ppBlobDepuisBase64(f.dataBase64, f.mimeType), { imageOrientation: 'from-image' });
+  try{
+    const M = 15;
+    const y0 = Math.max(0, zone[0] - M), x0 = Math.max(0, zone[1] - M), y1 = Math.min(1000, zone[2] + M), x1 = Math.min(1000, zone[3] + M);
+    const sx = Math.round(x0 / 1000 * bmp.width), sy = Math.round(y0 / 1000 * bmp.height);
+    const sw = Math.max(1, Math.round((x1 - x0) / 1000 * bmp.width)), sh = Math.max(1, Math.round((y1 - y0) / 1000 * bmp.height));
+    const ech = Math.min(1, 1600 / Math.max(sw, sh));
+    const w = Math.max(1, Math.round(sw * ech)), h = Math.max(1, Math.round(sh * ech));
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h);
+    cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high'; cx.drawImage(bmp, sx, sy, sw, sh, 0, 0, w, h);
+    const blob = await new Promise((ok, ko) => cv.toBlob(b => b ? ok(b) : ko(new Error('toBlob')), 'image/jpeg', 0.92));
+    cv.width = cv.height = 0;
+    return await ppImgReduire(blob);
+  }finally{ if(bmp.close) bmp.close(); }
+}
 /* Remplace les numéros d'images renvoyés par l'IA (nImgQ / nImgR) par les vraies images de la banque. */
-function ppImgResoudre(cartes){
-  return cartes.map(c => {
+async function ppImgResoudre(cartes, garderRecherche){
+  // v156 : si l'IA a donné une zone, on découpe l'illustration dans la photo d'origine ; sinon (ou en cas d'échec) photo entière.
+  const resoudre = async (n, zone) => {
+    if(!Number.isInteger(n)) return '';
+    const entiere = iaImgBanque[n - 1];
+    if(!entiere) return '';
+    const z = ppZoneValide(zone), src = iaImgBanque.src && iaImgBanque.src[n - 1];
+    if(z && src){ try{ const d = await ppImgRogner(src, z); if(d) return d; }catch(e){} }
+    return entiere;
+  };
+  const sortie = [];
+  for(const c of cartes){
     const out = { ...c };
-    const q = Number.isInteger(c.nImgQ) ? iaImgBanque[c.nImgQ - 1] : '', r = Number.isInteger(c.nImgR) ? iaImgBanque[c.nImgR - 1] : '';
-    delete out.nImgQ; delete out.nImgR;
+    const q = await resoudre(c.nImgQ, c.zQ), r = await resoudre(c.nImgR, c.zR);
+    delete out.nImgQ; delete out.nImgR; delete out.zQ; delete out.zR;
+    if(!garderRecherche){ delete out.rechercheImage; delete out.rechercheCote; }   // v155 : seule la génération initiale cherche des images
     if(q) out.imageQuestion = q;
     if(r) out.imageReponse = r;
-    return out;
+    sortie.push(out);
+  }
+  return sortie;
+}
+
+/* ================= v155 : images trouvées sur Wikimedia Commons =================
+   L'IA n'ajoute JAMAIS d'image d'elle-même : seulement si le texte de l'utilisateur en demande explicitement.
+   Elle écrit alors un mot-clé (`rechercheImage`) et le côté voulu (`rechercheCote`). L'app cherche sur Wikimedia
+   Commons (API publique, sans clé), télécharge la miniature de la première image utilisable et la réduit comme une
+   photo (ppImgReduire). L'image arrive dans l'aperçu : l'utilisateur la garde, la change ou la retire. */
+const PROMPT_RECHERCHE_IMAGES = `Recherche d'images : par défaut, N'AJOUTE AUCUNE image et ne prends JAMAIS l'initiative d'en chercher. Ajoute le champ facultatif "rechercheImage" à une carte SEULEMENT si le texte de l'utilisateur demande explicitement une image, une illustration, une carte géographique, un schéma ou une photo pour ce sujet, et seulement pour les cartes concernées par cette demande. "rechercheImage" doit être PRÉCIS : 3 à 8 mots-clés (pas une phrase) qui combinent le sujet exact, le type d'image voulu (schéma, carte, photo, coupe, diagramme…), un détail qui distingue ce qu'on veut des sujets proches (époque, organe, région, vue, « légendé »…) et, si cela aide, un ou deux mots en anglais. Forme : "<sujet précis> <type d'image> <détail distinctif>". Ajoute aussi "rechercheCote" : "question" si l'image doit s'afficher avec la question, ou "reponse" si elle doit s'afficher avec la réponse. Maximum 6 cartes avec "rechercheImage" par réponse. Si une image jointe montre déjà ce qu'il faut, utilise-la (imageQuestion / imageReponse) au lieu de ce champ. Exemple de forme : { "question": "<question>", "reponse": "<réponse>", "rechercheImage": "<mot-clé 1> <mot-clé 2> <mot-clé 3> <mot-clé 4>", "rechercheCote": "question" }.`;
+const IMG_RECHERCHE_MAX = 6;
+const IMG_WIKI_API = 'https://commons.wikimedia.org/w/api.php';
+async function ppFetchDelai(url, ms){
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms || 10000);
+  try{ return await fetch(url, { signal: ctl.signal }); }finally{ clearTimeout(t); }
+}
+/* Une recherche -> data URL réduite, ou '' si rien d'utilisable (aucun résultat, réseau, format non lisible). */
+async function ppImgEssaiWikimedia(q){
+  try{
+    const url = IMG_WIKI_API + '?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=' + encodeURIComponent(q)
+      + '&prop=imageinfo&iiprop=url%7Cmime%7Csize&iiurlwidth=' + IMG_COTE_MAX;
+    const rep = await ppFetchDelai(url, 10000);
+    if(!rep.ok) return '';
+    const data = await rep.json();
+    const pages = data && data.query && data.query.pages ? Object.values(data.query.pages) : [];
+    pages.sort((a, b) => (a.index || 0) - (b.index || 0));
+    for(const p of pages){
+      const ii = p.imageinfo && p.imageinfo[0];
+      if(!ii || !ii.thumburl || !/^https:\/\/upload\.wikimedia\.org\//.test(ii.thumburl)) continue;
+      if(!/^image\/(jpeg|png|webp|svg\+xml)$/.test(ii.mime || '')) continue;
+      if((ii.width || 0) < 200 || (ii.height || 0) < 150) continue;
+      try{
+        const img = await ppFetchDelai(ii.thumburl, 12000);
+        if(!img.ok) continue;
+        const blob = await img.blob();
+        if(blob.size > 8 * 1024 * 1024) continue;
+        return await ppImgReduire(blob);
+      }catch(e){ /* image suivante */ }
+    }
+  }catch(e){}
+  return '';
+}
+/* Mots-clés précis d'abord ; si Wikimedia ne trouve rien (trop de mots = aucun résultat), on retente avec les 5 puis les 3 premiers mots. */
+async function ppImgChercherWikimedia(mot){
+  const mots = String(mot || '').replace(/\s+/g, ' ').trim().slice(0, 120).split(' ').filter(Boolean);
+  if(!mots.length) return '';
+  const essais = [mots.join(' ')];
+  if(mots.length > 5) essais.push(mots.slice(0, 5).join(' '));
+  if(mots.length > 3) essais.push(mots.slice(0, 3).join(' '));
+  for(const q of essais){ const r = await ppImgEssaiWikimedia(q); if(r) return r; }
+  return '';
+}
+/* Pour chaque carte portant `rechercheImage`, cherche l'image (en parallèle, 6 au plus) et la pose du bon côté.
+   Efface toujours les champs de recherche. Renvoie { trouvees, ratees, perdues }. */
+async function ppImgChercherPourCartes(cartes){
+  const cibles = [];
+  cartes.forEach(c => {
+    const mot = typeof c.rechercheImage === 'string' ? c.rechercheImage.trim() : '';
+    const cote = c.rechercheCote === 'reponse' ? 'imageReponse' : 'imageQuestion';
+    delete c.rechercheImage; delete c.rechercheCote;
+    if(mot && cibles.length < IMG_RECHERCHE_MAX && !c[cote]) cibles.push({ c, mot, cote });
   });
+  if(!cibles.length) return { trouvees: 0, ratees: 0, perdues: 0 };
+  const urls = await Promise.all(cibles.map(x => ppImgChercherWikimedia(x.mot)));
+  let trouvees = 0, ratees = 0;
+  cibles.forEach((x, i) => { if(urls[i]){ x.c[x.cote] = urls[i]; trouvees++; } else ratees++; });
+  const perdues = ppImgAjusterBudget(cartes);
+  return { trouvees, ratees, perdues };
 }
 
 /* ================= v122 : visionneuse d'image (agrandir au toucher) =================
@@ -3716,15 +3941,20 @@ function addDays(dateStr, n){
   return `${yy}-${mm}-${dd}`;
 }
 function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str == null ? '' : str;
-  return d.innerHTML;
+  // v153 (constat 33) : échappe aussi " et ' pour pouvoir servir dans un attribut entre guillemets.
+  return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 function escapeJsAttr(str){
+  // v153 (constat 32) : 1) chaîne JavaScript sûre, 2) puis échappement HTML, car le navigateur décode
+  // l'attribut onclick="..." AVANT d'exécuter le JavaScript (sinon « &#39; » redevient « ' » et ferme la chaîne).
   return String(str == null ? '' : str)
     .replace(/\\/g, '\\\\')
     .replace(/'/g, "\\'")
-    .replace(/"/g, '&quot;');
+    .replace(/[\r\n\u2028\u2029]/g, ' ')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 /* ---------------- Similarité entre noms de matières (fusion) ---------------- */
@@ -3827,15 +4057,29 @@ function bumpStreak(){
     s.count = casse ? 1 : s.count + 1;
   }
   s.lastDate = today;
-  try{ localStorage.setItem('cartes-streak', JSON.stringify(s)); }catch(e){}
+  ppEcrire('cartes-streak', JSON.stringify(s));
   try{ localStorage.removeItem('lissage-marqueur-retard'); }catch(e){} // le marqueur a servi
   return s;
+}
+/* Série À AFFICHER : même règle que bumpStreak (sans rien écrire). Si un des jours sautés avait des cartes dues,
+   la série est déjà perdue : on affiche 0 au lieu d'attendre la prochaine réponse. Sinon elle continue. */
+function getStreakAffichee(){
+  const s = getStreakData();
+  if(!s.lastDate || s.count === 0) return s.count;
+  const today = todayStr();
+  if(s.lastDate >= addDays(today, -1)) return s.count;
+  let jour = addDays(s.lastDate, 1);
+  for(let i = 0; jour < today; i++){
+    if(i > 400 || auMoinsUneCarteDueLe(jour)) return 0;
+    jour = addDays(jour, 1);
+  }
+  return s.count;
 }
 let _lastStreakShown = null;
 function renderStreak(){
   const el = document.getElementById('streak-num');
   if(!el) return; // pill masqué (icône réglages affichée à la place, voir renderTopbarRight)
-  const count = getStreakData().count;
+  const count = getStreakAffichee();
   el.textContent = count;
   const pill = el.closest('.pp-streak');
   if(pill) pill.classList.toggle('is-zero', count === 0);
@@ -4075,12 +4319,12 @@ function toggleArchiveMatiere(nom){
 }
 
 function loadLocalArchiveOverlay(){
-  try{ return JSON.parse(localStorage.getItem('cartes-archive-overlay') || '{}'); }catch(e){ return {}; }
+  return ppLireJSON('cartes-archive-overlay', {}, ppEstObjet);
 }
 function saveLocalArchiveMatiere(nom, archive){
   const overlay = loadLocalArchiveOverlay();
   if(archive) overlay[nom] = true; else delete overlay[nom];
-  try{ localStorage.setItem('cartes-archive-overlay', JSON.stringify(overlay)); }catch(e){}
+  ppEcrire('cartes-archive-overlay', JSON.stringify(overlay));
 }
 function applyLocalArchiveOverlay(){
   const overlay = loadLocalArchiveOverlay();
@@ -4565,7 +4809,7 @@ function ppCbMatsHtml(){
   return `<div class="cb-mats pp-plan pp-still">${h}</div>`;
 }
 function ppProgressHtml(){
-  const streakN = getStreakData().count;
+  const streakN = getStreakAffichee();
   const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
   const today = todayStr();
   const dl = (typeof langueChoisie === 'function' && langueChoisie() === 'en') ? ['S','M','T','W','T','F','S'] : ['D','L','M','M','J','V','S'];
@@ -4658,7 +4902,7 @@ function ppMoodColor(counts){
     w += k[3] * q;
     for(let i = 0; i < 3; i++) c[i] += k[i] * k[3] * q;
   });
-  return w ? 'rgb(' + c.map(v => Math.round(v / w)).join(',') + ')' : (document.documentElement.getAttribute('data-theme') === 'light' ? '#d9ceb8' : '#3a3a4d');
+  return w ? 'rgb(' + c.map(v => Math.round(v / w)).join(',') + ')' : (document.documentElement.getAttribute('data-theme') === 'light' ? '#d3d0ea' : '#3a3a4d');
 }
 function ppSesRoot(){
   let r = document.getElementById('pp-ses');
@@ -4955,7 +5199,7 @@ function renderStudyInner(){
 function progressBlockHtml(){
   if(CARDS.length === 0) return '';
 
-  const streak = getStreakData().count;
+  const streak = getStreakAffichee();
   const masteredCount = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
 
   const today = todayStr();
@@ -5116,8 +5360,11 @@ function triggerMoodDrop(niveau){
    redescendre si une carte maîtrisée est ratée ici (reflet honnête de l'état
    réel, pas juste des promotions). */
 
+/* Nouvelle séance : le plafond de réinsertions repart de zéro (une PWA restée ouverte plusieurs jours le cumulait). */
+function ppReinsertionsRaz(){ for(const c of CARDS) if(c.reinsertionsSession) c.reinsertionsSession = null; }
 function startStudySession(mode){
   haptique(14);
+  ppReinsertionsRaz();
   studyMode = mode || 'due';
   studySessionActive = true;
   sessionReviewed = 0;
@@ -5141,6 +5388,7 @@ function startStudySession(mode){
    conséquence", juste une queue différente. */
 function startReviewSessionErrors(){
   haptique(14);
+  ppReinsertionsRaz();
   const errCards = sessionErrors.slice();
   studyMode = 'errors';
   studySessionActive = true;
@@ -5467,6 +5715,7 @@ const REINSERT_BOUNDS = { orange: [4, 12], rouge: [6, 18] };
 const MAX_REINSERTIONS = { orange: 3, rouge: 2 };
 
 function computeReinsertGap(niveau, remainingAfter){
+  if(!REINSERT_BOUNDS[niveau]) return 0;   // 'vert' : jamais réinséré
   const ratio = REINSERT_RATIO[niveau];
   const [min, max] = REINSERT_BOUNDS[niveau];
   const raw = Math.round(remainingAfter * ratio);
@@ -5481,19 +5730,20 @@ function computeReinsertGap(niveau, remainingAfter){
 const GESTE_SEUIL = 45;
 const GESTE_DESARME = 33;
 let carteEnSortie = false;
+let carteEnSortieT = null;   // minuteur du filet de sécurité : un seul à la fois, annulé dès que la carte est sortie
 const PP_NV = { vert:['var(--green)','ok'], rouge:['var(--pink)','x'], orange:['var(--amber)','wave'] };
 
 function sortirCarte(niveau, opts, apres){
   opts = opts || {};
   const scene = document.querySelector('.pp-card');
   lastAdvanceDir = null;
-  if(!scene){ ppMood.anim = 'in'; apres(); carteEnSortie = false; return; }
+  if(!scene){ ppMood.anim = 'in'; apres(); clearTimeout(carteEnSortieT); carteEnSortie = false; return; }
   const sortie = niveau === 'orange' ? (opts.dy < 0 ? 'pp-out-up' : 'pp-out-mid') : (niveau === 'vert' ? 'pp-out-ok' : 'pp-out-ko');
   scene.style.animation = ''; scene.style.transition = '';
   scene.classList.add(sortie);
   const rc = document.querySelector('#pp-ses .pp-rcard');   // carte « à écrire » (téléphone) : la carte réponse sort avec la carte question
   if(rc){ rc.style.animation = ''; rc.style.transition = ''; rc.classList.add(sortie); }
-  setTimeout(() => { ppMood.anim = 'in'; apres(); carteEnSortie = false; }, 320);
+  setTimeout(() => { ppMood.anim = 'in'; apres(); clearTimeout(carteEnSortieT); carteEnSortie = false; }, 320);
 }
 
 (function(){
@@ -5597,10 +5847,12 @@ function sortirCarte(niveau, opts, apres){
 
 function answer(niveau, opts){
   if(carteEnSortie) return;
-  carteEnSortie = true;
-  setTimeout(() => { carteEnSortie = false; }, 1500); // filet de sécurité
-  haptique(niveau === 'vert' ? 12 : niveau === 'orange' ? [10,40,10] : [18,50,18]);
   const c = queue[currentIndex];
+  if(!c) return;   // plus de carte courante (fin de file, carte supprimée) : rien à noter, et on n'arme pas le verrou
+  carteEnSortie = true;
+  clearTimeout(carteEnSortieT);   // sinon le minuteur d'une réponse précédente lèverait le verrou pendant cette animation
+  carteEnSortieT = setTimeout(() => { carteEnSortie = false; }, 1500); // filet de sécurité
+  haptique(niveau === 'vert' ? 12 : niveau === 'orange' ? [10,40,10] : [18,50,18]);
   const prevPalier = c.palier;
   const prevProchaineRevision = c.prochaineRevision;
   const prevDerniereRevision = c.derniereRevision;
@@ -5646,6 +5898,9 @@ function answer(niveau, opts){
   if(becameMastered) sessionMastered++;
   const wasNewSessionError = niveau !== 'vert' && !sessionErrors.some(e => e.id === c.id);
   if(wasNewSessionError) sessionErrors.push(c);
+  // État de la série, du record et du marqueur de retard AVANT cette réponse : « Annuler » les remet tels quels.
+  const prevSerie = {};
+  ['cartes-streak', 'lissage-marqueur-retard', 'cartes-stats-extra'].forEach(k => { try{ prevSerie[k] = localStorage.getItem(k); }catch(e){ prevSerie[k] = null; } });
   bumpStreak();
   ppStatBump();
   if(!rappelLeger) saveLocalOverlay(c.id, { palier, prochaineRevision, derniereRevision, derniereModification, difficultes: c.difficultes || 0, facileConsecutif: c.facileConsecutif || 0, facilite: c.facilite });
@@ -5665,8 +5920,10 @@ function answer(niveau, opts){
   // reinsertedAt est mémorisé pour pouvoir défaire proprement (undo).
   let reinsertedAt = null;
   if(niveau === 'orange' || niveau === 'rouge'){
-    c.reinsertionsSession = (c.reinsertionsSession || 0) + 1;
-    if(c.reinsertionsSession <= MAX_REINSERTIONS[niveau]){
+    // Compteur PAR NIVEAU (Difficile n'use pas le plafond de Pas su) et remis à zéro à chaque séance (ppReinsertionsRaz).
+    if(!ppEstObjet(c.reinsertionsSession)) c.reinsertionsSession = { orange: 0, rouge: 0 };
+    c.reinsertionsSession[niveau] = (c.reinsertionsSession[niveau] || 0) + 1;
+    if(c.reinsertionsSession[niveau] <= MAX_REINSERTIONS[niveau]){
       const remainingAfter = queue.length - currentIndex - 1;
       const gap = computeReinsertGap(niveau, remainingAfter);
       reinsertedAt = Math.min(currentIndex + 1 + gap, queue.length);
@@ -5677,7 +5934,7 @@ function answer(niveau, opts){
   // Sens vu pour cette carte (⇄) : gardé pour qu'un "Annuler" la remette dans
   // le MÊME sens (sinon le tirage serait refait et l'écran changerait).
   const sensVu = (sensAffiche.cle === 'etude:' + currentIndex + ':' + c.id) ? sensAffiche.inverse : false;
-  lastAnswer = { cardId: c.id, index: currentIndex, sensVu, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute };
+  lastAnswer = { cardId: c.id, index: currentIndex, sensVu, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute, prevSerie };
   recalcPlanning();
   saveLocalPlanning();
   planifierSyncDiffere();
@@ -5695,7 +5952,12 @@ function answer(niveau, opts){
 function undoLastAnswer(){
   if(!lastAnswer) return;
   ecrReset(); // carte à écrire : elle revient « à écrire », champ vide, verrou levé
-  ppStatUndo();
+  if(lastAnswer.prevSerie){
+    // Série du jour, record, total et marqueur de retard : exactement comme avant la réponse annulée.
+    for(const k of Object.keys(lastAnswer.prevSerie)){
+      try{ if(lastAnswer.prevSerie[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, lastAnswer.prevSerie[k]); }catch(e){}
+    }
+  } else ppStatUndo();
   const c = queue[lastAnswer.index];
   if(c && c.id === lastAnswer.cardId){
     c.palier = lastAnswer.prevPalier;
@@ -5711,7 +5973,7 @@ function undoLastAnswer(){
     c.derniereModification = lastAnswer.prevDerniereModification;
     // Défait aussi le compteur de réinsertions pour cette carte, sinon un
     // undo/refaire répété grillerait le plafond MAX_REINSERTIONS sans raison.
-    if(lastAnswer.reinsertedAt != null) c.reinsertionsSession = Math.max(0, (c.reinsertionsSession || 1) - 1);
+    if(ppEstObjet(c.reinsertionsSession) && lastAnswer.niveau && c.reinsertionsSession[lastAnswer.niveau] > 0) c.reinsertionsSession[lastAnswer.niveau]--;
     saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision: c.prochaineRevision, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification, difficultes: c.difficultes, facileConsecutif: c.facileConsecutif, facilite: c.facilite });
     // Ne retire de sessionErrors que si cette réponse est ce qui l'y avait ajoutée
     // (elle n'y figurait pas avant, cf. prevDifficultes) : sinon une carte déjà
@@ -5740,6 +6002,7 @@ function undoLastAnswer(){
   lastAnswer = null;
   recalcPlanning();
   saveLocalPlanning();
+  planifierSyncDiffere();   // l'état annulé doit partir lui aussi (sinon l'autre appareil garde la réponse annulée)
   justAdvanced = true;
   ppMood.anim = 'in';
   renderStudy();
@@ -5849,7 +6112,8 @@ function quizFlip(){
 function quizAnswer(niveau, opts){
   if(carteEnSortie) return;
   carteEnSortie = true;
-  setTimeout(() => { carteEnSortie = false; }, 1500);
+  clearTimeout(carteEnSortieT);   // v153 (constat 31) : un seul filet à la fois, comme dans answer()
+  carteEnSortieT = setTimeout(() => { carteEnSortie = false; }, 1500);
   haptique(niveau === 'vert' ? 12 : niveau === 'orange' ? [10,40,10] : [18,50,18]);
   const c = quizSet[quizIndex];
   if(niveau !== 'vert') quizErrors.push(c);
@@ -6051,23 +6315,32 @@ function ppEcrMatiere(m){
 
 /* ---- fiche d'une carte (prototype : cardEdit / cardSave / cardReset / cardAsk / cardDel) ---- */
 let ppFi = null; // { id, m (matière choisie), l (matières proposées), iv (sens inversé) }
-function ppFiche(id){
+function ppFiche(id, retour){
   const c = CARDS.find(x => x.id === id);
   if(!c) return;
   const actives = getMatieresActives(), cur = c.matiere || '';
-  ppFi = { id, m: cur, l: (cur && !actives.includes(cur)) ? [cur, ...actives] : actives.slice(), iv: !!c.inversible, ec: c.ecrite === true, imageQuestion: c.imageQuestion || '', imageReponse: c.imageReponse || '' };
+  /* retour = on revient d'une confirmation (Supprimer / Remettre à zéro) : on reprend ce qui était en cours de modification */
+  const garde = (retour && ppFi && ppFi.id === id && ppFi.bq !== undefined) ? ppFi : null;
+  ppFi = garde || { id, m: cur, l: (cur && !actives.includes(cur)) ? [cur, ...actives] : actives.slice(), iv: !!c.inversible, ec: c.ecrite === true, imageQuestion: c.imageQuestion || '', imageReponse: c.imageReponse || '' };
+  const qv = garde ? garde.bq : (c.question || ''), av = garde ? garde.ba : (c.reponse || '');
   const pills = ppFi.l.length > 1
-    ? `<label class="pp-l">Matière</label><div class="pp-pills pp-fm" style="margin-bottom:14px">${ppFi.l.map((x, i) => `<button class="pp-pill${x === cur ? ' on' : ''}" style="--c:${couleurMatiere(x)}" onclick="ppFichePickM(${i})"><span class="pp-dot" style="background:${couleurMatiere(x)}"></span>${escapeHtml(x)}</button>`).join('')}</div>`
+    ? `<label class="pp-l">Matière</label><div class="pp-pills pp-fm" style="margin-bottom:14px">${ppFi.l.map((x, i) => `<button class="pp-pill${x === ppFi.m ? ' on' : ''}" style="--c:${couleurMatiere(x)}" onclick="ppFichePickM(${i})"><span class="pp-dot" style="background:${couleurMatiere(x)}"></span>${escapeHtml(x)}</button>`).join('')}</div>`
     : '';
   const iA = escapeJsAttr(id);
-  const ivOff = !!(ppFi.ec && !(c.question || '').trim() && ppFi.imageQuestion);
-  const ecOk = ppEcritePossible(c), ecLong = (c.reponse || '').length > 80 || (c.reponse || '').indexOf('\n') >= 0;
-  ppSheet(`<div class="pp-grab"></div><h2>Modifier la carte</h2><p class="pp-hint"><span id="pp-fi-m">${escapeHtml(cur || 'Sans matière')}</span> · ${ppBrwLabel(c)}</p>
-  ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi')">${escapeHtml(c.question || '')}</textarea>`)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea">${escapeHtml(c.reponse || '')}</textarea>`)}
+  const ivOff = !!(ppFi.ec && !qv.trim() && ppFi.imageQuestion);
+  const ecOk = ppEcritePossible({ reponse: av }), ecLong = av.length > 80 || av.indexOf('\n') >= 0;
+  ppSheet(`<div class="pp-grab"></div><h2>Modifier la carte</h2><p class="pp-hint"><span id="pp-fi-m">${escapeHtml(ppFi.m || 'Sans matière')}</span> · ${ppBrwLabel(c)}</p>
+  ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi')">${escapeHtml(qv)}</textarea>`)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea">${escapeHtml(av)}</textarea>`)}
   <div class="pp-set" style="margin-bottom:14px"><div class="pp-li${ivOff ? ' pp-off' : ''}"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
   <div class="pp-li${ecOk ? '' : ' pp-off'}"><i class="pp-ico">${PP_IC.edit}</i><span>Réponse à écrire<small>${ecLong ? 'Réponse longue : peu pratique à écrire' : 'Tu tapes ta réponse avant de la voir'}</small></span><button class="pp-tg${ppFi.ec ? ' on' : ''}" aria-label="Réponse à écrire" onclick="ppFicheEc(this)"></button></div>
   <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre à zéro<small>Repart en « Nouvelle »</small></span></button></div>
   <div class="pp-duo"><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button><button class="pp-cta" onclick="ppFicheSave('${iA}')">Enregistrer</button></div>`);
+}
+/* Avant de remplacer la feuille par une confirmation : on note le texte en cours de modification (voir ppFiche(id, true)). */
+function ppFicheGarder(){
+  if(!ppFi) return;
+  const q = document.getElementById('pp-eq'), a = document.getElementById('pp-ea');
+  if(q && a){ ppFi.bq = q.value; ppFi.ba = a.value; }
 }
 function ppFichePickM(i){
   if(!ppFi || !ppFi.l[i]) return;
@@ -6150,8 +6423,9 @@ function ppFicheSave(id){
 function ppFicheResetAsk(id){
   const c = CARDS.find(x => x.id === id);
   if(!c) return;
+  ppFicheGarder();
   const iA = escapeJsAttr(id);
-  ppSheet(`<div class="pp-grab"></div><h2>Remettre cette carte à zéro ?</h2><p class="pp-hint"><span data-notr>${escapeHtml(c.question || '')}</span></p><p class="pp-hint">Elle repart en « Nouvelle » : son avancement est perdu.</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}')">Annuler</button><button class="pp-cta" onclick="ppFicheReset('${iA}')">Remettre à zéro</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Remettre cette carte à zéro ?</h2><p class="pp-hint"><span data-notr>${escapeHtml(c.question || '')}</span></p><p class="pp-hint">Elle repart en « Nouvelle » : son avancement est perdu.</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" onclick="ppFicheReset('${iA}')">Remettre à zéro</button></div>`);
 }
 function ppFicheReset(id){
   const c = CARDS.find(x => x.id === id);
@@ -6174,8 +6448,9 @@ function ppFicheReset(id){
 function ppFicheAsk(id){
   const c = CARDS.find(x => x.id === id);
   if(!c) return;
+  ppFicheGarder();
   const iA = escapeJsAttr(id);
-  ppSheet(`<div class="pp-grab"></div><h2>Supprimer cette carte ?</h2><p class="pp-hint">${escapeHtml(c.question)}</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}')">Annuler</button><button class="pp-cta" style="background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="ppFicheDel('${iA}')">Supprimer</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Supprimer cette carte ?</h2><p class="pp-hint">${escapeHtml(c.question)}</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" style="background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="ppFicheDel('${iA}')">Supprimer</button></div>`);
 }
 function ppFicheDel(id){
   ppSheetClose();
@@ -6275,6 +6550,7 @@ function reprogrammerCartesMatiere(matiere){
   // Passe à true si une carte NEUVE termine dans la zone tampon (repli) : renvoyé
   // à onDateControleChange pour prévenir l'utilisateur.
   let auMoinsUnRepli = false;
+  const patchesRepro = {};
   for(const c of cartes){
     // Carte jamais révisée : `intervals[palier]` représente le temps DEPUIS
     // la dernière révision, ce qui n'existe pas encore ici — la décaler
@@ -6297,8 +6573,9 @@ function reprogrammerCartesMatiere(matiere){
       const prochaineRevision = plafonnerDateRevision(matiere, cible, dateControle, c.id, true);
       c.prochaineRevision = prochaineRevision;
       if(estEnRepliZoneTampon(prochaineRevision, dateControle)) auMoinsUnRepli = true;
-      c.derniereModification = new Date().toISOString();
-      saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification });
+      // Un simple décalage de date ne touche PAS derniereModification (comme lisserRetards) : sinon la synchro
+      // prendrait l'état local, éventuellement périmé, pour plus récent et écraserait une révision faite ailleurs.
+      patchesRepro[c.id] = { palier: c.palier, prochaineRevision, derniereRevision: c.derniereRevision };
       continue;
     }
     const palier = Math.min(c.palier || 0, intervals.length - 1);
@@ -6326,9 +6603,9 @@ function reprogrammerCartesMatiere(matiere){
     // celui de l'import.
     const prochaineRevision = plafonnerDateRevision(matiere, cible, dateControle, c.id);
     c.prochaineRevision = prochaineRevision;
-    c.derniereModification = new Date().toISOString();
-    saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification });
+    patchesRepro[c.id] = { palier: c.palier, prochaineRevision, derniereRevision: c.derniereRevision };
   }
+  saveLocalOverlayLot(patchesRepro);   // une seule écriture pour toute la matière
   return auMoinsUnRepli;
 }
 
@@ -6364,11 +6641,23 @@ function onDateControleChange(matiere, val){
 function rattraperRetardsControle(){
   const today = todayStr();
   let modifie = false;
+  // Comptages construits UNE fois (cartes non maîtrisées par jour, par matière et au total) et tenus à jour à chaque
+  // déplacement : avant, chaque test d'un jour relisait toute la liste des cartes (coût quadratique, app figée au-delà de 2 000 cartes).
+  const parJour = {}, parMatJour = {};
+  for(const c of CARDS){
+    if((c.palier || 0) >= MASTERED_PALIER || !c.prochaineRevision) continue;
+    const m = c.matiere || 'Sans matière';
+    parJour[c.prochaineRevision] = (parJour[c.prochaineRevision] || 0) + 1;
+    if(!parMatJour[m]) parMatJour[m] = {};
+    parMatJour[m][c.prochaineRevision] = (parMatJour[m][c.prochaineRevision] || 0) + 1;
+  }
+  const patches = {};
   for(const [matiere, cfg] of Object.entries(matieresConfig)){
     if(!cfg || !cfg.dateControle || cfg.dateControle < today || cfg.archive) continue;
     const D = cfg.dateControle, iv = getIntervalsForMatiere(matiere);
     const cartes = CARDS.filter(c => (c.matiere || 'Sans matière') === matiere && (c.palier || 0) < MASTERED_PALIER);
-    const nb = (j, mat) => CARDS.filter(c => (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || '') === j && (!mat || (c.matiere || 'Sans matière') === matiere)).length;
+    if(!parMatJour[matiere]) parMatJour[matiere] = {};
+    const nbMat = parMatJour[matiere];
     for(const c of cartes){
       if(!c.prochaineRevision) continue;
       const p = c.palier || 0;
@@ -6379,14 +6668,19 @@ function rattraperRetardsControle(){
       if(limite < plancher) continue;                     // impossible à rattraper : le statut prévient
       let cible = limite;
       for(let j = addDays(limite, -1) >= plancher ? addDays(limite, -1) : limite; j >= plancher; j = addDays(j, -1)){
-        if(nb(j, true) < NOUVELLES_CARTES_MAX_PAR_JOUR && nb(j, false) < CHARGE_GLOBALE_MAX_PAR_JOUR){ cible = j; break; }
+        if((nbMat[j] || 0) < NOUVELLES_CARTES_MAX_PAR_JOUR && (parJour[j] || 0) < CHARGE_GLOBALE_MAX_PAR_JOUR){ cible = j; break; }
       }
+      // tenue à jour des comptages : la carte quitte son ancien jour pour le nouveau
+      parJour[c.prochaineRevision]--; nbMat[c.prochaineRevision]--;
+      parJour[cible] = (parJour[cible] || 0) + 1; nbMat[cible] = (nbMat[cible] || 0) + 1;
       c.prochaineRevision = cible;
-      c.derniereModification = new Date().toISOString();
-      saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision: cible, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification });
+      // PAS de derniereModification ici : un simple décalage de date ne doit jamais l'emporter sur une révision
+      // faite sur un autre appareil (même règle que lisserRetards). Chaque appareil recale ses propres dates.
+      patches[c.id] = { palier: c.palier, prochaineRevision: cible, derniereRevision: c.derniereRevision };
       modifie = true;
     }
   }
+  saveLocalOverlayLot(patches);
   return modifie;
 }
 
@@ -7020,7 +7314,7 @@ PP_IC.file = ppSvg('<path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h6M9 17h6"/>',18);
 PP_IC.cam = ppSvg('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',20);
 
 let ppAddMode = 'ia';               // 'ia' | 'man'
-let ppMan = { inv:false, ec:false, imageQuestion:'', imageReponse:'' };           // « Sens inversé » du formulaire à la main
+let ppMan = { inv:false, ec:false, imageQuestion:'', imageReponse:'', tq:'', ta:'' };           // « Sens inversé » du formulaire à la main
 let ppAddedN = 0;                    // cartes ajoutées à la main depuis l'ouverture de l'onglet
 let ppMsgApercu = '';                // texte du composeur de l'aperçu
 let ppApercuBusy = false;            // envoi en cours depuis le composeur de l'aperçu
@@ -7077,7 +7371,7 @@ function renderZoneFichiersSupp(cible){
 /* composeur unique : zone de texte + fichiers + boutons (prototype : .cmp) */
 function ppCmpBox(o){
   return `<div class="pp-cmp"><textarea ${o.id ? `id="${o.id}"` : ''} class="${o.tall ? 'pp-tall' : ''}" oninput="${o.inp}" placeholder="${o.ph}">${o.val}</textarea><div id="${o.zone}">${o.zoneHtml}</div>
-  <div class="pp-cmpb"><button class="pp-ibt" aria-label="Appareil photo" onclick="document.getElementById('${o.cam}').click()">${PP_IC.cam}</button><button class="pp-ibt" aria-label="Galerie" onclick="document.getElementById('${o.gal}').click()">${PP_IC.photo}</button><button class="pp-ibt" aria-label="Document" onclick="document.getElementById('${o.doc}').click()">${PP_IC.pdf}</button>${o.extra || ''}${o.send ? `<button class="pp-snd ${o.busy ? 'busy' : ''}" aria-label="Envoyer" onclick="${o.send}">${o.busy ? '…' : PP_IC.up}</button>` : ''}</div></div>`;
+  <div class="pp-cmpb"><button class="pp-ibt" aria-label="Appareil photo" onclick="ppCameraOuvrir('${o.cam}')">${PP_IC.cam}</button><button class="pp-ibt" aria-label="Galerie" onclick="document.getElementById('${o.gal}').click()">${PP_IC.photo}</button><button class="pp-ibt" aria-label="Document" onclick="document.getElementById('${o.doc}').click()">${PP_IC.pdf}</button>${o.extra || ''}${o.send ? `<button class="pp-snd ${o.busy ? 'busy' : ''}" aria-label="Envoyer" onclick="${o.send}">${o.busy ? '…' : PP_IC.up}</button>` : ''}</div></div>`;
 }
 function ppDateChip(){
   const d = iaBrouillon.date;
@@ -7110,9 +7404,9 @@ function ppViewIA(){
 function ppViewMan(){
   return `<button class="pp-bk2" onclick="ppSetMode('ia')">${PP_IC.back}Avec l'IA</button><h2 class="pp-t">Écrire une carte</h2>${ppPillsHtml()}
   <div class="pp-side pp-side-q"><div class="pp-numh"><b>1</b>Question<button class="pp-invc ${ppMan.inv ? 'on' : ''}${ppMan.ec && ppMan.imageQuestion ? ' pp-off' : ''}" id="pp-man-inv" style="margin-left:auto" onclick="ppManIv(this)">${PP_IC.swap}Sens inversé</button></div>
-  ${ppChampImg('man', 'q', `<textarea id="pp-nq" enterkeyhint="next" oninput="ppIvGris('man')" onkeydown="ppEnter(event,'q')" placeholder="Saisis le texte ici"></textarea>`)}</div>
+  ${ppChampImg('man', 'q', `<textarea id="pp-nq" enterkeyhint="next" oninput="ppMan.tq=this.value;ppIvGris('man')" onkeydown="ppEnter(event,'q')" placeholder="Saisis le texte ici">${ppEsc(ppMan.tq || '')}</textarea>`)}</div>
   <div class="pp-side pp-side-r"><div class="pp-numh"><b>2</b>Réponse<button class="pp-invc ${ppMan.ec ? 'on' : ''}" style="margin-left:auto" onclick="ppManEc(this)">${PP_IC.edit.replace(/17/g, '14')}À écrire</button></div>
-  ${ppChampImg('man', 'r', `<textarea id="pp-na" enterkeyhint="done" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici"></textarea>`)}</div>
+  ${ppChampImg('man', 'r', `<textarea id="pp-na" enterkeyhint="done" oninput="ppMan.ta=this.value" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici">${ppEsc(ppMan.ta || '')}</textarea>`)}</div>
   <button class="pp-cta" style="margin-top:0" onclick="ppAddCard()">Ajouter la carte</button>
   <div class="pp-kbd"><kbd>Entrée</kbd> pour avancer, puis pour ajouter</div>
   <p class="pp-note" id="pp-addn">${ppAddedN ? ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert' : 'Reste ouvert pour enchaîner sur la carte suivante'}</p>`;
@@ -7143,9 +7437,16 @@ function ppAddCard(){
   const imgs = { q: ppMan.imageQuestion || '', r: ppMan.imageReponse || '' };
   if(!createCardWithMatiere(m, q, a, false, imgs)) return;
   ppMan.imageQuestion = ppMan.imageReponse = ''; ppImgOuvert = null;
+  // Les deux bascules du formulaire ne doivent valoir que pour LA carte qu'on vient de créer,
+  // sinon la carte suivante hérite silencieusement de « Sens inversé »/« À écrire » sans que
+  // l'utilisateur l'ait redemandé (constat remonté par l'utilisateur, v150).
+  ppMan.inv = false; ppMan.ec = false;
+  const bInv = document.getElementById('pp-man-inv'); if(bInv) bInv.classList.remove('on');
+  const bEc = document.querySelector('#tab-add .pp-side-r .pp-invc'); if(bEc) bEc.classList.remove('on');
+  ppIvGris('man');
   ppImgRafraichir('man', 'q'); ppImgRafraichir('man', 'r');
   ppAddedN++;
-  nq.value = na.value = ''; nq.focus();
+  nq.value = na.value = ''; ppMan.tq = ppMan.ta = ''; nq.focus();
   const n = document.getElementById('pp-addn');
   if(n) n.textContent = ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert';
 }
@@ -7175,6 +7476,7 @@ async function ppAiSend(){
   const zone = document.getElementById('ia-supp-textarea');
   const t = ((zone ? zone.value : ppMsgApercu) || '').trim();
   ppMsgApercu = zone ? zone.value : ppMsgApercu;
+  const envoye = ppMsgApercu;   // texte réellement envoyé : le champ reste modifiable pendant l'attente
   const hasF = iaFichiersSupp.length > 0;
   if(!t && !hasF){ ppToast('Écris un message ou joins un fichier'); return; }
   const ajout = hasF || t.length > 160;
@@ -7185,7 +7487,10 @@ async function ppAiSend(){
   }finally{
     ppApercuBusy = false;
   }
-  if(!importMsg || importMsg.type === 'ok') ppMsgApercu = '';
+  if(!importMsg || importMsg.type === 'ok'){
+    if(ppMsgApercu === envoye) ppMsgApercu = '';
+    else if(ppMsgApercu.startsWith(envoye)) ppMsgApercu = ppMsgApercu.slice(envoye.length).replace(/^\s+/, '');   // on ne retire que la partie envoyée
+  }
   renderAdd();
 }
 
@@ -7219,12 +7524,13 @@ function ppSheet(html){
 }
 function ppSheetClose(){
   ppEnsureSheets();
+  ppSetBrouillon = {};
   document.getElementById('pp-veil').classList.remove('on'); document.getElementById('pp-sheet').classList.remove('on');
 }
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v149';
+const PP_APP_VERSION = 'v159';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -7236,6 +7542,72 @@ function ppAideMail(type){
     : (en ? 'Hi,\n\n\n' : 'Salut,\n\n\n');
   ppToast((en ? 'Write to: ' : 'Écris à : ') + PP_CONTACT_MAIL);
   try{ window.location.href = 'mailto:' + PP_CONTACT_MAIL + '?subject=' + encodeURIComponent(sujet) + '&body=' + encodeURIComponent(corps); }catch(e){}
+}
+
+/* ================= v157 : bouton « Appareil photo » =================
+   Téléphone / tablette : l'attribut `capture` de l'input ouvre l'appareil photo du système (comportement d'avant).
+   Chromebook / ordinateur : `capture` est ignoré (on tombait sur l'explorateur de fichiers) -> on ouvre la caméra dans l'app.
+   La photo prise est remise dans le même input (change), donc tout le reste du flux (réduction, banque d'images…) est inchangé.
+   Pas de caméra, refus ou erreur : on retombe sur le sélecteur de fichiers. */
+let ppCam = null;
+function ppCameraSysteme(){
+  const ua = navigator.userAgent || '';
+  if(/CrOS/.test(ua)) return false;
+  return /Android|iPhone|iPad|iPod/i.test(ua) || (/Mac/.test(navigator.platform || '') && navigator.maxTouchPoints > 1);
+}
+function ppCameraFermer(){
+  if(!ppCam) return;
+  const c = ppCam; ppCam = null;
+  try{ c.stream.getTracks().forEach(t => t.stop()); }catch(e){}
+  document.removeEventListener('keydown', c.clav, true);
+  if(c.el.parentNode) c.el.parentNode.removeChild(c.el);
+}
+function ppCameraPrendre(){
+  const c = ppCam; if(!c) return;
+  const v = c.video;
+  if(!v.videoWidth || !v.videoHeight) return;
+  const ech = Math.min(1, 2000 / Math.max(v.videoWidth, v.videoHeight));
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(v.videoWidth * ech); cv.height = Math.round(v.videoHeight * ech);
+  cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+  const inp = c.inp;
+  cv.toBlob(b => {
+    cv.width = cv.height = 0;
+    ppCameraFermer();
+    if(!b || !inp) return;
+    try{
+      const dt = new DataTransfer();
+      dt.items.add(new File([b], 'photo-' + Date.now() + '.jpg', { type: 'image/jpeg' }));
+      inp.files = dt.files;
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
+    }catch(e){ inp.click(); }
+  }, 'image/jpeg', 0.92);
+}
+async function ppCameraOuvrir(inputId){
+  const inp = document.getElementById(inputId); if(!inp) return;
+  if(ppCameraSysteme() || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ inp.click(); return; }
+  if(ppCam) return;
+  let stream = null;
+  try{ stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }); }
+  catch(e){ ppToast('Caméra indisponible : choisis un fichier.'); inp.click(); return; }
+  const el = document.createElement('div');
+  el.id = 'pp-cam';
+  el.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#05050a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px';
+  el.innerHTML = '<video autoplay playsinline muted style="max-width:100%;max-height:calc(100% - 96px);border-radius:18px;background:#000;box-shadow:0 0 0 2px #fff3"></video>'
+    + '<div style="display:flex;gap:14px;align-items:center">'
+    + '<button type="button" class="pp-ibt" data-c="x" style="width:auto;padding:0 20px;height:52px;font-weight:800;font-size:15px">Annuler</button>'
+    + '<button type="button" data-c="ok" aria-label="Prendre la photo" style="height:64px;min-width:64px;padding:0 24px;border-radius:32px;border:3px solid #fff;background:#ff6b3d;color:#1a0d08;font-weight:800;font-size:16px;font-family:inherit;cursor:pointer">Prendre la photo</button></div>';
+  document.body.appendChild(el);
+  const video = el.querySelector('video'); video.srcObject = stream;
+  const clav = (e) => {
+    if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); ppCameraFermer(); }
+    else if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); ppCameraPrendre(); }
+  };
+  document.addEventListener('keydown', clav, true);
+  ppCam = { el, video, stream, inp, clav };
+  el.querySelector('[data-c="x"]').onclick = ppCameraFermer;
+  el.querySelector('[data-c="ok"]').onclick = ppCameraPrendre;
+  try{ await video.play(); }catch(e){}
 }
 
 function ppToast(m){
@@ -7395,6 +7767,7 @@ function ppImporterDonnees(data){
     });
     if(!nouvelles.length){ ppToast('Ces cartes sont déjà dans ta matière'); return; }
     finaliserImport(nouvelles, renommages);
+    if(dernierImportEchec) return;   // stockage plein : le message reste sur l'écran, rien n'a été ajouté
     ppApresImport(nouvelles.length);
   });
 }
@@ -7459,6 +7832,10 @@ function sauverBrouillonIA(){
 
 function viderBrouillonIA(){
   iaBrouillon = { cours:'', matiere:'', date:'' };
+}
+let iaResteCours = '';   // texte tapé dans « Nouvelle carte » PENDANT la génération (voir genererCartesIA)
+function ppResteCoursReposer(){
+  if(iaResteCours){ iaBrouillon.cours = iaResteCours; iaResteCours = ''; }
 }
 
 function attrEchappe(str){
@@ -7530,10 +7907,23 @@ function decoderTexte(buffer){
   catch(e){ return new TextDecoder('windows-1252').decode(buffer); }
 }
 
+const INFLATE_MAX = 20 * 1024 * 1024;     // v153 (constat 41) : taille maximale d'une entrée décompressée
+const FICHIER_IA_MAX = 25 * 1024 * 1024;  // v153 (constat 41) : taille maximale d'un fichier choisi
 async function inflateRaw(bytes){
   if(typeof DecompressionStream === 'undefined') throw new Error('nav-ancien');
   const flux = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-  return new Uint8Array(await new Response(flux).arrayBuffer());
+  const lecteur = flux.getReader(), morceaux = [];
+  let total = 0;
+  for(;;){
+    const { done, value } = await lecteur.read();
+    if(done) break;
+    total += value.length;
+    if(total > INFLATE_MAX){ try{ await lecteur.cancel(); }catch(e){} throw new Error('zip-trop-gros'); }
+    morceaux.push(value);
+  }
+  const out = new Uint8Array(total); let p = 0;
+  for(const m of morceaux){ out.set(m, p); p += m.length; }
+  return out;
 }
 
 /* Lit UNE entrée d'un zip (ici word/document.xml). Renvoie null si absente. */
@@ -7680,6 +8070,7 @@ async function preparerFichiersIA(files){
   for(const file of files){
     const kind = iaFileKind(file);
     const nom = file.name || 'fichier';
+    if(file.size > FICHIER_IA_MAX){ problemes.push(`« ${nom} » : fichier trop gros (plus de 25 Mo).`); continue; }
     try{
       if(kind === 'image'){
         const blob = await compresserImage(file);
@@ -7695,7 +8086,8 @@ async function preparerFichiersIA(files){
         problemes.push(`« ${nom} » : format non géré. Enregistre-le en .docx ou en PDF, puis réessaie.`);
       }
     }catch(err){
-      if(err && err.message === 'nav-ancien') problemes.push(`« ${nom} » : ton navigateur est trop ancien pour lire un .docx. Utilise un PDF à la place.`);
+      if(err && err.message === 'zip-trop-gros') problemes.push(`« ${nom} » : document trop volumineux une fois ouvert (plus de 20 Mo de texte).`);
+      else if(err && err.message === 'nav-ancien') problemes.push(`« ${nom} » : ton navigateur est trop ancien pour lire un .docx. Utilise un PDF à la place.`);
       else problemes.push(`« ${nom} » : impossible de lire ce fichier (abîmé ou protégé par mot de passe ?).`);
     }
   }
@@ -7729,14 +8121,15 @@ function sauverGeminiKey(){
   const val = (input.value || '').trim();
   if(!val){ if(geminiKeyEdit) annulerEditionGeminiKey(); return; }
   geminiKeyEdit = false;
-  localStorage.setItem('gemini_api_key', val);
-  try{ localStorage.setItem('gemini_api_key_maj', new Date().toISOString()); }catch(e){}
+  delete ppSetBrouillon['gemini-key-input'];
+  if(ppEcrire('gemini_api_key', val)) ppEcrire('gemini_api_key_maj', new Date().toISOString());
   renderSettings();
 }
 function oublierGeminiKey(){
   localStorage.removeItem('gemini_api_key');
-  try{ localStorage.setItem('gemini_api_key_maj', new Date().toISOString()); }catch(e){}
+  ppEcrire('gemini_api_key_maj', new Date().toISOString());
   geminiKeyEdit = false;
+  delete ppSetBrouillon['gemini-key-input'];
   renderSettings();
 }
 /* « Changer » ouvre le champ pré-rempli avec la clé actuelle : rien n'est
@@ -7744,11 +8137,13 @@ function oublierGeminiKey(){
 let geminiKeyEdit = false;
 function editerGeminiKey(){
   geminiKeyEdit = true;
+  delete ppSetBrouillon['gemini-key-input'];
   renderSettings();
   setTimeout(() => { const i = document.getElementById('gemini-key-input'); if(i){ i.focus(); try{ i.setSelectionRange(i.value.length, i.value.length); }catch(e){} } }, 60);
 }
 function annulerEditionGeminiKey(){
   geminiKeyEdit = false;
+  delete ppSetBrouillon['gemini-key-input'];
   renderSettings();
 }
 
@@ -7808,6 +8203,7 @@ async function genererCartesIA(){
   const pfIa = ppPartsFichiers(iaFiles, 0);
   parts.push(...pfIa.parts);
   if(pfIa.total > 0) parts.push({ text: PROMPT_IMAGES });
+  parts.push({ text: PROMPT_RECHERCHE_IMAGES });   // v155
 
   let cartes;
   try{
@@ -7820,16 +8216,32 @@ async function genererCartesIA(){
 
   iaImgBanque = [];
   await ppImgBanqueAjouter(iaFiles);   // photos réduites : l'IA en désigne par numéro, tu peux en choisir d'autres dans l'aperçu
-  cartes = ppImgResoudre(cartes);
+  cartes = await ppImgResoudre(cartes, true);
+  // v155 : recherche des images demandées (Wikimedia Commons), avant d'ouvrir l'aperçu
+  let bilanImages = null;
+  if(cartes.some(c => c.rechercheImage)){
+    iaGenerationEnCours = true;
+    const bt = document.getElementById('ia-generate-btn'); if(bt) bt.textContent = 'Recherche des images...';
+    try{ bilanImages = await ppImgChercherPourCartes(cartes); }
+    finally{ iaGenerationEnCours = false; }
+  }
   iaCoursOriginal = cours;
   iaFichiersOriginal = iaFiles.map(f => ({ ...f })); // avant de vider iaFiles
   iaCartesPreview = { matiere, dateControle, cartes };
   const zoneCours = document.getElementById('ia-cours-textarea');
+  // Le champ reste modifiable pendant la génération : ce qui a été tapé en plus du texte envoyé est gardé (reposé à l'annulation / à la validation de l'aperçu).
+  const coursActuel = ((zoneCours ? zoneCours.value : iaBrouillon.cours) || '').trim();
+  iaResteCours = coursActuel === cours ? '' : (coursActuel.startsWith(cours) ? coursActuel.slice(cours.length).replace(/^\s+/, '') : coursActuel);
   if(zoneCours) zoneCours.value = '';
   viderBrouillonIA();
   iaFiles = [];
   iaFilesMsg = null;
   renderAdd();
+  if(bilanImages){
+    if(bilanImages.trouvees > 0) ppToast('Images trouvées sur Wikimedia Commons : vérifie-les avant d\u2019enregistrer.');
+    else ppToast('Aucune image trouvée pour les mots-clés de l\u2019IA.');
+    if(bilanImages.perdues > 0) setTimeout(() => ppToast(MSG_IMG_PLEIN), 2600);
+  }
 }
 
 /* --- Nouvelles tentatives automatiques sur les erreurs serveur passagères ---
@@ -7902,11 +8314,12 @@ async function appelerGeminiPourCartes(parts, options){
   const opts = options || {};
   const key = getGeminiKey();
   if(!key){ importMsg = { type:'err', text:"Ajoute ta clé API Gemini dans Réglages d'abord." }; return null; }
+  if(!/^[\x21-\x7e]+$/.test(key)){ importMsg = { type:'err', text:'La clé Gemini contient des caractères non valides : copie-la de nouveau depuis Google.' }; return null; }
   let response;
   try{
-    response = await fetchGeminiAvecRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(key)}`, {
+    response = await fetchGeminiAvecRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
         contents: [{ parts }],
         generationConfig: { responseMimeType: 'application/json' }
@@ -7940,10 +8353,15 @@ async function appelerGeminiPourCartes(parts, options){
 
     let cards;
     try{
-      cards = JSON.parse(rawText);
+      // v153 (constat 43) : on retire d'éventuelles balises ``` et on accepte un objet { cartes: [...] }
+      const brutNet = rawText.trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```[ \t]*$/, '').trim();
+      cards = JSON.parse(brutNet);
+      if(!Array.isArray(cards) && cards && Array.isArray(cards.cartes)) cards = cards.cartes;
     }catch(e){
       importMsg = { type:'err', text: (cand && cand.finishReason === 'MAX_TOKENS')
-        ? "Le cours est trop long : la réponse de l'IA a été coupée. Découpe-le en plusieurs parties et réessaie."
+        ? (opts.garderNumero
+            ? "La réponse de l'IA a été coupée : ce paquet est trop gros pour être modifié d'un coup. Modifie-le en plusieurs fois."
+            : "Le cours est trop long : la réponse de l'IA a été coupée. Découpe-le en plusieurs parties et réessaie.")
         : "Réponse de l'IA illisible, réessaie." };
       return null;
     }
@@ -7959,7 +8377,12 @@ async function appelerGeminiPourCartes(parts, options){
         const base = opts.garderNumero
           ? { n: numeroDe(c.n), question: String(c.question).trim(), reponse: String(c.reponse).trim() }
           : { question: String(c.question).trim(), reponse: String(c.reponse).trim() };
-        if(opts.garderImages){ base.nImgQ = numeroDe(c.imageQuestion); base.nImgR = numeroDe(c.imageReponse); }
+        if(opts.garderImages){
+          base.nImgQ = numeroDe(c.imageQuestion); base.nImgR = numeroDe(c.imageReponse);
+          base.zQ = c.zoneImageQuestion; base.zR = c.zoneImageReponse;   // v156 : zones de découpage (validées plus tard par ppZoneValide)
+          // v155 : mot-clé de recherche d'image (texte court, sans balise) et côté voulu
+          if(typeof c.rechercheImage === 'string' && c.rechercheImage.trim()){ base.rechercheImage = c.rechercheImage.replace(/[<>\n\r]/g, ' ').trim().slice(0, 120); base.rechercheCote = c.rechercheCote === 'reponse' ? 'reponse' : 'question'; }
+        }
         return base;
       });
 
@@ -8037,6 +8460,7 @@ function annulerIaPreview(){
   iaFichiersSupp = []; iaFichiersSuppMsg = null; iaTexteSupp = ''; iaRefineBrouillon = '';
   importMsg = null;
   viderBrouillonIA();
+  ppResteCoursReposer();
   renderAdd();
 }
 
@@ -8065,6 +8489,7 @@ function validerIaPreview(){
       saveLocalDateControle(matiereFinale, dateControle);
     }
     finaliserImport(items, renommages);
+    if(dernierImportEchec) return;   // stockage plein : l'aperçu est gardé, rien n'a été ajouté
     if(dateControle){
       recalcPlanning();
       saveLocalPlanning();
@@ -8074,6 +8499,7 @@ function validerIaPreview(){
     iaFichiersOriginal = []; iaImgBanque = []; ppImgOuvert = null;
     iaFichiersSupp = []; iaFichiersSuppMsg = null; iaTexteSupp = ''; iaRefineBrouillon = ''; ppMsgApercu = '';
     viderBrouillonIA();
+    ppResteCoursReposer();
     ppApresImport(items.length);
   });
 }
@@ -8143,7 +8569,7 @@ Réponds avec le tableau JSON complet et final des cartes à afficher (reprends 
   // celles que tu as changées ou retirées à la main) ; sinon on prend l'image proposée par l'IA, s'il y en a.
   const avantParQuestion = new Map();
   iaCartesPreview.cartes.forEach(c => { const k = c.question.trim(); if(!avantParQuestion.has(k)) avantParQuestion.set(k, c); });
-  const cartesAvecSens = ppImgResoudre(cartes).map(c => {
+  const cartesAvecSens = (await ppImgResoudre(cartes)).map(c => {
     const avant = avantParQuestion.get(c.question.trim());
     const out = { ...c, inversible: !!(avant && avant.inversible), ecrite: !!(avant && avant.ecrite) };
     const iq = (avant && avant.imageQuestion) || c.imageQuestion, ir = (avant && avant.imageReponse) || c.imageReponse;
@@ -8195,11 +8621,11 @@ function renderEditionIA(){
   const props = e.propositions;
   const nb = props.filter(x => x.accepte).length;
   const nbSuppr = props.filter(x => x.type === 'suppr').length;
-  const beaucoupDeSuppr = nbSuppr > 0 && nbSuppr >= Math.ceil(e.base.length / 2);
+  const beaucoupDeSuppr = nbSuppr >= 3 || (nbSuppr > 0 && nbSuppr >= Math.ceil(e.base.length / 2));
   const libelle = { modif: 'Modifiée', ajout: 'Nouvelle', suppr: 'Supprimée' };
   const couleur = { modif: 'var(--orange)', ajout: 'var(--green)', suppr: 'var(--pink)' };
   ppSheet(`<div class="pp-grab"></div><h2>Changements proposés</h2><p class="pp-hint">Décoche ce que tu ne veux pas appliquer.</p>${msgHtml}
-  ${beaucoupDeSuppr ? `<p class="pp-warn" style="--wc:var(--pink)">L'IA propose de supprimer ${nbSuppr} carte${nbSuppr > 1 ? 's' : ''} sur ${e.base.length}. Vérifie bien avant d'appliquer.</p>` : ''}
+  ${beaucoupDeSuppr ? `<p class="pp-warn" style="--wc:var(--pink)">L'IA propose de supprimer ${nbSuppr} carte${nbSuppr > 1 ? 's' : ''} sur ${e.base.length}. Elles sont décochées : coche seulement celles que tu veux vraiment supprimer (c'est définitif).</p>` : ''}
   ${props.length === 0 ? `<p class="pp-hint">L'IA n'a proposé aucun changement.</p>` : ''}
   ${props.map((x, i) => `<label class="pp-pv" style="display:flex;gap:11px;align-items:flex-start;cursor:pointer;opacity:${x.accepte ? 1 : .5}"><input type="checkbox" ${x.accepte ? 'checked' : ''} style="accent-color:var(--orange);width:20px;height:20px;margin-top:1px;flex:none" onchange="basculerPropositionIA(${i},this)"><span style="flex:1;min-width:0;font-size:14px;line-height:1.4"><span class="pp-tag2" style="color:${couleur[x.type]}">${libelle[x.type]}</span>
     ${x.type === 'ajout' ? '' : `<span style="display:block;color:var(--muted);text-decoration:line-through;margin-top:4px">${escapeHtml(x.avant.question)}<br>${escapeHtml(x.avant.reponse)}</span>`}
@@ -8278,7 +8704,7 @@ Règles : garde le "n" des cartes conservées ou modifiées ; recopie à l'ident
     }
   }
   e.base.forEach((c, i) => {
-    if(!vues.has(i + 1)) props.push({ type:'suppr', id:c.id, avant:{ question:c.question, reponse:c.reponse }, accepte:true });
+    if(!vues.has(i + 1)) props.push({ type:'suppr', id:c.id, avant:{ question:c.question, reponse:c.reponse }, accepte:false }); // v153 (constat 42) : une suppression est définitive, jamais cochée d'office
   });
   // Ordre d'affichage : modifiées, nouvelles, supprimées
   const ordre = { modif:0, ajout:1, suppr:2 };
@@ -8293,11 +8719,12 @@ function appliquerEditionIA(){
   if(!e) return;
   const acceptees = e.propositions.filter(x => x.accepte);
   if(acceptees.length === 0) return;
-  let nbModif = 0, nbSuppr = 0, nbAjout = 0;
+  let nbModif = 0, nbSuppr = 0, nbAjout = 0, nbChangees = 0;
 
   for(const x of acceptees.filter(x => x.type === 'modif')){
     const c = CARDS.find(k => k.id === x.id);
     if(!c) continue; // supprimée entre-temps (ex. par la synchro)
+    if((c.question || '').trim() !== (x.avant.question || '').trim() || (c.reponse || '').trim() !== (x.avant.reponse || '').trim()){ nbChangees++; continue; } // v153 : carte modifiée depuis l'ouverture : on ne l'écrase pas
     const derniereModification = new Date().toISOString();
     c.question = x.apres.question; c.reponse = x.apres.reponse; c.derniereModification = derniereModification;
     saveLocalOverlay(c.id, { question: c.question, reponse: c.reponse, derniereModification });
@@ -8317,7 +8744,7 @@ function appliquerEditionIA(){
   if(aAjouter.length){
     finaliserImport(aAjouter, {}); // étale les nouvelles cartes comme un ajout normal (recalcule et redessine)
     importMsg = null;              // message d'import inutile ici (on n'est pas sur l'onglet Ajouter)
-    nbAjout = aAjouter.length;
+    nbAjout = dernierImportEchec ? 0 : aAjouter.length;
   } else {
     if(matiereFilter !== 'toutes' && !getMatieres().includes(matiereFilter)) matiereFilter = 'toutes';
     recalcPlanning();
@@ -8329,6 +8756,8 @@ function appliquerEditionIA(){
   if(nbModif) morceaux.push(`${nbModif} modifiée${nbModif > 1 ? 's' : ''}`);
   if(nbAjout) morceaux.push(`${nbAjout} ajoutée${nbAjout > 1 ? 's' : ''}`);
   if(nbSuppr) morceaux.push(`${nbSuppr} supprimée${nbSuppr > 1 ? 's' : ''}`);
+  if(nbChangees) morceaux.push(`${nbChangees} ignorée${nbChangees > 1 ? 's' : ''} (carte modifiée entre-temps)`);
+  if(dernierImportEchec && aAjouter.length) morceaux.push('ajouts annulés : stockage plein');
   ppToast(morceaux.join(' · ') || 'Aucun changement');
   envoyerVersSync();
 }
@@ -8409,7 +8838,7 @@ async function genererCartesSupp(){
 
   await ppImgBanqueAjouter(iaFichiersSupp);   // les nouvelles photos prolongent la numérotation
   if(!iaCartesPreview){ renderAdd(); return; }
-  nouvelles = ppImgResoudre(nouvelles);
+  nouvelles = await ppImgResoudre(nouvelles);
   const deja = new Set(iaCartesPreview.cartes.map(c => (c.question || '').trim().toLowerCase()));
   const aAjouter = nouvelles.filter(c => !deja.has(c.question.trim().toLowerCase())).map(c => ({ ...c, inversible: false }));
   iaCartesPreview.cartes.push(...aAjouter);
@@ -8561,7 +8990,7 @@ function nettoyerModelesSynthese(liste){
 }
 
 function sauverModelesSynthese(liste){
-  try{ localStorage.setItem(SYNTHESE_MODELES_KEY, JSON.stringify(nettoyerModelesSynthese(liste))); }catch(e){}
+  ppEcrire(SYNTHESE_MODELES_KEY, JSON.stringify(nettoyerModelesSynthese(liste)));
   if(typeof envoyerVersSync === 'function') envoyerVersSync();
 }
 
@@ -8582,7 +9011,7 @@ function fusionnerModelesSynthese(recus){
     else if(ts(d.modifieLe) > ts(l.modifieLe) && d.texte !== l.texte){ parNom.set(d.nom.toLowerCase(), d); change = true; }
   }
   if(!change) return;
-  try{ localStorage.setItem(SYNTHESE_MODELES_KEY, JSON.stringify([...parNom.values()])); }catch(e){}
+  ppEcrire(SYNTHESE_MODELES_KEY, JSON.stringify([...parNom.values()]));
 }
 
 /* --- Ouverture --- */
@@ -8717,11 +9146,12 @@ async function appelerGeminiPourSynthese(parts, options){
   const conserve = opts.texteConserve !== false;
   const key = getGeminiKey();
   if(!key) return { erreur: "Ajoute ta clé API Gemini dans Réglages d'abord." };
+  if(!/^[\x21-\x7e]+$/.test(key)) return { erreur: 'La clé Gemini contient des caractères non valides : copie-la de nouveau depuis Google.' };
   let response;
   try{
-    response = await fetchGeminiAvecRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${encodeURIComponent(key)}`, {
+    response = await fetchGeminiAvecRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({ contents: [{ parts }] })
     }, opts.onRetry);
   }catch(err){
@@ -9218,6 +9648,7 @@ function pdfLargeurCar(cp, f){
 }
 
 /* Un caractère → descripteur de glyphe, ou null s'il n'existe pas dans le PDF. */
+let pdfIgnores = 0; // v153 (constat 39) : nombre de caractères non pris en charge omis pendant la construction du PDF
 function pdfGlyphe(ch, police, taille){
   let cp = ch.codePointAt(0);
   if(cp === 0xFE0F || cp === 0x200D || cp === 0x20E3) return null;
@@ -9251,12 +9682,16 @@ function pdfMots(texte, base){
         continue;
       }
       const g = pdfGlyphe(ch, police, base.taille);
-      if(!g) continue;
+      if(!g){
+        const cp0 = ch.codePointAt(0);
+        if(!(cp0 === 0xFE0F || cp0 === 0x200D || cp0 === 0x20E3 || cp0 < 0x20)) pdfIgnores++;
+        continue;
+      }
       if(!mot) mot = { cells: [], w: 0 };
       const last = mot.cells[mot.cells.length - 1];
       if(g.pt) mot.cells.push({ pt: g.pt, w: g.w, t: g.t });
-      else if(last && !last.pt && last.f === g.f && last.t === g.t && last.rise === g.rise && last.couleur === couleur){ last.s += pdfEchapper(g.b); last.w += g.w; }
-      else mot.cells.push({ f: g.f, t: g.t, rise: g.rise, couleur, s: pdfEchapper(g.b), w: g.w });
+      else if(last && !last.pt && last.f === g.f && last.t === g.t && last.rise === g.rise && last.couleur === couleur){ last.s += pdfEchapper(g.b); last.w += g.w; last.cs.push([pdfEchapper(g.b), g.w]); }
+      else mot.cells.push({ f: g.f, t: g.t, rise: g.rise, couleur, s: pdfEchapper(g.b), w: g.w, cs: [[pdfEchapper(g.b), g.w]] });
       mot.w += g.w;
     }
   }
@@ -9264,10 +9699,35 @@ function pdfMots(texte, base){
   return mots;
 }
 
+/* v153 (constat 40) : un mot plus large que la ligne est coupé en morceaux de la largeur de la ligne. */
+function pdfCouperMot(m, largeur){
+  const out = []; let cells = [], w = 0;
+  const vider = () => { if(cells.length){ out.push({ cells, w }); cells = []; w = 0; } };
+  for(const c of m.cells){
+    if(c.pt || !c.cs){ if(cells.length && w + c.w > largeur) vider(); cells.push(c); w += c.w; continue; }
+    let cur = null;
+    for(const [t, gw] of c.cs){
+      if(w + gw > largeur && (cells.length || cur)){ if(cur){ cells.push(cur); cur = null; } vider(); }
+      if(!cur) cur = { f: c.f, t: c.t, rise: c.rise, couleur: c.couleur, s: '', w: 0, cs: [] };
+      cur.s += t; cur.w += gw; cur.cs.push([t, gw]); w += gw;
+    }
+    if(cur) cells.push(cur);
+  }
+  vider();
+  return out;
+}
 function pdfMiseEnLignes(mots, largeur){
   const lignes = []; let cur = [], w = 0;
   const rognerFin = () => { while(cur.length && cur[cur.length - 1].espace) w -= cur.pop().w; };
-  for(const m of mots){
+  for(const m0 of mots){
+    if(!m0.espace && m0.w > largeur + 0.01 && largeur > 20){
+      for(const m of pdfCouperMot(m0, largeur)){
+        if(cur.length && w + m.w > largeur + 0.01){ rognerFin(); lignes.push({ mots: cur, w }); cur = []; w = 0; }
+        cur.push(m); w += m.w;
+      }
+      continue;
+    }
+    const m = m0;
     if(m.espace){ if(cur.length){ cur.push(m); w += m.w; } continue; }
     if(cur.length && w + m.w > largeur + 0.01){ rognerFin(); lignes.push({ mots: cur, w }); cur = []; w = 0; }
     cur.push(m); w += m.w;
@@ -9367,6 +9827,7 @@ function pdfAssembler(pages, W, H, imgs){
 }
 
 function construirePdfBlob(md){
+  pdfIgnores = 0;
   const E = { W: 595.28, H: 841.89, mx: 52, haut: 56, bas: 62, pages: [], imgs: [], p: null, y: 0,
     nouvellePage(){ this.p = []; this.pages.push(this.p); this.y = this.H - this.haut; } };
   E.nouvellePage();
@@ -9454,7 +9915,10 @@ function exporterSynthesePdf(){
   if(!s.markdown.trim()){ s.msg = { type:'err', text:'La synthèse est vide.' }; renderSynthese(); return; }
   try{
     telechargerBlob(construirePdfBlob(s.markdown), nomFichierSynthese('pdf'));
-    s.msg = { type:'ok', text:'PDF enregistré dans tes téléchargements.' };
+    const nbOmis = pdfIgnores;
+    s.msg = nbOmis > 0
+      ? { type:'ok', text:'PDF enregistré, mais ' + nbOmis + ' caractère' + (nbOmis > 1 ? 's' : '') + ' non pris en charge (alphabets non latins, emojis) ' + (nbOmis > 1 ? 'ont' : 'a') + ' été omis. Utilise l\u2019export Word pour tout garder.' }
+      : { type:'ok', text:'PDF enregistré dans tes téléchargements.' };
   }catch(e){
     exporterSynthesePdfImpression(); // secours : ancienne méthode via la boîte d'impression
     return;
@@ -9524,6 +9988,7 @@ async function toggleRappelQuotidien(){
    casser la compatibilité avec d'anciens exports. */
 let settingsImportMsg = null;
 let dernierImportDejaPresentes = 0;
+let dernierImportEchec = false;   // vrai si le dernier finaliserImport n'a rien pu écrire (stockage plein)
 
 /* Construit l'objet de données complet (cartes + progression + réglages
    transférables). Réutilisé par l'export manuel ET par la synchro
@@ -9574,6 +10039,8 @@ function construireDonneesProgression(options){
     datesControle,
     datesControleMaj: loadDatesControleMaj(),
     matieresVides: loadEmptyMatieres(),
+    matieresVidesDates: loadMatieresVidesDates(),
+    matieresSupprimees: loadMatieresSupprimees(),
     matieresArchivees,
     streak,
     geminiApiKey,
@@ -9602,7 +10069,12 @@ function handleImportFile(event){
       renderSettings();
       return;
     }
-    importerProgression(data);
+    try{
+      importerProgression(data);
+    }catch(e){
+      settingsImportMsg = { type:'err', text:'Import interrompu : fichier mal formé.' };
+      renderSettings();
+    }
   };
   reader.onerror = () => {
     settingsImportMsg = { type:'err', text:'Impossible de lire le fichier.' };
@@ -9619,9 +10091,9 @@ function importerProgression(data){
     cartes = data;
   } else if(data && Array.isArray(data.cartes)){
     cartes = data.cartes;
-    datesControle = data.datesControle || {};
-    matieresVides = data.matieresVides || [];
-    streak = data.streak || null;
+    datesControle = ppEstObjet(data.datesControle) ? data.datesControle : {};
+    matieresVides = Array.isArray(data.matieresVides) ? data.matieresVides.filter(m => typeof m === 'string' && m.trim()).map(m => m.trim()) : [];
+    streak = ppEstObjet(data.streak) ? data.streak : null;
     matieresArchivees = Array.isArray(data.matieresArchivees) ? data.matieresArchivees : [];
     geminiApiKey = typeof data.geminiApiKey === 'string' ? data.geminiApiKey : null;
     modelesSynthese = Array.isArray(data.modelesSynthese) ? data.modelesSynthese : [];
@@ -9649,7 +10121,7 @@ function importerProgression(data){
     // Absent sur un vieux payload version 2 (ou export sans champ) : null,
     // traité comme "très ancien" partout où c'est comparé (voir fusionnerDepuisSync).
     const derniereModification = typeof item.derniereModification === 'string' ? item.derniereModification : null;
-    items.push({ id: item.id ? String(item.id) : null, matiere, question, reponse, palier, prochaineRevision, derniereRevision, derniereModification, difficultes, facileConsecutif, facilite, inversible, ecrite, ...imgs });
+    items.push({ id: (item.id && /^[\w.-]{1,64}$/.test(String(item.id))) ? String(item.id) : null, matiere, question, reponse, palier, prochaineRevision, derniereRevision, derniereModification, difficultes, facileConsecutif, facilite, inversible, ecrite, ...imgs });
   }
   if(items.length === 0){
     // Une sauvegarde peut ne contenir que des matières vides (aucune carte) : on les restaure quand même.
@@ -9661,6 +10133,7 @@ function importerProgression(data){
     }
     videsAjoutees.forEach(m => addEmptyMatiere(m.trim()));
     settingsImportMsg = { type:'ok', text:`Sauvegarde restaurée : ${videsAjoutees.length} matière${videsAjoutees.length>1?'s':''} vide${videsAjoutees.length>1?'s':''} ajoutée${videsAjoutees.length>1?'s':''} (aucune carte dans le fichier).` };
+    if(cleMsg) settingsImportMsg.text += cleMsg;
     renderSettings();
     render();
     return;
@@ -9677,7 +10150,13 @@ function importerProgression(data){
       matieresConfig[matiereFinale].dateControle = datesControle[m];
       saveLocalDateControle(matiereFinale, datesControle[m]);
     });
+    const echecsAvant = ppEcritureEchecs;
     const repliRestauration = finaliserImport(items, renommages);
+    if(dernierImportEchec){
+      settingsImportMsg = { type:'err', text:'Stockage plein : restauration annulée, aucune carte ajoutée.' };
+      renderSettings();
+      return;
+    }
 
     matieresVides.forEach(m => { if(!getMatieres().includes(m)) addEmptyMatiere(m); });
     matieresArchivees.forEach(m => {
@@ -9687,16 +10166,31 @@ function importerProgression(data){
       saveLocalArchiveMatiere(matiereFinale, true);
     });
     if(streak){
-      try{ localStorage.setItem('cartes-streak', JSON.stringify(streak)); }catch(e){}
+      ppEcrire('cartes-streak', JSON.stringify(streak));
       renderStreak();
     }
+    // v153 (constat 37) : une clé venue d'un fichier ne remplace JAMAIS la clé locale ; elle n'est reprise
+    // que s'il n'y en a pas, et l'utilisateur en est prévenu (les cours partent vers le projet Google de cette clé).
+    let cleMsg = '';
     if(geminiApiKey){
-      try{ localStorage.setItem('gemini_api_key', geminiApiKey); }catch(e){}
+      let cleLocale = '';
+      try{ cleLocale = (localStorage.getItem('gemini_api_key') || '').trim(); }catch(e){}
+      if(!cleLocale){
+        if(ppEcrire('gemini_api_key', geminiApiKey.trim())) cleMsg = ' La clé Gemini du fichier a été enregistrée (tu n\u2019en avais pas).';
+      } else if(cleLocale !== geminiApiKey.trim()){
+        cleMsg = ' La clé Gemini du fichier n\u2019a pas été utilisée : tu gardes la tienne.';
+      }
     }
     fusionnerModelesSynthese(modelesSynthese);
     recalcPlanning();
     saveLocalPlanning();
 
+    if(ppEcritureEchecs > echecsAvant){
+      settingsImportMsg = { type:'err', text:'Restauration incomplète : stockage plein, une partie des données n\u2019a pas été enregistrée.' };
+      renderSettings();
+      render();
+      return;
+    }
     settingsImportMsg = { type:'ok', text:`Sauvegarde restaurée : ${items.length - dernierImportDejaPresentes} carte${(items.length - dernierImportDejaPresentes)>1?'s':''} ajoutée${(items.length - dernierImportDejaPresentes)>1?'s':''}${dernierImportDejaPresentes ? ` (${dernierImportDejaPresentes} déjà présente${dernierImportDejaPresentes>1?'s':''}, ignorée${dernierImportDejaPresentes>1?'s':''})` : ''}.${repliRestauration ? ' ' + MSG_AVERTISSEMENT_REPLI_ZONE : ''}` };
     renderSettings();
     render();
@@ -10077,7 +10571,14 @@ function finaliserImport(items, renommages){
     matieresTouchees.add(matiere);
     ajoutees++;
   }
-  saveImportedCards(imported);
+  dernierImportEchec = false;
+  if(!saveImportedCards(imported)){
+    // Stockage plein : rien n'est ajouté (sinon les cartes disparaîtraient au rechargement avec un message de succès).
+    dernierImportEchec = true;
+    importMsg = { type:'err', text:'Stockage plein : import annulé, aucune carte ajoutée. Supprime des images ou des cartes.' };
+    renderAdd();
+    return false;
+  }
   if(ajoutees > 0) CARDS = CARDS.concat(imported.slice(-ajoutees)); // slice(-0) renverrait TOUT
   dernierImportDejaPresentes = dejaPresentes;
   recalcPlanning();
@@ -10224,7 +10725,7 @@ function lisserRetards(){
    `datesControle` mais horodatée dans `datesControleMaj`) est effacée ici aussi.
    Une matière inconnue localement est ignorée (elle arrive avec ses cartes).
    Renvoie le nombre de dates modifiées. */
-function fusionnerDatesControleDepuisSync(data, tsOf){
+function fusionnerDatesControleDepuisSync(data, tsOf, nomsChanges){
   const dates = (data && data.datesControle && typeof data.datesControle === 'object') ? data.datesControle : {};
   const majRecu = (data && data.datesControleMaj && typeof data.datesControleMaj === 'object') ? data.datesControleMaj : {};
   const majLocal = loadDatesControleMaj();
@@ -10244,6 +10745,7 @@ function fusionnerDatesControleDepuisSync(data, tsOf){
     if(!matieresConfig[m]) matieresConfig[m] = {};
     matieresConfig[m].dateControle = dateRecue;
     saveLocalDateControle(m, dateRecue, majRecu[m] || undefined);
+    if(nomsChanges) nomsChanges.push(m);
     changees++;
   });
   return changees;
@@ -10260,11 +10762,38 @@ function fusionnerCleGeminiDepuisSync(data, tsOf){
   const tsRecu = tsOf(data.geminiApiKeyMaj);
   const tsLocal = tsOf(majLocale);
   if(tsRecu > tsLocal || (tsRecu === tsLocal && !cleLocale)){
-    try{
-      localStorage.setItem('gemini_api_key', cleRecue);
-      if(data.geminiApiKeyMaj) localStorage.setItem('gemini_api_key_maj', data.geminiApiKeyMaj);
-    }catch(e){}
+    if(ppEcrire('gemini_api_key', cleRecue) && data.geminiApiKeyMaj) ppEcrire('gemini_api_key_maj', data.geminiApiKeyMaj);
   }
+}
+
+/* Matières VIDES reçues de l'autre appareil (avant, `matieresVides` était envoyé mais jamais lu). Une matière vide reçue
+   n'est reprise que si elle n'a pas été supprimée ici APRÈS sa création ; une suppression reçue retire notre matière
+   vide si elle a été créée avant. Renvoie le nombre de changements. */
+function fusionnerMatieresVidesDepuisSync(data, tsOf){
+  let changees = 0;
+  const recues = Array.isArray(data.matieresVides) ? data.matieresVides.filter(m => typeof m === 'string' && m.trim()).map(m => m.trim()) : [];
+  const datesRecues = ppEstObjet(data.matieresVidesDates) ? data.matieresVidesDates : {};
+  const supRecues = ppEstObjet(data.matieresSupprimees) ? data.matieresSupprimees : {};
+  const supLocales = loadMatieresSupprimees();
+  for(const nom of recues){
+    if(getMatieres().includes(nom)) continue;
+    const cree = tsOf(datesRecues[nom]);
+    if(tsOf(supLocales[nom]) > cree || tsOf(supRecues[nom]) > cree) continue;
+    addEmptyMatiere(nom, typeof datesRecues[nom] === 'string' ? datesRecues[nom] : undefined);
+    changees++;
+  }
+  for(const nom of Object.keys(supRecues)){
+    if(typeof supRecues[nom] !== 'string') continue;
+    const sup = tsOf(supRecues[nom]);
+    const dates = loadMatieresVidesDates();
+    if(loadEmptyMatieres().includes(nom) && tsOf(dates[nom]) < sup && !CARDS.some(c => (c.matiere || 'Sans matière') === nom)){
+      deleteMatiereCompletement(nom);   // matière vide supprimée sur l'autre appareil
+      changees++;
+    }
+    const sl = loadMatieresSupprimees();
+    if(sup > tsOf(sl[nom])){ sl[nom] = supRecues[nom]; ppEcrire('cartes-matieres-supprimees', JSON.stringify(sl)); }
+  }
+  return changees;
 }
 
 function fusionnerDepuisSync(data){
@@ -10295,6 +10824,7 @@ function fusionnerDepuisSync(data){
 
   let ajoutees = 0, misesAJour = 0, ignorees = 0;
   const matieresTouchees = new Set();
+  const reactivees = [];   // cartes supprimées ici mais modifiées plus récemment ailleurs : elles reviennent, il faut les sortir de « cartes-deleted »
 
   for(const item of cartesRecues){
     if(!item || typeof item !== 'object') continue;
@@ -10340,6 +10870,7 @@ function fusionnerDepuisSync(data){
       CARDS.push(nouvelle);
       cardsParId.set(id, nouvelle);
       saveLocalOverlay(id, patch);
+      reactivees.push(id);
       matieresTouchees.add(matiere);
       ajoutees++;
       continue;
@@ -10356,9 +10887,12 @@ function fusionnerDepuisSync(data){
     // Sinon : version locale plus récente ou égale, on ne touche à rien.
   }
   saveImportedCards(imported);
+  // Une carte revenue ne doit plus figurer dans « cartes-deleted » (sinon elle disparaît au démarrage hors ligne) ni dans le tombstone local.
+  retirerSuppressionsLocales(reactivees);
 
   // Tombstones reçus : propager les suppressions faites sur l'autre appareil.
   let supprimees = 0;
+  const idsAEffacer = [];
   for(const t of tombstonesRecus){
     if(!t || !t.id) continue;
     const localCarte = cardsParId.get(t.id);
@@ -10366,11 +10900,12 @@ function fusionnerDepuisSync(data){
     if(tsOf(localCarte.derniereModification) < tsOf(t.supprimeLe)){
       CARDS = CARDS.filter(c => c.id !== t.id);
       cardsParId.delete(t.id);
-      saveLocalDelete(t.id);
+      idsAEffacer.push(t.id);
       supprimees++;
     }
     // Sinon : modifiée localement après la suppression distante -> on la garde.
   }
+  saveLocalDeleteLot(idsAEffacer);
   if(supprimees > 0){
     // Retire aussi des cartes "importées" celles qu'on vient de supprimer
     // (celles qui viennent du seed n'y sont de toute façon pas stockées).
@@ -10393,11 +10928,19 @@ function fusionnerDepuisSync(data){
 
   // Dates de contrôle et clé Gemini : appliquées APRÈS les cartes, pour que les
   // matières reçues existent déjà ici (sinon on créerait des matières fantômes).
-  const datesChangees = reglagesRecus ? fusionnerDatesControleDepuisSync(reglagesRecus, tsOf) : 0;
+  const nomsDatesChangees = [];
+  const datesChangees = reglagesRecus ? fusionnerDatesControleDepuisSync(reglagesRecus, tsOf, nomsDatesChangees) : 0;
   if(reglagesRecus) fusionnerCleGeminiDepuisSync(reglagesRecus, tsOf);
+  const videsChangees = reglagesRecus ? fusionnerMatieresVidesDepuisSync(reglagesRecus, tsOf) : 0;
 
-  if(ajoutees > 0 || misesAJour > 0 || supprimees > 0 || datesChangees > 0){
+  if(ajoutees > 0 || misesAJour > 0 || supprimees > 0 || datesChangees > 0 || videsChangees > 0){
     if(matiereFilter !== 'toutes' && !getMatieres().includes(matiereFilter)) matiereFilter = 'toutes';
+    // Une date de contrôle reçue : chaque appareil recale SES cartes (sans toucher à derniereModification, donc sans
+    // jamais écraser une révision de l'autre appareil).
+    if(nomsDatesChangees.length){
+      clearIntervalsCache();
+      nomsDatesChangees.forEach(m => { try{ reprogrammerCartesMatiere(m); }catch(e){} });
+    }
     recalcPlanning();
     saveLocalPlanning();
   }
@@ -10469,7 +11012,7 @@ function createCardWithMatiere(matiere, question, reponse, keepOpen, images){
   if(images && images.q) newCard.imageQuestion = images.q;
   if(images && images.r) newCard.imageReponse = images.r;
   imported.push(newCard);
-  saveImportedCards(imported);
+  if(!saveImportedCards(imported)) return false;   // stockage plein : ppEcrire a prévenu, la carte n'est pas ajoutée
   CARDS = CARDS.concat([newCard]);
   clearEmptyMatiereIfHasCards(matiere);
   recalcPlanning();
@@ -10748,7 +11291,7 @@ function syncCodePerso(){
   try{ return localStorage.getItem('sync-code-perso') || ''; }catch(e){ return ''; }
 }
 function syncSetCodePerso(code){
-  try{ localStorage.setItem('sync-code-perso', code); }catch(e){}
+  return ppEcrire('sync-code-perso', code); // v153 (constat 46) : renvoie false si le stockage est plein
 }
 
 /* Règles du code perso. Il protège aussi la clé Gemini qui voyage avec la synchro :
@@ -10794,12 +11337,30 @@ function syncActif(){
 
 /* Économie d'écritures KV (plan gratuit Cloudflare : 1 000 écritures/jour) :
    - on n'envoie que si les données ont changé depuis le dernier envoi réussi ;
-   - au moins 30 s entre deux envois (un envoi de rattrapage est programmé si
-     une modif arrive entre-temps) ;
+   - au moins 2 min entre deux envois normaux (v152 ; avant : 30 s), et 5 min une fois le « budget » du jour
+     dépassé (voir plus bas) ; un envoi de rattrapage est programmé si une modif arrive entre-temps ;
    - { urgent:true } (app qui se ferme / passe en arrière-plan) ignore le délai
      mais respecte quand même le test « rien n'a changé » ;
    - { force:true } (bouton Enregistrer le code) envoie toujours. */
-const SYNC_INTERVALLE_MIN = 30000;
+const SYNC_INTERVALLE_MIN = 120000;
+/* v152 : « budget » de sécurité. Chaque envoi réussi est compté sur l'appareil, par jour UTC (le compteur Cloudflare
+   repart à minuit UTC), dans la clé locale `sync-budget-jour` (ni exportée ni synchronisée). Au-delà de 40 envois dans la
+   journée, les envois normaux sont espacés de 5 min au lieu de 2. Un usage normal n'y arrive jamais : seul un cas anormal
+   (boucle, bug) est freiné. Jamais touchés : { force:true } (bouton Enregistrer) et { urgent:true } (fermeture, arrière-plan). */
+const SYNC_BUDGET_JOUR = 40;
+const SYNC_INTERVALLE_BUDGET = 300000;
+function syncJourUtc(){ return new Date().toISOString().slice(0, 10); }
+function syncBudgetLire(){
+  try{
+    const o = JSON.parse(localStorage.getItem('sync-budget-jour') || 'null');
+    if(o && typeof o === 'object' && o.j === syncJourUtc() && Number.isFinite(o.n) && o.n >= 0) return o.n;
+  }catch(e){}
+  return 0;
+}
+function syncBudgetCompter(){
+  try{ localStorage.setItem('sync-budget-jour', JSON.stringify({ j: syncJourUtc(), n: syncBudgetLire() + 1 })); }catch(e){}
+}
+function syncIntervalleActuel(){ return syncBudgetLire() >= SYNC_BUDGET_JOUR ? SYNC_INTERVALLE_BUDGET : SYNC_INTERVALLE_MIN; }
 /* v131 : l'empreinte du dernier envoi réussi est gardée sur l'appareil (clé locale `sync-dernier-hash`, ni exportée ni
    synchronisée) : rouvrir l'app sans rien changer n'écrit plus rien. La date d'export (`exporteLe`) n'entre pas dans
    l'empreinte (sinon chaque nouveau jour déclencherait un envoi sans vraie modification). */
@@ -10862,6 +11423,7 @@ let syncTardifTimer = null;
 function syncMotifErreur(e){
   if(e && e.motif) return e.motif;
   const m = String((e && e.message) || '');
+  if(e && e.name === 'AbortError') return 'délai dépassé : le serveur ne répond pas';
   if(/^HTTP \d+/.test(m)) return m;
   if(/fetch|network|load failed/i.test(m)) return 'pas de connexion';
   if(/JSON|token/i.test(m)) return 'réponse illisible du serveur';
@@ -10907,13 +11469,14 @@ async function envoyerVersSync(opts){
     if(force) syncEtat.derniereErreur = syncMessagePause();
     return;
   }
+  let ctlEnvoi = null, minuterieEnvoi = null;
   try{
-    const corps = JSON.stringify(construireDonneesProgression({ pourSync: true }));
-    const empreinte = syncEmpreinte(corps);
+    let corps = JSON.stringify(construireDonneesProgression({ pourSync: true }));
+    let empreinte = syncEmpreinte(corps);
     if(!force){
       if(empreinte === syncDernierHash) return;                        // rien de neuf
       if(syncEnvoiEnCours && empreinte === syncEnCoursEmpreinte) return; // déjà en route
-      const attente = SYNC_INTERVALLE_MIN - (Date.now() - syncDernierEnvoiTs);
+      const attente = syncIntervalleActuel() - (Date.now() - syncDernierEnvoiTs);
       if((attente > 0 || syncEnvoiEnCours) && !urgent){
         clearTimeout(syncTardifTimer);
         syncTardifTimer = setTimeout(() => { envoyerVersSync(); }, Math.max(attente, 5000));
@@ -10924,15 +11487,39 @@ async function envoyerVersSync(opts){
     syncEnvoiEnCours = true;
     syncEnCoursEmpreinte = empreinte;
     syncDernierEnvoiTs = Date.now();
+    // Le Worker ÉCRASE le JSON à chaque envoi : sans relecture, un appareil resté sur un état ancien effacerait
+    // une suppression ou une révision poussée entre-temps par l'autre. On relit donc d'abord (hors envoi urgent à la
+    // fermeture, qui n'a pas le temps, et hors séance / quiz pour ne pas toucher aux cartes en cours de révision).
+    if(!force && !urgent && !studySessionActive && !quizActive && !syncEtat.enCours){
+      const avant = corps;
+      const lu = await recupererDepuisSync();
+      if(!lu) return;   // relecture impossible : on n'écrase pas à l'aveugle (l'erreur est affichée dans Réglages)
+      let apres = JSON.stringify(construireDonneesProgression({ pourSync: true }));
+      if(apres !== avant && !studySessionActive && !quizActive){
+        try{ appliquerArchivageControlesPasses(0); lisserRetards(); render(); renderStreak(); renderSettings(); }catch(e){}
+        apres = JSON.stringify(construireDonneesProgression({ pourSync: true }));
+      }
+      corps = apres;
+      empreinte = syncEmpreinte(corps);
+      syncEnCoursEmpreinte = empreinte;
+      if(empreinte === syncDernierHash) return;   // l'état local est déjà celui du serveur
+    }
+    // keepalive : l'envoi survit à la fermeture de l'onglet, mais le navigateur le limite à ~64 Ko (en OCTETS, pas en
+    // caractères : un texte accentué pèse plus). Au-delà, l'envoi part normalement et n'est plus garanti à la fermeture.
+    let octets = corps.length;
+    try{ octets = new TextEncoder().encode(corps).length; }catch(e){}
+    ctlEnvoi = (typeof AbortController === 'function' && !urgent) ? new AbortController() : null;
+    if(ctlEnvoi) minuterieEnvoi = setTimeout(() => { try{ ctlEnvoi.abort(); }catch(e){} }, SYNC_DELAI_MS);   // délai maximum : un envoi qui ne finit jamais ne bloque plus rien
     const res = await fetch(`${SYNC_WORKER_URL}/sync?code=${encodeURIComponent(syncCodePerso())}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: corps,
-      // keepalive : l'envoi survit à la fermeture de l'onglet (limite navigateur ~64 Ko)
-      keepalive: corps.length < 60000
+      keepalive: octets < 60000,
+      ...(ctlEnvoi ? { signal: ctlEnvoi.signal } : {})
     });
     if(!res.ok) throw await syncErreurHttp(res);
     syncPoserHash(empreinte);
+    syncBudgetCompter();   // v152 : un envoi réussi = une écriture KV de plus aujourd'hui
     syncEtat.derniereSynchro = new Date().toISOString();
     syncEtat.derniereErreur = null;
     syncEtat.codeRefuse = false;
@@ -10940,6 +11527,7 @@ async function envoyerVersSync(opts){
   }catch(e){
     syncEtat.derniereErreur = (e && e.quota) ? syncMessagePause() : 'Envoi impossible (' + syncMotifErreur(e) + ')';
   }finally{
+    if(minuterieEnvoi) clearTimeout(minuterieEnvoi);
     syncEnvoiEnCours = false;
   }
 }
@@ -10960,6 +11548,7 @@ function planifierSyncDiffere(){
    sans ça, un onglet laissé ouvert ne récupérait jamais rien. Ignorée pendant
    une session de révision, un quiz, une fenêtre ouverte ou une saisie, et
    limitée à une fois toutes les 30 s. */
+const SYNC_DELAI_MS = 25000;   // délai maximum d'une requête de synchro (envoi ou récupération)
 let syncDernierRetourTs = 0;
 async function recupererAuRetour(){
   if(!syncActif() || syncEtat.enCours) return;
@@ -10980,19 +11569,25 @@ async function recupererAuRetour(){
   }
 }
 
+/* Renvoie true si la récupération a abouti (y compris « rien encore stocké »), false si elle a échoué. */
 async function recupererDepuisSync(){
-  if(!syncActif()) return;
+  if(!syncActif()) return false;
   syncEtat.enCours = true;
+  // Délai maximum (25 s) : avant, une requête qui ne répondait jamais laissait « enCours » à vrai et plus aucune
+  // récupération n'était lancée avant un rechargement de la page.
+  const ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+  const minuterie = ctl ? setTimeout(() => { try{ ctl.abort(); }catch(e){} }, SYNC_DELAI_MS) : null;
   try{
     const res = await fetch(`${SYNC_WORKER_URL}/sync?code=${encodeURIComponent(syncCodePerso())}`, {
-      method: 'GET'
+      method: 'GET',
+      ...(ctl ? { signal: ctl.signal } : {})
     });
     if(res.status === 404){
       // Rien encore stocké pour ce code : premier lancement, on enverra
       // notre propre état plus tard (à la sortie), rien à faire ici.
       syncEtat.derniereErreur = null;
       syncEtat.codeRefuse = false;
-      return;
+      return true;
     }
     if(!res.ok) throw await syncErreurHttp(res);
     const texteDistant = await res.text();
@@ -11003,9 +11598,12 @@ async function recupererDepuisSync(){
     syncEtat.derniereErreur = null;
     syncEtat.codeRefuse = false;
     try{ localStorage.setItem('sync-derniere-synchro', syncEtat.derniereSynchro); }catch(e){}
+    return true;
   }catch(e){
     syncEtat.derniereErreur = 'Récupération impossible (' + syncMotifErreur(e) + ')';
+    return false;
   }finally{
+    if(minuterie) clearTimeout(minuterie);
     syncEtat.enCours = false;
   }
 }
@@ -11093,7 +11691,13 @@ function validerCodePerso(){
       return;
     }
   }
-  syncSetCodePerso(code);
+  if(!syncSetCodePerso(code)){
+    syncCodeErreur = 'Stockage plein : le code n\u2019a pas pu être enregistré.';
+    syncBtnEtat = 'idle';
+    majSyncUi();
+    return;
+  }
+  delete ppSetBrouillon['sync-code-input'];   // code enregistré : le champ doit désormais afficher la valeur stockée
   if(!code){ syncBtnEtat = 'idle'; majSyncUi(); return; }
   syncBtnEtat = 'loading';
   majSyncUi();
@@ -11359,7 +11963,7 @@ function ppStatExtra(){
   }catch(err){}
   return { record: 0, total: 0 };
 }
-function ppStatSave(o){ try{ localStorage.setItem('cartes-stats-extra', JSON.stringify(o)); }catch(err){} }
+function ppStatSave(o){ ppEcrire('cartes-stats-extra', JSON.stringify(o)); }
 function ppStatBump(){
   const o = ppStatExtra();
   o.total++; o.record = Math.max(o.record, getStreakData().count);
@@ -11448,7 +12052,7 @@ function openStreakModal(){ ppPageShow(ppStatsHtml(), 'pp-stats-page'); }
 function ppStatsHtml(){
   const today = todayStr();
   const streakData = getStreakData();
-  const streak = streakData.count;
+  const streak = getStreakAffichee();
   const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
   const ex = ppStatExtra();
   const record = Math.max(ex.record, streak);
@@ -11488,12 +12092,24 @@ function ppToggleRelance(el){
   try{ localStorage.setItem('rappel-relance-active', on ? '1' : '0'); }catch(err){}
   if(el) el.classList.toggle('on', on);
 }
-function ppSettings(){ geminiKeyEdit = false; ppSetDraw(false); }
+/* Saisies en cours dans les Réglages (clé Gemini, code de synchro) : notées au fil de la frappe (oninput), puis reposées quand la feuille
+   est redessinée (synchro, bouton Rappel, retour depuis « Heure du rappel » / « Exporter »…). Vidées à la fermeture et dès que la saisie est validée. */
+let ppSetBrouillon = {};
+const PP_SET_CHAMPS = ['gemini-key-input', 'sync-code-input'];
+function ppSettings(retour){
+  if(!retour) ppSetBrouillon = {};
+  geminiKeyEdit = ppSetBrouillon['gemini-key-input'] !== undefined;
+  ppSetDraw(false);
+}
 function ppSetDraw(still){
   ppEnsureSheets();
   const e = document.getElementById('pp-sheet');
   const y = e.scrollTop;
+  const a = document.activeElement;
+  const foc = (a && e.contains(a) && PP_SET_CHAMPS.indexOf(a.id) >= 0) ? { id: a.id, d: a.selectionStart, f: a.selectionEnd } : null;
   e.innerHTML = ppSetHtml();
+  PP_SET_CHAMPS.forEach(id => { const c = document.getElementById(id); if(c && ppSetBrouillon[id] !== undefined) c.value = ppSetBrouillon[id]; });
+  if(still && foc){ const c = document.getElementById(foc.id); if(c){ c.focus({ preventScroll:true }); try{ c.setSelectionRange(foc.d, foc.f); }catch(err){} } }
   e.classList.toggle('pp-still', !!still);
   e.scrollTop = still ? y : 0;
   document.getElementById('pp-veil').classList.add('on');
@@ -11526,7 +12142,10 @@ function ppChoisirApparence(c){
 function ppSetHtml(){
   const actif = rappelEstActif();
   const bloque = ('Notification' in window) && Notification.permission === 'denied';
-  const rappels = bloque
+  const sansNotif = !('Notification' in window); // v154 : iPhone dans Safari (hors écran d'accueil) et navigateurs sans notifications
+  const rappels = sansNotif
+    ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Rappels indisponibles<small>${ppEstIos() ? "Ajoute d'abord Memoria à l'écran d'accueil pour pouvoir activer les rappels." : "Ce navigateur ne permet pas les notifications."}</small></span></div></div>`
+    : bloque
     ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Notifications bloquées<small>Autorise-les dans les réglages du téléphone.</small></span></div></div>`
     : `<div class="pp-set">
   <div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Rappel de révision</span><button class="pp-tg${actif ? ' on' : ''}" aria-label="Rappel" onclick="toggleRappelQuotidien()"></button></div>
@@ -11537,15 +12156,16 @@ function ppSetHtml(){
     ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé Gemini connectée<small>${ppEsc(key.slice(0, 6) + '••••••' + key.slice(-4))}</small></span><button class="pp-time" style="flex:none" onclick="editerGeminiKey()">Changer</button></div></div>`
     : (key
       ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Modifier la clé Gemini</span></div></div>
-  <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld" value="${attrEchappe(key)}" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>
+  <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld" value="${attrEchappe(key)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>
   <div class="pp-keyrow"><button class="pp-sec" onclick="annulerEditionGeminiKey()">Annuler</button><button class="pp-sec" onclick="oublierGeminiKey()">Retirer la clé</button></div>`
       : `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.</small></span></div></div>
   <div class="pp-keyrow"><button class="pp-sec" style="flex:1" onclick="window.open('https://aistudio.google.com/apikey','_blank','noopener')">Obtenir ma clé</button></div>
-  <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld pp-masque" placeholder="AIza..." autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
+  <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld pp-masque" placeholder="AIza..." oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
   <h4>Langue</h4>${ppLangueHtml()}
   <h4>Apparence</h4>${ppApparenceHtml()}
-  <h4>Rappels</h4>${rappels}
+  <h4>Rappels</h4>${rappels}${ppRappelsAppleHtml()}
+  ${ppAppleHtml()}
   <h4>Génération IA</h4>${ia}
   <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button></div></div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
@@ -11570,6 +12190,29 @@ function ppUrlSiteWeb(){
 }
 /* v143 : ce rappel n'a de sens que dans l'application installée (téléphone). Sur Chromebook / grand écran, ou dans un
    onglet de navigateur, on est déjà sur le site : rien n'est affiché. */
+/* v154 : détection des appareils Apple (iPhone/iPad, Mac Safari). Sert uniquement à afficher des conseils dans Réglages. */
+function ppEstIos(){
+  try{ const ua = navigator.userAgent || ''; return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }catch(e){ return false; }
+}
+function ppEstSafariMac(){
+  try{ const ua = navigator.userAgent || ''; return !ppEstIos() && /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR|Firefox|Android/.test(ua); }catch(e){ return false; }
+}
+function ppEstApple(){ return ppEstIos() || ppEstSafariMac(); }
+/* v154 : Safari efface les données d'un site non installé après 7 jours sans visite ; une app ajoutée à l'écran d'accueil est épargnée. */
+function ppAppleHtml(){
+  if(!ppEstApple()) return '';
+  if(ppEstIos() && !ppEnAppInstallee()){
+    return `<h4>iPhone / iPad</h4><div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.globe}</i><span>Ajoute Memoria à l'écran d'accueil<small>Dans Safari : Partager, puis « Sur l'écran d'accueil ». Sinon Safari peut effacer tes cartes après 7 jours sans ouvrir l'app. Active aussi la synchronisation.</small></span></div></div>`;
+  }
+  if(ppEstSafariMac() && !ppEnAppInstallee()){
+    return `<h4>Safari (Mac)</h4><div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.globe}</i><span>Pense à sauvegarder<small>Safari peut effacer les données d'un site peu visité. Active la synchronisation ou exporte ta progression de temps en temps.</small></span></div></div>`;
+  }
+  return '';
+}
+function ppRappelsAppleHtml(){
+  if(!ppEstApple() || !('Notification' in window)) return '';
+  return `<p class="pp-hint">Sur iPhone et Mac, le rappel s'affiche seulement quand Memoria est ouverte (pas d'envoi en arrière-plan).</p>`;
+}
 function ppEnAppInstallee(){
   try{
     if(window.navigator && window.navigator.standalone) return true;
@@ -11602,7 +12245,7 @@ function ppMobilesHtml(){
 function ppIosSheet(){
   const url = ppUrlSiteWeb();
   if(!url){ ppToast("Ouvre d'abord l'app depuis le site web"); return; }
-  ppSheet(`<div class="pp-grab"></div><h2>Memoria sur iPhone / iPad</h2><p class="pp-hint">1. Ouvre ce lien dans Safari sur ton iPhone ou iPad.<br>2. Touche Partager, puis « Sur l'écran d'accueil ».<br>3. Touche Ajouter : l'app apparaît comme les autres.</p><p style="margin:0 0 16px"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:var(--yellow);font-weight:700;word-break:break-all;text-decoration:underline">${ppEsc(url.replace(/^https?:\/\//, ''))}</a></p><div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-sec" onclick="ppCopierLienSite()">Copier le lien</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Memoria sur iPhone / iPad</h2><p class="pp-hint">1. Ouvre ce lien dans Safari sur ton iPhone ou iPad.<br>2. Touche Partager, puis « Sur l'écran d'accueil ».<br>3. Touche Ajouter : l'app apparaît comme les autres.</p><p style="margin:0 0 16px"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:var(--yellow);font-weight:700;word-break:break-all;text-decoration:underline">${ppEsc(url.replace(/^https?:\/\//, ''))}</a></p><div class="pp-duo"><button class="pp-sec" onclick="ppSettings(true)">Retour</button><button class="pp-sec" onclick="ppCopierLienSite()">Copier le lien</button></div>`);
 }
 async function ppCopierLienSite(){
   const url = ppUrlSiteWeb();
@@ -11615,8 +12258,9 @@ function ppSyncHtml(){
   const code = syncCodePerso();
   const codeAffiche = verifierSoliditeCode(code) ? '' : code;
   return `<div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
+  <p class="pp-hint">Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.</p>
   <div id="sync-code-erreur" style="margin-top:10px">${syncErreurCodeHtml()}</div>
-  <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
+  <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
   <p class="pp-hint">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>
   <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>`;
 }
@@ -11624,7 +12268,7 @@ function ppSyncHtml(){
 let ppPH = { h: 18, m: 0 };
 function ppTimeSheet(){
   const w = n => Array.from({ length: n }, (_, i) => `<div>${ppP2(i)}</div>`).join('');
-  ppSheet(`<div class="pp-grab"></div><h2>Heure du rappel</h2><p class="pp-hint">Si des cartes sont à réviser.</p><div class="pp-pt"><div class="pp-ptb"></div><div class="pp-ptc" id="pp-ph">${w(24)}</div><b>:</b><div class="pp-ptc" id="pp-pm">${w(60)}</div></div><div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-cta" style="margin:0" onclick="ppTimeOk()">Valider</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Heure du rappel</h2><p class="pp-hint">Si des cartes sont à réviser.</p><div class="pp-pt"><div class="pp-ptb"></div><div class="pp-ptc" id="pp-ph">${w(24)}</div><b>:</b><div class="pp-ptc" id="pp-pm">${w(60)}</div></div><div class="pp-duo"><button class="pp-sec" onclick="ppSettings(true)">Retour</button><button class="pp-cta" style="margin:0" onclick="ppTimeOk()">Valider</button></div>`);
   const t = String(rappelHeurePreferee() || '18:00').split(':').map(Number);
   ppPH = { h: t[0] || 0, m: t[1] || 0 };
   requestAnimationFrame(() => [['pp-ph', 'h', ppPH.h], ['pp-pm', 'm', ppPH.m]].forEach(([id, k, v]) => {
@@ -11635,15 +12279,15 @@ function ppTimeSheet(){
 }
 function ppTimeOk(){
   onChangeRappelHeure(ppP2(ppPH.h) + ':' + ppP2(ppPH.m));
-  ppSettings();
+  ppSettings(true);
 }
 /* confirmation avant téléchargement (prototype : exportSheet) */
 function ppExportSheet(k){
   const j = k === 'json';
-  const info = j ? `${CARDS.length} carte${CARDS.length > 1 ? 's' : ''} · ${getMatieres().length} matière${getMatieres().length > 1 ? 's' : ''} · ${getStreakData().count} jour${getStreakData().count > 1 ? 's' : ''} de suite` : 'Version à jour';
-  ppSheet(`<div class="pp-grab"></div><h2>${j ? 'Exporter la progression' : "Exporter l'app à jour"}</h2><p class="pp-hint">${j ? 'Cartes, paliers, dates de contrôle et série : tout est dans un seul fichier.' : "Une copie complète de l'app, utile comme sauvegarde de secours."}</p>
+  const info = j ? `${CARDS.length} carte${CARDS.length > 1 ? 's' : ''} · ${getMatieres().length} matière${getMatieres().length > 1 ? 's' : ''} · ${getStreakAffichee()} jour${getStreakAffichee() > 1 ? 's' : ''} de suite` : 'Version à jour';
+  ppSheet(`<div class="pp-grab"></div><h2>${j ? 'Exporter la progression' : "Exporter l'app à jour"}</h2><p class="pp-hint">${j ? 'Cartes, paliers, dates de contrôle et série : tout est dans un seul fichier.' : "Une copie complète de l'app, utile comme sauvegarde de secours."}</p>${j && getGeminiKey() ? '<p class="pp-hint">Ce fichier contient aussi ta clé Gemini : ne l\'envoie à personne.</p>' : ''}
   <div class="pp-fcard"><i>${j ? PP_IC.code : PP_IC.file}</i><div><b>${j ? 'memoria-progression.json' : 'index.html'}</b><span>${info}</span></div></div>
-  <div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-cta" style="margin:0" onclick="ppExportGo('${k}')">Télécharger</button></div>`);
+  <div class="pp-duo"><button class="pp-sec" onclick="ppSettings(true)">Retour</button><button class="pp-cta" style="margin:0" onclick="ppExportGo('${k}')">Télécharger</button></div>`);
 }
 function ppExportGo(k){
   ppSheetClose();
@@ -11673,7 +12317,7 @@ function renderSyntheseConsignes(){
   ${ppSynMsg(s)}
   ${modeles.length ? `<div class="pp-msel"><select id="synth-modele-select" onchange="choisirModeleSynthese(this.value)"><option value="">— Choisir un modèle —</option>${modeles.map(m => `<option value="${attrEchappe(m.nom)}" ${m.nom === s.modeleChoisi ? 'selected' : ''}>${ppEsc(m.nom)}</option>`).join('')}</select>${actif ? `<button class="pp-mini" onclick="renommerModeleSynthese()">Renommer</button><button class="pp-mini" onclick="supprimerModeleSynthese()">Supprimer</button>` : ''}</div>` : ''}
   ${s.source === 'parcourir' ? `<div class="pp-numh"><b>1</b>Fichiers en plus <span>(facultatif)</span></div>
-  <div class="pp-cmp" style="margin-bottom:14px"><div id="synth-src-zone">${zoneFichiersSynthSource()}</div><div class="pp-cmpb"><button class="pp-ibt" aria-label="Appareil photo" onclick="document.getElementById('synth-src-cam').click()">${PP_IC.cam}</button><button class="pp-ibt" aria-label="Galerie" onclick="document.getElementById('synth-src-gal').click()">${PP_IC.photo}</button><button class="pp-ibt" aria-label="Document" onclick="document.getElementById('synth-src-doc').click()">${PP_IC.pdf}</button></div></div>
+  <div class="pp-cmp" style="margin-bottom:14px"><div id="synth-src-zone">${zoneFichiersSynthSource()}</div><div class="pp-cmpb"><button class="pp-ibt" aria-label="Appareil photo" onclick="ppCameraOuvrir('synth-src-cam')">${PP_IC.cam}</button><button class="pp-ibt" aria-label="Galerie" onclick="document.getElementById('synth-src-gal').click()">${PP_IC.photo}</button><button class="pp-ibt" aria-label="Document" onclick="document.getElementById('synth-src-doc').click()">${PP_IC.pdf}</button></div></div>
   <input type="file" id="synth-src-cam" accept="image/*" capture="environment" style="display:none" onchange="handleFichiersSynthSource(event)"><input type="file" id="synth-src-gal" accept="image/*" multiple style="display:none" onchange="handleFichiersSynthSource(event)"><input type="file" id="synth-src-doc" accept="${ACCEPT_DOCS}" multiple style="display:none" onchange="handleFichiersSynthSource(event)">` : ''}
   <div class="pp-numh"><b>${s.source === 'parcourir' ? '2' : '1'}</b>Précisions pour l'IA <span>(facultatif)</span></div>
   <textarea class="pp-txa pp-tall" id="synth-consignes" oninput="syntheseEtat.consignes=this.value" placeholder="Ex. Fais un tableau pour comparer les régimes, garde les dates en gras.">${ppEsc(s.consignes)}</textarea>
@@ -11793,6 +12437,27 @@ function ppSynModDel(){
   ppToast('Modèle supprimé');
 }
 
+/* Changement de jour pendant que l'app reste ouverte (ou revient d'arrière-plan) : sans ça, l'accueil gardait le
+   nombre de cartes de la veille. Ne fait rien pendant une séance, un quiz ou une fenêtre ouverte (revérifié toutes les 5 min). */
+let ppJourRendu = todayStr();
+function ppVerifierChangementJour(){
+  const j = todayStr();
+  if(j === ppJourRendu) return false;
+  if(studySessionActive || quizActive) return false;
+  const modal = document.getElementById('modal-root');
+  if(modal && modal.innerHTML.trim() !== '') return false;
+  ppJourRendu = j;
+  appliquerArchivageControlesPasses(0);   // un contrôle a pu passer cette nuit
+  recalcPlanning();
+  saveLocalPlanning();
+  const n = lisserRetards();
+  render();
+  renderStreak();
+  if(activeTab === 'planning'){ try{ renderPlanning(); }catch(e){} }
+  annoncerEtalement(n, 0);
+  return true;
+}
+
 function init(){
   captureSourceHtml();
   applyLocalOverlay();
@@ -11804,6 +12469,8 @@ function init(){
   renderStreak();
   render();
   renderTabbar();
+  window.__ppDemarre = true; // v153 (constat 45) : le démarrage est allé jusqu'au premier rendu
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function(){}); }catch(e){} // v154 : demande de stockage persistant (Safari / Chrome)
   registerServiceWorker();
   // après le splash de démarrage (~1,45 s, qui ne démarre qu'une fois la page construite), sinon le message serait caché
   (function(n){ var iv = setInterval(function(){ if(document.body.classList.contains('splash-done')){ clearInterval(iv); annoncerEtalement(n, 350); } }, 50); })(nbEtalees);
@@ -11811,12 +12478,13 @@ function init(){
   verifierEtNotifierSiNecessaire();
   // Reconfirme pendant que l'app reste ouverte (heure atteinte en cours de
   // session, ou délai de relance écoulé) sans attendre une réouverture.
-  setInterval(verifierEtNotifierSiNecessaire, 5 * 60 * 1000);
+  setInterval(() => { verifierEtNotifierSiNecessaire(); ppVerifierChangementJour(); }, 5 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
     if(document.visibilityState === 'visible'){
       // App restée ouverte (ou en arrière-plan) pendant un changement de jour : de
       // nouveaux retards peuvent être apparus. Idempotent, sans effet s'il y en a ≤ 30.
       if(!studySessionActive && !quizActive){
+        ppVerifierChangementJour(); // accueil de la veille : redessiné si le jour a changé
         appliquerArchivageControlesPasses(0); // changement de jour : un contrôle a pu passer
         const n = lisserRetards();
         if(n > 0){ renderStreak(); render(); }
@@ -11837,27 +12505,72 @@ function init(){
   window.addEventListener('blur', () => { envoyerVersSync(); });
   window.addEventListener('focus', () => { recupererAuRetour(); });
   document.addEventListener('keydown', gererRaccourcisClavier);
-/* Échap (Chromebook / clavier) : ferme la feuille du bas, sinon la page ouverte (Statistiques, Fiche…),
-   sinon quitte la session de révision. Ne fait rien dans un champ de saisie quand rien n'est ouvert. */
-document.addEventListener('keydown', function(e){
-  if(e.key !== 'Escape' || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+/* Ferme, dans l'ordre, la couche la plus « au-dessus » actuellement ouverte : le calendrier,
+   sinon la feuille du bas, sinon la page ouverte (Statistiques, Fiche…) via son bouton Retour,
+   sinon une session de révision/quiz via son bouton de sortie. Renvoie true si quelque chose a
+   été fermé (pour qu'Échap et le bouton retour du téléphone sachent s'il faut aussi empêcher le
+   comportement par défaut), false si rien n'était ouvert. N'agit jamais dans un champ de saisie. */
+function ppCoucheOuverte(){
   const cal = document.getElementById('pp-psheet');
-  if(cal && cal.classList.contains('on')){ e.preventDefault(); ppPickClose(); return; }
+  if(cal && cal.classList.contains('on')) return true;
   const feuille = document.getElementById('pp-sheet');
-  if(feuille && feuille.classList.contains('on')){ e.preventDefault(); ppSheetClose(); return; }
-  const cible = e.target, tag = cible && cible.tagName ? cible.tagName.toLowerCase() : '';
-  if(tag === 'input' || tag === 'textarea' || tag === 'select' || (cible && cible.isContentEditable)) return;
+  if(feuille && feuille.classList.contains('on')) return true;
+  const racine = document.getElementById('modal-root');
+  if(racine && racine.innerHTML.trim() !== '') return true;
+  const ses = document.getElementById('pp-ses');
+  return !!(ses && getComputedStyle(ses).display !== 'none');
+}
+function ppFermerCouche(cible){
+  const cal = document.getElementById('pp-psheet');
+  if(cal && cal.classList.contains('on')){ ppPickClose(); return true; }
+  const feuille = document.getElementById('pp-sheet');
+  if(feuille && feuille.classList.contains('on')){ ppSheetClose(); return true; }
+  const tag = cible && cible.tagName ? cible.tagName.toLowerCase() : '';
+  if(tag === 'input' || tag === 'textarea' || tag === 'select' || (cible && cible.isContentEditable)) return false;
   const racine = document.getElementById('modal-root');
   if(racine){
     const retour = racine.querySelector('.pp-page .pp-back, .pp-page .pp-bk2');
-    if(retour){ e.preventDefault(); retour.click(); return; }
-    if(racine.innerHTML.trim() !== '') return; // autre fenêtre ouverte (confirmation…) : on ne touche à rien
+    if(retour){ retour.click(); return true; }
+    if(racine.innerHTML.trim() !== '') return true; // autre fenêtre ouverte (confirmation…) : on ne touche à rien, mais on a « consommé » le retour
   }
   const ses = document.getElementById('pp-ses');
   if(ses && getComputedStyle(ses).display !== 'none'){
     const quitter = ses.querySelector('.pp-mb .pp-bk');
-    if(quitter){ e.preventDefault(); quitter.click(); }
+    if(quitter){ quitter.click(); return true; }
   }
+  return false;
+}
+/* Échap (Chromebook / clavier) : voir ppFermerCouche. */
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape' || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+  if(ppFermerCouche(e.target)) e.preventDefault();
+});
+/* Bouton « Retour » du téléphone (et geste Android équivalent) : sans ceci, un seul retour
+   quittait directement l'app même en pleine feuille/séance/page, faute d'entrée d'historique à
+   consommer (constat remonté par l'utilisateur, v150). On pousse une entrée dès l'ouverture puis
+   à chaque fois qu'une couche s'ouvre au-dessus de l'accueil ; popstate ferme la couche du dessus
+   au lieu de laisser le navigateur/l'OS quitter l'app, et repousse une entrée pour le prochain retour. */
+/* v153 (constat 44) : au plus UNE entrée tampon à la fois. Avant, chaque feuille fermée par son bouton laissait
+   une entrée d'historique : après N ouvertures il fallait N appuis « Retour » sans effet avant de quitter l'app. */
+let ppHistTampon = 0;
+function ppPousserEtatRetour(){
+  if(ppHistTampon > 0) return;
+  try{ history.pushState({ ppCouche:true }, ''); ppHistTampon = 1; }catch(e){}
+}
+window.addEventListener('popstate', function(){
+  ppHistTampon = 0; // l'entrée tampon vient d'être consommée
+  ppFermerCouche(null);
+  // Tant qu'une couche reste ouverte (ou vient d'en fermer une), on repousse une entrée
+  // pour que le prochain retour la ferme aussi au lieu de quitter l'app ; à l'accueil nu,
+  // on ne repousse rien : le retour suivant quitte normalement l'app.
+  if(ppCoucheOuverte()) ppPousserEtatRetour();
+});
+ppPousserEtatRetour();
+// Toute ouverture de couche (feuille, calendrier, session) repousse une entrée pour que le
+// bouton retour du téléphone la referme au lieu de quitter l'app directement.
+['ppSheet','ppPickDate','ppSesShow'].forEach(nom => {
+  const orig = window[nom];
+  if(typeof orig === 'function') window[nom] = function(...args){ const r = orig.apply(this, args); ppPousserEtatRetour(); return r; };
 });
 
   // Récupération unique à l'ouverture : après le rendu initial pour ne
@@ -11871,7 +12584,29 @@ document.addEventListener('keydown', function(e){
   });
 }
 
-init();
+/* v153 (constat 45) : si le démarrage plante avant le premier rendu, on affiche un message avec « Recharger »
+   au lieu d'un écran vide. Sans effet une fois l'app démarrée. */
+function ppErreurDemarrage(e){
+  try{ console.error(e); }catch(_){}
+  if(window.__ppDemarre || document.getElementById('pp-erreur-demarrage')) return;
+  let en = false; try{ en = typeof langueChoisie === 'function' && langueChoisie() === 'en'; }catch(_){}
+  try{
+    document.body.classList.add('splash-done');
+    const sp = document.getElementById('boot-splash'); if(sp && sp.parentNode) sp.parentNode.removeChild(sp);
+    const d = document.createElement('div');
+    d.id = 'pp-erreur-demarrage'; d.setAttribute('data-notr', '1');
+    d.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:#0c0c12;color:#f5f1e8;font:16px/1.45 system-ui,sans-serif';
+    const p = document.createElement('p'); p.style.cssText = 'max-width:320px;margin:0';
+    p.textContent = en ? 'Memoria could not start. Your cards are still on this device. Tap Reload.' : 'Memoria n\u2019a pas pu démarrer. Tes cartes sont toujours sur cet appareil. Touche Recharger.';
+    const b = document.createElement('button'); b.textContent = en ? 'Reload' : 'Recharger';
+    b.style.cssText = 'font:inherit;font-weight:700;padding:12px 28px;border:0;border-radius:14px;background:#ff8a2b;color:#1a1208';
+    b.onclick = function(){ location.reload(); };
+    d.appendChild(p); d.appendChild(b); document.body.appendChild(d);
+  }catch(_){}
+}
+window.addEventListener('error', function(ev){ if(!window.__ppDemarre) ppErreurDemarrage(ev && ev.error); });
+window.addEventListener('unhandledrejection', function(ev){ if(!window.__ppDemarre) ppErreurDemarrage(ev && ev.reason); });
+try{ init(); }catch(e){ ppErreurDemarrage(e); }
 
 // Retire l'écran de transition custom du DOM une fois son animation de
 // sortie terminée, pour ne laisser aucun overlay invisible intercepter
@@ -12169,7 +12904,7 @@ init();
   function sauverCle(){
     if(!keyOk) return;
     var v=q('[data-i=ky]').value.trim().replace(/^["']|["']$/g,'');
-    try{ localStorage.setItem('gemini_api_key',v); localStorage.setItem('gemini_api_key_maj',new Date().toISOString()); }catch(e){}
+    if(ppEcrire('gemini_api_key', v)) ppEcrire('gemini_api_key_maj', new Date().toISOString()); // v153 (constat 46) : prévient si le stockage est plein
   }
   function suivant(){
     if(i===N-1){ fermer(true); return; }
