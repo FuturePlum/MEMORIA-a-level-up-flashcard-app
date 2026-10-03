@@ -4281,29 +4281,29 @@ function ppMathAmi(src){
   s = s.replace(/(\\[A-Za-z]+) (?=[_^])/g, '$1');
   return s;
 }
-/* Découpe un texte : sort les formules $…$ / $$…$$, remplace \$ . Règles de Pandoc : le $ ouvrant est collé au texte,
+/* Découpe un texte : sort les formules #…# / ##…## (et $…$ / $$…$$, toujours acceptés), remplace \# et \$ . Règles de Pandoc : le $ ouvrant est collé au texte,
    le $ fermant aussi et n'est pas suivi d'un chiffre → « 5 $ et 6 $ » ou « $5 et $6 » ne sont jamais pris pour une formule. */
 function ppRichMaths(t, mem){
   let out = '', i = 0;
   while(i < t.length){
     const c = t[i];
-    if(c === '\\' && t[i + 1] === '$'){ out += '\u0003'; i += 2; continue; }
-    if(c === '$'){
-      if(t[i + 1] === '$'){
-        const j = t.indexOf('$$', i + 2);
-        if(j > i + 2 && t.slice(i + 2, j).indexOf('\n') < 0){ mem.push({ src:t.slice(i + 2, j), bloc:true }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = j + 2; continue; }
+    if(c === '\\' && (t[i + 1] === '$' || t[i + 1] === '#')){ out += (t[i + 1] === '$' ? '\u0003' : '\u0004'); i += 2; continue; }
+    if(c === '$' || c === '#'){
+      if(t[i + 1] === c){
+        const j = t.indexOf(c + c, i + 2);
+        if(j > i + 2 && t.slice(i + 2, j).indexOf('\n') < 0){ mem.push({ src:t.slice(i + 2, j), bloc:true, d:c }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = j + 2; continue; }
       }
       const n = t[i + 1];
-      if(n !== undefined && !/\s/.test(n) && n !== '$'){
+      if(n !== undefined && !/\s/.test(n) && n !== c){
         let j = i + 1, f = -1;
         while(j < t.length){
           const d = t[j];
           if(d === '\n') break;
           if(d === '\\'){ j += 2; continue; }
-          if(d === '$'){ if(!/\s/.test(t[j - 1]) && !/\d/.test(t[j + 1] || '')) f = j; break; }
+          if(d === c){ if(!/\s/.test(t[j - 1]) && !/\d/.test(t[j + 1] || '')) f = j; break; }
           j++;
         }
-        if(f > i + 1){ mem.push({ src:t.slice(i + 1, f), bloc:false }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = f + 1; continue; }
+        if(f > i + 1){ mem.push({ src:t.slice(i + 1, f), bloc:false, d:c }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = f + 1; continue; }
       }
     }
     if(c === '√'){
@@ -4317,10 +4317,10 @@ function ppRichMaths(t, mem){
   return out;
 }
 /* Vrai si le texte contient quelque chose à mettre en forme (sert à n'afficher l'aperçu que quand c'est utile). */
-function ppRichMarque(t){ return /\$[^\s$]|\*[^\s*]|(^|\n)[ \t]*- [^\s\d]|√|[A-Za-z0-9)\]]\^[-+(A-Za-z0-9]|(^|[\s(])\/[^\s\/](?:[^\n\/]*[^\s\/])?\/(?=$|[\s.,;:!?)])/.test(String(t || '')); }
+function ppRichMarque(t){ return /[$#][^\s$#]|\*[^\s*]|(^|\n)[ \t]*- [^\s\d]|√|[A-Za-z0-9)\]]\^[-+(A-Za-z0-9]|(^|[\s(])\/[^\s\/](?:[^\n\/]*[^\s\/])?\/(?=$|[\s.,;:!?)])/.test(String(t || '')); }
 function ppRichHtml(texte){
   const t = String(texte == null ? '' : texte);
-  if(t.indexOf('$') < 0 && t.indexOf('*') < 0 && t.indexOf('/') < 0 && t.indexOf('^') < 0 && t.indexOf('√') < 0 && !/(^|\n)[ \t]*- /.test(t)) return escapeHtml(t);
+  if(t.indexOf('$') < 0 && t.indexOf('#') < 0 && t.indexOf('*') < 0 && t.indexOf('/') < 0 && t.indexOf('^') < 0 && t.indexOf('√') < 0 && !/(^|\n)[ \t]*- /.test(t)) return escapeHtml(t);
   const mem = [];
   let h = escapeHtml(ppRichMaths(t, mem));
   h = h.replace(/(^|\n)([ \t]*)- (?=[^\s\d])/g, '$1$2• ');
@@ -4333,10 +4333,10 @@ function ppRichHtml(texte){
   h = h.replace(/\u0001(\d+)\u0002/g, (m, k) => {
     const f = mem[+k]; if(!f) return '';
     const m1 = ppMathHtml(f.src);
-    if(m1 === null) return escapeHtml(f.nu ? f.src : ((f.bloc ? '$$' : '$') + f.src + (f.bloc ? '$$' : '$')));
+    if(m1 === null) return escapeHtml(f.nu ? f.src : (((f.bloc ? (f.d || '$') + (f.d || '$') : (f.d || '$'))) + f.src + (f.bloc ? (f.d || '$') + (f.d || '$') : (f.d || '$'))));
     return '<span class="pp-mt' + (f.bloc ? ' pp-mtb' : '') + '" data-notr>' + m1 + '</span>';
   });
-  return h.replace(/\u0003/g, '$');
+  return h.replace(/\u0003/g, '$').replace(/\u0004/g, '#');
 }
 /* Réparation des textes venus de l'IA : si le modèle écrit « \frac » avec UN seul antislash dans son JSON, JSON.parse le lit
    comme \f (saut de page), « \beta » comme \b, « \times » comme \t… On les remet. (Le cas \alpha, \sqrt, \pi… qui fait échouer
@@ -12467,7 +12467,7 @@ function ppRvMaj(srcId){
   r.hidden = !m; r.innerHTML = m ? ppRichHtml(s.value) : '';
 }
 function ppFormatAide(){
-  const ex = ['**gras**', '/italique/', '- une puce\n- une autre', 'x^2 et cm^3', '√16 ou √(x+1)', '$a/b$', '$(a+b)/(c+d)$', '$x_1 + y_1$', '$sum_(i=1)^n i$', '$delta x <= alpha$', '$\\ce{H2O}$', '$$E = mc^2$$'];
+  const ex = ['**gras**', '/italique/', '- une puce\n- une autre', 'x^2 et cm^3', '√16 ou √(x+1)', '#a/b#', '#(a+b)/(c+d)#', '#x_1 + y_1#', '#sum_(i=1)^n i#', '#delta x <= alpha#', '#\\ce{H2O}#', '##E = mc^2##'];
   ppSheet(`<div class="pp-grab"></div><h2>Écrire des formules</h2><p class="pp-hint">Dans une question ou une réponse. L'IA les écrit aussi toute seule.</p>${ex.map(s => `<div class="pp-fx"><code>${escapeHtml(s)}</code><span data-notr>${ppRichHtml(s)}</span></div>`).join('')}<p class="pp-hint">Un vrai dollar : <code>\\$</code></p><div class="pp-duo"><button class="pp-cta" style="margin:0;grid-column:1/-1" onclick="ppSettings(true)">Retour</button></div>`);
 }
 
