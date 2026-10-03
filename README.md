@@ -1,11 +1,11 @@
-# 🃏 Flashcard
+# 🃏 Memoria
 
 ### Ton cours entre dans l'app. Il reste dans ta tête.
 
 **Colle ton cours, prends-le en photo ou glisse ton PDF : l'IA en fait des cartes en quelques secondes. Ensuite, l'app te dit exactement quoi réviser aujourd'hui, et te prévient quand un contrôle approche.** Plus de « je commence par quoi ? », plus de révisions de dernière minute : tu arrives au contrôle avec de la marge.
 
 <p align="center">
-  <a href="https://flashcard2-4ra.pages.dev"><b>👉 Ouvrir l'app : flashcard2-4ra.pages.dev</b></a>
+  <a href="https://memoria-card.pages.dev"><b>👉 Ouvrir l'app : memoria-card.pages.dev</b></a>
 </p>
 
 ![PWA](https://img.shields.io/badge/PWA-installable-ff8a2b)
@@ -86,7 +86,7 @@ Même app, même progression, mais en grand : la carte et sa réponse s'affichen
 3. Ouvre-le et autorise l'installation depuis cette source si Android te le demande.
 
 **Depuis le navigateur (PWA)**
-1. Ouvre [**flashcard2-4ra.pages.dev**](https://flashcard2-4ra.pages.dev) dans Chrome.
+1. Ouvre [**memoria-card.pages.dev**](https://memoria-card.pages.dev) dans Chrome.
 2. Menu ⋮ → **Installer l'application** (ou **Ajouter à l'écran d'accueil**).
 
 Et ça marche **sans connexion** : métro, train, salle sans réseau, tes cartes sont là.

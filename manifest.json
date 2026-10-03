@@ -1,6 +1,6 @@
 {
-  "name": "Flashcard",
-  "short_name": "Flashcard",
+  "name": "Memoria",
+  "short_name": "Memoria",
   "description": "Flashcards et répétition espacée",
   "start_url": "./",
   "scope": "./",

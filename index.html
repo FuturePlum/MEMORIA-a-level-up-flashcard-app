@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Flashcard</title>
+<title>Memoria</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0c0c12">
 <script>
@@ -52,7 +52,7 @@
     'Réglages':'Settings','Retour':'Back','Langue':'Language','Apparence':'Appearance','Sombre':'Dark','Clair':'Light','Auto':'Auto',
     'Rappels':'Reminders','Rappel de révision':'Review reminder','Une notification par jour':'One notification per day',
     'Heure du rappel':'Reminder time','Relancer si ignoré':'Remind again if ignored','Un second rappel 2 h plus tard':'A second reminder 2 h later',
-    'Notifications bloquées':'Notifications blocked','Réglages du téléphone → Apps → Flashcard → Notifications : autorise-les, puis reviens ici.':'Phone settings → Apps → Flashcard → Notifications: allow them, then come back here.',
+    'Notifications bloquées':'Notifications blocked','Réglages du téléphone → Apps → Memoria → Notifications : autorise-les, puis reviens ici.':'Phone settings → Apps → Memoria → Notifications: allow them, then come back here.',
     'Tu reçois la notification à cette heure si des cartes sont à réviser.':'You get the notification at this time if cards are due.',
     'Génération IA':'AI generation','Clé API Gemini (gratuite)':'Gemini API key (free)','Crée-la sur aistudio.google.com/apikey, colle-la ici. Avec la synchro, elle suit sur tes autres appareils.':'Create it at aistudio.google.com/apikey and paste it here. With sync, it follows you to your other devices.',
     'Clé Gemini connectée':'Gemini key connected','Changer':'Change','Modifier la clé Gemini':'Edit Gemini key',"Ta clé actuelle reste en place tant que tu n'as pas validé.":'Your current key stays in place until you confirm.',
@@ -60,7 +60,7 @@
     'Synchronisation':'Sync','Synchro entre appareils':'Sync between devices','Pas encore configurée.':'Not set up yet.',
     'Sauvegarde':'Backup','Exporter la progression':'Export progress','Fichier JSON':'JSON file','Importer une progression':'Import progress',
     "Exporter l'app à jour":'Export the up-to-date app','Fichier HTML complet':'Full HTML file','Aussi sur le web':'Also on the web',
-    'Flashcard existe aussi en site web':'Flashcard is also available as a website','Retrouve tes cartes sur ton PC avec ton code de synchro.':'Find your cards on your computer with your sync code.',
+    'Memoria existe aussi en site web':'Memoria is also available as a website','Retrouve tes cartes sur ton PC avec ton code de synchro.':'Find your cards on your computer with your sync code.',
     'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
@@ -160,7 +160,7 @@
   });
   Object.assign(D,{ /* v138 : Android / iOS sur grand écran */
     'Aussi sur Android et iOS':'Also on Android and iOS',"Télécharger l'app (fichier APK)":'Download the app (APK file)','Ouvrir':'Open',"Ajouter le site à l'écran d'accueil":'Add the site to the home screen',
-    'Flashcard sur iPhone / iPad':'Flashcard on iPhone / iPad','Copier le lien':'Copy link',"Ouvre d'abord l'app depuis le site web":'Open the app from the website first',
+    'Memoria sur iPhone / iPad':'Memoria on iPhone / iPad','Copier le lien':'Copy link',"Ouvre d'abord l'app depuis le site web":'Open the app from the website first',
     '1. Ouvre ce lien dans Safari sur ton iPhone ou iPad.':'1. Open this link in Safari on your iPhone or iPad.',"2. Touche Partager, puis « Sur l'écran d'accueil ».":'2. Tap Share, then “Add to Home Screen”.',
     "3. Touche Ajouter : l'app apparaît comme les autres.":'3. Tap Add: the app appears like any other.'
   });
@@ -250,7 +250,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Flashcard">
+<meta name="apple-mobile-web-app-title" content="Memoria">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <link rel="icon" href="data:image/png;base64,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">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -358,7 +358,7 @@ input, textarea, [contenteditable="true"]{
      penchée + coche, devant une carte crème) est la pose STATIQUE de l'icône, au même endroit (288px, centré) : il reste
      fixe 0,5 s pour un raccord invisible, puis l'animation part de cette pose : saut,
      enfoncement sur le "?", retour sur la coche qui se redessine (1,3 s au total).
-     "Flashcard" arrive à 0,5 s. Sortie : fondu doux (logo qui rétrécit un peu) de 1,2 s à 1,45 s ; l'animationend de
+     "Memoria" arrive à 0,5 s. Sortie : fondu doux (logo qui rétrécit un peu) de 1,2 s à 1,45 s ; l'animationend de
      #boot-splash retire alors l'élément du DOM (voir le script en fin de fichier). */
 #boot-splash{
     position:fixed; inset:0; z-index:9999;
@@ -2449,6 +2449,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
 }
 
 /* ---- v140 : état vide « Ajouter des cartes » — Chromebook (même langage que la carte héros de l'accueil) ---- */
+/* v146 : renommage Flashcard → Memoria (nouveau domaine memoria-card.pages.dev). Les identifiants techniques (format 'flashcard-partage', SYNC_WORKER_URL, binding FLASHCARD_SYNC) ne changent pas. */
 /* v145 : carte un peu plus large (560 → 720 px) pour mieux remplir l'écran, sans rien ajouter autour */
 .home-empty-sticker.pp-sticker{display:none}
 @media (min-width:900px) and (min-height:480px){
@@ -2683,11 +2684,11 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
       </g>
     </svg>
   </div>
-  <div id="boot-splash-word">Flashcard</div>
+  <div id="boot-splash-word">Memoria</div>
 </div>
 <div class="wrap">
   <div class="pp-head" id="topbar">
-    <div class="pp-logo"><i id="pp-logo-icon"></i>Flashcard</div>
+    <div class="pp-logo"><i id="pp-logo-icon"></i>Memoria</div>
     <div class="pp-hr" id="topbar-right"></div>
   </div>
 
@@ -5832,7 +5833,7 @@ function ppPartageCopier(code){
   try{ navigator.clipboard.writeText(code).then(ok, () => ppToast(code)); }catch(e){ ppToast(code); }
 }
 function ppPartageEnvoyer(code, m){
-  const texte = `Cartes « ${m} » : ouvre Flashcard → Ajouter → Importer, code ${code}`;
+  const texte = `Cartes « ${m} » : ouvre Memoria → Ajouter → Importer, code ${code}`;
   if(navigator.share){ navigator.share({ text:texte }).catch(() => {}); return; }
   ppPartageCopier(code);
 }
@@ -5843,7 +5844,7 @@ function ppPartagerFichier(m, d){
   let fichier = null;
   try{ fichier = new File([json], nom, { type:'text/plain' }); }catch(e){}
   if(fichier && navigator.canShare && navigator.share && navigator.canShare({ files:[fichier] })){
-    navigator.share({ files:[fichier], title:titre, text:titre + ' — à importer dans Flashcard (Ajouter → Importer)' })
+    navigator.share({ files:[fichier], title:titre, text:titre + ' — à importer dans Memoria (Ajouter → Importer)' })
       .catch(err => { if(err && err.name !== 'AbortError'){ telechargerBlob(new Blob([json], { type:'text/plain' }), nom); ppToast('Fichier téléchargé : envoie-le à ton pote'); } });
     return;
   }
@@ -10248,7 +10249,7 @@ function exportAll(){
   html = html.replace(/const PLANNING = \[[\s\S]*?\];/, planningBlock.replace(/\$/g, '$$$$'));
 
   const blob = new Blob([html], { type: 'text/html' });
-  telechargerBlob(blob, 'flashcard.html');
+  telechargerBlob(blob, 'memoria.html');
 }
 
 /* Service worker séparé (./sw.js) : gère le cache basique et les
@@ -10360,7 +10361,7 @@ async function activerRappelQuotidien(){
 /* Le bouton d'ouverture automatique des réglages de notification a été
    retiré : sur ce téléphone, les intents Android depuis une TWA n'ouvrent
    rien (limitation constructeur/version Android). Le message manuel
-   ci-dessus (Réglages → Apps → Flashcard → Notifications) reste le seul
+   ci-dessus (Réglages → Apps → Memoria → Notifications) reste le seul
    chemin fiable. */
 
 function desactiverRappelQuotidien(){
@@ -10464,7 +10465,7 @@ const SYNC_CODE_LONGUEUR_MIN = 10;
 const SYNC_CODE_LONGUEUR_MAX = 100; // même limite que le Worker (cleanCode)
 const SYNC_CODE_CARACTERES = /^[A-Za-z0-9_-]+$/; // même règle que le Worker : tout autre caractère = HTTP 400
 const SYNC_CODE_LONGUEUR_LIBRE = 16; // à partir de là, pas besoin de mélanger les types de caractères
-const SYNC_CODE_MOTS_FAIBLES = ['password','motdepasse','azerty','qwerty','123456','654321','abcdef','flashcard','iloveyou','bonjour','soleil','admin','welcome','letmein','000000','111111','revision','football','doudou','chocolat'];
+const SYNC_CODE_MOTS_FAIBLES = ['password','motdepasse','azerty','qwerty','123456','654321','abcdef','flashcard','memoria','iloveyou','bonjour','soleil','admin','welcome','letmein','000000','111111','revision','football','doudou','chocolat'];
 
 function verifierSoliditeCode(code){
   code = String(code || '');
@@ -11110,7 +11111,7 @@ function ppWebHtml(){
   const url = ppUrlSiteWeb();
   if(!url) return '';
   const affiche = url.replace(/^https?:\/\//, '');
-  return `<h4>Aussi sur le web</h4><div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.globe}</i><span>Flashcard existe aussi en site web<small style="color:var(--yellow);font-weight:700;word-break:break-all;user-select:text;-webkit-user-select:text"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${ppEsc(affiche)}</a></small></span><button class="pp-time" style="flex:none" onclick="ppCopierLienSite()">Copier</button></div></div>`;
+  return `<h4>Aussi sur le web</h4><div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.globe}</i><span>Memoria existe aussi en site web<small style="color:var(--yellow);font-weight:700;word-break:break-all;user-select:text;-webkit-user-select:text"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${ppEsc(affiche)}</a></small></span><button class="pp-time" style="flex:none" onclick="ppCopierLienSite()">Copier</button></div></div>`;
 }
 /* v138 : sur Chromebook / grand écran, Réglages signale que l'app existe aussi sur Android (APK) et iOS (site à ajouter
    à l'écran d'accueil). Même seuil que le bloc CSS « CHROMEBOOK / ORDINATEUR ». Rien n'est affiché sur téléphone. */
@@ -11128,7 +11129,7 @@ function ppMobilesHtml(){
 function ppIosSheet(){
   const url = ppUrlSiteWeb();
   if(!url){ ppToast("Ouvre d'abord l'app depuis le site web"); return; }
-  ppSheet(`<div class="pp-grab"></div><h2>Flashcard sur iPhone / iPad</h2><p class="pp-hint">1. Ouvre ce lien dans Safari sur ton iPhone ou iPad.<br>2. Touche Partager, puis « Sur l'écran d'accueil ».<br>3. Touche Ajouter : l'app apparaît comme les autres.</p><p style="margin:0 0 16px"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:var(--yellow);font-weight:700;word-break:break-all;text-decoration:underline">${ppEsc(url.replace(/^https?:\/\//, ''))}</a></p><div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-sec" onclick="ppCopierLienSite()">Copier le lien</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Memoria sur iPhone / iPad</h2><p class="pp-hint">1. Ouvre ce lien dans Safari sur ton iPhone ou iPad.<br>2. Touche Partager, puis « Sur l'écran d'accueil ».<br>3. Touche Ajouter : l'app apparaît comme les autres.</p><p style="margin:0 0 16px"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:var(--yellow);font-weight:700;word-break:break-all;text-decoration:underline">${ppEsc(url.replace(/^https?:\/\//, ''))}</a></p><div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-sec" onclick="ppCopierLienSite()">Copier le lien</button></div>`);
 }
 async function ppCopierLienSite(){
   const url = ppUrlSiteWeb();
@@ -11168,7 +11169,7 @@ function ppExportSheet(k){
   const j = k === 'json';
   const info = j ? `${CARDS.length} carte${CARDS.length > 1 ? 's' : ''} · ${getMatieres().length} matière${getMatieres().length > 1 ? 's' : ''} · ${getStreakData().count} jour${getStreakData().count > 1 ? 's' : ''} de suite` : 'Version à jour';
   ppSheet(`<div class="pp-grab"></div><h2>${j ? 'Exporter la progression' : "Exporter l'app à jour"}</h2><p class="pp-hint">${j ? 'Cartes, paliers, dates de contrôle et série : tout est dans un seul fichier.' : "Une copie complète de l'app, utile comme sauvegarde de secours."}</p>
-  <div class="pp-fcard"><i>${j ? PP_IC.code : PP_IC.file}</i><div><b>${j ? 'flashcard-progression.json' : 'index.html'}</b><span>${info}</span></div></div>
+  <div class="pp-fcard"><i>${j ? PP_IC.code : PP_IC.file}</i><div><b>${j ? 'memoria-progression.json' : 'index.html'}</b><span>${info}</span></div></div>
   <div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-cta" style="margin:0" onclick="ppExportGo('${k}')">Télécharger</button></div>`);
 }
 function ppExportGo(k){
@@ -11753,7 +11754,7 @@ init();
     if(document.getElementById('fci')) return;
     T = S[(typeof langueChoisie==='function' && langueChoisie()==='en')?'en':'fr'];
     closing=false; i=0; ia=0; keyOk=false; p=0;
-    root=document.createElement('div'); root.id='fci'; root.setAttribute('data-notr',''); root.setAttribute('role','dialog'); root.setAttribute('aria-modal','true'); root.setAttribute('aria-label','Flashcard');
+    root=document.createElement('div'); root.id='fci'; root.setAttribute('data-notr',''); root.setAttribute('role','dialog'); root.setAttribute('aria-modal','true'); root.setAttribute('aria-label','Memoria');
     root.innerHTML=html();
     document.body.appendChild(root);
     sl=qa('.fi-sl'); nx=q('[data-i=nx]');

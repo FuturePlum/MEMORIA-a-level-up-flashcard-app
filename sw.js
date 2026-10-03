@@ -1,4 +1,4 @@
-/* Service worker de Flashcard.
+/* Service worker de Memoria.
    - Gère le cache basique (comme avant, pour le fonctionnement PWA hors-ligne).
    - Gère un rappel quotidien local : le client (index.html) programme un
      'setTimeout' via une notification différée en storant l'heure voulue ;
@@ -19,10 +19,12 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v48 : renommage Flashcard → Memoria (nom du cache et titre des notifications).
+
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v47';
-const CACHE_NOM = 'flashcard-' + SW_VERSION;
+const SW_VERSION = 'v48';
+const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
   if(lang === 'en') return true;
@@ -71,7 +73,7 @@ self.addEventListener('message', (event) => {
   if(data.type === 'SHOW_REMINDER'){
     const count = data.count || 0;
     if(count <= 0) return;
-    self.registration.showNotification('Flashcard', {
+    self.registration.showNotification('Memoria', {
       body: enAnglais(data.lang)
         ? (count === 1 ? '1 card to review today.' : `${count} cards to review today.`)
         : (count === 1
@@ -86,7 +88,7 @@ self.addEventListener('message', (event) => {
   if(data.type === 'SHOW_REMINDER_RELANCE'){
     const count = data.count || 0;
     if(count <= 0) return;
-    self.registration.showNotification('Flashcard', {
+    self.registration.showNotification('Memoria', {
       body: enAnglais(data.lang)
         ? (count === 1 ? 'Still 1 card waiting today.' : `Still ${count} cards waiting today.`)
         : (count === 1
@@ -121,7 +123,7 @@ async function checkAndNotify(){
     // cartes dues sans accès aux données de l'app (stockées en
     // localStorage, inaccessible depuis le service worker). On affiche
     // donc un rappel générique dans ce cas.
-    await self.registration.showNotification('Flashcard', {
+    await self.registration.showNotification('Memoria', {
       body: enAnglais() ? 'Remember to review your cards today!' : 'Pense à réviser tes cartes aujourd\'hui !',
       icon: './icon-192x192-any.png',
       badge: './icon-192x192-any.png',
