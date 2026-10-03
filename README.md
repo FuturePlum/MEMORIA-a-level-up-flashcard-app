@@ -86,9 +86,8 @@ Même app, même progression, mais en grand : la carte et sa réponse s'affichen
 ## 📲 Installer l'application
 
 **Sur Android (APK)**
-1. Va dans la section [**Releases**](../../releases) de ce dépôt.
-2. Télécharge le fichier `.apk` de la dernière version.
-3. Ouvre-le et autorise l'installation depuis cette source si Android te le demande.
+1. Télécharge [**Memoria.apk**](https://github.com/FuturePlum/MEMORIA-a-level-up-flashcard-app/releases/download/v1.0/Memoria.apk) (toutes les versions sont dans la section [**Releases**](../../releases) de ce dépôt).
+2. Ouvre-le et autorise l'installation depuis cette source si Android te le demande.
 
 **Depuis le navigateur (PWA)**
 1. Ouvre [**memoria-card.pages.dev**](https://memoria-card.pages.dev) dans Chrome.

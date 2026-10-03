@@ -28,6 +28,26 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
 })();
 </script>
 <script>
+/* v174 : le faux splash ne se rejoue pas quand on revient dans l'app. Android peut recharger la page après un passage en arrière-plan :
+   ce n'est pas un vrai démarrage. On pose la classe pp-reprise sur <html> AVANT le premier rendu (le CSS cache alors le splash) si
+   (a) l'onglet a déjà démarré (sessionStorage) ou (b) l'app était active il y a moins de 2 h (localStorage, au cas où Android ne
+   garde pas sessionStorage). Une vraie ouverture à froid (app fermée depuis plus de 2 h) garde le splash. */
+(function(){
+  var K = 'pp-derniere-activite', D = 'pp-deja-demarre';
+  function marquer(){ try{ localStorage.setItem(K, String(Date.now())); }catch(e){} }
+  try{
+    var t = parseInt(localStorage.getItem(K) || '0', 10);
+    if(sessionStorage.getItem(D) === '1' || (t && Date.now() - t >= 0 && Date.now() - t < 2 * 60 * 60 * 1000)){
+      document.documentElement.classList.add('pp-reprise');
+    }
+    sessionStorage.setItem(D, '1');
+  }catch(e){}
+  marquer();
+  document.addEventListener('visibilitychange', marquer);
+  window.addEventListener('pagehide', marquer);
+})();
+</script>
+<script>
   /* Apparence (v132) : choix Sombre / Clair / Auto, propre à CET appareil (localStorage, jamais synchronisé).
      Appliqué ICI, avant le premier rendu, via data-theme sur <html> : pas de flash au démarrage. */
   (function(){
@@ -470,6 +490,8 @@ input, textarea, [contenteditable="true"]{
 /* v106 : le splash reste FIGÉ sur la pose statique de l'icône tant que la page n'a pas fini de se construire ; le script en fin de fichier
    pose .go une fois l'init terminée et une image dessinée, pour que l'animation (1,35 s) tourne sur un processeur libre au lieu de saccader. */
 #boot-splash:not(.go), #boot-splash:not(.go) *{ animation-play-state:paused !important; }
+/* v174 : retour dans l'app (pas un vrai démarrage) : pas de faux splash. */
+html.pp-reprise #boot-splash{ display:none !important; }
 @media (prefers-reduced-motion: reduce){#boot-splash{ animation:none; opacity:0; }}
 @keyframes actionsIn{
     from{opacity:0; transform:translateY(8px);}
@@ -8037,7 +8059,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v173';
+const PP_APP_VERSION = 'v175';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -12893,7 +12915,7 @@ function ppWebHtml(){
 }
 /* v138 : sur Chromebook / grand écran, Réglages signale que l'app existe aussi sur Android (APK) et iOS (site à ajouter
    à l'écran d'accueil). Même seuil que le bloc CSS « CHROMEBOOK / ORDINATEUR ». Rien n'est affiché sur téléphone. */
-const PP_APK_URL = 'https://github.com/FuturePlum/flashcard/releases/download/v1.0/Flashcard.apk';
+const PP_APK_URL = 'https://github.com/FuturePlum/MEMORIA-a-level-up-flashcard-app/releases/download/v1.0/Memoria.apk';
 function ppGrandEcran(){
   try{ return !!(window.matchMedia && window.matchMedia('(min-width:900px) and (min-height:480px)').matches); }catch(e){ return false; }
 }
@@ -13284,6 +13306,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     if(splash && splash.parentNode) splash.parentNode.removeChild(splash);
   }
   if(!splash){ reveal(); return; }
+  if(document.documentElement.classList.contains('pp-reprise')){ reveal(); return; } // v174 : retour dans l'app, pas de splash
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     reveal();
     return;
