@@ -1,6 +1,6 @@
 # 🃏 Memoria
 
-## Le level au-dessus des flashcards.
+## Memoria. Le level au-dessus des flashcards.
 
 **Ton prof particulier de révision.** Photo, PDF ou texte collé : l'IA crée tes cartes et tes synthèses en quelques secondes. Tu donnes la date de ton contrôle, et chaque jour Memoria te dit quoi réviser, seulement ce que tu risques d'oublier. Un retard ? Une alerte « À risque » te prévient à temps, et tu arrives au contrôle avec de la marge.
 
@@ -13,7 +13,7 @@
 ![PWA](https://img.shields.io/badge/PWA-installable-ff8a2b)
 ![Hors ligne](https://img.shields.io/badge/hors%20ligne-oui-ffd23f)
 ![Sans compte](https://img.shields.io/badge/sans%20compte-oui-2b2b3a)
-![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-2b2b3a)
+![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais%20%26%20anglais-2b2b3a)
 
 <p align="center">
   <img src="docs/capture-accueil.png" width="23%" alt="Écran d'accueil : les cartes à réviser aujourd'hui et le compte à rebours avant le contrôle">
