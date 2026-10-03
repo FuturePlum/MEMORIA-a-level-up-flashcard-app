@@ -4,6 +4,10 @@
 
 **Colle ton cours, prends-le en photo ou glisse ton PDF : l'IA en fait des cartes en quelques secondes. Ensuite, l'app te dit exactement quoi réviser aujourd'hui, et te prévient quand un contrôle approche.** Plus de « je commence par quoi ? », plus de révisions de dernière minute : tu arrives au contrôle avec de la marge.
 
+<p align="center">
+  <a href="https://flashcard2-4ra.pages.dev"><b>👉 Ouvrir l'app : flashcard2-4ra.pages.dev</b></a>
+</p>
+
 ![PWA](https://img.shields.io/badge/PWA-installable-ff8a2b)
 ![Hors ligne](https://img.shields.io/badge/hors%20ligne-oui-ffd23f)
 ![Sans compte](https://img.shields.io/badge/sans%20compte-oui-2b2b3a)
@@ -82,14 +86,20 @@ Même app, même progression, mais en grand : la carte et sa réponse s'affichen
 3. Ouvre-le et autorise l'installation depuis cette source si Android te le demande.
 
 **Depuis le navigateur (PWA)**
-1. Ouvre l'adresse de l'app dans Chrome.
+1. Ouvre [**flashcard2-4ra.pages.dev**](https://flashcard2-4ra.pages.dev) dans Chrome.
 2. Menu ⋮ → **Installer l'application** (ou **Ajouter à l'écran d'accueil**).
 
 Et ça marche **sans connexion** : métro, train, salle sans réseau, tes cartes sont là.
 
 ## 🔒 Tes données
 
-Pas de compte, pas de pub, pas de pistage. Tes cartes et ta progression restent **sur ton appareil**. La synchronisation est facultative : si tu l'actives, elle passe par ton code perso, rien d'autre. Tu peux aussi exporter toute ta progression en un fichier quand tu veux.
+Pas de compte, pas de pub, pas de pistage. Tes cartes et ta progression restent **sur ton appareil**. Tu peux aussi exporter toute ta progression en un fichier quand tu veux.
+
+**La synchronisation et le partage sont facultatifs.** Si tu les actives, tes données (cartes, progression et clé Gemini) sont stockées sur mon serveur Cloudflare, protégées seulement par ton code perso. Je suis seul à y avoir accès techniquement, donc par transparence, je préfère te le dire clairement.
+
+J'ai développé cette appli pour moi, et je la publie pour que d'autres puissent en profiter. Je n'ai aucune intention de consulter, d'utiliser ou de revendre tes données, et je n'y ai aucun intérêt. Si tu préfères ne rien me confier, n'active pas la synchro : l'appli marche très bien sans.
+
+> 🔑 Choisis un code perso **long et unique**, et ne le partage pas.
 
 ## 🛠️ Technique
 
