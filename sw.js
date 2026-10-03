@@ -17,9 +17,18 @@
    bug remonté où l'app installée (mode standalone) se figeait (plus aucun
    clic possible) quelques secondes après l'ouverture, probablement à cause
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
-   cache résiduel d'une version antérieure au démarrage, par précaution. */
-const SW_VERSION = 'v46';
+   cache résiduel d'une version antérieure au démarrage, par précaution.
+
+   v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
+   sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
+const SW_VERSION = 'v47';
 const CACHE_NOM = 'flashcard-' + SW_VERSION;
+
+function enAnglais(lang){
+  if(lang === 'en') return true;
+  if(lang === 'fr') return false;
+  try{ return !/^fr/i.test(String((self.navigator && self.navigator.language) || 'fr')); }catch(e){ return false; }
+}
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
@@ -63,9 +72,11 @@ self.addEventListener('message', (event) => {
     const count = data.count || 0;
     if(count <= 0) return;
     self.registration.showNotification('Flashcard', {
-      body: count === 1
-        ? '1 carte à réviser aujourd\'hui.'
-        : `${count} cartes à réviser aujourd'hui.`,
+      body: enAnglais(data.lang)
+        ? (count === 1 ? '1 card to review today.' : `${count} cards to review today.`)
+        : (count === 1
+          ? '1 carte à réviser aujourd\'hui.'
+          : `${count} cartes à réviser aujourd'hui.`),
       icon: './icon-192x192-any.png',
       badge: './icon-192x192-any.png',
       tag: 'revision-rappel',
@@ -76,9 +87,11 @@ self.addEventListener('message', (event) => {
     const count = data.count || 0;
     if(count <= 0) return;
     self.registration.showNotification('Flashcard', {
-      body: count === 1
-        ? 'Toujours 1 carte en attente aujourd\'hui.'
-        : `Toujours ${count} cartes en attente aujourd'hui.`,
+      body: enAnglais(data.lang)
+        ? (count === 1 ? 'Still 1 card waiting today.' : `Still ${count} cards waiting today.`)
+        : (count === 1
+          ? 'Toujours 1 carte en attente aujourd\'hui.'
+          : `Toujours ${count} cartes en attente aujourd'hui.`),
       icon: './icon-192x192-any.png',
       badge: './icon-192x192-any.png',
       tag: 'revision-rappel',
@@ -109,7 +122,7 @@ async function checkAndNotify(){
     // localStorage, inaccessible depuis le service worker). On affiche
     // donc un rappel générique dans ce cas.
     await self.registration.showNotification('Flashcard', {
-      body: 'Pense à réviser tes cartes aujourd\'hui !',
+      body: enAnglais() ? 'Remember to review your cards today!' : 'Pense à réviser tes cartes aujourd\'hui !',
       icon: './icon-192x192-any.png',
       badge: './icon-192x192-any.png',
       tag: 'revision-rappel',

@@ -33,13 +33,16 @@
   })();
 </script>
 <script>
-/* v134 : Langue (Français / English). Choix local à l'appareil (localStorage 'fc-langue'), appliqué dès le <head>.
+/* v134 : Langue (Français / English). Choix local à l'appareil (localStorage 'fc-langue'), appliqué dès le <head>. Défaut (v141) : langue de l'appareil.
    En français ce bloc ne fait RIEN. En anglais, un traducteur remplace les textes exacts de FC_EN (textes, placeholder, title, aria-label, alt,
    alert/confirm) au fur et à mesure que l'app dessine l'écran, et met les dates en anglais. Pour traduire un texte de plus : ajouter
    'texte français exact': 'English text' dans FC_EN. Un texte absent du dictionnaire reste en français. */
 (function(){
   var K='fc-langue';
-  function lire(){ try{ var v=localStorage.getItem(K); if(v==='en'||v==='fr') return v; }catch(e){} return 'fr'; }
+  /* v141 : sans choix explicite (Réglages → Langue), la langue suit celle de l'appareil : français pour toute variante fr (fr, fr-CA, fr-BE…), anglais sinon.
+     Rien n'est enregistré tant que l'utilisateur n'a pas choisi : si la langue de l'appareil change, l'app suit. L'intro lit aussi ce résultat (langueChoisie). */
+  function appareil(){ var l=''; try{ l=String((navigator.languages&&navigator.languages[0])||navigator.language||'fr'); }catch(e){} return /^fr/i.test(l)?'fr':'en'; }
+  function lire(){ try{ var v=localStorage.getItem(K); if(v==='en'||v==='fr') return v; }catch(e){} return appareil(); }
   window.langueChoisie=lire;
   window.choisirLangue=function(c){ try{ localStorage.setItem(K,c); }catch(e){} location.reload(); };
   if(lire()!=='en') return;
@@ -58,13 +61,13 @@
     'Sauvegarde':'Backup','Exporter la progression':'Export progress','Fichier JSON':'JSON file','Importer une progression':'Import progress',
     "Exporter l'app à jour":'Export the up-to-date app','Fichier HTML complet':'Full HTML file','Aussi sur le web':'Also on the web',
     'Flashcard existe aussi en site web':'Flashcard is also available as a website','Retrouve tes cartes sur ton PC avec ton code de synchro.':'Find your cards on your computer with your sync code.',
-    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up'
+    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
     'Renommer la matière':'Rename subject','Nouveau nom':'New name','Renommer':'Rename','Supprimer tout':'Delete all','Une de tes photos :':'One of your photos:','Une autre image…':'Another image…','Fermer':'Close',
     'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test',
     'Matières et contrôles':'Subjects and tests','Toutes tes matières sont archivées.':'All your subjects are archived.','Afficher la réponse':'Show answer','Espace':'Space','pour afficher la réponse':'to show the answer',
-    'Suppr':'Del','Maj':'Shift','Entrée':'Enter','Ta première carte':'Your first card','Ajouter des cartes':'Add cards',"Rien à réviser aujourd'hui":'Nothing to review today',
+    'Suppr':'Del','Maj':'Shift','Entrée':'Enter','Aucune carte':'No cards','Ta première carte':'Your first card','Ajouter des cartes':'Add cards',"Rien à réviser aujourd'hui":'Nothing to review today',
     'Compte pour la maîtrise':'Counts toward mastery',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
     "Retour à l'accueil":'Back to home',"Terminé pour aujourd'hui":'Done for today','Par quelle matière tu commences ?':'Which subject do you start with?','Tout enchaîner':'Do everything in a row',
     'Revoir quoi ?':'Review what?','Tout regrouper':'Combine all','Entraînement terminé · ne compte pas pour la maîtrise':"Practice finished · doesn't count toward mastery",'À revoir':'To review','Tout juste':'Just about',
@@ -142,6 +145,25 @@
     f(/^Sauvegarde en pause jusqu'à (.+)$/,function(x){ return 'Backup paused until '+x; }),
     f(new RegExp('^('+MOIS+') (\\d{4})$'),function(m,y){ return D[m]+' '+y; })
   ];
+  RULES.push( /* v138 : textes composés (nombres, matière) */
+    f(/^marge (\d+) j$/,function(n){ return 'margin '+n+' d'; }),
+    f(/^dépasse de (\d+) j$/,function(n){ return 'over by '+n+' d'; }),
+    f(/^≈ (\d+) rappels? prévus?$/,function(n){ return '≈ '+c(n,'review')+' expected'; }),
+    f(/^(\d+)\/(\d+) maîtrisées?$/,function(a,b){ return a+'/'+b+' mastered'; }),
+    f(/^Contrôle (?:de |d')(.+)$/,function(x){ return 'Test: '+x; }),
+    f(/^(\d+) cartes? dans cette matière\. Tu vérifies chaque changement avant de l'appliquer\.$/,function(n){ return c(n,'card')+' in this subject. You check each change before applying it.'; }),
+    f(/^(texte collé|\d+ cartes?) \+ (\d+) fichiers?$/,function(a,n){ var m=/^(\d+)/.exec(a); return (m?c(m[1],'card'):'pasted text')+' + '+c(n,'file'); }),
+    f(/^(\d+) fichiers?$/,function(n){ return c(n,'file'); })
+  );
+  Object.assign(D,{ /* v138 : textes oubliés (captures) */
+    'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
+  });
+  Object.assign(D,{ /* v138 : Android / iOS sur grand écran */
+    'Aussi sur Android et iOS':'Also on Android and iOS',"Télécharger l'app (fichier APK)":'Download the app (APK file)','Ouvrir':'Open',"Ajouter le site à l'écran d'accueil":'Add the site to the home screen',
+    'Flashcard sur iPhone / iPad':'Flashcard on iPhone / iPad','Copier le lien':'Copy link',"Ouvre d'abord l'app depuis le site web":'Open the app from the website first',
+    '1. Ouvre ce lien dans Safari sur ton iPhone ou iPad.':'1. Open this link in Safari on your iPhone or iPad.',"2. Touche Partager, puis « Sur l'écran d'accueil ».":'2. Tap Share, then “Add to Home Screen”.',
+    "3. Touche Ajouter : l'app apparaît comme les autres.":'3. Tap Add: the app appears like any other.'
+  });
   Object.assign(D,{ /* lot 4 (v137) : audit — textes oubliés, erreurs, placeholders */
     'Copié ✓':'Copied ✓','Ta synthèse':'Your summary','Tout réviser':'Study all','Tout réviser — quelle matière ?':'Study all — which subject?',"S'entraîner — quelle matière ?":'Practice — which subject?',
     'Sans matière':'No subject','Ton code perso':'Your personal code','Modèle renommé':'Template renamed','Modèle enregistré':'Template saved',"Envoyer à l'IA":'Send to the AI','Mois précédent':'Previous month',
@@ -194,7 +216,7 @@
     f(/^Dernière synchro : (.+?) à (.+)$/,function(d,h){ return 'Last sync: '+(J[d]||d)+' at '+h; }),
     f(/^Contrôles? passés? · (.+)$/,function(x){ return 'Past test · '+x; })
   );
-  var SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,NOSCRIPT:1}, ATTRS=['placeholder','title','aria-label','alt'];
+  var NOATT={SCRIPT:1,STYLE:1,NOSCRIPT:1}, SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,NOSCRIPT:1}, ATTRS=['placeholder','title','aria-label','alt'];
   function tr(s){
     if(typeof s!=='string') return s; var t=s.trim(); if(!t) return s;
     var e=D[t]; if(e!==undefined) return s.replace(t,e);
@@ -206,10 +228,10 @@
   function att(el){ for(var i=0;i<ATTRS.length;i++){ var a=el.getAttribute&&el.getAttribute(ATTRS[i]); if(a){ var v=tr(a); if(v!==a&&libre(el)) el.setAttribute(ATTRS[i],v); } } }
   function arbre(n){
     if(n.nodeType===3){ txt(n); return; }
-    if(n.nodeType!==1||SKIP[n.nodeName]) return;
-    att(n);
+    if(n.nodeType!==1||NOATT[n.nodeName]) return;
+    att(n); /* v138 : INPUT/TEXTAREA aussi (placeholder), seul leur texte reste intact */
     var w=document.createTreeWalker(n,5), x; // 5 = éléments + textes
-    while((x=w.nextNode())){ if(x.nodeType===3) txt(x); else if(!SKIP[x.nodeName]) att(x); }
+    while((x=w.nextNode())){ if(x.nodeType===3) txt(x); else if(!NOATT[x.nodeName]) att(x); }
   }
   new MutationObserver(function(ms){
     ms.forEach(function(m){
@@ -1734,6 +1756,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .pp-pill{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);font-size:14.5px;font-weight:600;color:var(--muted);transition:transform .25s var(--pps)}
 .pp-pill.on{border:2px solid var(--c);background:color-mix(in srgb,var(--c) 18%,var(--panel));color:var(--cream);font-weight:800}
+/* Bouton « Nouvelle matière » (ajout manuel, ajout IA, ajout de contrôle) : bien visible, couleur d'accent, tirets = « à créer » */
+.pp-pill.pp-pill-new{border:1.5px dashed var(--orange);background:var(--c-osoft,rgba(255,107,61,.14));color:var(--orange-t);font-weight:800}
+.pp-pill.pp-pill-new svg{stroke:currentColor}
 :where(.pp-add,.pp-sheet) label.pp-l{display:block;color:var(--muted);font-weight:800;letter-spacing:.12em;font-size:11px;margin:0 2px 7px;text-transform:uppercase}
 .pp-chip{flex:1;height:40px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel);font-weight:800;color:var(--muted)}
 .pp-chip.on{border-color:var(--orange);color:var(--orange-t);background:var(--c-osoft)}
@@ -2423,11 +2448,175 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #tab-add .pp-add:has(>.pp-pv)>.pp-pv{ grid-column:auto; }
 }
 
+/* ---- v140 : état vide « Ajouter des cartes » — Chromebook (même langage que la carte héros de l'accueil) ---- */
+.home-empty-sticker.pp-sticker{display:none}
+@media (min-width:900px) and (min-height:480px){
+  #tab-study .home-empty-state{position:relative;overflow:hidden;max-width:560px;margin:max(14px,calc((100vh - 540px)/2 - 70px)) auto 0;padding:40px 44px 44px;border-radius:26px;background:radial-gradient(circle at 100% 0%,rgba(255,107,61,.14),transparent 55%),var(--panel);border:2px solid var(--cream);box-shadow:9px 9px 0 var(--orange)}
+  #tab-study .home-empty-state::before,#tab-study .home-empty-state::after{content:"";position:absolute;pointer-events:none;z-index:0;border-radius:11% / 8%;aspect-ratio:2/3;height:auto}
+  #tab-study .home-empty-state::before{right:-8%;top:-6%;width:38%;transform:rotate(8deg);background:linear-gradient(160deg,rgba(255,107,61,.2),rgba(255,107,61,.1))}
+  #tab-study .home-empty-state::after{right:10%;top:6%;width:34%;transform:rotate(-8deg);border:1px solid rgba(255,107,61,.38);border-radius:12% / 9%}
+  #tab-study .home-empty-state>*{position:relative;z-index:1}
+  #tab-study .home-empty-sticker.pp-sticker{display:inline-block}
+  #tab-study .home-empty-icon{display:none}
+  #tab-study .home-empty-state{text-align:left}
+  #tab-study .home-empty-title{font-family:var(--font-sans);font-weight:800;font-size:clamp(34px,5.6vh,46px);line-height:1.04;letter-spacing:-.03em;margin:22px 0 12px;text-shadow:3px 3px 0 var(--orange)}
+  #tab-study .home-empty-sub{font-size:16px;line-height:1.5;max-width:380px;margin:0 0 6px}
+  #tab-study .home-empty-state .home-cta{width:auto;min-width:270px;height:56px;padding:0 34px;margin:24px 0 0}
+  #tab-study .home-empty-state .home-cta::before{content:"+";font-size:28px;font-weight:700;line-height:1;margin-top:-2px}
+}
+
+/* ---- v140 : mode clair — identité propre (papier + traits d'encre + ombres dures), plus une simple inversion du sombre ---- */
+:root:root:root[data-theme="light"]{ --line:#d8c9ad; }
+:root:root:root[data-theme="light"] body{
+  background:
+    linear-gradient(var(--bg), rgba(var(--bgr),0) 130px),
+    radial-gradient(circle at 90% 0%, rgba(255,107,61,.22), transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(255,217,61,.2), transparent 40%),
+    radial-gradient(circle, rgba(var(--ov),.17) 1px, transparent 1.3px) 0 0/16px 16px,
+    var(--bg) !important;
+  background-attachment:fixed !important;
+}
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-grp,.pp-sec,.cb-wl,.cb-mats,.pp-streak,.pp-gear){ border-color:var(--ink); }
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec){ --d:3px; --sc:var(--ink); box-shadow:0 3px 0 var(--ink); }
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec):is(:active,.js-press){ box-shadow:0 0 0 0 var(--ink); }
+:root:root:root[data-theme="light"] :is(.pp-grp,.cb-wl,.cb-mats){ box-shadow:4px 4px 0 var(--ink); }
+:root:root:root[data-theme="light"] .pp-ctl{ border-color:var(--ink); }
+:root:root:root[data-theme="light"] .pp-home .pp-hero .pp-big{ text-shadow:6px 6px 0 var(--orange); }
+@media (min-width:900px) and (min-height:480px){
+  :root:root:root[data-theme="light"] body .pp-nav{ border:2px solid var(--ink); background:var(--panel); box-shadow:4px 4px 0 var(--ink); }
+}
+
 /* ---- v132 : Apparence — contrôle à 3 positions (réutilise .pp-mode) ---- */
 .pp-mode.m3{grid-template-columns:1fr 1fr 1fr}
 .pp-mode.m3 i{width:calc((100% - 8px) / 3)}
 .pp-mode.m3.p1 i{transform:translateX(100%)}
 .pp-mode.m3.p2 i{transform:translateX(200%)}
+</style>
+<style id="fci-css">
+/* v141 : Introduction — tout est sous #fci et préfixé fi- (aucune collision avec le reste de l'app) */
+#fci{--bg:#0c0c12;--panel:#1a1a26;--ink:#f5f0e6;--line:#2a2a3a;--muted:#8d8aa3;--orange:#ff6b3d;--orange-d:#b8431d;--yellow:#ffd93d;--yellow-d:#a8891a;--green:#2ed8a3;--pink:#ff4d7a;--edge:#08080d;--dis:#26262f;--ov:255,255,255;--sp:cubic-bezier(.34,1.56,.64,1);--f:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif}
+:root[data-theme=light] #fci{--bg:#f6efe2;--panel:#fffbf3;--ink:#231d12;--line:#d8c9ad;--muted:#7d7162;--yellow-d:#b8921a;--edge:#d3c6ad;--dis:#e8dfcc;--ov:70,50,20}
+#fci,#fci *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+#fci{font:500 16px/1.4 var(--f);color:var(--ink);background:radial-gradient(circle at 90% 0,rgba(255,107,61,.18),transparent 45%),radial-gradient(circle,rgba(var(--ov),.08) 1px,transparent 1.3px) 0 0/16px 16px,var(--bg);display:grid;place-items:center;overflow:hidden;position:fixed;inset:0;z-index:9000;width:100%;height:100%}
+#fci button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+#fci button:focus-visible,#fci input:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+/* bouton qui s'enfonce */
+#fci .fi-bt{--d:4px;--sc:var(--edge);box-shadow:0 var(--d) 0 var(--sc);transition:transform .3s var(--sp),box-shadow .25s var(--sp),background .2s,opacity .2s}
+#fci .fi-bt:active,#fci .fi-bt.fi-p{transform:translateY(var(--d));box-shadow:0 0 0 0 var(--sc);transition-duration:.07s}
+#fci .fi-bt[disabled]{background:var(--dis)!important;color:var(--muted)!important;--sc:var(--edge);pointer-events:none}
+#fci .fi-cta{width:100%;height:56px;border-radius:17px;background:var(--orange);color:#1a0d08;font-size:18px;font-weight:800;letter-spacing:-.02em;--sc:var(--orange-d);display:flex;align-items:center;justify-content:center;gap:8px}
+#fci .fi-ghost{width:100%;display:flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:14px;border:1.5px solid var(--line);font-weight:800;font-size:15px;--d:3px}
+/* fenêtre */
+#fci .fi-stage{position:relative;width:100%;height:100%;max-width:480px;display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom));overflow:clip;touch-action:pan-y}
+@media(min-width:900px) and (min-height:480px){#fci .stage{height:min(720px,calc(100vh - 56px));max-width:520px;border-radius:28px;background:var(--panel);border:2px solid var(--ink);box-shadow:9px 9px 0 var(--orange);padding:22px 28px 26px}}
+#fci .fi-top{display:flex;align-items:center;gap:12px;height:44px;flex:none}
+#fci .fi-pills{flex:1;display:flex;gap:6px;justify-content:center}
+#fci .fi-pills i{height:7px;width:7px;border-radius:9px;background:var(--line);transition:width .45s var(--sp),background .3s}
+#fci .fi-pills i.fi-on{width:30px;background:var(--yellow);box-shadow:0 2px 0 var(--yellow-d)}
+#fci .fi-pills i.fi-ok{background:var(--orange)}
+#fci .fi-top button{width:64px;color:var(--muted);font-weight:800;font-size:14px;height:44px}
+#fci .fi-top .fi-bk{width:44px;display:grid;place-items:center;border-radius:50%;transition:opacity .2s,transform .3s var(--sp)}
+#fci .fi-top .fi-bk:active{transform:scale(.9)}
+#fci .fi-top .fi-sk{text-align:right}
+#fci .fi-top .fi-hide{opacity:0;pointer-events:none}
+#fci .fi-body{position:relative;flex:1;min-height:0;overflow:clip}
+#fci .fi-sl{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:6px 2px;opacity:0;pointer-events:none;transition:transform .5s var(--sp),opacity .3s}
+#fci .fi-sl.fi-L{transform:translateX(-46px)}
+#fci .fi-sl.fi-R{transform:translateX(46px)}
+#fci .fi-sl.fi-on{opacity:1;pointer-events:auto;transform:none}
+#fci .fi-sl.fi-on .fi-rv{animation:fi-up .55s var(--sp) both;animation-delay:calc(var(--k)*70ms)}
+@keyframes fi-up{from{opacity:0;transform:translateY(22px) scale(.97)}}
+#fci .fi-stk{align-self:flex-start;background:var(--yellow);color:#1a1405;font-weight:800;letter-spacing:.08em;font-size:11px;padding:6px 10px;border-radius:6px;transform:rotate(-2deg);box-shadow:0 3px 0 var(--yellow-d);text-transform:uppercase}
+#fci h1{font-size:clamp(34px,6.4vh,46px);line-height:1.02;letter-spacing:-.035em;font-weight:800;text-shadow:3px 3px 0 var(--orange)}
+#fci .fi-sub{color:var(--muted);font-size:16px;max-width:360px}
+#fci .fi-sub b{color:var(--ink)}
+#fci .fi-box{background:var(--panel);border:1.5px solid var(--line);border-radius:20px;padding:14px}
+:root[data-theme=light] #fci .fi-box{border-color:var(--ink)}
+#fci .fi-foot{flex:none;display:flex;flex-direction:column;gap:10px;padding-top:12px;transition:opacity .25s}
+#fci .fi-foot.fi-hide{opacity:0;pointer-events:none}
+/* 0 · accueil */
+#fci .fi-fan{position:relative;height:clamp(150px,26vh,210px);margin:6px 0 8px}
+#fci .fi-fan i{position:absolute;left:50%;top:0;width:118px;height:168px;margin-left:-59px;border-radius:18px;border:2px solid var(--ink);background:var(--panel);box-shadow:5px 5px 0 var(--orange);transform-origin:50% 120%;display:grid;place-items:center;animation:fi-fan 1s var(--sp) both,fi-fl 4.5s ease-in-out 1.2s infinite}
+#fci .fi-fan i:nth-child(1){--r:-14deg;--x:-46px;animation-delay:.05s,1.2s;background:rgba(255,107,61,.16)}
+#fci .fi-fan i:nth-child(2){--r:12deg;--x:46px;animation-delay:.15s,1.5s;background:rgba(255,217,61,.16)}
+#fci .fi-fan i:nth-child(3){--r:0deg;--x:0px;animation-delay:.3s,1.8s}
+#fci .fi-fan svg{width:54px;stroke:var(--orange);fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+@keyframes fi-fan{from{transform:translateY(40px) rotate(0) scale(.6);opacity:0}to{transform:translateX(var(--x)) rotate(var(--r))}}
+@keyframes fi-fl{50%{transform:translateX(var(--x)) translateY(-7px) rotate(var(--r))}}
+/* 1 · maîtrise */
+#fci .fi-qs{font-size:20px;font-weight:800;letter-spacing:-.02em;margin:2px 0 12px}
+#fci .fi-lad{display:flex;align-items:center;margin:4px 6px 12px}
+#fci .fi-lad i{position:relative;flex:none;width:30px;height:30px;border-radius:50%;background:var(--panel);border:2px solid var(--line);display:grid;place-items:center;font:800 12px var(--f);color:var(--muted);font-style:normal;transition:.35s var(--sp)}
+#fci .fi-lad i.fi-f{background:var(--yellow);border-color:var(--yellow);color:#1a1405}
+#fci .fi-lad i.fi-t{transform:scale(1.22);box-shadow:0 3px 0 var(--yellow-d)}
+#fci .fi-lad u{flex:1;height:4px;background:var(--line);position:relative;border-radius:4px}
+#fci .fi-lad u:after{content:"";position:absolute;inset:0;background:var(--yellow);border-radius:4px;transform:scaleX(0);transform-origin:left;transition:transform .45s}
+#fci .fi-lad u.fi-f:after{transform:none}
+#fci .fi-res{display:flex;justify-content:space-between;align-items:center;font-weight:800;margin-top:12px;min-height:30px}
+#fci .fi-res span{color:var(--muted);font-weight:500}
+#fci .fi-badge{background:var(--green);color:#06281e;border-radius:99px;padding:4px 12px;font-size:14px;animation:fi-pop .5s var(--sp)}
+@keyframes fi-pop{from{transform:scale(.4);opacity:0}}
+/* 2 · planning */
+#fci .fi-chips{display:flex;gap:8px}
+#fci .fi-chips button{flex:1;height:44px;border-radius:14px;border:1.5px solid var(--line);font-weight:800;font-size:15px;--d:3px;background:var(--panel)}
+#fci .fi-chips button.fi-on{background:var(--yellow);color:#1a1405;border-color:var(--yellow);--sc:var(--yellow-d)}
+#fci .fi-wk{display:flex;align-items:flex-end;gap:5px;height:150px;padding:6px 2px 0}
+#fci .fi-wk i{flex:1;border-radius:8px 8px 3px 3px;background:rgba(255,217,61,.3);height:var(--h);min-height:6px;position:relative;transition:height .5s var(--sp),background .3s}
+#fci .fi-wk i.fi-z{background:rgba(255,107,61,.55)}
+#fci .fi-wk i.fi-j{background:var(--yellow);box-shadow:0 4px 0 var(--yellow-d)}
+#fci .fi-wk i.fi-j:before{content:"";position:absolute;left:50%;bottom:calc(100% + 4px);width:16px;height:14px;margin-left:-3px;background:var(--orange);clip-path:polygon(0 0,100% 25%,0 50%,0 100%,0 100%)}
+#fci .fi-lg{display:flex;gap:14px;color:var(--muted);font-size:13px;font-weight:600}
+#fci .fi-lg s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:rgba(255,217,61,.5);text-decoration:none}
+#fci .fi-lg s.fi-o{background:rgba(255,107,61,.7)}
+/* 3 · synchro */
+#fci .fi-dev{display:flex;align-items:center;justify-content:center;height:150px;position:relative;padding:0 14px 0 8px}
+#fci .fi-dev>div{display:grid;place-items:center;border:2px solid var(--ink);background:var(--panel);transition:transform .3s var(--sp)}
+#fci .fi-dev .fi-ph{width:62px;height:108px;border-radius:14px;box-shadow:4px 4px 0 var(--orange)}
+#fci .fi-dev .fi-lp{width:118px;height:88px;border-radius:12px 12px 4px 4px;box-shadow:4px 4px 0 var(--yellow-d)}
+#fci .fi-dev .fi-hit{transform:scale(1.1) rotate(-3deg)}
+#fci .fi-dev em{font:800 22px var(--f);font-style:normal;color:var(--green)}
+#fci .fi-trk{flex:1;height:4px;margin:0 12px;border-radius:4px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px);position:relative}
+#fci .fi-trk b{position:absolute;top:-8px;left:0;width:20px;height:20px;border-radius:5px;background:var(--orange);opacity:0;border:2px solid var(--ink)}
+#fci .fi-trk b.fi-go{animation:fi-fly 1s cubic-bezier(.5,0,.3,1)}
+#fci .fi-trk b.fi-go.fi-r{animation-direction:reverse}
+@keyframes fi-fly{0%{left:0;opacity:1;transform:rotate(-12deg)}90%{opacity:1}100%{left:calc(100% - 20px);opacity:0;transform:rotate(12deg)}}
+#fci .fi-where{display:flex;gap:10px;align-items:center;font-weight:700;font-size:15px}
+#fci .fi-where i{font-style:normal;color:var(--yellow);font-size:20px}
+/* 4 · IA */
+#fci .fi-pick{display:flex;flex-direction:column;gap:10px}
+#fci .fi-stp{display:flex;flex-wrap:wrap;gap:12px;align-items:center;width:100%;text-align:left;padding:12px;border-radius:16px;background:var(--panel);border:1.5px solid var(--line);font-weight:700;transition:border-color .3s}
+#fci .fi-stp>span:nth-child(2){flex:1;min-width:0}
+#fci .fi-go{width:100%;height:52px;border-radius:15px;background:var(--yellow);color:#1a1405;--sc:var(--yellow-d);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;gap:9px;animation:fi-ring 1.8s ease-out 1s 2}
+@keyframes fi-ring{0%{box-shadow:0 4px 0 var(--yellow-d),0 0 0 0 rgba(255,217,61,.55)}70%,100%{box-shadow:0 4px 0 var(--yellow-d),0 0 0 14px rgba(255,217,61,0)}}
+#fci .fi-stp .fi-n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-weight:800;font-size:14px;transition:.35s var(--sp)}
+#fci .fi-stp.fi-ok .fi-n{background:var(--green);color:#06281e;transform:scale(1.12)}
+#fci .fi-stp small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+#fci .fi-stp.fi-op{border-color:var(--yellow)}
+#fci .fi-stp.fi-ok{border-color:var(--green)}
+#fci .fi-key{flex:1;min-width:0;height:50px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:0 14px;font:600 15px var(--f)}
+#fci .fi-key:focus{border-color:var(--yellow)}
+#fci .fi-sl .fi-v{display:none;flex-direction:column;gap:12px}
+#fci .fi-sl.fi-b .fi-v.fi-b,#fci .fi-sl:not(.fi-b) .fi-v.fi-a{display:flex}
+/* 5 · fin */
+#fci .fi-cf{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#fci .fi-cf i{position:absolute;left:50%;top:38%;width:14px;height:20px;border-radius:4px;background:var(--c);animation:fi-bs 1.3s cubic-bezier(.2,.7,.3,1) both;animation-delay:var(--dl)}
+@keyframes fi-bs{from{transform:translate(0) scale(.2)}to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+@media(prefers-reduced-motion:reduce){#fci *{animation-duration:.01s!important;animation-delay:0s!important;transition-duration:.01s!important}}
+#fci .fi-res .fi-badge{color:#06281e;font-weight:800}
+/* v142 : composants alignés sur l'app réelle */
+#fci{--amber:#ffb020}
+:root[data-theme=light] #fci{--amber:#d98a00;--green:#16966b;--pink:#e0356a}
+#fci .fi-cta{height:54px;border-radius:16px;font-size:17px}
+#fci .fi-box{border:2px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--orange);padding:16px}
+:root[data-theme=light] #fci .fi-box{border-color:var(--ink)}
+#fci .fi-ans{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+#fci .fi-ans button{height:68px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:800;font-size:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel));color:var(--c);--sc:color-mix(in srgb,var(--c) 40%,#111)}
+#fci .fi-ans svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+#fci .fi-ans .fi-a1{--c:var(--pink)}
+#fci .fi-ans .fi-a2{--c:var(--amber)}
+#fci .fi-ans .fi-a3{--c:var(--green)}
+#fci .fi-fan i svg.fi-logo{width:62px;height:auto;stroke:none;fill:none}
+#fci .fi-res .fi-badge{background:var(--green);color:#06281e}
 </style>
 </head>
 <body>
@@ -4204,7 +4393,7 @@ function ppProgressHtml(){
   const streakN = getStreakData().count;
   const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
   const today = todayStr();
-  const dl = ['D','L','M','M','J','V','S'];
+  const dl = (typeof langueChoisie === 'function' && langueChoisie() === 'en') ? ['S','M','T','W','T','F','S'] : ['D','L','M','M','J','V','S'];
   const cnt = [], lab = [];
   for(let i = 6; i >= 0; i--){
     const d = addDays(today, -i);
@@ -4433,6 +4622,7 @@ function renderStudyInner(){
     if(CARDS.length === 0){
       el.innerHTML = `
         <div class="home-empty-state">
+          <span class="pp-sticker home-empty-sticker">Aucune carte</span>
           <div class="home-empty-icon">${icon('plus')}</div>
           <div class="home-empty-title">Ta première carte</div>
           <div class="home-empty-sub">Colle un cours à Claude, récupère les questions/réponses générées, et elles apparaîtront ici prêtes à réviser.</div>
@@ -6126,7 +6316,7 @@ function ppDrawCtrl(){
   /* Titre = la matière. Les pastilles de choix n'apparaissent que pour AJOUTER un contrôle (plusieurs matières possibles). */
   const entete = edition
     ? `<h2 class="pp-ctt"><span class="pp-dot" style="background:${couleurMatiere(m)}"></span>${escapeHtml(m)}</h2><p class="pp-cts">Date du contrôle</p>`
-    : `<h2>Ajouter un contrôle</h2><div class="pp-pills" style="margin-bottom:14px">${l.map((x, i) => `<button class="pp-pill ${x === m ? 'on' : ''}" style="--c:${couleurMatiere(x)}" onclick="ppCtrlPickM(${i})"><span class="pp-dot" style="background:${couleurMatiere(x)}"></span>${escapeHtml(x)}</button>`).join('')}<button class="pp-pill" onclick="ppSubjSheet()">+ Matière</button></div><p class="pp-cts">Date du contrôle</p>`;
+    : `<h2>Ajouter un contrôle</h2><div class="pp-pills" style="margin-bottom:14px">${l.map((x, i) => `<button class="pp-pill ${x === m ? 'on' : ''}" style="--c:${couleurMatiere(x)}" onclick="ppCtrlPickM(${i})"><span class="pp-dot" style="background:${couleurMatiere(x)}"></span>${escapeHtml(x)}</button>`).join('')}<button class="pp-pill pp-pill-new" onclick="ppSubjSheet()">${PP_IC.plus.replace(/22/g, '16')}Nouvelle matière</button></div><p class="pp-cts">Date du contrôle</p>`;
   ppSheet(`<div class="pp-grab"></div>${entete}
   <button class="pp-dt pp-dtb" id="pp-cd" style="margin-bottom:10px" onclick="ppPickDate(ppCtrlD,v=>{ppCtrlD=v;document.querySelector('#pp-cd span').textContent=ppFmtL(v);ppCtrlHint()})"><span>${ppFmtL(ppCtrlD)}</span>${PP_IC.cal}</button>
   <div id="pp-ch">${ppLoadHint(m)}</div>
@@ -6557,7 +6747,7 @@ function ppMatiereSel(){
 
 function ppPillsHtml(){
   const l = getMatieresActives(), sel = ppMatiereSel();
-  return `<div class="pp-pills">${l.map((s, i) => `<button class="pp-pill ${s === sel ? 'on' : ''}" style="--c:${couleurMatiere(s)}" onclick="ppPickMatiere(${i})"><span class="pp-dot" style="background:${couleurMatiere(s)}"></span>${ppEsc(s)}</button>`).join('')}<button class="pp-pill" onclick="ppSubjSheet()">+ Matière</button></div>`;
+  return `<div class="pp-pills">${l.map((s, i) => `<button class="pp-pill ${s === sel ? 'on' : ''}" style="--c:${couleurMatiere(s)}" onclick="ppPickMatiere(${i})"><span class="pp-dot" style="background:${couleurMatiere(s)}"></span>${ppEsc(s)}</button>`).join('')}<button class="pp-pill pp-pill-new" onclick="ppSubjSheet()">${PP_IC.plus.replace(/22/g, '16')}Nouvelle matière</button></div>`;
 }
 function ppPickMatiere(i){
   const l = getMatieresActives(); if(!l[i]) return;
@@ -10169,7 +10359,7 @@ async function envoyerNotifRappel(count, type){
   try{
     const reg = await serviceWorkerPret();
     if(!reg.active) return false;
-    reg.active.postMessage({ type: type === 'relance' ? 'SHOW_REMINDER_RELANCE' : 'SHOW_REMINDER', count });
+    reg.active.postMessage({ type: type === 'relance' ? 'SHOW_REMINDER_RELANCE' : 'SHOW_REMINDER', count, lang: (typeof langueChoisie === 'function' ? langueChoisie() : 'fr') });
     return true;
   }catch(e){ return false; }
 }
@@ -10826,27 +11016,30 @@ function ppSetHtml(){
   const actif = rappelEstActif();
   const bloque = ('Notification' in window) && Notification.permission === 'denied';
   const rappels = bloque
-    ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Notifications bloquées<small>Réglages du téléphone → Apps → Flashcard → Notifications : autorise-les, puis reviens ici.</small></span></div></div>`
+    ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Notifications bloquées<small>Autorise-les dans les réglages du téléphone.</small></span></div></div>`
     : `<div class="pp-set">
-  <div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Rappel de révision<small>Une notification par jour</small></span><button class="pp-tg${actif ? ' on' : ''}" aria-label="Rappel" onclick="toggleRappelQuotidien()"></button></div>
+  <div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Rappel de révision</span><button class="pp-tg${actif ? ' on' : ''}" aria-label="Rappel" onclick="toggleRappelQuotidien()"></button></div>
   <button class="pp-li" onclick="ppTimeSheet()"><i class="pp-ico">${PP_IC.cal}</i><span>Heure du rappel</span><span class="pp-time" style="flex:none">${ppEsc(rappelHeurePreferee())}</span></button>
-  <div class="pp-li"><i class="pp-ico">${PP_IC.loop}</i><span>Relancer si ignoré<small>Un second rappel 2 h plus tard</small></span><button class="pp-tg${ppRelanceActive() ? ' on' : ''}" aria-label="Relance" onclick="ppToggleRelance(this)"></button></div></div>${rappelPermissionMsg ? `<p class="pp-warn">${ppEsc(rappelPermissionMsg)}</p>` : ''}`;
+  <div class="pp-li"><i class="pp-ico">${PP_IC.loop}</i><span>Relancer si ignoré<small>Après 2 h</small></span><button class="pp-tg${ppRelanceActive() ? ' on' : ''}" aria-label="Relance" onclick="ppToggleRelance(this)"></button></div></div>${rappelPermissionMsg ? `<p class="pp-warn">${ppEsc(rappelPermissionMsg)}</p>` : ''}`;
   const key = getGeminiKey();
   const ia = (key && !geminiKeyEdit)
     ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé Gemini connectée<small>${ppEsc(key.slice(0, 6) + '••••••' + key.slice(-4))}</small></span><button class="pp-time" style="flex:none" onclick="editerGeminiKey()">Changer</button></div></div>`
     : (key
-      ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Modifier la clé Gemini<small>Ta clé actuelle reste en place tant que tu n'as pas validé.</small></span></div></div>
+      ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Modifier la clé Gemini</span></div></div>
   <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld" value="${attrEchappe(key)}" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>
   <div class="pp-keyrow"><button class="pp-sec" onclick="annulerEditionGeminiKey()">Annuler</button><button class="pp-sec" onclick="oublierGeminiKey()">Retirer la clé</button></div>`
-      : `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>Crée-la sur aistudio.google.com/apikey, colle-la ici. Avec la synchro, elle suit sur tes autres appareils.</small></span></div></div>
+      : `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.</small></span></div></div>
+  <div class="pp-keyrow"><button class="pp-sec" style="flex:1" onclick="window.open('https://aistudio.google.com/apikey','_blank','noopener')">Obtenir ma clé</button></div>
   <div class="pp-keyrow"><input type="password" id="gemini-key-input" class="pp-fld" placeholder="AIza..." autocomplete="off" autocapitalize="none" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
   <h4>Langue</h4>${ppLangueHtml()}
   <h4>Apparence</h4>${ppApparenceHtml()}
   <h4>Rappels</h4>${rappels}
-  <h4>Génération IA</h4>${ia}</div><div>
+  <h4>Génération IA</h4>${ia}
+  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button></div></div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
   ${ppWebHtml()}
+  ${ppMobilesHtml()}
   <h4>Sauvegarde</h4><div class="pp-set">
   <button class="pp-li" onclick="ppExportSheet('json')"><i class="pp-ico">${PP_IC.dl}</i><span>Exporter la progression<small>Fichier JSON</small></span></button>
   <button class="pp-li" onclick="document.getElementById('import-file-input').click()"><i class="pp-ico">${PP_IC.ul}</i><span>Importer une progression</span></button>
@@ -10868,7 +11061,25 @@ function ppWebHtml(){
   const url = ppUrlSiteWeb();
   if(!url) return '';
   const affiche = url.replace(/^https?:\/\//, '');
-  return `<h4>Aussi sur le web</h4><div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.globe}</i><span>Flashcard existe aussi en site web<small>Retrouve tes cartes sur ton PC avec ton code de synchro.</small><small style="color:var(--yellow);font-weight:700;word-break:break-all;user-select:text;-webkit-user-select:text">${ppEsc(affiche)}</small></span><button class="pp-time" style="flex:none" onclick="ppCopierLienSite()">Copier</button></div></div>`;
+  return `<h4>Aussi sur le web</h4><div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.globe}</i><span>Flashcard existe aussi en site web<small style="color:var(--yellow);font-weight:700;word-break:break-all;user-select:text;-webkit-user-select:text"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${ppEsc(affiche)}</a></small></span><button class="pp-time" style="flex:none" onclick="ppCopierLienSite()">Copier</button></div></div>`;
+}
+/* v138 : sur Chromebook / grand écran, Réglages signale que l'app existe aussi sur Android (APK) et iOS (site à ajouter
+   à l'écran d'accueil). Même seuil que le bloc CSS « CHROMEBOOK / ORDINATEUR ». Rien n'est affiché sur téléphone. */
+const PP_APK_URL = 'https://github.com/FuturePlum/flashcard/releases/download/v1.0/Flashcard.apk';
+function ppGrandEcran(){
+  try{ return !!(window.matchMedia && window.matchMedia('(min-width:900px) and (min-height:480px)').matches); }catch(e){ return false; }
+}
+function ppMobilesHtml(){
+  if(!ppGrandEcran()) return '';
+  const url = ppUrlSiteWeb();
+  const android = `<a class="pp-li" href="${PP_APK_URL}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><i class="pp-ico">${PP_IC.dl}</i><span>Android</span><span class="pp-time" style="flex:none">Ouvrir</span></a>`;
+  const ios = url ? `<button class="pp-li" onclick="ppIosSheet()"><i class="pp-ico">${PP_IC.globe}</i><span>iPhone / iPad (iOS)</span><span class="pp-time" style="flex:none">Ouvrir</span></button>` : '';
+  return `<h4>Aussi sur Android et iOS</h4><div class="pp-set">${android}${ios}</div>`;
+}
+function ppIosSheet(){
+  const url = ppUrlSiteWeb();
+  if(!url){ ppToast("Ouvre d'abord l'app depuis le site web"); return; }
+  ppSheet(`<div class="pp-grab"></div><h2>Flashcard sur iPhone / iPad</h2><p class="pp-hint">1. Ouvre ce lien dans Safari sur ton iPhone ou iPad.<br>2. Touche Partager, puis « Sur l'écran d'accueil ».<br>3. Touche Ajouter : l'app apparaît comme les autres.</p><p style="margin:0 0 16px"><a href="${attrEchappe(url)}" target="_blank" rel="noopener" style="color:var(--yellow);font-weight:700;word-break:break-all;text-decoration:underline">${ppEsc(url.replace(/^https?:\/\//, ''))}</a></p><div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-sec" onclick="ppCopierLienSite()">Copier le lien</button></div>`);
 }
 async function ppCopierLienSite(){
   const url = ppUrlSiteWeb();
@@ -10883,14 +11094,14 @@ function ppSyncHtml(){
   return `<div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
   <div id="sync-code-erreur" style="margin-top:10px">${syncErreurCodeHtml()}</div>
   <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
-  <p class="pp-hint">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre. Lettres sans accent, chiffres, - et _ seulement (pas d'espace). Les mots de passe faciles sont refusés.</p>
+  <p class="pp-hint">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>
   <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>`;
 }
 /* sélecteur d'heure à roues (prototype : timeSheet) */
 let ppPH = { h: 18, m: 0 };
 function ppTimeSheet(){
   const w = n => Array.from({ length: n }, (_, i) => `<div>${ppP2(i)}</div>`).join('');
-  ppSheet(`<div class="pp-grab"></div><h2>Heure du rappel</h2><p class="pp-hint">Tu reçois la notification à cette heure si des cartes sont à réviser.</p><div class="pp-pt"><div class="pp-ptb"></div><div class="pp-ptc" id="pp-ph">${w(24)}</div><b>:</b><div class="pp-ptc" id="pp-pm">${w(60)}</div></div><div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-cta" style="margin:0" onclick="ppTimeOk()">Valider</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Heure du rappel</h2><p class="pp-hint">Si des cartes sont à réviser.</p><div class="pp-pt"><div class="pp-ptb"></div><div class="pp-ptc" id="pp-ph">${w(24)}</div><b>:</b><div class="pp-ptc" id="pp-pm">${w(60)}</div></div><div class="pp-duo"><button class="pp-sec" onclick="ppSettings()">Retour</button><button class="pp-cta" style="margin:0" onclick="ppTimeOk()">Valider</button></div>`);
   const t = String(rappelHeurePreferee() || '18:00').split(':').map(Number);
   ppPH = { h: t[0] || 0, m: t[1] || 0 };
   requestAnimationFrame(() => [['pp-ph', 'h', ppPH.h], ['pp-pm', 'm', ppPH.m]].forEach(([id, k, v]) => {
@@ -11289,6 +11500,237 @@ init();
   window.addEventListener('resize', plan);
   try{ new MutationObserver(plan).observe(document.body, { childList:true, subtree:true }); }catch(e){}
   plan();
+})();
+</script>
+
+<script>
+/* v141 : Introduction (6 écrans) — s'affiche une seule fois, au tout premier lancement (aucune carte, pas de clé Gemini, pas de code de synchro).
+   Langue : elle lit langueChoisie() (script du <head>) — fr/en suivent la langue de l'appareil tant qu'aucun choix n'est fait dans Réglages → Langue.
+   Les textes de l'intro sont ici (objet S) : data-notr sur #fci empêche le traducteur de l'app d'y toucher.
+   Vue = localStorage 'fc-intro-vue'. Réglages → « Revoir l'introduction » (ou ?intro dans l'adresse) la relance : fcIntroOuvrir(). */
+(function(){
+  var SEEN='fc-intro-vue', N=6;
+  var S={
+   fr:{lets:"C'est parti",next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
+    wel:'Bienvenue',h0:'Retiens tout, sans y penser.',s0:"Quelques cartes par jour. L'app s'occupe du reste.",
+    mas:'Maîtrise',h1:'Chaque carte monte en niveau.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
+    tryit:'Teste : touche un bouton',backIn:'Revient dans ',d:' j',noNeed:"Plus besoin d\u2019y penser",mastered:'Maîtrisée',
+    pla:'Planning',h2:'Un contrôle ? Donne la date.',d5:'Dans 5 j',d10:'Dans 10 j',d14:'Dans 2 sem',lgR:'Révisions',lgB:'Zone tampon',
+    syn:'Synchro',h3:'Même progression partout.',s3:'Téléphone, Chromebook : entre le même code et tout suit.',where:'Réglages › Synchronisation',
+    ia:'IA · gratuit',h4:'Cartes générées à partir de ton cours ?',s4:"L'IA écrit les questions à partir de ton cours. Il te faut une clé gratuite (2 min).",yes:'Oui, je la branche',later:'Plus tard',
+    steps:'3 étapes',st1:'Ouvre Google AI Studio',st1s:'Avec ton compte Google',open:'Ouvrir Google AI Studio',
+    st2:'Touche «\u00a0Créer\u00a0une\u00a0clé\u00a0API\u00a0»',st2s:'Copie-la, puis reviens ici.',ph:'Colle ta clé ici',paste:'Coller',
+    rdy:'Prêt',h5:'À toi de jouer.',s5:'Ajoute tes premières cartes.'},
+   en:{lets:"Let's go",next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
+    wel:'Welcome',h0:'Remember everything, effortlessly.',s0:'A few cards a day. The app handles the rest.',
+    mas:'Mastery',h1:'Every card levels up.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
+    tryit:'Try it: tap a button',backIn:'Back in ',d:' d',noNeed:'No need to think about it',mastered:'Mastered',
+    pla:'Planning',h2:'A test coming up? Set the date.',d5:'In 5 d',d10:'In 10 d',d14:'In 2 wk',lgR:'Reviews',lgB:'Buffer zone',
+    syn:'Sync',h3:'Same progress everywhere.',s3:'Phone, Chromebook: enter the same code and everything follows.',where:'Settings › Sync',
+    ia:'AI · free',h4:'Generate cards from your course?',s4:'The AI writes questions from your course. You need a free key (2 min).',yes:'Yes, set it up',later:'Later',
+    steps:'3 steps',st1:'Open Google AI Studio',st1s:'With your Google account',open:'Open Google AI Studio',
+    st2:'Tap \u201cCreate\u00a0API\u00a0key\u201d',st2s:'Copy it, then come back here.',ph:'Paste your key here',paste:'Paste',
+    rdy:'Ready',h5:'Your turn.',s5:'Add your first cards.'}
+  };
+  var T, root, sl, i, ia, keyOk, p, J=[1,3,7,14,30], nx, onKey, closing;
+
+  function dejaUtilisateur(){
+    try{
+      if(typeof CARDS!=='undefined' && CARDS.length) return true;
+      if(localStorage.getItem('gemini_api_key')) return true;
+      if(localStorage.getItem('sync-code-perso')) return true;
+    }catch(e){}
+    return false;
+  }
+  function q(s){ return root.querySelector(s); }
+  function qa(s){ return [].slice.call(root.querySelectorAll(s)); }
+  function vib(n){ try{ if(navigator.vibrate) navigator.vibrate(n); }catch(e){} }
+  function markSeen(){ try{ localStorage.setItem(SEEN,'1'); }catch(e){} }
+
+  function ic(k){ try{ return (typeof PP_IC!=='undefined' && PP_IC[k]) || ''; }catch(e){ return ''; } }
+  /* vrai logo de l'app (celui de l'en-tête) : on le recopie, on ne le redessine pas */
+  function logo(){
+    try{ var l=document.getElementById('pp-logo-icon'); if(l && l.firstElementChild){ var c=l.firstElementChild.cloneNode(true); c.setAttribute('class','fi-logo'); return c.outerHTML; } }catch(e){}
+    return '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+  }
+  function html(){
+    var chk=logo();
+    var ext='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+    var bk='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+    return '<main class="fi-stage" data-i="st">'
+    +'<div class="fi-top"><button class="fi-bk fi-hide" data-i="bk" aria-label="'+T.back+'">'+bk+'</button><div class="fi-pills" data-i="pl"></div><button class="fi-sk" data-i="sk">'+T.skip+'</button></div>'
+    +'<div class="fi-body">'
+    +'<section class="fi-sl"><div class="fi-fan fi-rv"><i></i><i></i><i>'+chk+'</i></div><span class="fi-stk fi-rv">'+T.wel+'</span><h1 class="fi-rv">'+T.h0+'</h1><p class="fi-sub fi-rv">'+T.s0+'</p></section>'
+    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.mas+'</span><h1 class="fi-rv">'+T.h1+'</h1><div class="fi-box fi-rv"><div class="fi-qs">'+T.q1+'</div><div class="fi-lad" data-i="lad"></div>'
+      +'<div class="fi-ans"><button class="fi-bt fi-a1" data-v="-1">'+ic('x')+T.miss+'</button><button class="fi-bt fi-a2" data-v="0">'+ic('wave')+T.hard+'</button><button class="fi-bt fi-a3" data-v="1">'+ic('ok')+T.easy+'</button></div>'
+      +'<div class="fi-res"><span data-i="rj">'+T.tryit+'</span><b data-i="rb"></b></div></div><p class="fi-sub fi-rv">'+T.s1+'</p></section>'
+    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.pla+'</span><h1 class="fi-rv">'+T.h2+'</h1><div class="fi-chips fi-rv" data-i="ch"><button class="fi-bt fi-on" data-n="5">'+T.d5+'</button><button class="fi-bt" data-n="10">'+T.d10+'</button><button class="fi-bt" data-n="14">'+T.d14+'</button></div>'
+      +'<div class="fi-box fi-rv"><div class="fi-wk" data-i="wk"></div></div><div class="fi-lg fi-rv"><span><s></s>'+T.lgR+'</span><span><s class="fi-o"></s>'+T.lgB+'</span></div></section>'
+    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.syn+'</span><h1 class="fi-rv">'+T.h3+'</h1><div class="fi-dev fi-rv"><div class="fi-ph" data-i="dp"><em data-i="c1"></em></div><div class="fi-trk"><b data-i="fl"></b></div><div class="fi-lp" data-i="dl"><em data-i="c2"></em></div></div>'
+      +'<p class="fi-sub fi-rv">'+T.s3+'</p><div class="fi-where fi-rv"><i>\u2699</i>'+T.where+'</div></section>'
+    +'<section class="fi-sl" data-i="ia"><div class="fi-v fi-a"><span class="fi-stk fi-rv">'+T.ia+'</span><h1 class="fi-rv">'+T.h4+'</h1><p class="fi-sub fi-rv">'+T.s4+'</p>'
+      +'<div class="fi-pick fi-rv"><button class="fi-cta fi-bt" data-i="yes">'+T.yes+'</button><button class="fi-ghost fi-bt" data-i="no">'+T.later+'</button></div></div>'
+      +'<div class="fi-v fi-b"><span class="fi-stk">'+T.steps+'</span>'
+      +'<div class="fi-stp fi-op" data-i="s1"><span class="fi-n">1</span><span>'+T.st1+'<small>'+T.st1s+'</small></span><button class="fi-go fi-bt" data-i="go1">'+ext+T.open+'</button></div>'
+      +'<div class="fi-stp" data-i="s2"><span class="fi-n">2</span><span>'+T.st2+'<small>'+T.st2s+'</small></span></div>'
+      +'<div class="fi-stp" data-i="s3"><span class="fi-n">3</span><input class="fi-key" data-i="ky" placeholder="'+T.ph+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="fi-ghost fi-bt" data-i="pst" style="width:auto;height:50px">'+T.paste+'</button></div></div></section>'
+    +'<section class="fi-sl"><div class="fi-cf" data-i="cf"></div><span class="fi-stk fi-rv">'+T.rdy+'</span><h1 class="fi-rv">'+T.h5+'</h1><p class="fi-sub fi-rv">'+T.s5+'</p></section>'
+    +'</div>'
+    +'<div class="fi-foot" data-i="ft"><button class="fi-cta fi-bt" data-i="nx"></button><button class="fi-ghost fi-bt" data-i="hm" style="display:none">'+T.home+'</button></div>'
+    +'</main>';
+  }
+
+  function ui(){
+    var pills=q('[data-i=pl]').children, k;
+    for(k=0;k<pills.length;k++) pills[k].className = k===i?'fi-on':k<i?'fi-ok':'';
+    q('[data-i=bk]').classList.toggle('fi-hide', i===0);
+    q('[data-i=sk]').classList.toggle('fi-hide', i===N-1);
+    q('[data-i=ft]').classList.toggle('fi-hide', i===4 && !ia);
+    var lbl=[T.lets,T.next,T.next,T.next,T.cont,T.add];
+    nx.textContent = (i===4 && ia) ? (keyOk?T.cont:T.contNo) : lbl[i];
+    var hm=q('[data-i=hm]'); hm.style.display = i===N-1?'flex':'none'; hm.classList.remove('fi-hide');
+    nx.disabled=false;
+  }
+  function go(n){
+    if(n<0||n>=N) return;
+    sl.forEach(function(s,k){
+      s.classList.remove('fi-on','fi-L','fi-R'); s.classList.add(k===n?'fi-on':k<n?'fi-L':'fi-R');
+      if(k===n) [].forEach.call(s.querySelectorAll('.fi-rv'),function(r,j){ r.style.setProperty('--k',j); });
+    });
+    i=n; ui();
+    if(n===3) setTimeout(function(){ if(!closing) sync(1); },700);
+    if(n===5) boom();
+    vib(8);
+  }
+  function fermer(versAjouter){
+    if(closing) return; closing=true;
+    markSeen();
+    document.removeEventListener('keydown',onKey,true);
+    root.style.transition='opacity .25s'; root.style.opacity='0'; root.style.pointerEvents='none';
+    setTimeout(function(){ if(root.parentNode) root.parentNode.removeChild(root); },280);
+    if(versAjouter){ try{ switchTab('add'); }catch(e){} }
+  }
+  function sauverCle(){
+    if(!keyOk) return;
+    var v=q('[data-i=ky]').value.trim().replace(/^["']|["']$/g,'');
+    try{ localStorage.setItem('gemini_api_key',v); localStorage.setItem('gemini_api_key_maj',new Date().toISOString()); }catch(e){}
+  }
+  function suivant(){
+    if(i===N-1){ fermer(true); return; }
+    if(i===4 && ia) sauverCle();
+    go(i+1);
+  }
+  function precedent(){
+    if(i===4 && ia){ ia=0; q('[data-i=ia]').classList.remove('fi-b'); ui(); }
+    else go(i-1);
+  }
+
+  /* maîtrise */
+  function lv(d,muet){
+    var lad=q('[data-i=lad]'); p=Math.max(0,Math.min(4,p+d));
+    [].forEach.call(lad.children,function(c,k){
+      if(c.tagName==='I'){ var z=k/2; c.className = z<=p ? 'fi-f'+(z===p?' fi-t':'') : ''; }
+      else c.className = k/2<=p ? 'fi-f' : '';
+    });
+    q('[data-i=rj]').innerHTML = p===4 ? T.noNeed : T.backIn+'<b style="color:var(--ink)">'+J[p]+T.d+'</b>';
+    q('[data-i=rb]').innerHTML = p===4 ? '<span class="fi-badge">'+T.mastered+' \u2713</span>' : '';
+    if(!muet) vib(p===4?[10,40,10]:10);
+  }
+  /* planning */
+  function wk(n){
+    var w=q('[data-i=wk]'); w.innerHTML='';
+    for(var k=0;k<n;k++){
+      (function(k){
+        var e=document.createElement('i'); e.className = k===n-1?'fi-j':k>=n-3?'fi-z':''; e.style.setProperty('--h','6px'); w.appendChild(e);
+        var h = k===n-1?118:k>=n-3?34:44+Math.abs(Math.sin(k*1.7))*58;
+        setTimeout(function(){ e.style.setProperty('--h',h+'px'); },60+k*40);
+      })(k);
+    }
+  }
+  /* synchro */
+  function sync(d){
+    var f=q('[data-i=fl]'); f.className=''; void f.offsetWidth; f.className='fi-go'+(d?'':' fi-r');
+    var t=d?q('[data-i=dl]'):q('[data-i=dp]'), c=d?q('[data-i=c2]'):q('[data-i=c1]');
+    setTimeout(function(){
+      t.classList.add('fi-hit'); c.textContent='\u2713'; vib(12);
+      setTimeout(function(){ t.classList.remove('fi-hit'); c.textContent=''; },900);
+    },950);
+  }
+  /* fin : confettis */
+  function boom(){
+    var c=q('[data-i=cf]'); c.innerHTML='';
+    var col=['var(--orange)','var(--yellow)','var(--green)','var(--pink)'];
+    for(var k=0;k<26;k++){
+      var e=document.createElement('i'), a=Math.random()*6.28, d=90+Math.random()*130;
+      e.style.cssText='--c:'+col[k%4]+';--x:'+Math.cos(a)*d+'px;--y:'+(Math.sin(a)*d-40)+'px;--r:'+(Math.random()*540-270)+'deg;--dl:'+(k*8)+'ms';
+      c.appendChild(e);
+    }
+  }
+
+  function ouvrir(){
+    if(document.getElementById('fci')) return;
+    T = S[(typeof langueChoisie==='function' && langueChoisie()==='en')?'en':'fr'];
+    closing=false; i=0; ia=0; keyOk=false; p=0;
+    root=document.createElement('div'); root.id='fci'; root.setAttribute('data-notr',''); root.setAttribute('role','dialog'); root.setAttribute('aria-modal','true'); root.setAttribute('aria-label','Flashcard');
+    root.innerHTML=html();
+    document.body.appendChild(root);
+    sl=qa('.fi-sl'); nx=q('[data-i=nx]');
+    var pl=q('[data-i=pl]'); pl.innerHTML=new Array(N+1).join('<i></i>');
+    var lad=q('[data-i=lad]'); lad.innerHTML=J.map(function(_,k){ return (k?'<u></u>':'')+'<i>'+(k+1)+'</i>'; }).join('');
+    /* bouton qui s'enfonce (appui minimum 120 ms) */
+    root.addEventListener('pointerdown',function(e){
+      var b=e.target.closest&&e.target.closest('.fi-bt'); if(!b) return;
+      b.classList.add('fi-p'); var t=Date.now();
+      var u=function(){ setTimeout(function(){ b.classList.remove('fi-p'); },Math.max(0,120-(Date.now()-t))); removeEventListener('pointerup',u); removeEventListener('pointercancel',u); };
+      addEventListener('pointerup',u); addEventListener('pointercancel',u);
+    });
+    nx.onclick=suivant;
+    q('[data-i=hm]').onclick=function(){ fermer(false); };
+    q('[data-i=bk]').onclick=precedent;
+    q('[data-i=sk]').onclick=function(){ go(N-1); };
+    qa('.fi-ans button').forEach(function(b){ b.onclick=function(){ lv(+b.getAttribute('data-v')); }; });
+    qa('[data-i=ch] button').forEach(function(b){ b.onclick=function(){ qa('[data-i=ch] button').forEach(function(x){ x.classList.toggle('fi-on',x===b); }); wk(+b.getAttribute('data-n')); vib(8); }; });
+    q('[data-i=dp]').onclick=function(){ sync(1); }; q('[data-i=dl]').onclick=function(){ sync(0); };
+    q('[data-i=yes]').onclick=function(){ ia=1; q('[data-i=ia]').classList.add('fi-b'); ui(); };
+    q('[data-i=no]').onclick=function(){ go(5); };
+    q('[data-i=go1]').onclick=function(){ try{ window.open('https://aistudio.google.com/apikey','_blank','noopener'); }catch(e){} q('[data-i=s1]').classList.replace('fi-op','fi-ok'); q('[data-i=s2]').classList.add('fi-op'); };
+    var ky=q('[data-i=ky]');
+    ky.oninput=function(){ keyOk = ky.value.trim().length>=20; q('[data-i=s3]').classList.toggle('fi-ok',keyOk); q('[data-i=s2]').classList.toggle('fi-ok',keyOk); q('[data-i=s2]').classList.toggle('fi-op',!keyOk && q('[data-i=s1]').classList.contains('fi-ok')); ui(); };
+    q('[data-i=pst]').onclick=function(){
+      var done=function(t){ ky.value=(t||'').trim(); ky.oninput(); };
+      try{ navigator.clipboard.readText().then(done,function(){ ky.focus(); }); }catch(e){ ky.focus(); }
+    };
+    /* clavier (capturé : les raccourcis de l'app, ex. Espace, ne doivent pas partir derrière l'intro) */
+    onKey=function(e){
+      if(e.target&&e.target.tagName==='INPUT'){ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(keyOk) suivant(); } return; }
+      e.stopPropagation();
+      if(e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); if(!(i===4&&!ia)) nx.click(); }
+      else if(e.key==='ArrowLeft'){ e.preventDefault(); q('[data-i=bk]').click(); }
+      else if(e.key==='Escape'){ e.preventDefault(); q('[data-i=sk]').click(); }
+    };
+    document.addEventListener('keydown',onKey,true);
+    /* glissement */
+    var sx=null, st=q('[data-i=st]');
+    st.addEventListener('pointerdown',function(e){ if(!(e.target.closest&&e.target.closest('button,input'))) sx=e.clientX; });
+    st.addEventListener('pointerup',function(e){
+      if(sx===null) return; var d=e.clientX-sx; sx=null;
+      if(d<-45 && !(i===4&&!ia)) nx.click(); else if(d>45) q('[data-i=bk]').click();
+    });
+    wk(5); lv(0,true); q('[data-i=rj]').textContent=T.tryit;
+    sl.forEach(function(s,k){ s.classList.add(k?'fi-R':'fi-on'); });
+    [].forEach.call(sl[0].querySelectorAll('.fi-rv'),function(r,j){ r.style.setProperty('--k',j); });
+    ui();
+  }
+  window.fcIntroOuvrir=ouvrir;
+  function auto(){
+    var force=false, vu=false;
+    try{ force=/[?&]intro(=1|&|$)/.test(location.search); vu=!!localStorage.getItem(SEEN); }catch(e){}
+    if(force){ ouvrir(); return; }
+    if(vu) return;
+    if(dejaUtilisateur()){ markSeen(); return; }
+    ouvrir();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',auto); else auto();
 })();
 </script>
 
