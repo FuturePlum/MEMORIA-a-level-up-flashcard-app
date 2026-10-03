@@ -93,7 +93,7 @@
     "Modifier avec l'IA":'Edit with AI','Reformuler ou compléter les cartes':'Reword or complete the cards','Faire une synthèse':'Make a summary','À partir des cartes, fichiers en option':'From the cards, files optional',
     'Inverser toutes les cartes':'Reverse all cards',"Aussi posées dans l'autre sens":'Also asked the other way around','Partager':'Share','Envoi…':'Sending…','Envoyer':'Send','Matière':'Subject',
     'Modifier la carte':'Edit card','Question':'Question','Réponse':'Answer','Sens inversé':'Reversed',"La carte est aussi posée dans l'autre sens":'The card is also asked the other way around',
-    'Remettre à zéro':'Reset','Repart en « Nouvelle »':'Goes back to “New”','Enregistrer':'Save','Supprimer cette carte ?':'Delete this card?','À venir':'Upcoming','en cours':'in progress','Matières':'Subjects',
+    'Remettre à zéro':'Reset','Remettre la maîtrise à zéro':'Reset mastery','Repart en « Nouvelle »':'Goes back to “New”','Enregistrer':'Save','Supprimer cette carte ?':'Delete this card?','À venir':'Upcoming','en cours':'in progress','Matières':'Subjects',
     'Crée une matière pour pouvoir fixer une date de contrôle.':'Create a subject to set a test date.','Date du contrôle':'Test date','Ajouter un contrôle':'Add a test','+ Matière':'+ Subject',
     'Retirer la date':'Remove date','Gérer la matière':'Manage subject','Supprimer la matière':'Delete subject','Enregistre pour répartir tes révisions avant cette date.':'Save to spread your reviews before this date.',
     'Toutes les cartes sont déjà maîtrisées.':'All cards are already mastered.','Nouvelle carte':'New card',"Les cartes sont créées par l'IA, tu les relis avant de les ajouter.":'Cards are created by the AI; you review them before adding.',
@@ -114,7 +114,7 @@
   Object.assign(D,{ /* lot 3 (v136) : messages courts (toasts) et petits textes */
     'Impossible de lire cette image. Essaie une photo JPG ou PNG.':"Can't read this image. Try a JPG or PNG photo.",'Aucune carte à partager':'No cards to share','Code copié':'Code copied',
     'Fichier téléchargé : envoie-le à ton pote':'File downloaded: send it to your friend','Chaque côté a besoin d’un texte ou d’une image':'Each side needs text or an image',
-    'Carte modifiée':'Card edited','Carte remise à zéro':'Card reset','Carte supprimée':'Card deleted','Carte ajoutée':'Card added',"Crée d'abord une matière":'Create a subject first','Date retirée':'Date removed',
+    'Carte modifiée':'Card edited','Maîtrise remise à zéro':'Mastery reset','Carte supprimée':'Card deleted','Carte ajoutée':'Card added',"Crée d'abord une matière":'Create a subject first','Date retirée':'Date removed',
     'Écris un message ou joins un fichier':'Write a message or attach a file','Cette matière existe déjà':'This subject already exists','JSON invalide':'Invalid JSON','Code invalide (6 caractères)':'Invalid code (6 characters)',
     'Pas de connexion':'No connection','Format non reconnu':'Unrecognized format','Aucune carte valide':'No valid cards','Ces cartes sont déjà dans ta matière':'These cards are already in your subject',
     'Choisis un jour':'Pick a day','Aucune carte dans cette matière':'No cards in this subject','Image illisible':'Unreadable image','Image ajoutée':'Image added',
@@ -243,7 +243,7 @@
     'Aucune réponse à écrire possible ici':'No written answer possible here'
   });
   Object.assign(D,{ /* réponse à écrire (étape 2) */
-    'Remettre cette carte à zéro ?':'Reset this card?','Elle repart en « Nouvelle » : son avancement est perdu.':'It goes back to “New”: its progress is lost.','Image de la question':'Question image','Image de la réponse':'Answer image','Ta réponse…':'Your answer…','Ta réponse':'Your answer','Ta réponse · verrouillée':'Your answer · locked','Pas de réponse':'No answer'
+    'Remettre la maîtrise de cette carte à zéro ?':'Reset this card\'s mastery?','Elle repart en « Nouvelle » : son avancement est perdu.':'It goes back to “New”: its progress is lost.','Image de la question':'Question image','Image de la réponse':'Answer image','Ta réponse…':'Your answer…','Ta réponse':'Your answer','Ta réponse · verrouillée':'Your answer · locked','Pas de réponse':'No answer'
   });
   RULES.push( f(/^Réponse (normale|écrite) · (.+)$/,function(v,x){ return (v==='normale'?'Normal answer':'Written answer')+' · '+x; }) );
   var J={"aujourd'hui":'today',hier:'yesterday'};
@@ -1682,7 +1682,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-at{font-size:34px;font-weight:800;color:var(--yellow-t);letter-spacing:-.035em;line-height:1.1}
 .pp-qt{transition:font-size .25s,color .25s}
 /* v120 : respecte les retours à la ligne saisis dans la question / la réponse (cartes déjà créées comprises) */
-.pp-qt,.pp-at{white-space:pre-line}
+.pp-qt,.pp-at{white-space:pre-line;overflow-wrap:anywhere}
+/* v161 : une formule trop longue défile au lieu d'être coupée à droite */
+.pp-qt .pp-mt:not(.pp-mtb),.pp-at .pp-mt:not(.pp-mtb){display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle;padding:.15em 0;scrollbar-width:thin}
 /* v121 : images des cartes (question / réponse) */
 .pp-qimg,.pp-aimg{display:block;align-self:flex-start;max-width:100%;max-height:32vh;object-fit:contain;border-radius:28px;border:2px solid rgba(var(--cr),.16);background:var(--panel);box-shadow:0 10px 26px rgba(0,0,0,.38),0 0 0 5px rgba(var(--cr),.05);margin:14px 5px 6px 0;cursor:zoom-in;-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}
 .pp-body.pp-flipped .pp-qimg{max-height:64px;margin-top:8px;border-radius:18px;box-shadow:0 6px 16px rgba(0,0,0,.32)}
@@ -1757,6 +1759,19 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-conf{position:absolute;left:50%;top:0;width:9px;height:14px;border-radius:2px;background:var(--c);opacity:0;animation:ppconf 1.1s ease-out forwards;animation-delay:var(--d)}
 .pp-btns{display:flex;flex-direction:column;gap:9px;margin-top:16px}
 .pp-btns .pp-cta{margin:0}
+/* v162 : écran de fin de séance — une carte centrée (plus de barre orange sur toute la largeur), pastille ✓, boutons à la taille de l'app */
+.pp-done{max-width:440px}
+.pp-okm{width:68px;height:68px;margin:0 auto 16px;border-radius:22px;display:grid;place-items:center;background:var(--c-gsoft);border:2px solid color-mix(in srgb,var(--green) 55%,transparent);color:var(--green);box-shadow:0 4px 0 color-mix(in srgb,var(--green) 26%,transparent);animation:pppop .45s var(--pps) both}
+.pp-okm svg{width:32px;height:32px}
+.pp-done .pp-btns .pp-cta{height:50px;font-size:16px;border-radius:16px;box-shadow:0 4px 0 var(--orange-d)}
+.pp-done .pp-btns .pp-cta.pp-ghost,.pp-done .pp-btns .pp-cta.pp-quiet{box-shadow:0 3px 0 var(--c-edge);background:var(--panel)}
+.pp-done .pp-btns .pp-cta.pp-quiet{color:var(--cream)}
+.pp-done .pp-btns .pp-cta svg{flex:none}
+@media (min-width:900px) and (min-height:480px){
+  .pp-done{max-width:480px;padding:34px 28px 26px;border-radius:28px;background:var(--panel);border:1.5px solid var(--line);box-shadow:0 5px 0 var(--c-edge)}
+  .pp-done h2{font-size:30px}
+  .pp-done .pp-bil>div{background:var(--bg)}
+}
 .pp-cta.pp-ghost{background:transparent;color:var(--cream);border:1.5px solid var(--line);box-shadow:none}
 .pp-cta.pp-quiet{background:transparent;color:var(--muted);border:1.5px solid var(--line);box-shadow:none}
 .pp-qres{text-align:center;width:100%;overflow-y:auto}
@@ -1786,11 +1801,12 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-mt .fn{padding:0 .22em .08em;border-bottom:.075em solid currentColor}
 .pp-mt .fd{padding:.1em .22em 0}
 .pp-mt .f.nb .fn{border-bottom:0}
-.pp-mt .s{display:inline-flex;align-items:stretch;vertical-align:middle}
-.pp-mt .sg{align-self:flex-end;line-height:1;padding-right:.04em}
-.pp-mt .sb{border-top:.075em solid currentColor;padding:.08em .1em 0 .08em;margin-top:.1em}
+.pp-mt .s{display:inline-flex;align-items:stretch;vertical-align:middle;padding-top:.12em}
+.pp-mt .sg{flex:none;align-self:stretch;width:.7em;min-height:1em;overflow:visible}
+.pp-sup{font-size:.7em;line-height:0;vertical-align:.55em}
+.pp-mt .sb{border-top:.075em solid currentColor;padding:.08em .1em 0 .06em}
 .pp-mt .si{font-size:.58em;align-self:flex-start;margin-right:-.4em;margin-top:.25em}
-.pp-mt .s.g .sg{font-size:1.5em}
+.pp-mt .s.g .sg{width:.95em}
 .pp-mt .ms{font-size:.7em;line-height:0;margin:0 .04em}
 .pp-mt .ms.up{vertical-align:.62em}
 .pp-mt .ms.dn{vertical-align:-.32em}
@@ -1811,7 +1827,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-rv[hidden]{display:none}
 .pp-fx{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:8px}
 .pp-fx code{font:600 12.5px ui-monospace,Menlo,Consolas,monospace;color:var(--muted);white-space:pre-line;min-width:0;overflow-wrap:anywhere}
-.pp-fx span{font-size:17px;text-align:right;flex:none;max-width:48%;white-space:pre-line}
+.pp-fx > span{font-size:17px;text-align:right;flex:none;max-width:48%;white-space:pre-line}
 /* v160 — bilan de fin de séance et objectif du jour */
 .pp-bil{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 4px;text-align:left}
 .pp-bil>div{padding:10px 11px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);animation:pppop .35s var(--pps) both}
@@ -1821,18 +1837,6 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-bil span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 .pp-bil em{display:block;font-style:normal;font-size:11.5px;font-weight:800;color:var(--green);margin-top:1px}
 .pp-bil em.dn{color:var(--muted)}
-.pp-obj{margin:12px 0 2px;text-align:left}
-.pp-obj .t1{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--muted);font-weight:700;margin-bottom:6px}
-.pp-obj .t1 b{color:var(--cream);font-weight:800}
-.pp-obj .bar{height:8px;border-radius:99px;background:var(--c-s1);overflow:hidden}
-.pp-obj .bar i{display:block;height:100%;width:var(--p);border-radius:99px;background:var(--orange);transform-origin:left;animation:ppobj .7s var(--pps) .15s both}
-.pp-obj.ok .bar i{background:var(--green)}
-.pp-obj.ok .t1 span{color:var(--green)}
-@keyframes ppobj{from{transform:scaleX(0)}}
-.pp-objstep{display:flex;align-items:center;gap:6px;flex:none}
-.pp-objstep button{width:30px;height:30px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);color:var(--cream);font:800 16px/1 inherit;display:grid;place-items:center;cursor:pointer}
-.pp-objstep button:active{transform:translateY(1px)}
-.pp-objstep b{min-width:52px;text-align:center;font-size:14px;font-weight:800}
 @keyframes ppcardIn{0%{transform:translateY(40px) rotate(4deg) scale(.94);opacity:0}60%{transform:translateY(-7px) rotate(-1deg) scale(1.01);opacity:1}100%{transform:none;opacity:1}}
 @keyframes ppflipIn{0%{opacity:0;transform:translateY(12px)}60%{opacity:1;transform:translateY(-3px)}100%{opacity:1;transform:none}}
 @keyframes ppoutR{to{transform:translateX(130%) rotate(12deg);opacity:0}}
@@ -2345,6 +2349,11 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
     background:linear-gradient(110deg,rgba(var(--yr),.2),rgba(var(--yr),.07) 70%),var(--c-yse); }
   .pp-ctl-add .pp-ctt b{ font-size:16px; color:var(--cream); }
   .pp-ctl-add>s{ display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:rgba(var(--yr),.18); }
+  /* v163 : thème clair — plein jaune, texte foncé, pastilles inversées (avant : jaune très pâle presque invisible sur fond blanc) */
+  :root:root:root[data-theme="light"] .pp-home>.pp-ctl.pp-ctl-add{ --sc:var(--yellow-d); border:2px dashed var(--yellow-d); background:linear-gradient(110deg,#ffe680,var(--yellow) 65%,#ffcf24); box-shadow:0 4px 0 var(--yellow-d); }
+  :root:root:root[data-theme="light"] .pp-ctl-add .pp-ctt b{ color:#1a1405; font-size:17px; }
+  :root:root:root[data-theme="light"] .pp-ctl-add>i{ background:#1a1405; color:var(--yellow); box-shadow:0 3px 0 rgba(26,20,5,.35); }
+  :root:root:root[data-theme="light"] .pp-ctl-add>s{ background:#1a1405; color:var(--yellow); }
   .pp-home>.pp-opts{ grid-column:1; grid-row:3; margin:0 9px 0 0; gap:16px; }
   .pp-home>.pp-prog7{ display:none; }
   .pp-view>.pp-opts .pp-row{ padding:18px 20px; border-radius:20px; gap:12px; background:linear-gradient(160deg,var(--panel),var(--c-rowgrad)); }
@@ -4054,6 +4063,7 @@ function ppMathCe(brut){
 }
 /* Renvoie le HTML d'une formule, ou null si elle est trop longue / illisible (l'appelant affiche alors le texte tel quel). */
 function ppMathHtml(src){
+  src = ppMathAmi(src);
   const T = ppMathTok(src);
   if(!T.length || T.length >= 900) return null;
   let i = 0, prof = 0, droit = 0;
@@ -4131,7 +4141,7 @@ function ppMathHtml(src){
       esp(); let idx = '';
       if(T[i] && T[i].k === 'h' && T[i].v === '['){ i++; while(T[i] && !(T[i].k === 'h' && T[i].v === ']')) idx += scripted(); if(T[i]) i++; }
       const b = groupe();
-      return { h:'<span class="s' + (/class="(f|s|bo|ib)[ "]/.test(b) ? ' g' : '') + '">' + (idx ? '<span class="si">' + idx + '</span>' : '') + '<span class="sg">√</span><span class="sb">' + b + '</span></span>' };
+      return { h:'<span class="s' + (/class="(f|s|bo|ib)[ "]/.test(b) ? ' g' : '') + '">' + (idx ? '<span class="si">' + idx + '</span>' : '') + '<svg class="sg" viewBox="0 0 10 20" preserveAspectRatio="none" aria-hidden="true"><path d="M.5 11.6 2.3 10.3 5 17.8 9.6 .65" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="butt" vector-effect="non-scaling-stroke"/></svg><span class="sb">' + b + '</span></span>' };
     }
     if(v === 'text' || v === 'textrm' || v === 'mbox' || v === 'textit' || v === 'textbf' || v === 'operatorname') return { h:'<span class="t">' + esc(brut()) + '</span>' };
     if(v === 'ce') return { h:ppMathCe(brut()) };
@@ -4182,6 +4192,95 @@ function ppMathHtml(src){
   }
   try{ return seq(null); }catch(e){ return null; }
 }
+/* ---- v161 : écriture simplifiée ----
+   Dans le texte (sans $) : /italique/   √16   √(x+1)   x^2   x^(n+1)
+   Dans $…$ (quand il n'y a PAS d'antislash) : a/b   (a+b)/(c+d)   x^(n+1)   sqrt(x)   pi alpha delta…   sum int lim sin cos ln…   <= >= != -> * +-
+   Dès qu'il y a un antislash, c'est du LaTeX pur (seul « √ » est converti). Tout finit en LaTeX avant ppMathHtml. */
+function ppAmiFerme(s, o){            // s[o] = « ( » ou « { » : indice du fermant correspondant, sinon -1
+  const ouv = s[o], fer = ouv === '(' ? ')' : '}';
+  let d = 0;
+  for(let k = o; k < s.length; k++){ if(s[k] === ouv) d++; else if(s[k] === fer && --d === 0) return k; }
+  return -1;
+}
+function ppAmiOuvre(s, f){            // s[f] = « ) » ou « } » : indice de l'ouvrant correspondant, sinon -1
+  const fer = s[f], ouv = fer === ')' ? '(' : '{';
+  let d = 0;
+  for(let k = f; k >= 0; k--){ if(s[k] === fer) d++; else if(s[k] === ouv && --d === 0) return k; }
+  return -1;
+}
+function ppAmiApres(s, p){            // fin (exclue) de l'opérande qui commence en p, sinon -1
+  let e = p;
+  for(let g = 0; g < 12; g++){
+    const c = s[e];
+    if(c === '(' || c === '{'){ const f = ppAmiFerme(s, e); if(f < 0) return -1; e = f + 1; }
+    else if(c === '\\'){ const m = /^\\[A-Za-z]+/.exec(s.slice(e)); if(!m) return -1; e += m[0].length; if(s[e] === '{'){ const f = ppAmiFerme(s, e); if(f < 0) return -1; e = f + 1; } }
+    else { const m = /^[A-Za-z0-9.]+/.exec(s.slice(e)); if(!m) return -1; e += m[0].length; }
+    if((s[e] === '^' || s[e] === '_') && e + 1 < s.length){ e++; if((s[e] === '-' || s[e] === '+') && e + 1 < s.length) e++; continue; }
+    return e;
+  }
+  return -1;
+}
+function ppAmiAvant(s, k){            // début de l'opérande qui finit juste avant k, sinon -1
+  let e = k;
+  for(let g = 0; g < 12; g++){
+    const c = s[e - 1];
+    if(c === ')' || c === '}'){
+      const o = ppAmiOuvre(s, e - 1); if(o < 0) return -1; e = o;
+      if(c === '}'){ const m = /\\[A-Za-z]+$/.exec(s.slice(0, e)); if(m) e -= m[0].length; }
+    } else if(c !== undefined && /[A-Za-z0-9.]/.test(c)){
+      while(e > 0 && /[A-Za-z0-9.]/.test(s[e - 1])) e--;
+      if(e > 1 && (s[e - 1] === '-' || s[e - 1] === '+') && (s[e - 2] === '^' || s[e - 2] === '_')) e--;
+    } else return -1;
+    if(e > 0 && (s[e - 1] === '^' || s[e - 1] === '_')){ e--; continue; }
+    return e;
+  }
+  return -1;
+}
+function ppAmiRacines(s){             // √x  √(…)  sqrt(…)  →  \sqrt{…}
+  const re = /√|sqrt/g;
+  let r, out = '', last = 0;
+  while((r = re.exec(s))){
+    const i = r.index, mot = r[0];
+    if(mot === 'sqrt' && ((i > 0 && /[A-Za-z\\]/.test(s[i - 1])) || /[A-Za-z]/.test(s[i + 4] || ''))) continue;
+    let j = i + mot.length; while(s[j] === ' ') j++;
+    let fin = -1, dedans = '';
+    if(s[j] === '(' || s[j] === '{'){ const f = ppAmiFerme(s, j); if(f > 0){ dedans = s.slice(j + 1, f); fin = f + 1; } }
+    else { const m = /^[\p{L}0-9²³]+(?:[.,][0-9]+)?/u.exec(s.slice(j)); if(m){ dedans = m[0]; fin = j + m[0].length; } }
+    if(fin < 0) continue;
+    out += s.slice(last, i) + '\\sqrt{' + ppAmiRacines(dedans) + '}';
+    last = fin; re.lastIndex = fin;
+  }
+  return out + s.slice(last);
+}
+function ppAmiDecap(x){ return (x[0] === '(' && ppAmiFerme(x, 0) === x.length - 1) ? x.slice(1, -1) : x; }
+function ppMathAmi(src){
+  let s = ppAmiRacines(String(src));
+  if(String(src).indexOf('\\') >= 0) return s;
+  // x^(n+1) → x^{n+1}   a_(i+1) → a_{i+1}
+  for(let p = 0, g = 0; g < 40; g++){
+    const re = /[\^_]\(/g; re.lastIndex = p; const r = re.exec(s); if(!r) break;
+    const o = r.index + 1, f = ppAmiFerme(s, o);
+    if(f < 0){ p = o + 1; continue; }
+    s = s.slice(0, o) + '{' + s.slice(o + 1, f) + '}' + s.slice(f + 1); p = o + 1;
+  }
+  // a/b → \frac{a}{b}
+  for(let from = 0, g = 0; g < 40; g++){
+    const k = s.indexOf('/', from); if(k < 0) break;
+    let a = k; while(a > 0 && s[a - 1] === ' ') a--;
+    let b = k + 1; while(s[b] === ' ') b++;
+    const st = ppAmiAvant(s, a), en = ppAmiApres(s, b);
+    if(st < 0 || en < 0){ from = k + 1; continue; }
+    const num = ppAmiDecap(s.slice(st, a)), den = ppAmiDecap(s.slice(b, en));
+    s = s.slice(0, st) + '\\frac{' + num + '}{' + den + '}' + s.slice(en);
+    from = st + 6;
+  }
+  s = s.replace(/<=>/g, '\\Leftrightarrow ').replace(/<->/g, '\\leftrightarrow ').replace(/<=/g, '\\leq ').replace(/>=/g, '\\geq ')
+       .replace(/!=/g, '\\neq ').replace(/=>/g, '\\Rightarrow ').replace(/->/g, '\\rightarrow ').replace(/\+-/g, '\\pm ').replace(/\*/g, '\\times ');
+  s = s.replace(/(^|[^A-Za-z\\])(alpha|beta|gamma|delta|epsilon|theta|lambda|mu|pi|rho|sigma|tau|phi|omega|Gamma|Delta|Theta|Lambda|Pi|Sigma|Phi|Psi|Omega|infty|inf|sum|prod|int|lim|sin|cos|tan|ln|log|exp)(?![A-Za-z])/g,
+       (m, a, w) => a + '\\' + (w === 'inf' ? 'infty' : w) + ' ');
+  s = s.replace(/(\\[A-Za-z]+) (?=[_^])/g, '$1');
+  return s;
+}
 /* Découpe un texte : sort les formules $…$ / $$…$$, remplace \$ . Règles de Pandoc : le $ ouvrant est collé au texte,
    le $ fermant aussi et n'est pas suivi d'un chiffre → « 5 $ et 6 $ » ou « $5 et $6 » ne sont jamais pris pour une formule. */
 function ppRichMaths(t, mem){
@@ -4207,24 +4306,34 @@ function ppRichMaths(t, mem){
         if(f > i + 1){ mem.push({ src:t.slice(i + 1, f), bloc:false }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = f + 1; continue; }
       }
     }
+    if(c === '√'){
+      let f = -1, src = null;
+      if(t[i + 1] === '('){ const e = ppAmiFerme(t, i + 1); if(e > i + 2 && t.slice(i, e).indexOf('\n') < 0){ src = t.slice(i, e + 1); f = e + 1; } }
+      else { const m = /^[\p{L}0-9²³]+(?:[.,][0-9]+)?/u.exec(t.slice(i + 1)); if(m){ src = '√' + m[0]; f = i + 1 + m[0].length; } }
+      if(src){ mem.push({ src:src, bloc:false, nu:true }); out += '\u0001' + (mem.length - 1) + '\u0002'; i = f; continue; }
+    }
     out += c; i++;
   }
   return out;
 }
 /* Vrai si le texte contient quelque chose à mettre en forme (sert à n'afficher l'aperçu que quand c'est utile). */
-function ppRichMarque(t){ return /\$[^\s$]|\*[^\s*]|(^|\n)[ \t]*- [^\s\d]/.test(String(t || '')); }
+function ppRichMarque(t){ return /\$[^\s$]|\*[^\s*]|(^|\n)[ \t]*- [^\s\d]|√|[A-Za-z0-9)\]]\^[-+(A-Za-z0-9]|(^|[\s(])\/[^\s\/](?:[^\n\/]*[^\s\/])?\/(?=$|[\s.,;:!?)])/.test(String(t || '')); }
 function ppRichHtml(texte){
   const t = String(texte == null ? '' : texte);
-  if(t.indexOf('$') < 0 && t.indexOf('*') < 0 && !/(^|\n)[ \t]*- /.test(t)) return escapeHtml(t);
+  if(t.indexOf('$') < 0 && t.indexOf('*') < 0 && t.indexOf('/') < 0 && t.indexOf('^') < 0 && t.indexOf('√') < 0 && !/(^|\n)[ \t]*- /.test(t)) return escapeHtml(t);
   const mem = [];
   let h = escapeHtml(ppRichMaths(t, mem));
   h = h.replace(/(^|\n)([ \t]*)- (?=[^\s\d])/g, '$1$2• ');
+  // v161 : /italique/ (le / ouvrant est collé au mot suivant et précédé d'un espace ou du début : « et/ou », « 1/2 », « km/h » ne sont jamais touchés)
+  h = h.replace(/(^|[\s(\[«]|&quot;|&#39;)\/([^\s\/](?:[^\/\n]*[^\s\/])?)\/(?=$|[\s.,;:!?)\]»<&])/g, '$1<span class="pp-fi" data-notr>$2</span>');
+  // v161 : x^2, cm^3, x^(n+1) en exposant, sans $
+  h = h.replace(/([A-Za-z0-9\u00C0-\u024F)\]])\^(\(([^()\n]{1,40})\)|[-+]?[A-Za-z0-9]{1,12})/g, (m, base, ex, grp) => base + '<sup class="pp-sup" data-notr>' + (grp !== undefined ? grp : ex) + '</sup>');
   h = h.replace(/\*\*([^\s*](?:[^*\n]*[^\s*])?)\*\*/g, '<span class="pp-fb" data-notr>$1</span>');
   h = h.replace(/(^|[^\w*])\*([^\s*](?:[^*\n]*[^\s*])?)\*(?![\w*])/g, '$1<span class="pp-fi" data-notr>$2</span>');
   h = h.replace(/\u0001(\d+)\u0002/g, (m, k) => {
     const f = mem[+k]; if(!f) return '';
     const m1 = ppMathHtml(f.src);
-    if(m1 === null) return escapeHtml((f.bloc ? '$$' : '$') + f.src + (f.bloc ? '$$' : '$'));
+    if(m1 === null) return escapeHtml(f.nu ? f.src : ((f.bloc ? '$$' : '$') + f.src + (f.bloc ? '$$' : '$')));
     return '<span class="pp-mt' + (f.bloc ? ' pp-mtb' : '') + '" data-notr>' + m1 + '</span>';
   });
   return h.replace(/\u0003/g, '$');
@@ -4442,6 +4551,7 @@ function icon(name){ return ICONS[name] || ''; }
    affichée sur les écrans Ajouter/Parcourir/Réglages à la place du streak. */
 const ppSvg=(p,w=22,extra='')=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" ${extra}>${p}</svg>`;
 /* Icônes du prototype (copiées telles quelles). */
+const PP_HOME = ppSvg('<path d="M4 11l8-7 8 7M6 9.5V20h4v-5h4v5h4V9.5"/>', 18);
 const PP_IC={
  mail:ppSvg('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3.5 7.5l8.5 6 8.5-6"/>'),
  bug:ppSvg('<path d="M12 20a5 5 0 0 1-5-5v-3a5 5 0 0 1 10 0v3a5 5 0 0 1-5 5zM12 7V4M7 12H3.5M20.5 12H17M7.5 17l-3 2M16.5 17l3 2M8 6l1.5 1.5M16 6l-1.5 1.5"/>'),
@@ -5180,7 +5290,9 @@ function haptique(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e)
       if(!b.isConnected || b.disabled) return;
       const c = new MouseEvent('click', { bubbles:true, cancelable:true, view:window, detail:e.detail, clientX:e.clientX, clientY:e.clientY });
       c._rejoue = true;
-      b.dispatchEvent(c);
+      /* v163 : on rejoue le clic sur l'élément réellement touché (ex. l'interrupteur .pp-tg DANS une ligne .pp-li), pas sur le conteneur : sinon le tap léger du pavé ne faisait rien */
+      const cible = (e.target && e.target.isConnected && b.contains(e.target)) ? e.target : b;
+      cible.dispatchEvent(c);
     }, reste);
   }, true);
 })();
@@ -5448,7 +5560,7 @@ function renderStudyInner(){
       ? 'Aucune carte révisée aujourd\'hui dans cette sélection.'
       : (matiereFilter !== 'toutes' ? 'Rien à réviser dans cette matière pour le moment.' : "Colle un cours à Claude pour ajouter des cartes.");
     ppMood.anim = '';
-    ppSesShow(`<div class="pp-done"><h2>Rien à réviser</h2><p>${emptyMsg}</p><div class="pp-btns"><button class="pp-cta" onclick="exitStudySession()">Retour à l'accueil</button></div></div>`);
+    ppSesShow(`<div class="pp-done"><div class="pp-okm">${PP_IC.ok}</div><h2>Rien à réviser</h2><p>${emptyMsg}</p><div class="pp-btns"><button class="pp-cta" onclick="exitStudySession()">${PP_HOME}Retour à l'accueil</button></div></div>`);
     return;
   }
   if(currentIndex >= queue.length){
@@ -5465,9 +5577,9 @@ function renderStudyInner(){
     const btnErreurs = nbErr
       ? `<button class="pp-cta${suivante ? ' pp-ghost' : ''}" onclick="startReviewSessionErrors()">Revoir ${nbErr} carte${nbErr>1?'s':''} en erreur</button>`
       : '';
-    const btnRetour = `<button class="pp-cta${many ? ' pp-quiet' : ''}" onclick="exitStudySession()">Retour à l'accueil</button>`;
+    const btnRetour = `<button class="pp-cta${many ? ' pp-quiet' : ''}" onclick="exitStudySession()">${PP_HOME}Retour à l'accueil</button>`;
     ppMood.anim = '';
-    ppSesShow(`<div class="pp-done">${ppConfetti()}<h2>Terminé pour aujourd'hui</h2><p>${sessionReviewed} carte${sessionReviewed>1?'s':''} révisée${sessionReviewed>1?'s':''}${sessionMastered ? ` · ${sessionMastered} nouvelle${sessionMastered>1?'s':''} maîtrisée${sessionMastered>1?'s':''}` : ''}.</p>
+    ppSesShow(`<div class="pp-done">${ppConfetti()}<div class="pp-okm">${PP_IC.ok}</div><h2>Terminé pour aujourd'hui</h2><p>${sessionReviewed} carte${sessionReviewed>1?'s':''} révisée${sessionReviewed>1?'s':''}${sessionMastered ? ` · ${sessionMastered} nouvelle${sessionMastered>1?'s':''} maîtrisée${sessionMastered>1?'s':''}` : ''}.</p>
  ${ppBilanHtml()}<div class="pp-btns">${btnSuite}${btnErreurs}${btnRetour}</div></div>`);
     return;
   }
@@ -6637,7 +6749,7 @@ function ppFiche(id, retour){
   ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi');ppRvMaj('pp-eq')">${escapeHtml(qv)}</textarea>`)}${ppRvDiv('pp-eq-rv', qv)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea" oninput="ppRvMaj('pp-ea')">${escapeHtml(av)}</textarea>`)}${ppRvDiv('pp-ea-rv', av)}
   <div class="pp-set" style="margin-bottom:14px"><div class="pp-li${ivOff ? ' pp-off' : ''}"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
   <div class="pp-li${ecOk ? '' : ' pp-off'}"><i class="pp-ico">${PP_IC.edit}</i><span>Réponse à écrire<small>${ecLong ? 'Réponse longue : peu pratique à écrire' : 'Tu tapes ta réponse avant de la voir'}</small></span><button class="pp-tg${ppFi.ec ? ' on' : ''}" aria-label="Réponse à écrire" onclick="ppFicheEc(this)"></button></div>
-  <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre à zéro<small>Repart en « Nouvelle »</small></span></button></div>
+  <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre la maîtrise à zéro<small>Repart en « Nouvelle »</small></span></button></div>
   <div class="pp-duo"><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button><button class="pp-cta" onclick="ppFicheSave('${iA}')">Enregistrer</button></div>`);
 }
 /* Avant de remplacer la feuille par une confirmation : on note le texte en cours de modification (voir ppFiche(id, true)). */
@@ -6729,7 +6841,7 @@ function ppFicheResetAsk(id){
   if(!c) return;
   ppFicheGarder();
   const iA = escapeJsAttr(id);
-  ppSheet(`<div class="pp-grab"></div><h2>Remettre cette carte à zéro ?</h2><p class="pp-hint"><span data-notr>${ppRichHtml(c.question || '')}</span></p><p class="pp-hint">Elle repart en « Nouvelle » : son avancement est perdu.</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" onclick="ppFicheReset('${iA}')">Remettre à zéro</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Remettre la maîtrise de cette carte à zéro ?</h2><p class="pp-hint"><span data-notr>${ppRichHtml(c.question || '')}</span></p><p class="pp-hint">Elle repart en « Nouvelle » : son avancement est perdu.</p><div class="pp-duo"><button class="pp-sec" onclick="ppFiche('${iA}',1)">Annuler</button><button class="pp-cta" onclick="ppFicheReset('${iA}')">Remettre à zéro</button></div>`);
 }
 function ppFicheReset(id){
   const c = CARDS.find(x => x.id === id);
@@ -6746,7 +6858,7 @@ function ppFicheReset(id){
   recalcPlanning();
   saveLocalPlanning();
   renderBrowse();
-  ppToast('Carte remise à zéro');
+  ppToast('Maîtrise remise à zéro');
   planifierSyncDiffere();
 }
 function ppFicheAsk(id){
@@ -11509,6 +11621,8 @@ function desactiverRappelQuotidien(){
 }
 
 function rappelEstActif(){
+  /* v165 : iPhone / iPad / Safari Mac — pas de rappel en arrière-plan : le bloc « Rappels » est masqué dans Réglages et plus aucun rappel n'est envoyé (même un ancien réglage activé). */
+  try{ if(ppEstApple()) return false; }catch(e){}
   try{ return localStorage.getItem('rappel-notifs-actif') === '1'; }catch(e){ return false; }
 }
 
@@ -12283,8 +12397,7 @@ function ppStatUndo(){
 /* ---- v160 : bilan de fin de séance + objectif du jour (données locales à l'appareil, jamais synchronisées) ----
    `cartes-seances` = liste des 60 dernières séances { d: jour, ms: temps actif, n: cartes, v: « Facile », m: nouvelles maîtrisées, e: 1 si « Revoir les erreurs » }.
    Temps actif : à chaque réponse on ajoute le temps écoulé depuis la précédente, plafonné à 2 min (app laissée ouverte = pas comptée). */
-const PP_SEANCES_KEY = 'cartes-seances', PP_OBJ_KEY = 'cartes-objectif-jour';
-const PP_OBJ_PAS = [0, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200];
+const PP_SEANCES_KEY = 'cartes-seances';
 function ppSeancesLire(){
   try{
     const a = JSON.parse(localStorage.getItem(PP_SEANCES_KEY) || '[]');
@@ -12292,14 +12405,6 @@ function ppSeancesLire(){
     return a.filter(x => x && typeof x === 'object' && typeof x.d === 'string' && Number.isFinite(+x.n) && +x.n > 0)
       .map(x => ({ d:x.d, ms:Math.max(0, +x.ms || 0), n:Math.floor(+x.n), v:Math.max(0, Math.floor(+x.v) || 0), m:Math.max(0, Math.floor(+x.m) || 0), e:x.e ? 1 : 0 })).slice(-60);
   }catch(err){ return []; }
-}
-function ppObjectif(){ try{ const n = Math.floor(+localStorage.getItem(PP_OBJ_KEY)); return (n > 0 && n <= 500) ? n : 0; }catch(err){ return 0; } }
-function ppObjPas(sens){
-  const cur = ppObjectif();
-  let k = PP_OBJ_PAS.findIndex(x => x >= cur); if(k < 0) k = PP_OBJ_PAS.length - 1;
-  k = Math.max(0, Math.min(PP_OBJ_PAS.length - 1, k + sens));
-  ppEcrire(PP_OBJ_KEY, String(PP_OBJ_PAS[k]));
-  ppSetDraw(true);
 }
 function ppSeanceRaz(){ ppSeance = { ms: 0, last: Date.now(), saved: false, bilan: null }; }
 function ppSeanceTick(){
@@ -12339,26 +12444,16 @@ function ppBilanHtml(){
     evo = d > 0 ? `<em>+${d} pts</em>` : (d < 0 ? `<em class="dn">−${-d} pts</em>` : `<em class="dn">=</em>`);
   }
   const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
-  const obj = ppObjectif();
-  let objHtml = '';
-  if(obj){
-    const ok = b.aujourdhui >= obj, p = Math.min(100, Math.round(100 * b.aujourdhui / obj));
-    objHtml = `<div class="pp-obj${ok ? ' ok' : ''}"><div class="t1"><span>${ok ? 'Objectif atteint' : 'Objectif du jour'}</span><b>${b.aujourdhui} / ${obj}</b></div><div class="bar"><i style="--p:${p}%"></i></div></div>`;
-  }
-  return `<div class="pp-bil"><div><b>${ppDuree(e.ms)}</b><span>temps</span></div><div><b>${taux} %</b><span>réussite</span>${evo}</div><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span>${e.m > 0 ? `<em>+${e.m}</em>` : ''}</div></div>${objHtml}`;
+  return `<div class="pp-bil"><div><b>${ppDuree(e.ms)}</b><span>temps</span></div><div><b>${taux} %</b><span>réussite</span>${evo}</div><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span>${e.m > 0 ? `<em>+${e.m}</em>` : ''}</div></div>`;
 }
 /* Statistiques : 2 repères en plus (temps des 7 derniers jours, cartes du jour / objectif). */
 function ppStatsSeancesHtml(){
   const l = ppSeancesLire(), today = todayStr(), debut = addDays(today, -6);
   const ms = l.filter(x => x.d >= debut && x.d <= today).reduce((a, x) => a + x.ms, 0);
-  const auj = l.filter(x => x.d === today).reduce((a, x) => a + x.n, 0), obj = ppObjectif();
+  const auj = l.filter(x => x.d === today).reduce((a, x) => a + x.n, 0);
   const clock = ppSvg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 16), cible = ppSvg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>', 16);
   return `<div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${clock}</i><div><b>${ms ? ppDuree(ms) : '–'}</b><span>cette semaine</span></div></div>
-    <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${cible}</i><div><b>${obj ? auj + ' / ' + obj : auj}</b><span>${obj ? 'objectif du jour' : "aujourd'hui"}</span></div></div>`;
-}
-function ppObjHtml(){
-  const n = ppObjectif();
-  return `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${ppSvg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>', 18)}</i><span>Cartes par jour<small>Facultatif</small></span><span class="pp-objstep"><button aria-label="Diminuer" onclick="ppObjPas(-1)">−</button><b>${n ? n : 'Aucun'}</b><button aria-label="Augmenter" onclick="ppObjPas(1)">+</button></span></div></div>`;
+    <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${cible}</i><div><b>${auj}</b><span>aujourd'hui</span></div></div>`;
 }
 /* ---- v160 : aperçu en direct sous les champs de texte (visible seulement s'il y a une mise en forme) + aide ---- */
 function ppRvDiv(id, val){
@@ -12372,7 +12467,7 @@ function ppRvMaj(srcId){
   r.hidden = !m; r.innerHTML = m ? ppRichHtml(s.value) : '';
 }
 function ppFormatAide(){
-  const ex = ['**gras**', '*italique*', '- une puce\n- une autre', '$x^2 + y_1$', '$\\frac{a}{b}$', '$\\sqrt{x}$', '$\\sum_{i=1}^{n} i$', '$\\Delta x \\leq \\alpha$', '$\\ce{H2O}$', '$$E = mc^2$$'];
+  const ex = ['**gras**', '/italique/', '- une puce\n- une autre', 'x^2 et cm^3', '√16 ou √(x+1)', '$a/b$', '$(a+b)/(c+d)$', '$x_1 + y_1$', '$sum_(i=1)^n i$', '$delta x <= alpha$', '$\\ce{H2O}$', '$$E = mc^2$$'];
   ppSheet(`<div class="pp-grab"></div><h2>Écrire des formules</h2><p class="pp-hint">Dans une question ou une réponse. L'IA les écrit aussi toute seule.</p>${ex.map(s => `<div class="pp-fx"><code>${escapeHtml(s)}</code><span data-notr>${ppRichHtml(s)}</span></div>`).join('')}<p class="pp-hint">Un vrai dollar : <code>\\$</code></p><div class="pp-duo"><button class="pp-cta" style="margin:0;grid-column:1/-1" onclick="ppSettings(true)">Retour</button></div>`);
 }
 
@@ -12565,9 +12660,8 @@ function ppSetHtml(){
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
   <h4>Langue</h4>${ppLangueHtml()}
   <h4>Apparence</h4>${ppApparenceHtml()}
-  <h4>Rappels</h4>${rappels}${ppRappelsAppleHtml()}
+  ${ppEstApple() ? '' : `<h4>Rappels</h4>${rappels}`}
   ${ppAppleHtml()}
-  <h4>Objectif du jour</h4>${ppObjHtml()}
   <h4>Génération IA</h4>${ia}
   <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button></div></div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
@@ -12610,10 +12704,6 @@ function ppAppleHtml(){
     return `<h4>Safari (Mac)</h4><div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.globe}</i><span>Pense à sauvegarder<small>Safari peut effacer les données d'un site peu visité. Active la synchronisation ou exporte ta progression de temps en temps.</small></span></div></div>`;
   }
   return '';
-}
-function ppRappelsAppleHtml(){
-  if(!ppEstApple() || !('Notification' in window)) return '';
-  return `<p class="pp-hint">Sur iPhone et Mac, le rappel s'affiche seulement quand Memoria est ouverte (pas d'envoi en arrière-plan).</p>`;
 }
 function ppEnAppInstallee(){
   try{
