@@ -57,6 +57,7 @@ Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si t
 
 - **Réviser** : de grands boutons de réponse toujours à portée de pouce, un bouton « annuler » si tu t'es trompé, un **mode Quiz** pour changer de rythme.
 - **Sens inversé ⇄** : un bouton, et la carte marche aussi dans l'autre sens (réponse → question). Une seule progression, et l'app choisit le sens au hasard pour t'empêcher de réviser en pilote automatique.
+- **Réponse à écrire ✏️** : pour les cartes où tu dois vraiment sortir la réponse de ta tête, tu la tapes avant de retourner la carte. Tu vois ensuite ta réponse à côté de la bonne et tu te notes toi-même : l'app ne corrige rien, et ce que tu as tapé n'est jamais enregistré. À régler carte par carte ou pour toute une matière, aussi dans le Quiz.
 - **Série** : ta flamme monte tant que tu révises. Elle ne casse que si tu as vraiment laissé des cartes en retard.
 - **Statistiques** : ce que tu maîtrises, matière par matière, en un coup d'œil.
 - **Parcourir** : recherche, modifie, partage ou supprime n'importe quelle carte.
