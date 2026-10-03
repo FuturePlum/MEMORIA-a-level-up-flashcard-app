@@ -1803,6 +1803,21 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
   .pp-ei b{font-size:15.5px}
   .pp-ei span{font-size:14.5px}
 }
+/* v169 : Chromebook / grand écran, mode sombre uniquement — la grille de points du fond est un peu plus présente (.07 → .11 ; le téléphone et le mode clair ne changent pas). Pour la régler : changer .11 dans les deux règles. */
+@media (min-width:900px) and (min-height:480px){
+  :root:root:root:not([data-theme="light"]) body{
+    background:
+      linear-gradient(var(--bg), rgba(var(--bgr),0) 130px),
+      radial-gradient(circle at 90% 0%, rgba(255,107,61,.16), transparent 45%),
+      radial-gradient(circle, rgba(var(--ov),.11) 1px, transparent 1.2px) 0 0/16px 16px,
+      var(--bg) !important;
+    background-attachment:fixed !important;
+  }
+  :root:root:root:not([data-theme="light"]) body #pp-ses{
+    background:linear-gradient(var(--bg), rgba(var(--bgr),0) 130px), radial-gradient(circle at 90% 0%, rgba(255,107,61,.16), transparent 45%), radial-gradient(circle, rgba(var(--ov),.11) 1px, transparent 1.2px) 0 0/16px 16px, var(--bg);
+    background-attachment:fixed;
+  }
+}
 .pp-cta.pp-ghost{background:transparent;color:var(--cream);border:1.5px solid var(--line);box-shadow:none}
 .pp-cta.pp-quiet{background:transparent;color:var(--muted);border:1.5px solid var(--line);box-shadow:none}
 .pp-score{font-size:76px;font-weight:800;letter-spacing:-.05em;line-height:1;margin:10px 0 4px;animation:ppslam .55s var(--pps) both}
@@ -1889,6 +1904,8 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 /* Bouton « Nouvelle matière » (ajout manuel, ajout IA, ajout de contrôle) : bien visible, couleur d'accent, tirets = « à créer » */
 .pp-pill.pp-pill-new{border:1.5px dashed var(--orange);background:var(--c-osoft,rgba(255,107,61,.14));color:var(--orange-t);font-weight:800}
 .pp-pill.pp-pill-new svg{stroke:currentColor}
+/* v170 : onglet Ajouter, mode sombre uniquement — « Nouvelle matière » sans fond : texte et tirets orange seulement (le mode clair et la fenêtre « Ajouter un contrôle » gardent le fond d'avant). */
+:root:not([data-theme="light"]) #tab-add .pp-pill.pp-pill-new{background:transparent;color:var(--orange)}
 :where(.pp-add,.pp-sheet) label.pp-l{display:block;color:var(--muted);font-weight:800;letter-spacing:.12em;font-size:11px;margin:0 2px 7px;text-transform:uppercase}
 .pp-chip{flex:1;height:40px;border-radius:12px;border:1.5px solid var(--line);background:var(--panel);font-weight:800;color:var(--muted)}
 .pp-chip.on{border-color:var(--orange);color:var(--orange-t);background:var(--c-osoft)}
@@ -13207,10 +13224,13 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     /* v82 — grand écran (Chromebook) : sur un écran large l'onde traversait tout l'écran et devenait trop visible
        (sur téléphone il y a peu d'espace vide, c'était discret). Elle reste donc près du coin haut-droit (portée
        plafonnée), plus transparente et avec des points plus petits. Le téléphone ne change pas. */
-    var alpha = .6, r0 = 1.2, r1 = 1.2, xmin = 0, ymax = H + S;
+    var alpha = .6, r0 = 1.2, r1 = 1.2, xmin = 0, ymax = H + S, RF = R, plancher = 0;
+    /* v169 : sur grand écran l'onde était coupée à ~520 px du coin haut-droit : tout le reste de l'écran restait vide.
+       Près du coin elle ne change presque pas (un peu plus marquée) ; au-delà, un « plancher » discret la prolonge
+       jusqu'au coin le plus éloigné en s'estompant doucement. Pour la rendre plus / moins présente au loin :
+       changer `plancher` (0 = comme avant, .5 = bien visible) ; pour tout l'ensemble : `alpha`. */
     if(grand){
-      R = Math.min(R, 520); alpha = .36; r0 = 1; r1 = .8;
-      xmin = Math.max(0, ox - R * 1.1); ymax = Math.min(H + S, R * 1.1); // inutile de calculer les points hors de portée
+      R = Math.min(R, 520); alpha = .40; r0 = 1; r1 = .9; plancher = .5;
     }
     g.setTransform(DPR, 0, 0, DPR, 0, 0);
     g.clearRect(0, 0, W, H);
@@ -13222,7 +13242,9 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
         var sn = Math.sin(dist / 52 - t * .66);
         if(sn <= 0) continue;
         var u = dist / R;
-        var lit = Math.pow(sn, 1.4) * (1 - .85 * Math.pow(u, 1.6));
+        var f = 1 - .85 * Math.pow(u, 1.6);
+        if(plancher) f = Math.max(f, plancher * (1 - .5 * Math.min(1, dist / RF)));
+        var lit = Math.pow(sn, 1.4) * f;
         if(lit < .04) continue;
         g.fillStyle = cp + (lit * alpha).toFixed(2) + ')';
         g.beginPath(); g.arc(x, y, r0 + lit * r1, 0, 6.2832); g.fill();
