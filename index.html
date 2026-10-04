@@ -81,34 +81,59 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
    (4) aucun « pagehide » noté (Android a coupé la page en silence) → pas de splash si l'app était active il y a moins de 2 h, sinon splash.
    Le verdict est écrit dans le journal de diagnostic (ligne SPLASH). L'état de l'écran est remis dans tous les cas (script de reprise plus bas). */
 (function(){
-  var K = 'pp-derniere-activite', D = 'pp-deja-demarre', PH = 'pp-pagehide';
-  var GAP_RELANCE = 1500, DEUX_H = 2 * 60 * 60 * 1000;
-  /* v184 : quand on revient par l'icône (Android relance la page), le logo natif d'Android apparaît puis disparaît d'un coup : ça « clignote ».
-     true = le faux splash animé est rejoué juste derrière, dans le prolongement du logo natif (pas de coupure) ; false = comme avant (pas de splash). */
-  var SPLASH_SUR_RELANCE = true;
+  /* v185 : trois cas, décidés AVANT le premier rendu.
+     (1) page rechargée dans le même onglet (ex. changement de langue) : ni splash ni accueil, l'écran est remis ;
+     (2) RELANCE PAR L'ICÔNE (app déjà ouverte en arrière-plan) : l'ancienne page reçoit « visible » (on note l'heure : 'pp-vu') puis « pagehide » et une
+         nouvelle page se charge dans la même seconde. Le faux splash est rejoué et l'écran d'avant est remis ;
+     (3) tout le reste (vraie fermeture puis réouverture, page coupée par Android) : ouverture normale = splash animé + accueil, rien n'est remis.
+     Avant v185 le cas (3) était pris pour une reprise quand il n'y avait pas de « pagehide » noté : pas de splash et écran remis à tort. */
+  var K = 'pp-derniere-activite', D = 'pp-deja-demarre', PH = 'pp-pagehide', VU = 'pp-vu';
+  var GAP_RELANCE = 1500, GAP_VU = 2000;
   function marquer(){ try{ localStorage.setItem(K, String(Date.now())); }catch(e){} }
   function oublierPh(){ try{ localStorage.removeItem(PH); }catch(e){} }
-  var verdict = 'ouverture à froid';
+  var verdict = 'ouverture normale';
+  window.__ppRestaurer = false;
   try{
     var now = Date.now();
-    var t = parseInt(localStorage.getItem(K) || '0', 10);
     var ph = parseInt(localStorage.getItem(PH) || '0', 10);
+    var vu = parseInt(localStorage.getItem(VU) || '0', 10);
     var reprise = false;
-    if(sessionStorage.getItem(D) === '1'){ reprise = true; verdict = 'même onglet rechargé : pas de splash'; }
-    else if(ph && now - ph >= 0 && now - ph < GAP_RELANCE){
-      if(SPLASH_SUR_RELANCE){ verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : splash rejoué (v184)'; }
-      else { reprise = true; verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : pas de splash'; }
-    }
-    else if(ph){ verdict = 'vraie fermeture puis réouverture (pagehide il y a ' + Math.round((now - ph) / 1000) + ' s) : splash'; }
-    else if(t && now - t >= 0 && now - t < DEUX_H){ reprise = true; verdict = 'aucun pagehide noté, activité il y a ' + Math.round((now - t) / 1000) + ' s : pas de splash'; }
-    else { verdict = 'ouverture à froid (aucune activité récente) : splash'; }
+    if(sessionStorage.getItem(D) === '1'){ reprise = true; window.__ppRestaurer = true; verdict = 'même onglet rechargé : pas de splash, écran remis'; }
+    else if(ph && now - ph >= 0 && now - ph < GAP_RELANCE){ window.__ppRestaurer = true; verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : splash rejoué, écran remis'; }
+    else if(vu && now - vu >= 0 && now - vu < GAP_VU){ window.__ppRestaurer = true; verdict = 'relance par l\u2019icône (retour visible il y a ' + (now - vu) + ' ms) : splash rejoué, écran remis'; }
+    else { verdict = 'ouverture normale (pagehide ' + (ph ? 'il y a ' + Math.round((now - ph) / 1000) + ' s' : 'non noté') + ', retour visible ' + (vu ? 'il y a ' + Math.round((now - vu) / 1000) + ' s' : 'non noté') + ') : splash + accueil'; }
     oublierPh();
     if(reprise) document.documentElement.classList.add('pp-reprise');
     sessionStorage.setItem(D, '1');
   }catch(e){ verdict = 'erreur : ' + ((e && e.message) || e); }
   try{ window.ppJournal('SPLASH', verdict); }catch(e){}
   marquer();
-  document.addEventListener('visibilitychange', function(){ marquer(); if(document.visibilityState === 'visible') oublierPh(); });
+
+  /* v185 : voile de retour. Quand on touche l'icône, Android montre d'abord l'ANCIENNE page (l'écran où on était), puis relance la page : on voyait
+     donc l'écran de l'app, puis le splash. Dès que la page redevient visible on pose un voile uni (couleur du fond) ; si la page est relancée, il
+     disparaît avec elle (le splash prend le relais) ; sinon (retour par les applis récentes, rien ne se relance) il s'efface au bout de 0,8 s. */
+  function voile(){
+    try{
+      if(document.getElementById('pp-voile')) return;
+      var v = document.createElement('div');
+      v.id = 'pp-voile'; v.setAttribute('aria-hidden', 'true');
+      var clair = document.documentElement.getAttribute('data-theme') === 'light';
+      v.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:' + (clair ? '#f1f0fb' : '#0c0c12') + ';transition:opacity .18s ease-out;pointer-events:none';
+      (document.body || document.documentElement).appendChild(v);
+      setTimeout(function(){
+        v.style.opacity = '0';
+        setTimeout(function(){ if(v.parentNode) v.parentNode.removeChild(v); }, 220);
+      }, 800);
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange', function(){
+    marquer();
+    if(document.visibilityState === 'visible'){
+      try{ localStorage.setItem(VU, String(Date.now())); }catch(e){}
+      oublierPh();
+      voile();
+    }
+  });
   window.addEventListener('pageshow', function(e){ if(e.persisted) oublierPh(); });
   window.addEventListener('pagehide', function(){ marquer(); try{ localStorage.setItem(PH, String(Date.now())); }catch(e){} });
 })();
@@ -8146,7 +8171,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v184';
+const PP_APP_VERSION = 'v185';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13573,6 +13598,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var raw = localStorage.getItem(K);
     if(!window.__ppDemarre){ jr('pas faite : le démarrage n\u2019est pas allé jusqu\u2019au premier rendu'); return; }
     if(!raw){ jr('rien à restaurer (aucun instantané)'); return; }
+    if(!window.__ppRestaurer){ localStorage.removeItem(K); jr('ouverture normale : accueil, rien n\u2019est remis (v185)'); return; }
     var o = JSON.parse(raw);
     localStorage.removeItem(K);   // si la reprise elle-même plantait, elle ne recommencerait pas à chaque ouverture
     var age = o ? Date.now() - o.t : -1;
