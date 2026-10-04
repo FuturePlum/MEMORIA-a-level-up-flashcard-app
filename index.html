@@ -215,7 +215,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   if(lire()!=='en') return;
   document.documentElement.setAttribute('lang','en');
   var D=window.FC_EN={'Chargement…':'Loading…','Limite du jour atteinte, réessaie demain.':'Daily limit reached, try again tomorrow.','Chargement impossible pour l’instant. Réessaie plus tard.':'Couldn’t load right now. Try again later.','Cette conversation n’a pas encore été envoyée depuis l’autre appareil. Ouvre Memoria là-bas avec du réseau.':'This conversation hasn’t been sent from the other device yet. Open Memoria there with a connection.','Retenir · carnet':'Remember · notebook','Ce que Prof retient':'What Prof remembers','ex. préfère des exemples concrets':'e.g. prefers concrete examples','Des notes courtes que Prof lit avant chaque réponse, pour s’adapter à ta façon de réviser.':'Short notes Prof reads before every answer, to fit the way you study.','Supprimer cette ligne':'Delete this line','Carnet plein : supprime une ligne pour en ajouter':'Notebook full: delete a line to add one','Cette ligne existe déjà':'This line already exists','En cours':'In progress','Commencer une nouvelle conversation ? L’actuelle sera rangée dans « Conversations passées ».':'Start a new conversation? The current one will be saved in “Past conversations”.','Nouvelle':'New','Conversations passées':'Past conversations','Aucune conversation rangée pour l’instant.':'No saved conversation yet.','Cette conversation n’est pas disponible sur cet appareil.':'This conversation is not available on this device.','Supprimer cette conversation ?':'Delete this conversation?',
-    'Tes cartes sont envoyées à Google (Gemini) pour répondre.':'Your cards are sent to Google (Gemini) to answer.','Compris':'Got it','Nouvelle conversation':'New conversation','Pratiquer une langue':'Practice a language','Effacer cette conversation ?':'Clear this conversation?','Effacer':'Clear','Quelle langue ?':'Which language?','Actions proposées':'Suggested actions','Appliquer':'Apply','Ignorer':'Dismiss','+ Ajouter en carte':'+ Add as card','Il me faut ta clé Gemini':'I need your Gemini key','Ouvrir les Réglages':'Open Settings','Avant de commencer':'Before you start','Photo prête':'Photo ready',"Je t'explique":'I explain it to you','Explique autrement':'Explain differently','Pourquoi je rate celle-là ?':'Why do I keep missing this one?',
+    'Tes cartes sont envoyées à Google (Gemini) pour répondre.':'Your cards are sent to Google (Gemini) to answer.','Compris':'Got it','Nouvelle conversation':'New conversation','Tout voir':'See all','Gérer':'Manage','Aucune note pour l’instant.':'No notes yet.','Pratiquer une langue':'Practice a language','Effacer cette conversation ?':'Clear this conversation?','Effacer':'Clear','Quelle langue ?':'Which language?','Actions proposées':'Suggested actions','Appliquer':'Apply','Ignorer':'Dismiss','+ Ajouter en carte':'+ Add as card','Il me faut ta clé Gemini':'I need your Gemini key','Ouvrir les Réglages':'Open Settings','Avant de commencer':'Before you start','Photo prête':'Photo ready',"Je t'explique":'I explain it to you','Explique autrement':'Explain differently','Pourquoi je rate celle-là ?':'Why do I keep missing this one?',
     'Pose ta question…':'Ask a question…','Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t\'interroger.':'Hi! I know your cards. Ask me a question or ask me to quiz you.','Interroge-moi':'Quiz me','Résume la matière':'Summarize the subject','Vérifie mes cartes':'Check my cards','Question d\'examen':'Exam question','Mon bilan de la semaine':'My weekly review','Plan avant le contrôle':'Plan before the test','Toutes':'All','Photo':'Photo','Envoyer':'Send','Photo : pas encore branchée':'Photo: not connected yet','Je ne suis pas encore relié à l\'IA : l\'écran est prêt, les réponses arrivent à l\'étape suivante.':'I\'m not connected to the AI yet: the screen is ready, answers come in the next step.',
     'Réviser':'Study','Prendre la photo':'Take photo','Caméra indisponible : choisis un fichier.':'Camera unavailable: pick a file.','Planning':'Planning','Ajouter':'Add','Parcourir':'Browse',
     'Réglages':'Settings','Retour':'Back','Langue':'Language','Apparence':'Appearance','Sombre':'Dark','Clair':'Light','Auto':'Auto',
@@ -3099,7 +3099,9 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pc-add{display:block;margin-top:8px;padding:0;border:0;background:none;color:var(--muted);font:700 12.5px var(--font-sans)}
 .pc-add:active{color:var(--orange)}
 .pc-info-n{font-size:12px;font-weight:600;opacity:.8}
-.pc-more{margin-left:auto}
+.pc-new{margin-left:auto}
+.pc-new,.pc-more-b{transition:transform .35s var(--ease-press)}
+.pc-new:active,.pc-new.js-press,.pc-more-b:active,.pc-more-b.js-press{transform:scale(.9);transition-duration:.07s}
 .pc-nokey,.pc-act{align-self:stretch;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:var(--cream);font-size:14px;animation:pcin .5s var(--pce) backwards}
 .pc-nokey span{color:var(--muted);font-size:13px}
 .pc-act h4{margin:0;font-size:14px;font-weight:800}
@@ -3176,6 +3178,71 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 #pc-photo-prev .pc-pj-nom{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #pc-photo-prev button{margin-left:auto;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);color:var(--cream);font-size:18px;line-height:1}
 @media (prefers-reduced-motion:reduce){#pc-layer.open,#pc-layer.closing{transition-duration:.01ms!important}#pc-layer.open .pc-stg{animation:none;opacity:1;transform:none}.pp-coach svg,.pp-coach.bounce{animation:none}}
+/* ===== v227 : Prof sur Chromebook / grand écran (même seuil que le reste : 900 × 480) =====
+   Téléphone : rien ne change (.pc-win = display:contents, la colonne .pc-side est cachée).
+   Grand écran : Prof est une PAGE à droite de la barre latérale (qui reste visible, onglet Prof allumé) : colonne de gauche (matières,
+   conversations récentes, carnet, langue) + fenêtre de conversation (bordure crème, ombre orange dure, comme les autres onglets).
+   Largeurs liées : gauche 236 px (= --side - 8) ; colonne 300 px + écart 26 px ; fenêtre avec 9 px de marge pour l'ombre ; si on les change, changer aussi les .pc-hist / #pc-menu ci-dessous. */
+.pc-win{display:contents}
+.pc-side{display:none}
+.pc-new,.pc-more-b{flex:none}
+@media (min-width:900px) and (min-height:480px){
+  #pc-veil{display:none!important}   /* pas de voile : la barre de gauche reste cliquable (changer d'onglet ferme Prof) */
+  #pc-layer{left:236px;top:0!important;height:100%!important;width:auto;right:0;padding:24px 30px 33px 8px;border:0;border-radius:0;box-shadow:none;transform:translateY(12px);opacity:0}
+  #pc-layer.open{transform:none;opacity:1;transition:opacity .3s ease,transform .5s var(--pce)}
+  #pc-layer.closing{transform:translateY(10px);opacity:0;transition:opacity .2s ease-in,transform .2s ease-in}
+  #pc-layer.ready{transform:none;opacity:1;transition:none}
+  /* fond : mêmes couches que le body (et #pp-ses), fixées à l'écran, pour qu'aucune couture ne se voie à gauche (clair ET sombre) */
+  :root:root:root:not([data-theme="light"]) body #pc-layer{background:linear-gradient(var(--bg), rgba(var(--bgr),0) 130px), radial-gradient(circle at 90% 0%, rgba(255,107,61,.16), transparent 45%), radial-gradient(circle, rgba(var(--ov),.11) 1px, transparent 1.2px) 0 0/16px 16px, var(--bg);background-attachment:fixed}
+  :root:root:root[data-theme="light"] body #pc-layer{background:linear-gradient(var(--bg), rgba(var(--bgr),0) 130px), radial-gradient(circle at 92% 0%, rgba(122,90,248,.20), transparent 46%), radial-gradient(circle at 0% 100%, rgba(255,107,61,.14), transparent 42%), radial-gradient(circle at 50% 55%, rgba(47,124,240,.07), transparent 55%), radial-gradient(circle, rgba(var(--ov),.16) 1px, transparent 1.3px) 0 0/16px 16px, var(--bg);background-attachment:fixed}
+  #pc-layer .pp-grab{display:none}
+  .pc-in{max-width:none;display:grid;grid-template-columns:300px minmax(0,1fr);column-gap:26px;align-items:stretch}
+  .pc-side{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;padding:2px 2px 6px}
+  .pc-sc{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:13px 14px;flex:none}
+  .pc-sc:empty{display:none}
+  .pc-sc h3{margin:0 0 9px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:800}
+  #pc-smats{display:flex;flex-direction:column;gap:9px}
+  #pc-smats .pc-pill{width:100%;text-align:left;border-radius:14px;padding:9px 14px;font-size:14px;background:var(--bg)}
+  #pc-smats .pc-pill.on{background:var(--c)}
+  #pc-pills{display:none}
+  #pc-shist{display:flex;flex-direction:column;gap:6px}
+  #pc-shist .pch-it{padding:8px 11px;border-radius:12px;background:var(--bg)}
+  #pc-shist .pch-it b{font-size:13.5px;-webkit-line-clamp:1}
+  #pc-shist .pch-it span{font-size:12px}
+  .pc-sv{margin:0;color:var(--muted);font-size:13px;font-weight:600}
+  .pc-sn{margin:0;padding:6px 0;border-top:1px solid var(--line);font-size:13px;line-height:1.35;color:var(--cream)}
+  .pc-sn:first-of-type{border-top:0;padding-top:0}
+  .pc-sb{display:block;width:100%;margin-top:8px;padding:9px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--cream);font:700 13px var(--font-sans);transition:transform .35s var(--ease-press)}
+  .pc-sb small{font-size:12px;font-weight:600;color:var(--muted)}
+  .pc-sb:active,.pc-sb.js-press{transform:scale(.96);transition-duration:.07s}
+  #pc-slang .pc-sb{margin-top:0}
+  .pc-win{display:flex;flex-direction:column;min-height:0;margin:0 9px 9px 0;background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--orange) 12%,transparent),transparent 55%),var(--panel);border:2px solid var(--cream);border-radius:26px;box-shadow:9px 9px 0 var(--orange);overflow:hidden}
+  .pc-bar{padding:14px 20px;border-bottom:1.5px solid var(--line)}
+  .pc-title{font-size:20px}
+  .pc-title i{width:44px;height:30px}
+  #pc-feed{padding:22px 28px;gap:10px;scrollbar-width:thin}
+  .pc-b{max-width:min(640px,78%);font-size:15px;padding:11px 16px}
+  #pc-sugg{flex-wrap:wrap;overflow:visible;padding:6px 28px 12px}
+  .pc-chip{font-size:13.5px;padding:8px 15px}
+  .pc-input{padding:14px 20px 14px}
+  .pc-sq,.pc-send{height:44px}
+  .pc-sq{width:44px}
+  #pc-input{height:44px;font-size:15.5px}
+  .pc-act,.pc-nokey{align-self:flex-start;width:min(560px,86%)}
+  /* écrans par-dessus la fenêtre : on les cale EXACTEMENT sur elle (haut 24, droite 39, bas 42, gauche 8 + 300 + 26) */
+  .pc-hist{inset:24px 39px 42px 334px;border-radius:26px;border:2px solid var(--cream);box-shadow:9px 9px 0 var(--orange);padding-top:6px}
+  .pc-hist .pc-bar{border-bottom:0;max-width:640px;padding:14px 8px 6px}
+  .pch-corps{max-width:640px}
+  .pc-info{align-items:center;border-radius:26px;inset:24px 39px 42px 334px}
+  #pc-menu{top:84px;right:62px;max-width:320px}
+  /* barre de gauche : l'onglet de la page ouverte reste jaune ; pendant Prof, c'est celui de Prof */
+  body.pc-open .pp-tab.on:not(.pp-tab-prof){background:transparent;color:var(--muted);box-shadow:none}
+  body.pc-open .pp-tab-prof{background:var(--yellow);color:#1a1405;font-weight:800;box-shadow:0 4px 0 var(--yellow-d),0 10px 18px -8px rgba(var(--yr),.4)}
+  body.pc-open .pp-tab-prof svg{animation:vieTabHop .55s var(--pps) both}
+}
+@media (min-width:900px) and (min-height:480px) and (hover:hover) and (pointer:fine){
+  :is(.pc-pill,.pc-chip,.pc-sb,.pch-it,.pc-new,.pc-more-b,.pc-sq,.pc-send):not(:disabled):hover{filter:brightness(1.12)}
+}
 </style>
 <style id="fci-css">
 /* v141 : Introduction — tout est sous #fci et préfixé fi- (aucune collision avec le reste de l'app) */
@@ -5118,6 +5185,7 @@ const TABBAR_ITEMS = [
 const TOPBAR_SETTINGS_TABS = ['add', 'browse', 'settings'];
 
 function switchTab(tab){
+  try{ if(pcOuvert) ppCoachFermer(); }catch(e){}   /* v227 : grand écran, Prof reste ouvert à côté de la barre : un clic sur un autre onglet le ferme */
   if(tab === 'planning' && ppWide()) tab = 'study'; // grand écran : le planning est directement sur l'accueil
   if(tab === 'add' && activeTab !== 'add') ppAddReset();
   if(tab === 'planning' && activeTab !== 'planning') ppPlanReset();
@@ -5199,16 +5267,19 @@ let pcOuvert = false, pcMat = '*', pcDerniere = '*', pcListe = [], pcUtilises = 
 const PC_TOUTES = '*';
 function pcEl(id){ return document.getElementById(id); }
 function pcNom(m){ return m === PC_TOUTES ? 'Toutes' : m; }
+const PC_NEW_IC = ppSvg('<path d="M20 14.5a2 2 0 0 1-2 2H9l-4.5 3.6V9.5a2 2 0 0 1 2-2H13"/><path d="M18 2.5v6M15 5.5h6"/>', 20);   /* v227 : bulle de discussion + petit plus au-dessus à droite */
 function pcEnsure(){
   if(pcEl('pc-layer')) return;
   const v = document.createElement('div'); v.id = 'pc-veil'; v.className = 'pp-veil'; document.body.appendChild(v);
   const l = document.createElement('div'); l.id = 'pc-layer'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-modal', 'true'); l.setAttribute('aria-hidden', 'true');
   l.innerHTML = `<div class="pp-grab"></div><div class="pc-in">
-    <div class="pc-bar pc-stg" style="--i:0"><button class="pp-back" id="pc-back" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><i>${pcEtoiles(18)}</i><span>${escapeHtml(PP_COACH_NOM)}</span></div><button class="pp-back pc-more" id="pc-more" aria-label="Menu" type="button">${PP_DOTS_H}</button></div>
+    <aside class="pc-side" id="pc-side"><div class="pc-sc"><h3>Matière</h3><div id="pc-smats"></div></div><div class="pc-sc"><h3>Conversations passées</h3><div id="pc-shist"></div></div><div class="pc-sc"><h3>Ce que Prof retient</h3><div id="pc-snote"></div></div><div class="pc-sc" id="pc-slang"></div></aside>
+    <div class="pc-win">
+    <div class="pc-bar pc-stg" style="--i:0"><button class="pp-back" id="pc-back" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><i>${pcEtoiles(18)}</i><span>${escapeHtml(PP_COACH_NOM)}</span></div><button class="pp-back pc-new" id="pc-new" aria-label="Nouvelle conversation" type="button">${PC_NEW_IC}</button><button class="pp-back pc-more-b" id="pc-more" aria-label="Menu" type="button">${PP_DOTS_H}</button></div>
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
     <div id="pc-sugg" class="pc-stg" style="--i:3"></div>
-    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><button class="pc-sq" id="pc-photo" aria-label="Photo">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><input id="pc-input" placeholder="Pose ta question…" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false"><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div>`;
+    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><button class="pc-sq" id="pc-photo" aria-label="Photo">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><input id="pc-input" placeholder="Pose ta question…" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false"><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
   document.body.appendChild(l);
   const inp = pcEl('pc-input'), sendBtn = pcEl('pc-send');
   pcEl('pc-back').onclick = ppCoachFermer;
@@ -5218,7 +5289,8 @@ function pcEnsure(){
   pcEl('pc-doc').addEventListener('change', pcPhotoChoisie);
   pcEl('pc-input').addEventListener('paste', pcCollerTexte);   /* v224 : un long texte collé devient une pièce jointe */
   pcEl('pc-more').onclick = () => pcMenu(pcMenuMode ? '' : 'liste');
-  l.addEventListener('pointerdown', e => { if(pcMenuMode && !e.target.closest('#pc-menu,#pc-more')) pcMenu(''); });
+  pcEl('pc-new').onclick = () => pcMenu(pcMenuMode === 'confirme' ? '' : 'confirme');   /* v227 : « Nouvelle conversation » sort du menu ⋯ et vit à côté des trois points */
+  l.addEventListener('pointerdown', e => { if(pcMenuMode && !e.target.closest('#pc-menu,#pc-more,#pc-new')) pcMenu(''); });
   sendBtn.addEventListener('pointerdown', e => e.preventDefault()); /* garde le clavier ouvert à l'envoi */
   sendBtn.onclick = () => { pcEnvoyer(inp.value); sendBtn.classList.remove('fly'); void sendBtn.offsetWidth; sendBtn.classList.add('fly'); };
   inp.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); pcEnvoyer(inp.value); } });
@@ -5230,7 +5302,7 @@ function pcEnsure(){
   l.querySelector('.pc-input').addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
   l.querySelector('.pc-input').addEventListener('mousedown', e => e.stopPropagation());
   /* v204 : glissé depuis la poignée, l'en-tête ET la conversation (seulement si elle est tout en haut : sinon elle défile) */
-  ppSwipeFeuille(l, v, ppCoachFermer, tg => { const f = pcEl('pc-feed'); return !f.contains(tg) || f.scrollTop <= 0; });
+  ppSwipeFeuille(l, v, ppCoachFermer, tg => { if(ppWide()) return false; const f = pcEl('pc-feed'); return !f.contains(tg) || f.scrollTop <= 0; });   /* v227 : sur grand écran Prof est une page, pas une feuille */
   if(window.visualViewport){ visualViewport.addEventListener('resize', pcFit); visualViewport.addEventListener('scroll', pcFit); }
 }
 /* ===== Prof : le cerveau (étapes 1 à 5 du cahier) — v207 =====
@@ -5286,7 +5358,8 @@ function pcIdAssure(){
 }
 /* Copie la conversation en cours dans l'historique (si elle contient au moins un message de l'utilisateur) : corps coach-conv-<id> + entrée d'index mise à jour,
    placée en tête. Renvoie true si c'est fait ou s'il n'y avait rien à faire ; false si l'écriture a échoué (rien n'est perdu, ppEcrire a déjà prévenu). */
-function pcInstantane(pasEnvoi){
+function pcInstantane(pasEnvoi){ const r = pcInstantane0(pasEnvoi); pcSideMaj(); return r; }   /* v227 : la colonne de gauche suit chaque rangement */
+function pcInstantane0(pasEnvoi){
   /* v219 : tant qu'une réponse est attendue, le dernier message de l'utilisateur n'est pas rangé (il serait resté seul dans la copie) */
   const conv = (pcAttente && pcConv.length && pcConv[pcConv.length - 1] && pcConv[pcConv.length - 1].r === 'u') ? pcConv.slice(0, -1) : pcConv;
   if(!conv.some(m => m && m.r === 'u')) return true;
@@ -5589,7 +5662,7 @@ function pcSortie(h){
   h.classList.add('out');
   setTimeout(() => { if(h.isConnected) h.remove(); }, 230);
 }
-function pcCarnetFerme(anime){ const h = pcEl('pc-carnet'); if(!h) return; if(anime === true) pcSortie(h); else document.querySelectorAll('#pc-carnet').forEach(x => x.remove()); }
+function pcCarnetFerme(anime){ const h = pcEl('pc-carnet'); if(!h) return; pcSideMaj(); if(anime === true) pcSortie(h); else document.querySelectorAll('#pc-carnet').forEach(x => x.remove()); }
 function pcCarnetOuvrir(){
   if(!pcOuvert) return;
   pcCarnetFerme(); pcHistFerme();
@@ -5628,12 +5701,13 @@ function pcCarnetDessine(){
   });
   info.textContent = plein ? 'Le carnet est plein (' + CARNET_MAX + ' lignes). Supprime une ligne pour en ajouter.' : l.length + '/' + CARNET_MAX + ' lignes · ' + CARNET_LIGNE_MAX + ' caractères maximum par ligne';
   inp.disabled = plein; btn.disabled = plein;
+  pcSideMaj();
 }
 function pcHistDate(iso){
   const d = new Date(iso); if(isNaN(d)) return '';
   try{ return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); }catch(e){ return ''; }
 }
-function pcHistFerme(anime){ const h = pcEl('pc-hist'); if(!h) return; if(anime === true) pcSortie(h); else document.querySelectorAll('#pc-hist').forEach(x => x.remove()); }
+function pcHistFerme(anime){ const h = pcEl('pc-hist'); if(!h) return; pcSideMaj(); if(anime === true) pcSortie(h); else document.querySelectorAll('#pc-hist').forEach(x => x.remove()); }
 function pcHistOuvrir(){
   if(!pcOuvert) return;
   pcHistFerme(); pcInstantane(true); /* la conversation en cours doit être à jour dans la liste (pas d'envoi au serveur pour une simple ouverture) */
@@ -5784,7 +5858,7 @@ function pcMenu(mode){
   m.classList.remove('out');
   let h = '';
   if(mode === 'liste'){
-    h = `<button type="button" data-a="nouv">Nouvelle conversation</button><button type="button" data-a="passees">Conversations passées${pcHistLire().length ? ' (' + pcHistLire().length + ')' : ''}</button><button type="button" data-a="carnet">Ce que Prof retient${pcCarnetLire().length ? ' (' + pcCarnetLire().length + ')' : ''}</button>` + (pcLangue
+    h = `<button type="button" data-a="passees">Conversations passées${pcHistLire().length ? ' (' + pcHistLire().length + ')' : ''}</button><button type="button" data-a="carnet">Ce que Prof retient${pcCarnetLire().length ? ' (' + pcCarnetLire().length + ')' : ''}</button>` + (pcLangue
       ? `<button type="button" data-a="stop">Arrêter la langue (${escapeHtml(pcLangue)})</button>`
       : `<button type="button" data-a="langue">Pratiquer une langue</button>`);
   } else if(mode === 'confirme'){
@@ -5797,9 +5871,10 @@ function pcMenu(mode){
   const li = pcEl('pc-lang-in'); if(li){ li.onkeydown = e => { if(e.key === 'Enter'){ e.preventDefault(); pcMenuAction('ok'); } }; setTimeout(() => li.focus(), 60); }
 }
 function pcMenuAction(a){
+  setTimeout(pcSideMaj, 0);
   if(a === 'nouv') return pcMenu('confirme');
   if(a === 'langue') return pcMenu('langue');
-  if(a === 'non') return pcMenu('liste');
+  if(a === 'non') return pcMenu(pcMenuMode === 'langue' ? 'liste' : '');
   if(a === 'passees'){ pcMenu(''); return pcHistOuvrir(); }
   if(a === 'carnet'){ pcMenu(''); return pcCarnetOuvrir(); }
   if(a === 'oui'){
@@ -6216,17 +6291,59 @@ function pcAjouteEnCarte(texte){
 }
 
 function pcRenderPills(){
-  const box = pcEl('pc-pills');
-  box.innerHTML = pcListe.map((m, i) => `<button class="pc-pill" style="--c:${m === PC_TOUTES ? 'var(--orange)' : couleurMatiere(m)};--k:${i}" data-i="${i}">${escapeHtml(pcNom(m))}</button>`).join('');
-  box.querySelectorAll('.pc-pill').forEach(b => b.onclick = () => pcChoisir(+b.dataset.i));
+  const html = pcListe.map((m, i) => `<button class="pc-pill" style="--c:${m === PC_TOUTES ? 'var(--orange)' : couleurMatiere(m)};--k:${i}" data-i="${i}">${escapeHtml(pcNom(m))}</button>`).join('');
+  ['pc-pills', 'pc-smats'].forEach(id => {   /* v227 : #pc-pills = téléphone (défilement horizontal), #pc-smats = colonne de gauche du grand écran (le CSS en cache un des deux) */
+    const box = pcEl(id); if(!box) return;
+    box.innerHTML = html;
+    box.querySelectorAll('.pc-pill').forEach(b => b.onclick = () => pcChoisir(+b.dataset.i));
+  });
   pcMarque(false);
 }
 function pcMarque(pop){ /* met à jour les classes sans recréer les boutons : les transitions restent fluides */
-  const box = pcEl('pc-pills');
-  box.querySelectorAll('.pc-pill').forEach((b, i) => {
-    const on = pcListe[i] === pcMat; b.classList.toggle('on', on); b.classList.remove('pop');
-    if(pop && on){ void b.offsetWidth; b.classList.add('pop'); if(box.scrollWidth > box.clientWidth) box.scrollTo({ left: b.offsetLeft - (box.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); }
+  ['pc-pills', 'pc-smats'].forEach(id => {
+    const box = pcEl(id); if(!box) return;
+    box.querySelectorAll('.pc-pill').forEach((b, i) => {
+      const on = pcListe[i] === pcMat; b.classList.toggle('on', on); b.classList.remove('pop');
+      if(pop && on){ void b.offsetWidth; b.classList.add('pop'); if(box.scrollWidth > box.clientWidth) box.scrollTo({ left: b.offsetLeft - (box.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); }
+    });
   });
+}
+/* v227 : colonne de gauche de Prof (grand écran seulement, display:none sur téléphone) : conversations récentes, carnet, langue.
+   Les matières sont dans #pc-smats (voir pcRenderPills). Rafraîchie à l'ouverture, après chaque rangement de conversation, à la fermeture des écrans « Conversations passées » / carnet et après une action du menu. */
+function pcSideMaj(){
+  const bh = pcEl('pc-shist'), bn = pcEl('pc-snote'), bl = pcEl('pc-slang'); if(!bh || !bn || !bl) return;
+  const idx = pcHistLire();
+  bh.innerHTML = '';
+  if(!idx.length){ const v = document.createElement('p'); v.className = 'pc-sv'; v.textContent = 'Aucune conversation rangée pour l\u2019instant.'; bh.appendChild(v); }
+  idx.slice(0, 4).forEach(e => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pch-it';
+    const t = document.createElement('b'); t.textContent = e.t || 'Conversation';
+    const meta = [e.id === pcConvId ? 'En cours' : '', e.m ? pcNom(e.m) : '', e.n + (e.n > 1 ? ' messages' : ' message')].filter(Boolean);
+    const sp = document.createElement('span');
+    meta.forEach((x, i) => { if(i) sp.appendChild(document.createTextNode(' · ')); sp.appendChild(document.createTextNode(x)); });
+    b.appendChild(t); b.appendChild(sp);
+    b.onclick = () => { pcMenu(''); pcHistOuvrir(); pcHistLecture(e.id); };
+    bh.appendChild(b);
+  });
+  if(idx.length){
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pc-sb';
+    b.appendChild(document.createTextNode('Tout voir')); const n = document.createElement('small'); n.textContent = ' (' + idx.length + ')'; n.setAttribute('data-notr', ''); b.appendChild(n);
+    b.onclick = () => { pcMenu(''); pcHistOuvrir(); };
+    bh.appendChild(b);
+  }
+  const notes = pcCarnetLire();
+  bn.innerHTML = '';
+  if(!notes.length){ const v = document.createElement('p'); v.className = 'pc-sv'; v.textContent = 'Aucune note pour l\u2019instant.'; bn.appendChild(v); }
+  notes.slice(0, 3).forEach(t => { const r = document.createElement('p'); r.className = 'pc-sn'; r.textContent = t; bn.appendChild(r); });
+  const bg = document.createElement('button'); bg.type = 'button'; bg.className = 'pc-sb';
+  bg.appendChild(document.createTextNode('Gérer')); const ng = document.createElement('small'); ng.textContent = ' (' + notes.length + '/' + CARNET_MAX + ')'; ng.setAttribute('data-notr', ''); bg.appendChild(ng);
+  bg.onclick = () => { pcMenu(''); pcCarnetOuvrir(); };
+  bn.appendChild(bg);
+  bl.innerHTML = '';
+  const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'pc-sb';
+  bb.textContent = pcLangue ? 'Arrêter la langue (' + pcLangue + ')' : 'Pratiquer une langue';
+  bb.onclick = () => pcMenuAction(pcLangue ? 'stop' : 'langue');
+  bl.appendChild(bb);
 }
 function pcChoisir(i){
   if(pcListe[i] === pcMat) return;
@@ -6317,7 +6434,8 @@ function ppCoachOuvrir(ctx){
   pcRendreConv();
   if(pcCarte){ const c = CARDS.find(k => k.id === pcCarte); pcSep('Carte : ' + pcNet(c.question || '🖼 Image').slice(0, 60)); }
   if(!getGeminiKey()) pcEtatSansCle();
-  pcRenderPills(); pcRenderSugg(); pcRebond();
+  pcRenderPills(); pcRenderSugg(); pcSideMaj(); pcRebond();
+  document.body.classList.add('pc-open');   /* v227 : grand écran, l'onglet Prof de la barre de gauche s'allume */
   const tb = document.getElementById('tabbar-root'); if(tb) tb.classList.add('tabbar-hidden');
   l.style.display = 'flex'; void l.offsetWidth;
   l.classList.remove('closing', 'ready'); l.classList.add('open'); pcEl('pc-veil').classList.add('on'); l.setAttribute('aria-hidden', 'false');
@@ -6330,6 +6448,7 @@ function ppCoachFermer(){
   clearTimeout(pcPretT); l.classList.remove('ready'); void l.offsetWidth;
   l.style.top = '0'; l.style.height = '100%';
   l.classList.remove('open'); l.classList.add('closing'); pcEl('pc-veil').classList.remove('on');
+  document.body.classList.remove('pc-open');
   const tb = document.getElementById('tabbar-root'); if(tb) tb.classList.remove('tabbar-hidden');
   pcRebond();
   clearTimeout(pcFermT);
@@ -7023,7 +7142,7 @@ function ppCountUp(){
    Plus de vibration sur les simples appuis de boutons, ni au retournement de la carte, ni sur Générer / Ajouter. */
 function haptique(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 (function(){
-  const sel = '.pp-head button,.pp-nav button,.pp-home button,#pp-ses button,.pp-row,.pp-prog7,.pp-ctl,.pp-mat,.pp-li,.pp-sec,.pp-snd,.pp-chip,.pp-ibt,.pp-pill,.pp-coach,.pc-pill,.pc-chip,.pc-sq,.pc-send,.pp-invc,.pp-dash,.pp-bk2,.pp-back,.pp-alt button,.pp-pd,.pp-d,.pp-pdn,.pp-ib,.pp-mini,.pp-cta,.pp-undo,.home-cta,.home-matiere-due-item,.planning-strip,.filter-pill,.modal-actions button,#pc-menu button,.pch-it,.pc-mb button';
+  const sel = '.pp-head button,.pp-nav button,.pp-home button,#pp-ses button,.pp-row,.pp-prog7,.pp-ctl,.pp-mat,.pp-li,.pp-sec,.pp-snd,.pp-chip,.pp-ibt,.pp-pill,.pp-coach,.pc-pill,.pc-chip,.pc-sq,.pc-send,.pc-new,.pc-more-b,.pc-sb,.pp-invc,.pp-dash,.pp-bk2,.pp-back,.pp-alt button,.pp-pd,.pp-d,.pp-pdn,.pp-ib,.pp-mini,.pp-cta,.pp-undo,.home-cta,.home-matiere-due-item,.planning-strip,.filter-pill,.modal-actions button,#pc-menu button,.pch-it,.pc-mb button';
   document.addEventListener('pointerdown', e => {
     const b = e.target.closest ? e.target.closest(sel) : null;
     if(!b || b.disabled) return;
@@ -9925,7 +10044,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v226';
+const PP_APP_VERSION = 'v227';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -15157,6 +15276,10 @@ function ppFermerCouche(cible){
   if(cal && cal.classList.contains('on')){ ppPickClose(); return true; }
   const feuille = document.getElementById('pp-sheet');
   if(feuille && feuille.classList.contains('on')){ ppSheetClose(); return true; }
+  try{ if(pcOuvert && ppWide()){   /* v227 : Échap dans Prof (même depuis le champ de saisie) : écran du dessus, sinon menu, sinon fermeture */
+    if(pcEl('pc-hist')) pcHistFerme(true); else if(pcEl('pc-carnet')) pcCarnetFerme(true); else if(pcMenuMode) pcMenu(''); else ppCoachFermer();
+    return true;
+  } }catch(e){}
   const tag = cible && cible.tagName ? cible.tagName.toLowerCase() : '';
   if(tag === 'input' || tag === 'textarea' || tag === 'select' || (cible && cible.isContentEditable)) return false;
   const racine = document.getElementById('modal-root');
