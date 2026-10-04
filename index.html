@@ -126,7 +126,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
         v.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:' + '#ff0000' /* v188 TEST : rouge vif, à remettre en (clair ? '#f1f0fb' : '#0c0c12') */ + ';transition:opacity .18s ease-out;pointer-events:none';
         (document.body || document.documentElement).appendChild(v);
       }
-      v.style.opacity = '1';
+      v.style.transition = 'none'; v.style.opacity = '1'; void v.offsetHeight; /* v189 : pose immédiate, sans fondu, et dessin forcé */
       clearTimeout(minuteurVoile); minuteurVoile = null;
       return v;
     }catch(e){ return null; }
@@ -136,7 +136,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     if(!v) return;
     clearTimeout(minuteurVoile);
     minuteurVoile = setTimeout(function(){
-      v.style.opacity = '0';
+      v.style.transition = 'opacity .18s ease-out'; v.style.opacity = '0';
       setTimeout(function(){ if(v.parentNode && v.style.opacity === '0') v.parentNode.removeChild(v); }, 220);
     }, 800);
   }
@@ -151,6 +151,10 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     }
   });
   window.addEventListener('freeze', function(){ poserVoile(); });
+  /* v189 TEST : pose plus précoce, dès que l'app perd le focus (avant le passage en arrière-plan) ; levé au retour du focus. */
+  window.addEventListener('blur', function(){ poserVoile(); });
+  window.addEventListener('focus', function(){ if(document.visibilityState === 'visible'){ poserVoile(); leverVoile(); } });
+  document.addEventListener('pause', function(){ poserVoile(); });
   window.addEventListener('pageshow', function(e){ if(e.persisted) oublierPh(); });
   window.addEventListener('pagehide', function(){ marquer(); poserVoile(); try{ localStorage.setItem(PH, String(Date.now())); }catch(e){} });
 })();
@@ -8189,7 +8193,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v188';
+const PP_APP_VERSION = 'v189';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
