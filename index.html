@@ -110,8 +110,8 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     var vu = parseInt(localStorage.getItem(VU) || '0', 10);
     var reprise = false;
     if(sessionStorage.getItem(D) === '1'){ reprise = true; window.__ppRestaurer = true; verdict = 'même onglet rechargé : pas de splash, écran remis'; }
-    else if(ph && now - ph >= 0 && now - ph < GAP_RELANCE){ window.__ppRestaurer = true; verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : splash rejoué, écran remis'; }
-    else if(vu && now - vu >= 0 && now - vu < GAP_VU){ window.__ppRestaurer = true; verdict = 'relance par l\u2019icône (retour visible il y a ' + (now - vu) + ' ms) : splash rejoué, écran remis'; }
+    else if(ph && now - ph >= 0 && now - ph < GAP_RELANCE){ window.__ppRestaurer = true; document.documentElement.classList.add('pp-icone'); verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : faux splash statique + fondu, écran remis'; }
+    else if(vu && now - vu >= 0 && now - vu < GAP_VU){ window.__ppRestaurer = true; document.documentElement.classList.add('pp-icone'); verdict = 'relance par l\u2019icône (retour visible il y a ' + (now - vu) + ' ms) : faux splash statique + fondu, écran remis'; }
     else { verdict = 'ouverture normale (pagehide ' + (ph ? 'il y a ' + Math.round((now - ph) / 1000) + ' s' : 'non noté') + ', retour visible ' + (vu ? 'il y a ' + Math.round((now - vu) / 1000) + ' s' : 'non noté') + ') : splash + accueil'; }
     oublierPh();
     if(reprise) document.documentElement.classList.add('pp-reprise');
@@ -617,6 +617,12 @@ input, textarea, [contenteditable="true"]{
 #boot-splash:not(.go), #boot-splash:not(.go) *{ animation-play-state:paused !important; }
 /* v174 : retour dans l'app (pas un vrai démarrage) : pas de faux splash. */
 html.pp-reprise #boot-splash{ display:none !important; }
+/* v203 : retour par l'icône (app déjà ouverte en arrière-plan) : on ne montre que le faux splash STATIQUE (logo seul, sans le mot « Memoria »,
+   sans l'animation du logo), puis le même fondu de sortie qu'au démarrage, lancé tout de suite (délai 0 au lieu de 1,2 s). */
+html.pp-icone #boot-splash{ animation-delay:0s; }
+html.pp-icone #boot-splash-icon{ animation-delay:0s; }
+html.pp-icone #boot-splash-word, html.pp-icone #bs-ys, html.pp-icone #bs-yf{ display:none !important; }
+html.pp-icone #bs-hop, html.pp-icone #bs-of, html.pp-icone #bs-os, html.pp-icone #boot-splash-card #bs-check{ animation:none !important; }
 /* v176 : au retour dans l'app, l'accueil ne rejoue pas son fondu d'entrée (sinon l'écran « clignote » : invisible puis affiché en fondu). */
 html.pp-reprise .home-status, html.pp-reprise .home-cta, html.pp-reprise .home-choice-item,
 html.pp-reprise .home-secondary-sep, html.pp-reprise .home-secondary{ opacity:1 !important; animation:none !important; }
@@ -13872,7 +13878,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     splash.classList.add('go');
     setTimeout(reveal, 2000);
   }
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){ setTimeout(start, 50); }); });
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ setTimeout(start, document.documentElement.classList.contains('pp-icone') ? 0 : 50); }); }); // v203 : retour par l'icône = fondu sans attendre
   setTimeout(start, 1500);
 })();
 </script>
