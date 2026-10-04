@@ -3161,6 +3161,24 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pc-prec::placeholder{color:var(--c-ph)}
 .pc-prec:focus{border-color:var(--orange);box-shadow:0 0 0 3px color-mix(in srgb,var(--orange) 18%,transparent)}
 .pc-act.done .pc-un{align-self:flex-start}
+/* v240 : états Appliqué / Ignoré / Annulé de la carte d'actions de Prof */
+.pc-act{position:relative}
+.pc-hd{display:flex;align-items:center;gap:9px}
+.pc-chk{display:inline-flex;flex:none}
+.pc-chk svg{display:block;overflow:visible}
+.pc-chk-c{fill:none;stroke:var(--muted);stroke-width:2}
+.pc-chk-p{fill:none;stroke:var(--muted);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;animation:pcchk .5s .18s var(--pce) forwards}
+.pc-act.pc-ok .pc-chk-c{fill:var(--good,var(--green));stroke:var(--good,var(--green));transform-origin:center;transform-box:fill-box;animation:pcpop .5s var(--ease-press) backwards}
+.pc-act.pc-ok .pc-chk-p{stroke:var(--bg)}
+.pc-act.pc-undo .pc-chk-c,.pc-act.pc-undo .pc-chk-p{stroke:var(--orange)}
+.pc-act.pc-ok{animation:pcflashok .8s var(--pce)}
+.pc-act.pc-undo{animation:pcflashun .7s var(--pce)}
+.pc-ghost{position:absolute;left:14px;right:14px;top:12px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+@keyframes pcchk{to{stroke-dashoffset:0}}
+@keyframes pcpop{from{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}to{transform:none}}
+@keyframes pcflashok{0%{border-color:var(--good,var(--green));box-shadow:0 0 0 0 color-mix(in srgb,var(--good,var(--green)) 45%,transparent)}100%{border-color:var(--line);box-shadow:0 0 0 14px transparent}}
+@keyframes pcflashun{0%{border-color:var(--orange);box-shadow:0 0 0 0 color-mix(in srgb,var(--orange) 40%,transparent)}100%{border-color:var(--line);box-shadow:0 0 0 12px transparent}}
+@media (prefers-reduced-motion:reduce){.pc-chk-p{animation:none;stroke-dashoffset:0}.pc-act.pc-ok,.pc-act.pc-undo,.pc-act.pc-ok .pc-chk-c{animation:none}}
 #pc-menu{position:absolute;top:56px;right:14px;z-index:5;min-width:210px;background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:6px;display:none;flex-direction:column;gap:2px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5)}
 #pc-menu.on{display:flex;animation:pcin .3s var(--pce)}
 #pc-menu button{text-align:left;padding:11px 12px;border:0;border-radius:10px;background:none;color:var(--cream);font:700 14px var(--font-sans)}
@@ -6438,6 +6456,40 @@ function pcRefresh(){
   render();
 }
 function pcSupprCarte(id){ CARDS = CARDS.filter(c => c.id !== id); saveLocalDelete(id); saveTombstone(id); }
+/* v240 : la carte d'actions de Prof change d'état en douceur (Appliqué / Ignoré / Annulé).
+   L'ancien contenu s'efface en glissant (copie « fantôme »), la hauteur s'ajuste, le nouveau contenu arrive en cascade,
+   l'icône se dessine et le contour fait un petit éclat. Rien ne bloque : le contenu est déjà à sa place avant l'animation. */
+const PC_ICONES = {
+  ok: '<svg viewBox="0 0 24 24" width="22" height="22"><circle class="pc-chk-c" cx="12" cy="12" r="11"/><path class="pc-chk-p" d="M7 12.5l3.4 3.4L17 9"/></svg>',
+  ko: '<svg viewBox="0 0 24 24" width="22" height="22"><circle class="pc-chk-c" cx="12" cy="12" r="11"/><path class="pc-chk-p" d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" width="22" height="22"><circle class="pc-chk-c" cx="12" cy="12" r="11"/><path class="pc-chk-p" d="M10 8L6.5 11.5 10 15M7 11.5h6.5a3.5 3.5 0 0 1 0 7H12"/></svg>'
+};
+function pcBoxEtat(box, ton, titre, reste){
+  const reduit = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const h0 = box.offsetHeight;
+  let ghost = null;
+  if(!reduit && box.animate){
+    ghost = document.createElement('div'); ghost.className = 'pc-ghost'; ghost.setAttribute('aria-hidden', 'true');
+    [...box.childNodes].forEach(n => ghost.appendChild(n.cloneNode(true)));
+    ghost.querySelectorAll('textarea,input,button').forEach(x => { x.disabled = true; });
+  }
+  box.classList.remove('pc-ok', 'pc-ko', 'pc-undo');
+  box.classList.add('done', 'pc-' + ton);
+  box.innerHTML = '<h4 class="pc-hd"><span class="pc-chk" aria-hidden="true">' + PC_ICONES[ton] + '</span>' + titre + '</h4>' + (reste || '');
+  if(!ghost) return;
+  const ease = 'cubic-bezier(.22,1,.36,1)';
+  box.appendChild(ghost);
+  ghost.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-8px) scale(.98)' }], { duration: 220, easing: 'ease-in', fill: 'forwards' }).onfinish = () => ghost.remove();
+  const h1 = box.offsetHeight;
+  if(h0 && h1 && h0 !== h1){
+    box.style.overflow = 'hidden';
+    const a = box.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: 420, easing: ease });
+    a.onfinish = a.oncancel = () => { box.style.overflow = ''; };
+  }
+  [...box.children].filter(x => x !== ghost).forEach((el, k) => el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 120 + k * 70, easing: ease, fill: 'backwards' }));
+  const bouton = box.querySelector(':scope > .pc-un');
+  if(bouton) bouton.animate([{ transform: 'scale(.85)' }, { transform: 'scale(1.06)', offset: .6 }, { transform: 'scale(1)' }], { duration: 520, delay: 260, easing: 'ease-out', fill: 'backwards' });
+}
 function pcActionsCarte(actions, matiere){
   const box = document.createElement('div'); box.className = 'pc-act';
   const lib = a => {
@@ -6459,6 +6511,7 @@ function pcActionsCarte(actions, matiere){
     + `<div class="pc-warn" hidden>Attention : plusieurs suppressions sont cochées.</div><div class="pc-ab"><button type="button" class="pp-cta pc-ap">Appliquer</button><button type="button" class="pp-sec pc-ig">Ignorer</button></div>`;
   pcEl('pc-feed').appendChild(box);
   pcActsAttente = { actions, matiere, box };
+  ['pointerdown', 'mousedown'].forEach(k => box.addEventListener(k, e => { if(!e.target.closest('.pc-prec')) e.preventDefault(); }));   /* v240 : toucher Appliquer / Ignorer / Annuler / une case ne fait plus descendre le clavier de Prof (même méthode que le bouton d'envoi) */
   const cases = [...box.querySelectorAll('input')], warn = box.querySelector('.pc-warn');
   const maj = () => {
     const sup = cases.filter(c => c.checked && actions[+c.dataset.i].type === 'supprimer').map(c => actions[+c.dataset.i]);
@@ -6473,7 +6526,7 @@ function pcActionsCarte(actions, matiere){
     t.oninput = () => { act.precisions = t.value.slice(0, 600); };
     ['touchstart', 'mousedown'].forEach(k => t.addEventListener(k, e => e.stopPropagation(), { passive: true }));
   });
-  box.querySelector('.pc-ig').onclick = () => { if(pcActsAttente && pcActsAttente.box === box) pcActsAttente = null; box.classList.add('done'); box.innerHTML = '<h4>Actions ignorées</h4>'; };
+  box.querySelector('.pc-ig').onclick = () => { if(pcActsAttente && pcActsAttente.box === box) pcActsAttente = null; pcBoxEtat(box, 'ko', 'Actions ignorées', ''); };
   box.querySelector('.pc-ap').onclick = () => {
     const choix = cases.filter(c => c.checked).map(c => actions[+c.dataset.i]);
     if(!choix.length){ ppToast('Rien de coché'); return; }
@@ -6573,8 +6626,7 @@ function pcAppliquer(choix, box){
   notes.forEach(n => p.push(n));
   if(touche && pcLot && pcLot.btn) pcLot.btn.remove(); /* « Annuler » ne défait que le dernier lot */
   const aUndo = lot.creees.length || lot.modif.length || lot.suppr.length || lot.matieres.length || lot.defaire.length;
-  box.classList.add('done');
-  box.innerHTML = `<h4>Appliqué</h4><p>${p.join(' · ') || (synth ? 'Synthèse ouverte' : 'Aucun changement')}</p>` + (aUndo ? '<button type="button" class="pp-sec pc-un">Annuler</button>' : '');
+  pcBoxEtat(box, 'ok', 'Appliqué', `<p>${p.join(' · ') || (synth ? 'Synthèse ouverte' : 'Aucun changement')}</p>` + (aUndo ? '<button type="button" class="pp-sec pc-un">Annuler</button>' : ''));
   if(aUndo){
     const b = box.querySelector('.pc-un'); pcLot = { ...lot, btn: b };
     b.onclick = () => pcAnnuler(box);
@@ -6641,7 +6693,7 @@ function pcAnnuler(box){
   }
   pcRefresh(); envoyerVersSync();
   if((lot.matieres && lot.matieres.length) || (lot.defaire && lot.defaire.length)) pcMatMaj();
-  box.innerHTML = '<h4>Annulé</h4><p>Le dernier lot a été défait.</p>';
+  pcBoxEtat(box, 'undo', 'Annulé', '<p>Le dernier lot a été défait.</p>');
 }
 
 /* ---------- « Ajouter en carte » : même chemin que « Nouvelle carte » (aperçu « Vérifie tes cartes ») ---------- */
@@ -10657,7 +10709,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v239';
+const PP_APP_VERSION = 'v240';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
