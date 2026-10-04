@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v89 : Prof branché à Gemini (v207) : index.html change, donc nouvelle version du cache.
+
    v69 : « navigation preload » : la page est demandée au réseau pendant que le service worker démarre (retour par l'icône plus rapide, donc logo natif d'Android moins longtemps) ; sauvegarde complète de l'écran : index.html change aussi.
 
    v68 : le faux splash se rejoue seulement après une vraie fermeture de l'app (décision selon l'heure du dernier « pagehide ») : index.html change, donc nouvelle version du cache.
@@ -35,7 +37,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v88';
+const SW_VERSION = 'v100';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

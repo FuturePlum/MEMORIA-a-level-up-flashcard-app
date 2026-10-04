@@ -2,7 +2,7 @@
 
 ## Le level au-dessus des flashcards.
 
-**Ton prof particulier de révision.** Photo, PDF ou texte collé : l'IA crée tes cartes et tes synthèses en quelques secondes. Tu donnes la date de ton contrôle, et chaque jour Memoria te dit quoi réviser, seulement ce que tu risques d'oublier. Un retard ? Une alerte « À risque » te prévient à temps, et tu arrives au contrôle avec de la marge.
+**Ton prof particulier de révision.** Photo, PDF ou texte collé : l'IA crée tes cartes et tes synthèses en quelques secondes, et **Prof**, ton assistant de révision, t'interroge et t'explique ce qui coince. Tu donnes la date de ton contrôle, et chaque jour Memoria te dit quoi réviser, seulement ce que tu risques d'oublier. Un retard ? Une alerte « À risque » te prévient à temps, et tu arrives au contrôle avec de la marge.
 
 **Gratuit · Sans compte · Hors ligne**
 
@@ -30,6 +30,21 @@
 ### 📸 Photographie ton cours, l'IA fait les cartes
 Texte collé, photo du tableau, PDF, Word, fichier texte : tu déposes, l'IA génère les cartes. Tu relis, tu corriges, tu valides. Fini les heures à recopier. Tu peux même demander à l'IA de **retoucher toute une matière** : elle te propose les changements, et c'est toi qui acceptes ou refuses carte par carte.
 
+### 🎓 Prof, ton assistant de révision
+Prof connaît tes cartes et tes matières. Tu lui poses une question, tu lui envoies la photo d'un exercice, un PDF ou un texte collé, ou tu lui demandes de t'interroger :
+- **« Interroge-moi »** et **« Question d'examen »** : il pose la question seule, attend ta réponse libre, te dit si c'est juste, partiel ou faux, puis enchaîne. Tu as des boutons *Question suivante*, *Indice*, *Je ne sais pas* et *Arrêter et faire le bilan* ;
+- **« Mon bilan de la semaine »** : ta réussite, ton temps et tes cartes les plus ratées sur 7 jours, identique sur tous tes appareils ;
+- **Discuter d'une carte ou d'une matière** : depuis la fiche d'une carte ou le menu d'une matière, tu ouvres Prof directement dessus ;
+- **Il propose, tu décides** : Prof peut te suggérer de créer, modifier ou supprimer des cartes, ou de rédiger une synthèse. Rien ne change sans ton accord, et un bouton **Annuler** défait le dernier lot ;
+- **« + Ajouter en carte »** sous une réponse, pour garder ce qu'il vient d'expliquer ;
+- **Une matière = une conversation** : quand tu changes de matière, Prof repart sur une conversation neuve (les anciennes bulles restent à l'écran, atténuées), pour ne pas mélanger les sujets.
+
+### 🗂️ Conversations passées
+Chaque conversation avec Prof est **rangée toute seule** (quand tu fermes Prof ou l'app, ou quand tu en commences une nouvelle). Dans le menu ⋯ de Prof, **Conversations passées** te permet de relire les 15 dernières, de **reprendre** l'une d'elles ou de la supprimer. Avec la synchronisation, elles se retrouvent d'un appareil à l'autre : tu commences sur le téléphone, tu relis sur l'ordinateur. Supprimer une conversation l'efface de tes appareils et de la copie de synchro (si tu es hors ligne, l'effacement se fait au prochain passage en ligne).
+
+### 📓 Ce que Prof retient
+Un petit carnet, **visible et modifiable**, où Prof note ta façon de réviser (« préfère des exemples concrets », « je confonds X et Y »…). Il le relit avant chaque réponse pour s'adapter. Tu peux y écrire toi-même (15 lignes), supprimer une ligne quand tu veux, ou dire à Prof « retiens que… » : il te propose la ligne et c'est toi qui valides. Le carnet suit aussi tes appareils.
+
 ### 🧠 Révise uniquement ce que tu risques d'oublier
 Chaque réponse (rouge, orange, vert) décide quand la carte reviendra : demain, dans 3 jours, 1 semaine, 2 semaines… jusqu'à 3 mois. Ce que tu sais déjà s'efface de ta file. Ce qui te résiste revient. Tu passes ton temps sur ce qui compte vraiment.
 
@@ -45,7 +60,7 @@ Tu donnes la date de tes contrôles, l'app calcule le reste :
 À partir de ton cours, l'IA rédige une fiche selon **tes consignes**. Tu la lis, tu la modifies, puis tu l'exportes en **Word ou PDF**. Tu peux garder tes consignes préférées comme modèle.
 
 ### 🔁 Ta progression te suit partout
-Avec ton code perso (sans compte, sans mot de passe à inventer), tes cartes, tes paliers et ta clé IA passent d'un appareil à l'autre. Tu révises sur le téléphone dans le bus, tu retrouves tout sur la tablette le soir.
+Avec ton code perso (sans compte, sans mot de passe à inventer), tes cartes, tes paliers, ta clé IA, le carnet de Prof et tes conversations passées avec lui passent d'un appareil à l'autre. Tu révises sur le téléphone dans le bus, tu retrouves tout sur la tablette le soir.
 
 ### 🤝 Partage une matière en 6 caractères
 Un code, un copier-coller, et ton pote a toutes tes cartes. Aussi simple que ça.
@@ -65,6 +80,8 @@ Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si t
 - **Série** : ta flamme monte tant que tu révises. Elle ne casse que si tu as vraiment laissé des cartes en retard.
 - **Statistiques** : ce que tu maîtrises, matière par matière, en un coup d'œil.
 - **Parcourir** : recherche, modifie, partage ou supprime n'importe quelle carte.
+- **Les difficiles** : une entrée dans « S'entraîner » regroupe les cartes qui te résistent le plus, pour t'entraîner dessus.
+- **Mettre une carte en pause ⏸️** : elle sort de tes révisions, du planning et des rappels sans être supprimée, et revient quand tu la réactives.
 - **Cartes illustrées** : ajoute tes photos à tes cartes (schémas, cartes, formules).
 
 ## 🎨 L'esprit
@@ -107,7 +124,9 @@ Pas de compte, pas de pub, pas de pistage. Tes cartes et ta progression restent 
 
 **Un seul signal anonyme** part quand tu touches « C'est parti » à la première ouverture, ou quand l'appli est installée. Je reçois seulement « quelqu'un a installé l'appli » (avec la version et la langue) : je n'enregistre ni adresse IP, ni identifiant, ni aucune donnée sur toi.
 
-**La synchronisation et le partage sont facultatifs.** Si tu les actives, tes données (cartes, progression et clé Gemini) sont stockées sur mon serveur Cloudflare, protégées seulement par ton code perso. Je suis seul à y avoir accès techniquement, donc par transparence, je préfère te le dire clairement.
+**Prof et la génération par l'IA envoient ce que tu demandes à Google (Gemini)** : tes cartes utiles à la question, les 20 derniers messages de la conversation en cours et ce que tu joins (photo, PDF, texte), avec ta propre clé. Les anciennes conversations ne repartent jamais vers Gemini.
+
+**La synchronisation et le partage sont facultatifs.** Si tu les actives, tes données (cartes, progression, clé Gemini, carnet de Prof, conversations passées avec Prof et journal de tes réponses) sont stockées sur mon serveur Cloudflare, protégées seulement par ton code perso. Ton export de progression les contient aussi : garde-le pour toi. Je suis seul à y avoir accès techniquement, donc par transparence, je préfère te le dire clairement.
 
 J'ai développé cette appli pour moi, et je la publie pour que d'autres puissent en profiter. Je n'ai aucune intention de consulter, d'utiliser ou de revendre tes données, et je n'y ai aucun intérêt. Si tu préfères ne rien me confier, n'active pas la synchro : l'appli marche très bien sans.
 
@@ -118,8 +137,8 @@ J'ai développé cette appli pour moi, et je la publie pour que d'autres puissen
 - Application web progressive (PWA) : `index.html` + `manifest.json` + service worker `sw.js`
 - HTML, CSS et JavaScript, sans framework
 - Fonctionne hors ligne grâce au cache du service worker
-- Génération IA avec ta propre clé Gemini (à renseigner dans les Réglages)
-- Dossier `worker/` : partie serveur légère (synchronisation et génération IA)
+- IA (cartes, synthèses, Prof) avec ta propre clé Gemini, à renseigner dans les Réglages
+- Dossier `worker/` : partie serveur légère sur Cloudflare Workers (synchronisation, partage par code, conversations de Prof)
 - Hébergement : Cloudflare Pages
 
 ## 📁 Structure du dépôt
