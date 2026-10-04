@@ -228,7 +228,6 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Sauvegarde':'Backup','Exporter la progression':'Export progress','Fichier JSON':'JSON file','Importer une progression':'Import progress',
     "Exporter l'app à jour":'Export the up-to-date app','Fichier HTML complet':'Full HTML file','Aussi sur le web':'Also on the web',
     'Memoria existe aussi en site web':'Memoria is also available as a website','Retrouve tes cartes sur ton PC avec ton code de synchro.':'Find your cards on your computer with your sync code.',
-    'Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.':'Your cards, progress and Gemini key are stored on the developer\'s Cloudflare server, protected only by this code.',
     "Ce fichier contient aussi ta clé Gemini : ne l'envoie à personne.":'This file also contains your Gemini key: do not send it to anyone.',
     'Stockage plein : le code n\u2019a pas pu être enregistré.':'Storage full: the code could not be saved.',
     "Ajoute Memoria à l'écran d'accueil":'Add Memoria to your Home Screen',
@@ -8207,7 +8206,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v193';
+const PP_APP_VERSION = 'v194';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13119,8 +13118,7 @@ function ppSyncHtml(){
   if(!SYNC_WORKER_URL) return `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.cloud}</i><span>Synchro entre appareils<small>Pas encore configurée.</small></span></div></div>`;
   const code = syncCodePerso();
   const codeAffiche = verifierSoliditeCode(code) ? '' : code;
-  return `<p class="pp-hint pp-synh pp-synh-haut">Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.</p>
-  <div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
+  return `<div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
   <div id="sync-code-erreur" style="margin-top:6px">${syncErreurCodeHtml()}</div>
   <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
   <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>
