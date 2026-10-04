@@ -3061,6 +3061,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 #pc-layer.open .pc-stg{animation:pcin .6s var(--pce) forwards;animation-delay:calc(var(--i)*60ms + 220ms)}
 #pc-layer.closing .pc-stg{opacity:0;transition:opacity .15s}
 @keyframes pcin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#pc-feed .pc-b.pc-sans{animation:none}   /* v246 */
 /* v223 : sortie en fondu du menu ⋯, de l'historique et du carnet */
 @keyframes pcout{to{opacity:0;transform:translateY(10px)}}
 #pc-menu.on.out{animation:pcout .18s ease-in forwards;pointer-events:none}
@@ -6015,7 +6016,7 @@ function pcSauve(){ pcConv = pcConv.slice(-COACH_MSG_MAX); ppEcrire('coach-conve
 const PC_IC_HC = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.01"/></svg>';
 function pcAjoute(r, t, o){
   o = o || {};
-  const d = document.createElement('div'); d.className = 'pc-b ' + r + (o.err ? ' err' : '');
+  const d = document.createElement('div'); d.className = 'pc-b ' + r + (o.err ? ' err' : '') + (o.sans ? ' pc-sans' : '');   /* v246 : o.sans = bulle d'une conversation rechargée */
   if(r === 'a' && !o.err){
     d.innerHTML = ppRichHtml(t);
     if(o.hors) d.insertAdjacentHTML('beforeend', `<span class="pc-hc" role="img" title="Pas tiré de tes cartes" aria-label="Pas tiré de tes cartes">${PC_IC_HC}</span>`);
@@ -6023,13 +6024,13 @@ function pcAjoute(r, t, o){
     const hc = d.querySelector('.pc-hc'); if(hc) hc.onclick = () => ppToast('Pas tiré de tes cartes');
     const ad = d.querySelector('.pc-add'); if(ad) ad.onclick = () => pcAjouteEnCarte(t);
   } else d.textContent = t;
-  pcEl('pc-feed').appendChild(d); pcBas(); return d;
+  pcEl('pc-feed').appendChild(d); if(!o.sans) pcBas(); return d;
 }
 function pcSep(t){ const d = document.createElement('div'); d.className = 'pc-sep'; d.textContent = t; pcEl('pc-feed').appendChild(d); }
 function pcBas(){ const f = pcEl('pc-feed'); f.scrollTo({ top: f.scrollHeight, behavior: 'smooth' }); }
 function pcRendreConv(){
   if(!pcConv.length){ pcAjoute('a', "Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t'interroger.", { carte: false }); return; }
-  pcConv.forEach(m => { if(typeof m.n === 'string') return; if(m.s) pcSep(m.s); else pcAjoute(m.r, m.t, { hors: m.h === true, carte: m.r === 'a' && m.a === true }); });
+  pcConv.forEach(m => { if(typeof m.n === 'string') return; if(m.s) pcSep(m.s); else pcAjoute(m.r, m.t, { hors: m.h === true, carte: m.r === 'a' && m.a === true, sans: true }); });   /* v246 : plus d'arrivée animée de toutes les bulles à la fois */
   const f = pcEl('pc-feed'); f.scrollTop = f.scrollHeight;
 }
 
@@ -7124,6 +7125,7 @@ function ppCoachOuvrir(ctx){
   document.body.classList.add('pc-open');   /* v227 : grand écran, l'onglet Prof de la barre de gauche s'allume */
   const tb = document.getElementById('tabbar-root'); if(tb) tb.classList.add('tabbar-hidden');
   l.style.display = 'flex'; void l.offsetWidth;
+  { const f0 = pcEl('pc-feed'); if(f0) f0.scrollTop = f0.scrollHeight; }   /* v246 : en bas tout de suite, sans glissement */
   pcStick = true; pcPlus(false); pcChampAjuste(); pcOutilsMaj();   /* v231 */
   l.classList.remove('closing', 'ready'); l.classList.add('open'); pcEl('pc-veil').classList.add('on'); l.setAttribute('aria-hidden', 'false');
   clearTimeout(pcPretT); pcPretT = setTimeout(() => { if(pcOuvert) l.classList.add('ready'); }, 950); /* après l'animation, la hauteur peut suivre le clavier */
@@ -10803,7 +10805,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v245';
+const PP_APP_VERSION = 'v246';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
