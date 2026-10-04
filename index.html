@@ -123,7 +123,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
         v = document.createElement('div');
         v.id = 'pp-voile'; v.setAttribute('aria-hidden', 'true');
         var clair = document.documentElement.getAttribute('data-theme') === 'light';
-        v.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:' + (clair ? '#f1f0fb' : '#0c0c12') + ';transition:opacity .18s ease-out;pointer-events:none';
+        v.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:' + '#ff0000' /* v188 TEST : rouge vif, à remettre en (clair ? '#f1f0fb' : '#0c0c12') */ + ';transition:opacity .18s ease-out;pointer-events:none';
         (document.body || document.documentElement).appendChild(v);
       }
       v.style.opacity = '1';
@@ -8189,7 +8189,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v187';
+const PP_APP_VERSION = 'v188';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
