@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v68 : le faux splash se rejoue seulement après une vraie fermeture de l'app (décision selon l'heure du dernier « pagehide ») : index.html change, donc nouvelle version du cache.
+
    v67 : journal de diagnostic (retours à l'accueil) + instantané d'écran toutes les 3 s : index.html change, donc nouvelle version du cache.
 
    v60 : champs de saisie conservés lors d'un redessin (Réglages, Modifier la carte, aperçu des cartes) : index.html change, donc nouvelle version du cache.
@@ -31,7 +33,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v67';
+const SW_VERSION = 'v68';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

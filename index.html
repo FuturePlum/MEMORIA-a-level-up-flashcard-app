@@ -70,23 +70,41 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
 })();
 </script>
 <script>
-/* v174 : le faux splash ne se rejoue pas quand on revient dans l'app. Android peut recharger la page après un passage en arrière-plan :
-   ce n'est pas un vrai démarrage. On pose la classe pp-reprise sur <html> AVANT le premier rendu (le CSS cache alors le splash) si
-   (a) l'onglet a déjà démarré (sessionStorage) ou (b) l'app était active il y a moins de 2 h (localStorage, au cas où Android ne
-   garde pas sessionStorage). Une vraie ouverture à froid (app fermée depuis plus de 2 h) garde le splash. */
+/* v174 → v180 : le faux splash ne se rejoue pas quand on revient dans l'app. Constat (journal de diagnostic, v179) : toucher l'icône de l'app
+   RELANCE la page (nouvelle page, sessionStorage vide) ; l'ancienne page reçoit alors « pagehide » juste avant (moins d'une seconde avant le
+   chargement de la nouvelle). Quand l'utilisateur FERME vraiment l'app (balayage dans les applis récentes), « pagehide » arrive aussi, mais la
+   page suivante ne se charge que plus tard (plusieurs secondes : le temps de rouvrir l'app). On note donc l'heure du dernier « pagehide »
+   (localStorage 'pp-pagehide', effacée dès que la page redevient visible ou est lue par la page suivante) et on décide, AVANT le premier rendu :
+   (1) même onglet rechargé (sessionStorage 'pp-deja-demarre') → pas de splash ;
+   (2) « pagehide » il y a moins de 1,5 s → relance par l'icône → pas de splash (html.pp-reprise) ;
+   (3) « pagehide » plus ancien → vraie fermeture puis réouverture → splash animé ;
+   (4) aucun « pagehide » noté (Android a coupé la page en silence) → pas de splash si l'app était active il y a moins de 2 h, sinon splash.
+   Le verdict est écrit dans le journal de diagnostic (ligne SPLASH). L'état de l'écran est remis dans tous les cas (script de reprise plus bas). */
 (function(){
-  var K = 'pp-derniere-activite', D = 'pp-deja-demarre';
+  var K = 'pp-derniere-activite', D = 'pp-deja-demarre', PH = 'pp-pagehide';
+  var GAP_RELANCE = 1500, DEUX_H = 2 * 60 * 60 * 1000;
   function marquer(){ try{ localStorage.setItem(K, String(Date.now())); }catch(e){} }
+  function oublierPh(){ try{ localStorage.removeItem(PH); }catch(e){} }
+  var verdict = 'ouverture à froid';
   try{
+    var now = Date.now();
     var t = parseInt(localStorage.getItem(K) || '0', 10);
-    if(sessionStorage.getItem(D) === '1' || (t && Date.now() - t >= 0 && Date.now() - t < 2 * 60 * 60 * 1000)){
-      document.documentElement.classList.add('pp-reprise');
-    }
+    var ph = parseInt(localStorage.getItem(PH) || '0', 10);
+    var reprise = false;
+    if(sessionStorage.getItem(D) === '1'){ reprise = true; verdict = 'même onglet rechargé : pas de splash'; }
+    else if(ph && now - ph >= 0 && now - ph < GAP_RELANCE){ reprise = true; verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : pas de splash'; }
+    else if(ph){ verdict = 'vraie fermeture puis réouverture (pagehide il y a ' + Math.round((now - ph) / 1000) + ' s) : splash'; }
+    else if(t && now - t >= 0 && now - t < DEUX_H){ reprise = true; verdict = 'aucun pagehide noté, activité il y a ' + Math.round((now - t) / 1000) + ' s : pas de splash'; }
+    else { verdict = 'ouverture à froid (aucune activité récente) : splash'; }
+    oublierPh();
+    if(reprise) document.documentElement.classList.add('pp-reprise');
     sessionStorage.setItem(D, '1');
-  }catch(e){}
+  }catch(e){ verdict = 'erreur : ' + ((e && e.message) || e); }
+  try{ window.ppJournal('SPLASH', verdict); }catch(e){}
   marquer();
-  document.addEventListener('visibilitychange', marquer);
-  window.addEventListener('pagehide', marquer);
+  document.addEventListener('visibilitychange', function(){ marquer(); if(document.visibilityState === 'visible') oublierPh(); });
+  window.addEventListener('pageshow', function(e){ if(e.persisted) oublierPh(); });
+  window.addEventListener('pagehide', function(){ marquer(); try{ localStorage.setItem(PH, String(Date.now())); }catch(e){} });
 })();
 </script>
 <script>
@@ -8104,7 +8122,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v179';
+const PP_APP_VERSION = 'v180';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
