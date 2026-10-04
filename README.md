@@ -31,19 +31,14 @@
 Texte collé, photo du tableau, PDF, Word, fichier texte : tu déposes, l'IA génère les cartes. Tu relis, tu corriges, tu valides. Fini les heures à recopier. Tu peux même demander à l'IA de **retoucher toute une matière** : elle te propose les changements, et c'est toi qui acceptes ou refuses carte par carte.
 
 ### 🎓 Prof, ton assistant de révision
-Prof connaît tes cartes et tes matières. Tu lui poses une question, tu lui envoies la photo d'un exercice, un PDF ou un texte collé, ou tu lui demandes de t'interroger :
-- **« Interroge-moi »** et **« Question d'examen »** : il pose la question seule, attend ta réponse libre, te dit si c'est juste, partiel ou faux, puis enchaîne. Tu as des boutons *Question suivante*, *Indice*, *Je ne sais pas* et *Arrêter et faire le bilan* ;
-- **« Mon bilan de la semaine »** : ta réussite, ton temps et tes cartes les plus ratées sur 7 jours, identique sur tous tes appareils ;
-- **Discuter d'une carte ou d'une matière** : depuis la fiche d'une carte ou le menu d'une matière, tu ouvres Prof directement dessus ;
-- **Il propose, tu décides** : Prof peut te suggérer de créer, modifier ou supprimer des cartes, ou de rédiger une synthèse. Rien ne change sans ton accord, et un bouton **Annuler** défait le dernier lot ;
-- **« + Ajouter en carte »** sous une réponse, pour garder ce qu'il vient d'expliquer ;
-- **Une matière = une conversation** : quand tu changes de matière, Prof repart sur une conversation neuve (les anciennes bulles restent à l'écran, atténuées), pour ne pas mélanger les sujets.
-
-### 🗂️ Conversations passées
-Chaque conversation avec Prof est **rangée toute seule** (quand tu fermes Prof ou l'app, ou quand tu en commences une nouvelle). Dans le menu ⋯ de Prof, **Conversations passées** te permet de relire les 15 dernières, de **reprendre** l'une d'elles ou de la supprimer. Avec la synchronisation, elles se retrouvent d'un appareil à l'autre : tu commences sur le téléphone, tu relis sur l'ordinateur. Supprimer une conversation l'efface de tes appareils et de la copie de synchro (si tu es hors ligne, l'effacement se fait au prochain passage en ligne).
-
-### 📓 Ce que Prof retient
-Un petit carnet, **visible et modifiable**, où Prof note ta façon de réviser (« préfère des exemples concrets », « je confonds X et Y »…). Il le relit avant chaque réponse pour s'adapter. Tu peux y écrire toi-même (15 lignes), supprimer une ligne quand tu veux, ou dire à Prof « retiens que… » : il te propose la ligne et c'est toi qui valides. Le carnet suit aussi tes appareils.
+Un assistant IA qui révise avec toi :
+- **Connecté à tes cartes et à tes matières** : ses réponses portent sur ce que tu as vraiment à apprendre
+- **Il lit ce que tu lui montres** : photo d'un exercice, PDF ou texte collé
+- **Il t'interroge** : questions d'examen, indices, bilan de ta semaine
+- **Il t'aide à pratiquer une langue**
+- **Il crée tes cartes** : il propose, tu valides, et « + Ajouter en carte » garde ses explications
+- **Il s'adapte à toi** : un carnet visible et modifiable retient ta façon de réviser
+- **Conversations et carnet synchronisés** d'un appareil à l'autre
 
 ### 🧠 Révise uniquement ce que tu risques d'oublier
 Chaque réponse (rouge, orange, vert) décide quand la carte reviendra : demain, dans 3 jours, 1 semaine, 2 semaines… jusqu'à 3 mois. Ce que tu sais déjà s'efface de ta file. Ce qui te résiste revient. Tu passes ton temps sur ce qui compte vraiment.
