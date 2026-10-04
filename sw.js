@@ -29,7 +29,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v63';
+const SW_VERSION = 'v66';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

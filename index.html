@@ -492,6 +492,9 @@ input, textarea, [contenteditable="true"]{
 #boot-splash:not(.go), #boot-splash:not(.go) *{ animation-play-state:paused !important; }
 /* v174 : retour dans l'app (pas un vrai démarrage) : pas de faux splash. */
 html.pp-reprise #boot-splash{ display:none !important; }
+/* v176 : au retour dans l'app, l'accueil ne rejoue pas son fondu d'entrée (sinon l'écran « clignote » : invisible puis affiché en fondu). */
+html.pp-reprise .home-status, html.pp-reprise .home-cta, html.pp-reprise .home-choice-item,
+html.pp-reprise .home-secondary-sep, html.pp-reprise .home-secondary{ opacity:1 !important; animation:none !important; }
 @media (prefers-reduced-motion: reduce){#boot-splash{ animation:none; opacity:0; }}
 @keyframes actionsIn{
     from{opacity:0; transform:translateY(8px);}
@@ -8059,7 +8062,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v175';
+const PP_APP_VERSION = 'v178';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -13291,6 +13294,84 @@ function ppErreurDemarrage(e){
 window.addEventListener('error', function(ev){ if(!window.__ppDemarre) ppErreurDemarrage(ev && ev.error); });
 window.addEventListener('unhandledrejection', function(ev){ if(!window.__ppDemarre) ppErreurDemarrage(ev && ev.reason); });
 try{ init(); }catch(e){ ppErreurDemarrage(e); }
+
+/* v177/v178 : reprise de l'écran. Rien dans le code de l'app ne recharge la page quand on part ou qu'on revient. Mais Android peut couper
+   la page en arrière-plan (téléphone à court de mémoire, économiseur de batterie, option développeur « Ne pas conserver les activités ») puis la
+   recharger au retour. Pour que ça ne se voie pas, on note le départ (passage en arrière-plan) ET, après chaque saisie, un instantané :
+   onglet affiché, défilement, séance en cours (mode, matière, carte affichée, carte retournée ou non, compteurs) et textes tapés dans les champs.
+   Au démarrage, si l'instantané a moins de 3 h, on remet tout. Non repris : fenêtres ouvertes en plusieurs étapes, « Revoir les erreurs », quiz. */
+(function(){
+  var K = 'pp-etat-ecran';
+  var SECRETS = { 'gemini-key-input':1, 'sync-code-input':1, 'pp-ij-code':1 };
+  function brouillons(){
+    var d = {}, n = 0;
+    try{
+      var els = document.querySelectorAll('textarea[id], input[id]:not([type=file]):not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=password])');
+      for(var i = 0; i < els.length; i++){
+        var e = els[i];
+        if(SECRETS[e.id] || !e.value || e.value.length > 20000 || n >= 20) continue;
+        d[e.id] = e.value; n++;
+      }
+    }catch(x){}
+    return d;
+  }
+  function sauver(){
+    try{
+      var seance = studySessionActive && (studyMode === 'due' || studyMode === 'all') && queue && currentIndex < queue.length;
+      localStorage.setItem(K, JSON.stringify({
+        o: activeTab, y: Math.round(window.scrollY || 0), t: Date.now(),
+        m: seance ? studyMode : null, f: matiereFilter,
+        c: seance && queue[currentIndex] ? queue[currentIndex].id : null, fl: seance ? !!flipped : false,
+        sr: sessionReviewed, sm: sessionMastered, mc: sessionMoodCounts,
+        d: brouillons()
+      }));
+    }catch(e){}
+  }
+  var minuteur = null;
+  document.addEventListener('input', function(){ clearTimeout(minuteur); minuteur = setTimeout(sauver, 600); }, true);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') sauver(); });
+  window.addEventListener('pagehide', sauver);
+  function remplir(d, y){
+    setTimeout(function(){
+      try{
+        if(d) for(var id in d){
+          var el = document.getElementById(id);
+          if(el && !el.value){ el.value = d[id]; el.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+        if(y > 0) window.scrollTo(0, y);
+      }catch(e){}
+    }, 80);
+  }
+  try{
+    var raw = localStorage.getItem(K);
+    if(!raw || !window.__ppDemarre) return;
+    var o = JSON.parse(raw);
+    localStorage.removeItem(K);
+    if(!o || !(Date.now() - o.t >= 0 && Date.now() - o.t < 3 * 60 * 60 * 1000)) return;
+    var tabs = ['study', 'browse', 'planning', 'add', 'settings'];
+    if(o.m === 'due' || o.m === 'all'){
+      studyMode = o.m; matiereFilter = o.f || 'toutes';
+      buildQueue(false);
+      if(queue.length > 0){
+        startStudySession(o.m);
+        try{
+          if(o.c){
+            var k = queue.findIndex(function(c){ return c.id === o.c; });
+            if(k >= 0){ var carte = queue.splice(k, 1)[0]; queue.unshift(carte); currentIndex = 0; flipped = !!o.fl; }
+          }
+          sessionReviewed = o.sr | 0; sessionMastered = o.sm | 0;
+          if(o.mc && typeof o.mc === 'object') sessionMoodCounts = { rouge: o.mc.rouge | 0, orange: o.mc.orange | 0, vert: o.mc.vert | 0 };
+          renderStudy();
+        }catch(e){}
+        remplir(o.d, 0);
+        return;
+      }
+      studyMode = 'due'; matiereFilter = 'toutes'; buildQueue();
+    }
+    if(tabs.indexOf(o.o) > 0) switchTab(o.o);
+    remplir(o.d, o.y || 0);
+  }catch(e){}
+})();
 
 // Retire l'écran de transition custom du DOM une fois son animation de
 // sortie terminée, pour ne laisser aucun overlay invisible intercepter
