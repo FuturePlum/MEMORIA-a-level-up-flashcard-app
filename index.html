@@ -87,6 +87,17 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
          nouvelle page se charge dans la même seconde. Le faux splash est rejoué et l'écran d'avant est remis ;
      (3) tout le reste (vraie fermeture puis réouverture, page coupée par Android) : ouverture normale = splash animé + accueil, rien n'est remis.
      Avant v185 le cas (3) était pris pour une reprise quand il n'y avait pas de « pagehide » noté : pas de splash et écran remis à tort. */
+  /* v192 : hauteur de la boîte du faux splash. 100dvh dépasse l'écran visible d'environ 125 px (barres système) : le logo du faux splash était
+     centré trop bas (≈ 55 px) par rapport au splash natif d'Android, qui est centré sur tout l'écran. On donne donc au faux splash et au voile la
+     hauteur de l'écran (screen.height) quand l'app est installée ; sinon (onglet de navigateur) on garde 100dvh. */
+  function hauteurEcran(){
+    try{
+      var inst = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+      if(inst && window.screen && screen.height > 200) document.documentElement.style.setProperty('--bs-h', Math.round(screen.height) + 'px');
+    }catch(e){}
+  }
+  hauteurEcran();
+  window.addEventListener('resize', hauteurEcran);
   var K = 'pp-derniere-activite', D = 'pp-deja-demarre', PH = 'pp-pagehide', VU = 'pp-vu';
   var GAP_RELANCE = 1500, GAP_VU = 2000;
   function marquer(){ try{ localStorage.setItem(K, String(Date.now())); }catch(e){} }
@@ -123,10 +134,10 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
         v = document.createElement('div');
         v.id = 'pp-voile'; v.setAttribute('aria-hidden', 'true');
         var clair = document.documentElement.getAttribute('data-theme') === 'light';
-        v.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:' + (clair ? '#f1f0fb' : '#0c0c12') + ';transition:opacity .18s ease-out;pointer-events:none';
+        v.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:var(--bs-h,100%);z-index:2147483647;display:flex;align-items:center;justify-content:center;background:' + (clair ? '#f1f0fb' : '#0c0c12') + ';transition:opacity .18s ease-out;pointer-events:none';
         /* v190 : le voile reprend la pose de départ du faux splash (fond uni + logo 288 px centré, sans le mot « Memoria » qui n'arrive qu'à 0,1 s) :
            raccord sans à-coup quand le splash prend le relais. */
-        v.innerHTML = '<div style="width:288px;height:288px;transform:translateY(-3px)"><svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible"><g transform="translate(-6 0.5)"><g transform="rotate(10 250 250) translate(14 -4)"><rect x="177" y="154" width="170" height="216" rx="34" fill="' + (clair ? '#1d1b3a' : '#9c9588') + '"/><rect x="165" y="142" width="170" height="216" rx="34" fill="' + (clair ? '#2f2d5c' : '#f5f0e6') + '"/></g><g transform="rotate(-8 250 250) translate(-6 2)"><rect x="177" y="154" width="170" height="216" rx="34" fill="#b8431d"/><rect x="165" y="142" width="170" height="216" rx="34" fill="#ff6b3d"/><path d="M204 253 L238 290 L306 210" fill="none" stroke="#f5f0e6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg></div>';
+        v.innerHTML = '<div style="width:288px;height:288px"><svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible"><g transform="translate(-6 0.5)"><g transform="rotate(10 250 250) translate(14 -4)"><rect x="177" y="154" width="170" height="216" rx="34" fill="' + (clair ? '#1d1b3a' : '#9c9588') + '"/><rect x="165" y="142" width="170" height="216" rx="34" fill="' + (clair ? '#2f2d5c' : '#f5f0e6') + '"/></g><g transform="rotate(-8 250 250) translate(-6 2)"><rect x="177" y="154" width="170" height="216" rx="34" fill="#b8431d"/><rect x="165" y="142" width="170" height="216" rx="34" fill="#ff6b3d"/><path d="M204 253 L238 290 L306 210" fill="none" stroke="#f5f0e6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg></div>';
         (document.body || document.documentElement).appendChild(v);
       }
       v.style.transition = 'none'; v.style.opacity = '1'; void v.offsetHeight; /* v189 : pose immédiate, sans fondu, et dessin forcé */
@@ -563,14 +574,14 @@ input, textarea, [contenteditable="true"]{
      "Memoria" arrive à 0,5 s. Sortie : fondu doux (logo qui rétrécit un peu) de 1,2 s à 1,45 s ; l'animationend de
      #boot-splash retire alors l'élément du DOM (voir le script en fin de fichier). */
 #boot-splash{
-    position:fixed; inset:0; z-index:9999;
-    width:100vw; height:100vh; height:100dvh;
+    position:fixed; top:0; left:0; z-index:9999;
+    width:100vw; height:100vh; height:100dvh; height:var(--bs-h,100dvh);
     background:#0c0c12;
     display:flex; align-items:center; justify-content:center;
     pointer-events:none;
     animation:bootSplashBg .25s cubic-bezier(.4,0,.2,1) 1.2s forwards;
   }
-#boot-splash-icon{ position:relative; width:288px; height:288px; transform:translateY(-3px); animation:bsOut .25s cubic-bezier(.4,0,.2,1) 1.2s forwards; }
+#boot-splash-icon{ position:relative; width:288px; height:288px; animation:bsOut .25s cubic-bezier(.4,0,.2,1) 1.2s forwards; }
 #boot-splash-card{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
 #boot-splash-card g, #boot-splash-card path{ transform-box:view-box; }
 #bs-hop{ transform-origin:262px 384px; animation:bsHop 1.3s ease-in-out both; will-change:transform; }
@@ -581,7 +592,7 @@ input, textarea, [contenteditable="true"]{
 #bs-ys{ animation:bsYs 1.3s step-end both; }
 #boot-splash-card #bs-check{ stroke-dasharray:175; transform-box:fill-box; transform-origin:center; animation:bsChk 1.3s ease-out both, bsPop 1.3s ease-out both; }
 #boot-splash-word{
-    position:absolute; left:0; right:0; top:calc(50% + 92px); text-align:center;
+    position:absolute; left:0; right:0; top:calc(50% + 95px); text-align:center;
     font-family:var(--font-sans,"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif);
     font-size:30px; font-weight:800; letter-spacing:-.04em; color:#f5f0e6;
     animation:bsWord .3s cubic-bezier(.2,.8,.2,1) .1s both;
@@ -594,7 +605,7 @@ input, textarea, [contenteditable="true"]{
 @keyframes bsChk{0%,23.33%{stroke-dashoffset:0}23.43%,66.67%{stroke-dashoffset:175}90%,100%{stroke-dashoffset:0}}
 @keyframes bsPop{0%,86.67%{transform:scale(1)}91.67%{transform:scale(1.3)}98.33%,100%{transform:scale(1)}}
 @keyframes bsWord{ from{ transform:translateY(14px); opacity:0; } to{ transform:none; opacity:1; } }
-@keyframes bsOut{ to{ transform:translateY(-3px) scale(.94); opacity:0; } }
+@keyframes bsOut{ to{ transform:scale(.94); opacity:0; } }
 @keyframes bootSplashBg{
     to{ background:var(--paper); opacity:0; }
   }
@@ -8196,7 +8207,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v191';
+const PP_APP_VERSION = 'v192';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
