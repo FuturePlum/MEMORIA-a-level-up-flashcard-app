@@ -251,7 +251,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test',
     'Matières et contrôles':'Subjects and tests','Toutes tes matières sont archivées.':'All your subjects are archived.','Afficher la réponse':'Show answer','Espace':'Space','pour afficher la réponse':'to show the answer',
     'Suppr':'Del','Maj':'Shift','Entrée':'Enter','Aucune carte':'No cards','Ta première carte':'Your first card','Ajouter des cartes':'Add cards',"Rien à réviser aujourd'hui":'Nothing to review today',
-    'Compte pour la maîtrise des cartes':'Counts toward card mastery','Les difficiles':'Tough ones','Question suivante':'Next question','Indice':'Hint','Je ne sais pas':"I don't know",'Arrêter et faire le bilan':'Stop and sum up','Plus simple':'Simpler','Un exemple':'An example','Aide-moi à la retenir':'Help me remember it','Teste-moi sur cette carte':'Test me on this card','Mes cartes les plus ratées':'My most-missed cards',"Qu'est-ce qui manque ?":"What's missing?",'Fais une synthèse':'Make a summary','Mettre en pause':'Pause card','Reprendre':'Resume','Reprendre la carte':'Resume card','Elle revient dans tes révisions':'It comes back into your reviews','Elle sort des révisions, sans rien perdre':'It leaves your reviews, nothing is lost','Carte en pause':'Card paused','Carte reprise':'Card resumed','En pause':'Paused','Discuter de cette matière':'Talk about this subject','Questions, explications, entraînement':'Questions, explanations, practice','Discuter de la carte':'Talk about this card','Explication, astuce pour la retenir':'Explanation, a tip to remember it','Il en faut au moins 5 ratées 2 fois':'You need at least 5 cards missed twice',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
+    'Compte pour la maîtrise des cartes':'Counts toward card mastery','Les difficiles':'Tough ones','Les difficiles — quelle matière ?':'Tough ones — which subject?','Question suivante':'Next question','Indice':'Hint','Je ne sais pas':"I don't know",'Arrêter et faire le bilan':'Stop and sum up','Plus simple':'Simpler','Un exemple':'An example','Aide-moi à la retenir':'Help me remember it','Teste-moi sur cette carte':'Test me on this card','Mes cartes les plus ratées':'My most-missed cards',"Qu'est-ce qui manque ?":"What's missing?",'Fais une synthèse':'Make a summary','Mettre en pause':'Pause card','Reprendre':'Resume','Reprendre la carte':'Resume card','Elle revient dans tes révisions':'It comes back into your reviews','Elle sort des révisions, sans rien perdre':'It leaves your reviews, nothing is lost','Carte en pause':'Card paused','Carte reprise':'Card resumed','En pause':'Paused','Discuter de cette matière':'Talk about this subject','Questions, explications, entraînement':'Questions, explanations, practice','Discuter de la carte':'Talk about this card','Explication, astuce pour la retenir':'Explanation, a tip to remember it','Il en faut au moins 5 ratées 2 fois':'You need at least 5 cards missed twice',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
     "Retour à l'accueil":'Back to home',"Terminé pour aujourd'hui":'Done for today','Par quelle matière tu commences ?':'Which subject do you start with?','Tout enchaîner':'Do everything in a row',
     'Revoir quoi ?':'Review what?','Tout regrouper':'Combine all','Entraînement terminé · ne compte pas pour la maîtrise':"Practice finished · doesn't count toward mastery",'À revoir':'To review','Tout juste':'Just about',
     'Retour aux révisions':'Back to reviews','⇄ inversée':'⇄ reversed','Aucune carte trouvée. Essaie un autre mot.':'No cards found. Try another word.',"Aucune carte pour l'instant.":'No cards yet.',
@@ -1847,10 +1847,6 @@ input[type="date"]{ color-scheme:inherit; }
 .pp-pausebar{display:flex;gap:8px;margin:2px 0 10px}
 .pp-it.pp-paused{opacity:.62}
 .pp-invt.pp-paus{color:var(--orange)}
-.pp-view>.pp-opts .pp-row.pp-diff{grid-column:1/-1;flex-direction:row;align-items:center;gap:12px}
-.pp-view>.pp-opts .pp-row.pp-diff>span{display:block}
-.pp-view>.pp-opts .pp-row.pp-diff>div{flex:1}
-.pp-view>.pp-opts .pp-row.pp-diff .pp-ri{background:var(--c-osoft);color:var(--orange)}
 /* finitions d'animation (v24/v25 du prototype) */
 .pp-row,.pp-prog7,.pp-ctl{transition:transform .22s var(--pps),background .2s,border-color .2s,box-shadow .2s}
 .pp-row:active{background:var(--c-press)}
@@ -2749,7 +2745,8 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .pp-tab[data-tab-id="planning"]{ display:none; }
   /* v225 : Prof dans la barre de gauche, plus dans le haut (Chromebook seulement) */
   .pp-tab-prof{ display:flex; }
-  .pp-tab-prof .pp-coach{ width:34px; height:28px; }
+  .pp-tab-prof{ --pcf:currentColor; }
+  .pp-tab-prof .pc-spark{ flex:none; }
   #topbar-right > .pp-coach{ display:none; }
   body .pp-home{ height:calc(100vh - 124px); min-height:560px; }
   /* accueil : semaine cliquable + détail du jour */
@@ -5175,7 +5172,7 @@ function renderTabbar(){
   if(!el) return;
   const TAB_ICON = { study:PP_IC.cards, planning:PP_IC.cal, add:PP_IC.plus, browse:PP_IC.dir };
   if(!el.dataset.built){
-    el.innerHTML = `<nav class="pp-nav" id="tabbar-inner">${TABBAR_ITEMS.map(it => `<button class="pp-tab" data-tab-id="${it.id}" onclick="switchTab('${it.id}')">${TAB_ICON[it.id]}${it.label}</button>`).join('')}<button class="pp-tab pp-tab-prof" data-tab-id="prof" aria-label="${PP_COACH_NOM}" onclick="ppCoachOuvrir()"><span class="pp-coach">${pcEtoiles(16)}</span>${PP_COACH_NOM}</button></nav>`;
+    el.innerHTML = `<nav class="pp-nav" id="tabbar-inner">${TABBAR_ITEMS.map(it => `<button class="pp-tab" data-tab-id="${it.id}" onclick="switchTab('${it.id}')">${TAB_ICON[it.id]}${it.label}</button>`).join('')}<button class="pp-tab pp-tab-prof" data-tab-id="prof" aria-label="${PP_COACH_NOM}" onclick="ppCoachOuvrir()">${pcEtoiles(22)}${PP_COACH_NOM}</button></nav>`;
     el.dataset.built = '1';
   }
   el.querySelectorAll('.pp-tab').forEach(btn => {
@@ -6301,7 +6298,7 @@ function pcFit(){
   if(bas) pcPin(360);
   if(window.scrollY !== pcScrollY) window.scrollTo(0, pcScrollY);
 }
-function pcRebond(){ document.querySelectorAll('#pp-coach-btn,.pp-tab-prof .pp-coach').forEach(b => { b.classList.remove('bounce'); void b.offsetWidth; b.classList.add('bounce'); }); }
+function pcRebond(){ document.querySelectorAll('#pp-coach-btn').forEach(b => { b.classList.remove('bounce'); void b.offsetWidth; b.classList.add('bounce'); }); }
 function ppCoachOuvrir(ctx){
   ctx = (ctx && typeof ctx === 'object' && typeof ctx.preventDefault !== 'function') ? ctx : null;
   pcEnsure(); if(pcOuvert) return; pcOuvert = true;
@@ -7303,10 +7300,7 @@ function renderStudyInner(){
     ppFresh = false;
     const multi = matieres.length > 1 && matiereFilter === 'toutes';
     const rowAll = `<button class="pp-row" ${totalFiltered===0?'disabled':''} onclick="${multi ? 'openChooseMatiereForAll()' : "startStudySession('all')"}"><i class="pp-ri">${PP_IC.all.replace(/16/g,'18')}</i><div><b>Réviser tout${matiereFilter!=='toutes' ? ' — ' + escapeHtml(matiereFilter) : ''}</b><span>Compte pour la maîtrise des cartes</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
-    const rowQuiz = `<button class="pp-row" ${totalFiltered<2?'disabled':''} onclick="${multi ? 'openChooseMatiereForQuiz()' : 'startQuizFromHome()'}"><i class="pp-ri">${PP_IC.quiz.replace(/16/g,'18')}</i><div><b>S'entraîner</b><span>Un score, sans pression</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
-    const nbDiff = cartesDifficiles(matiereFilter).length;
-    const diffOk = nbDiff >= QUIZ_DIFF_MIN;
-    const rowDiff = `<button class="pp-row pp-diff" ${diffOk?'':'disabled'} onclick="startQuizDifficiles()"><i class="pp-ri">${PP_IC.fire}</i><div><b>Les difficiles</b><span>${diffOk ? 'Seulement tes cartes les plus ratées (' + nbDiff + ')' : 'Il en faut au moins ' + QUIZ_DIFF_MIN + ' ratées 2 fois'}</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
+    const rowQuiz = `<button class="pp-row" ${totalFiltered<2?'disabled':''} onclick="openChooseMatiereForQuiz()"><i class="pp-ri">${PP_IC.quiz.replace(/16/g,'18')}</i><div><b>S'entraîner</b><span>Un score, sans pression</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
     el.innerHTML = `<div class="pp-view pp-home${ppStill ? ' pp-still' : ''}">${ppCtlHtml() || ppCtlAddHtml()}
   <div class="pp-hero"><div><span class="pp-sticker">${dueTotal > 0 ? "À réviser aujourd'hui" : 'Tout est à jour'}</span></div><div class="pp-hmid"><div class="pp-big" id="bigN" data-n="${dueTotal}">${dueTotal}</div>
   <p class="pp-sub">sur <b>${totalFiltered}</b> carte${totalFiltered>1?'s':''} au total${nbRappels > 0 ? ` · <span class="pp-rappel">+ ${nbRappels} rappel${nbRappels>1?'s':''}</span>` : ''}</p></div>
@@ -7315,7 +7309,6 @@ function renderStudyInner(){
   <div class="pp-opts">
    ${rowAll}
    ${rowQuiz}
-   ${rowDiff}
   </div>
   ${ppProgressHtml()}${ppCbHtml(dueTotal)}</div>`;
     return;
@@ -7759,9 +7752,60 @@ function startStudyAllOnMatiere(matiere){
   matiereFilter = matiere;
   startStudySession('all');
 }
+/* v226 : « S'entraîner » ouvre toujours un choix : tout / une matière, et sous « Tout regrouper » la ligne « Les difficiles »
+   (qui demande à son tour la matière). Si l'accueil est déjà filtré sur une matière (ou s'il n'y en a qu'une), pas de choix de matière :
+   « S'entraîner » et « Les difficiles » seulement. */
+function entrItem(label, nb, fn, opts){
+  opts = opts || {};
+  const off = opts.off ? ' disabled style="opacity:.45;pointer-events:none"' : '';
+  const txt = opts.txt !== undefined ? opts.txt : (nb + ' carte' + (nb > 1 ? 's' : ''));
+  return `<button class="home-matiere-due-item${opts.grouped ? ' home-matiere-due-item-grouped' : ''}"${off} onclick="${fn}"><span>${label}</span><span class="home-matiere-due-count">${txt}</span></button>`;
+}
 function openChooseMatiereForQuiz(){
-  const total = CARDS.length;
-  openChooseMatiereGeneric("S'entraîner — quelle matière ?", 'startQuizOnMatiere', 'startQuizGrouped', total);
+  const mats = getMatieresActives().filter(m => CARDS.some(c => (c.matiere || 'Sans matière') === m));
+  const fixe = matiereFilter !== 'toutes' || mats.length <= 1;
+  const portee = matiereFilter !== 'toutes' ? matiereFilter : 'toutes';
+  const nbTout = portee === 'toutes' ? cartesNonPausees().length : cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === portee).length;
+  const nbDiff = cartesDifficiles(portee).length;
+  const diffOff = nbDiff < QUIZ_DIFF_MIN;
+  const diffTxt = diffOff ? ('min. ' + QUIZ_DIFF_MIN) : undefined;
+  const lignes = [];
+  if(fixe){
+    lignes.push(entrItem(portee === 'toutes' ? "S'entraîner" : escapeHtml(portee), nbTout, "closeChooseMatiereForAll(); startQuizFromHome()", { grouped: true }));
+    lignes.push(entrItem('Les difficiles', nbDiff, "closeChooseMatiereForAll(); startQuizDifficiles()", { off: diffOff, txt: diffTxt }));
+  } else {
+    lignes.push(entrItem('Tout regrouper', nbTout, "closeChooseMatiereForAll(); startQuizGrouped()", { grouped: true }));
+    lignes.push(entrItem('Les difficiles', nbDiff, "openChooseDifficiles()", { off: diffOff, txt: diffTxt }));
+    lignes.push('<div class="home-matiere-due-sep"></div>');
+    mats.forEach(m => { const n = cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === m).length; lignes.push(entrItem(escapeHtml(m), n, "closeChooseMatiereForAll(); startQuizOnMatiere('" + escapeJsAttr(m) + "')")); });
+  }
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeChooseMatiereForAll()">
+      <div class="modal-sheet">
+        <div class="modal-title">${fixe ? "S'entraîner" : "S'entraîner — quelle matière ?"}</div>
+        <div class="home-matiere-due-list">${lignes.join('')}</div>
+        <div class="modal-actions"><button class="modal-cancel" onclick="closeChooseMatiereForAll()">Annuler</button></div>
+      </div>
+    </div>`;
+}
+/* Deuxième étape : Les difficiles, puis la matière (Toutes en tête). Une matière avec moins de QUIZ_DIFF_MIN cartes difficiles est grisée. */
+function openChooseDifficiles(){
+  const mats = getMatieresActives().filter(m => cartesDifficiles(m).length > 0 || CARDS.some(c => (c.matiere || 'Sans matière') === m));
+  const nbTout = cartesDifficiles('toutes').length;
+  const lignes = [entrItem('Toutes', nbTout, "closeChooseMatiereForAll(); startQuizDifficilesSur('toutes')", { grouped: true, off: nbTout < QUIZ_DIFF_MIN, txt: nbTout < QUIZ_DIFF_MIN ? 'min. ' + QUIZ_DIFF_MIN : undefined }), '<div class="home-matiere-due-sep"></div>'];
+  mats.forEach(m => { const n = cartesDifficiles(m).length; lignes.push(entrItem(escapeHtml(m), n, "closeChooseMatiereForAll(); startQuizDifficilesSur('" + escapeJsAttr(m) + "')", { off: n < QUIZ_DIFF_MIN, txt: n < QUIZ_DIFF_MIN ? 'min. ' + QUIZ_DIFF_MIN : undefined })); });
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this) closeChooseMatiereForAll()">
+      <div class="modal-sheet">
+        <div class="modal-title">Les difficiles — quelle matière ?</div>
+        <div class="home-matiere-due-list">${lignes.join('')}</div>
+        <div class="modal-actions"><button class="modal-cancel" onclick="openChooseMatiereForQuiz()">Retour</button></div>
+      </div>
+    </div>`;
+}
+function startQuizDifficilesSur(matiere){
+  matiereFilter = matiere;
+  startQuizDifficiles();
 }
 function startQuizGrouped(){
   matiereFilter = 'toutes';
@@ -9881,7 +9925,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v225';
+const PP_APP_VERSION = 'v226';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
