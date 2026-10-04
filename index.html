@@ -28,6 +28,48 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
 })();
 </script>
 <script>
+/* v179 : JOURNAL DE DIAGNOSTIC (Réglages > Aide > Journal de diagnostic). Sert à savoir si la page est vraiment rechargée quand on quitte
+   puis qu'on revient, et par qui. Chaque chargement de page écrit une ligne « CHARGEMENT » (type de navigation, page « écartée » par Chrome,
+   sessionStorage encore là ou non, temps depuis la dernière activité, instantané d'écran présent ou non, origine = android-app:// dans l'APK).
+   Puis une ligne par visibilitychange / pagehide / pageshow / freeze / resume. 80 lignes au maximum, dans localStorage 'pp-journal'. Placé AVANT
+   le script v174 : il doit lire les clés avant qu'elles soient réécrites. */
+(function(){
+  var K = 'pp-journal', MAX = 80;
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function hms(){ var d = new Date(); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+  function lire(){ try{ var a = JSON.parse(localStorage.getItem(K) || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
+  window.ppJournalLire = lire;
+  window.ppJournalEffacer = function(){ try{ localStorage.removeItem(K); }catch(e){} };
+  window.ppJournal = function(evt, detail){
+    try{
+      var a = lire();
+      a.push(hms() + '  ' + evt + (detail ? '  ' + detail : ''));
+      if(a.length > MAX) a = a.slice(a.length - MAX);
+      localStorage.setItem(K, JSON.stringify(a));
+    }catch(e){}
+  };
+  try{
+    var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || null;
+    var t = parseInt(localStorage.getItem('pp-derniere-activite') || '0', 10);
+    var snap = 'aucun';
+    try{
+      var o = JSON.parse(localStorage.getItem('pp-etat-ecran') || 'null');
+      if(o) snap = 'oui (âge ' + Math.round((Date.now() - o.t) / 1000) + ' s, onglet ' + o.o + ', séance ' + (o.m || 'non') + ')';
+    }catch(e){ snap = 'illisible'; }
+    var ss = 'indisponible'; try{ ss = sessionStorage.getItem('pp-deja-demarre') === '1' ? 'déjà là' : 'vide'; }catch(e){}
+    var ecran = 'navigateur'; try{ if(window.matchMedia && matchMedia('(display-mode: standalone)').matches) ecran = 'standalone'; }catch(e){}
+    window.ppJournal('CHARGEMENT', 'navigation=' + (nav ? nav.type : '?') + ' | page écartée par Chrome=' + (document.wasDiscarded ? 'OUI' : 'non') +
+      ' | sessionStorage=' + ss + ' | dernière activité=' + (t ? 'il y a ' + Math.round((Date.now() - t) / 1000) + ' s' : 'jamais') +
+      ' | instantané=' + snap + ' | visibilité=' + document.visibilityState + ' | origine=' + (document.referrer || '-') + ' | écran=' + ecran);
+  }catch(e){}
+  document.addEventListener('visibilitychange', function(){ window.ppJournal('visibilité', document.visibilityState); });
+  window.addEventListener('pagehide', function(e){ window.ppJournal('pagehide', 'persisted=' + !!e.persisted); });
+  window.addEventListener('pageshow', function(e){ window.ppJournal('pageshow', 'persisted=' + !!e.persisted); });
+  document.addEventListener('freeze', function(){ window.ppJournal('freeze'); });
+  document.addEventListener('resume', function(){ window.ppJournal('resume'); });
+})();
+</script>
+<script>
 /* v174 : le faux splash ne se rejoue pas quand on revient dans l'app. Android peut recharger la page après un passage en arrière-plan :
    ce n'est pas un vrai démarrage. On pose la classe pp-reprise sur <html> AVANT le premier rendu (le CSS cache alors le splash) si
    (a) l'onglet a déjà démarré (sessionStorage) ou (b) l'app était active il y a moins de 2 h (localStorage, au cas où Android ne
@@ -8062,7 +8104,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v178';
+const PP_APP_VERSION = 'v179';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -8074,6 +8116,27 @@ function ppAideMail(type){
     : (en ? 'Hi,\n\n\n' : 'Salut,\n\n\n');
   ppToast((en ? 'Write to: ' : 'Écris à : ') + PP_CONTACT_MAIL);
   try{ window.location.href = 'mailto:' + PP_CONTACT_MAIL + '?subject=' + encodeURIComponent(sujet) + '&body=' + encodeURIComponent(corps); }catch(e){}
+}
+
+/* v179 : écran « Journal de diagnostic » (Réglages > Aide). Le journal lui-même est écrit par le script du <head> (window.ppJournal). */
+function ppJournalTexte(){
+  let a = []; try{ a = window.ppJournalLire ? window.ppJournalLire() : []; }catch(e){}
+  return 'Memoria ' + PP_APP_VERSION + '\n' + (navigator.userAgent || '') + '\n' + screen.width + 'x' + screen.height + '\n\n' + (a.length ? a.join('\n') : '(journal vide)');
+}
+function ppJournalOuvrir(){
+  ppSheet(`<div class="pp-grab"></div><h2>Journal de diagnostic</h2><p class="pp-hint">Quitte l'app, reviens, puis ouvre cet écran : touche Copier et colle le texte dans la conversation.</p><pre data-notr style="font:11px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;max-height:46vh;overflow:auto;-webkit-user-select:text;user-select:text;text-align:left;padding:10px 12px;border-radius:14px;background:var(--panel);border:1.5px solid var(--line);margin:0 0 12px">${ppEsc(ppJournalTexte())}</pre><div class="pp-duo"><button class="pp-sec" onclick="ppJournalEffacerUi()">Effacer</button><button class="pp-cta" onclick="ppJournalCopier()">Copier</button><button class="pp-sec" style="grid-column:1/-1" onclick="ppSettings(true)">Retour</button></div>`);
+}
+function ppJournalEffacerUi(){ try{ window.ppJournalEffacer(); }catch(e){} ppJournalOuvrir(); }
+function ppJournalCopier(){
+  const t = ppJournalTexte();
+  const ok = () => ppToast('Journal copié');
+  const secours = () => {
+    try{
+      const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok();
+    }catch(e){ ppToast('Copie impossible : sélectionne le texte à la main'); }
+  };
+  try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, secours); else secours(); }catch(e){ secours(); }
 }
 
 /* ================= v157 : bouton « Appareil photo » =================
@@ -12858,7 +12921,7 @@ function ppSetHtml(){
   ${ppEstApple() ? '' : `<h4>Rappels</h4>${rappels}`}
   ${ppAppleHtml()}
   <h4>Génération IA</h4>${ia}
-  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button></div></div><div>
+  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button><button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button></div></div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
   ${ppWebHtml()}
   ${ppMobilesHtml()}
@@ -13303,6 +13366,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
 (function(){
   var K = 'pp-etat-ecran';
   var SECRETS = { 'gemini-key-input':1, 'sync-code-input':1, 'pp-ij-code':1 };
+  function jr(msg){ try{ window.ppJournal('RESTAURATION', msg); }catch(x){} }
   function brouillons(){
     var d = {}, n = 0;
     try{
@@ -13315,7 +13379,11 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     }catch(x){}
     return d;
   }
-  function sauver(){
+  /* v179 : l'instantané est aussi enregistré toutes les 3 s tant que l'app est visible (avant : seulement au départ et après une saisie).
+     Si Android coupe la page sans laisser le temps de réagir à « départ », l'instantané récent est quand même là.
+     'source' ne sert qu'au journal de diagnostic (départ / pagehide) ; une erreur d'enregistrement est notée une seule fois. */
+  var erreurDite = false;
+  function sauver(source){
     try{
       var seance = studySessionActive && (studyMode === 'due' || studyMode === 'all') && queue && currentIndex < queue.length;
       localStorage.setItem(K, JSON.stringify({
@@ -13325,12 +13393,16 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
         sr: sessionReviewed, sm: sessionMastered, mc: sessionMoodCounts,
         d: brouillons()
       }));
-    }catch(e){}
+      if(typeof source === 'string') window.ppJournal('instantané enregistré', '(' + source + ') onglet ' + activeTab + ', séance ' + (seance ? studyMode : 'non'));
+    }catch(e){
+      if(!erreurDite){ erreurDite = true; try{ window.ppJournal('instantané ERREUR', String((e && e.message) || e)); }catch(x){} }
+    }
   }
   var minuteur = null;
-  document.addEventListener('input', function(){ clearTimeout(minuteur); minuteur = setTimeout(sauver, 600); }, true);
-  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') sauver(); });
-  window.addEventListener('pagehide', sauver);
+  document.addEventListener('input', function(){ clearTimeout(minuteur); minuteur = setTimeout(function(){ sauver(); }, 600); }, true);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') sauver('départ'); });
+  window.addEventListener('pagehide', function(){ sauver('pagehide'); });
+  setInterval(function(){ if(document.visibilityState === 'visible') sauver(); }, 3000);
   function remplir(d, y){
     setTimeout(function(){
       try{
@@ -13344,33 +13416,39 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   }
   try{
     var raw = localStorage.getItem(K);
-    if(!raw || !window.__ppDemarre) return;
+    if(!window.__ppDemarre){ jr('pas faite : le démarrage n\u2019est pas allé jusqu\u2019au premier rendu'); return; }
+    if(!raw){ jr('rien à restaurer (aucun instantané)'); return; }
     var o = JSON.parse(raw);
     localStorage.removeItem(K);
-    if(!o || !(Date.now() - o.t >= 0 && Date.now() - o.t < 3 * 60 * 60 * 1000)) return;
+    var age = o ? Date.now() - o.t : -1;
+    if(!o || !(age >= 0 && age < 3 * 60 * 60 * 1000)){ jr('instantané trop vieux ou illisible (' + Math.round(age / 60000) + ' min)'); return; }
     var tabs = ['study', 'browse', 'planning', 'add', 'settings'];
     if(o.m === 'due' || o.m === 'all'){
       studyMode = o.m; matiereFilter = o.f || 'toutes';
       buildQueue(false);
       if(queue.length > 0){
         startStudySession(o.m);
+        var carteOk = false;
         try{
           if(o.c){
             var k = queue.findIndex(function(c){ return c.id === o.c; });
-            if(k >= 0){ var carte = queue.splice(k, 1)[0]; queue.unshift(carte); currentIndex = 0; flipped = !!o.fl; }
+            if(k >= 0){ var carte = queue.splice(k, 1)[0]; queue.unshift(carte); currentIndex = 0; flipped = !!o.fl; carteOk = true; }
           }
           sessionReviewed = o.sr | 0; sessionMastered = o.sm | 0;
           if(o.mc && typeof o.mc === 'object') sessionMoodCounts = { rouge: o.mc.rouge | 0, orange: o.mc.orange | 0, vert: o.mc.vert | 0 };
           renderStudy();
         }catch(e){}
         remplir(o.d, 0);
+        jr('séance reprise (' + o.m + ', carte ' + (carteOk ? 'retrouvée' : 'non retrouvée') + (o.fl ? ', retournée' : '') + ')');
         return;
       }
+      jr('séance impossible à reprendre (file vide)');
       studyMode = 'due'; matiereFilter = 'toutes'; buildQueue();
     }
-    if(tabs.indexOf(o.o) > 0) switchTab(o.o);
+    if(tabs.indexOf(o.o) > 0){ switchTab(o.o); jr('onglet « ' + o.o + ' » remis'); }
+    else jr('accueil (rien à remettre)');
     remplir(o.d, o.y || 0);
-  }catch(e){}
+  }catch(e){ jr('ERREUR : ' + ((e && e.message) || e)); }
 })();
 
 // Retire l'écran de transition custom du DOM une fois son animation de
