@@ -5385,7 +5385,7 @@ function pcEnsure(){
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
     <div class="pc-suggw pc-stg" style="--i:3"><button class="pp-back pc-arr l" id="pc-al" type="button" aria-label="Suggestions précédentes">${ppSvg('<path d="M15 6l-6 6 6 6"/>', 18)}</button><div id="pc-sugg"></div><button class="pp-back pc-arr r" id="pc-ar" type="button" aria-label="Suggestions suivantes">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</button></div>
-    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences' })}<button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
+    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true })}<button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
   document.body.appendChild(l);
   ppCEScan(l);   /* v228 : le champ de saisie est un champ ppCE (pas de barre d'autofill) */
   const inp = pcEl('pc-input'), sendBtn = pcEl('pc-send');
@@ -5776,7 +5776,7 @@ function pcCarnetOuvrir(){
   if(!pcOuvert) return;
   pcCarnetFerme(); pcHistFerme();
   const h = document.createElement('div'); h.id = 'pc-carnet'; h.className = 'pc-hist';
-  h.innerHTML = `<div class="pc-bar"><button class="pp-back" id="pcn-back" type="button" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><span>${ppWide() ? 'Mémoire' : 'Ce que Prof retient'}</span></div></div><div id="pcn-corps" class="pch-corps"></div><div id="pcn-pied" class="pch-pied"><p id="pcn-info"></p>${ppCEHtml({ id: 'pcn-in', ph: 'ex. préfère des exemples concrets', max: CARNET_LIGNE_MAX, enter: 'done', cap: 'sentences' })}<button id="pcn-add" class="pcn-add" type="button">Ajouter</button></div>`;
+  h.innerHTML = `<div class="pc-bar"><button class="pp-back" id="pcn-back" type="button" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><span>${ppWide() ? 'Mémoire' : 'Ce que Prof retient'}</span></div></div><div id="pcn-corps" class="pch-corps"></div><div id="pcn-pied" class="pch-pied"><p id="pcn-info"></p>${ppCEHtml({ id: 'pcn-in', ph: 'ex. préfère des exemples concrets', max: CARNET_LIGNE_MAX, enter: 'done', cap: 'sentences', spell: true })}<button id="pcn-add" class="pcn-add" type="button">Ajouter</button></div>`;
   ['touchstart', 'mousedown'].forEach(k => h.addEventListener(k, e => e.stopPropagation(), { passive: true })); /* le glissé de fermeture de Prof ne doit pas s'activer ici */
   pcHote().appendChild(h);
   ppCEScan(h); pcPendN = -1; pcUndoHide();
@@ -10242,7 +10242,7 @@ function ppEnsureSheets(){
 function ppCEHtml(o){
   o = o || {};
   const a = (k, v) => (v == null || v === '') ? '' : ` ${k}="${escapeHtml(String(v))}"`;
-  return `<div${a('id', o.id)} class="pp-ce${o.cls ? ' ' + o.cls : ''}" contenteditable="plaintext-only" role="textbox" tabindex="0"${a('aria-label', o.label || o.ph)}${a('data-ph', o.ph)}${a('data-max', o.max)} enterkeyhint="${o.enter || 'done'}" autocapitalize="${o.cap || 'sentences'}" autocorrect="off" spellcheck="false"${o.attrs ? ' ' + o.attrs : ''}></div>`;
+  return `<div${a('id', o.id)} class="pp-ce${o.cls ? ' ' + o.cls : ''}" contenteditable="plaintext-only" role="textbox" tabindex="0"${a('aria-label', o.label || o.ph)}${a('data-ph', o.ph)}${a('data-max', o.max)} enterkeyhint="${o.enter || 'done'}" autocapitalize="${o.cap || 'sentences'}" autocorrect="${o.spell ? 'on' : 'off'}" spellcheck="${o.spell ? 'true' : 'false'}"${o.attrs ? ' ' + o.attrs : ''}></div>`;
 }
 function ppCEInit(el){
   if(!el || el.__ce) return el; el.__ce = true;
