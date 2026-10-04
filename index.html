@@ -439,10 +439,13 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     /* v223 : pastilles renommées, « Plus… » / « Moins », précisions de la synthèse */
     'Résumé rapide':'Quick summary','Fiche de synthèse':'Summary sheet',"Je t'explique, corrige-moi":'I explain, you correct me','Plus…':'More…','Moins':'Less',
     'Précisions pour la synthèse (facultatif)':'Details for the summary (optional)','Précisions':'Details' });
+  Object.assign(D,{ 'Cherche les doublons':'Find duplicates','Date de contrôle':'Test date','Renommer la matière':'Rename subject','Fusionner':'Merge','Archiver la matière':'Archive subject','Désarchiver la matière':'Unarchive subject','Supprimer la matière':'Delete subject','Mettre en pause':'Pause','Reprendre':'Resume','retirée':'removed',
+    'Attention : la matière ET toutes ses cartes seront supprimées, sans retour possible.':'Warning: the subject AND all its cards will be deleted, with no way back.' });
   RULES.push(
     f(/^Conversations passées \((\d+)\)$/,function(n){ return 'Past conversations ('+n+')'; }),
     f(/^Ce que Prof retient \((\d+)\)$/,function(n){ return 'What Prof remembers ('+n+')'; }),
     f(/^(\d+) messages?$/,function(n){ return c(n,'message'); }),
+    f(/^(\d+) cartes? déplacées?$/,function(n){ return c(n,'card')+' moved'; }),
     f(/^Le carnet est plein \((\d+) lignes\)\. Supprime une ligne pour en ajouter\.$/,function(n){ return 'The notebook is full ('+c(n,'line')+'). Delete a line to add one.'; }),
     f(/^(\d+)\/(\d+) lignes · (\d+) caractères maximum par ligne$/,function(a,b,m){ return a+'/'+b+' lines · '+m+' characters maximum per line'; })
   );
@@ -451,6 +454,14 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   var LOT_PROF={'créée':'created','modifiée':'edited','supprimée':'deleted','ignorée':'ignored'};
   function morceauProf(x){
     if(NOTES_PROF[x]) return NOTES_PROF[x];
+    var m2=/^contrôle « (.+) » le (\d{2}\/\d{2}\/\d{4})$/.exec(x); if(m2) return 'test for “'+m2[1]+'” on '+m2[2];
+    m2=/^date de contrôle « (.+) » retirée$/.exec(x); if(m2) return 'test date for “'+m2[1]+'” removed';
+    m2=/^matière « (.+) » renommée en « (.+) »$/.exec(x); if(m2) return 'subject “'+m2[1]+'” renamed to “'+m2[2]+'”';
+    m2=/^matière « (.+) » fusionnée dans « (.+) »$/.exec(x); if(m2) return 'subject “'+m2[1]+'” merged into “'+m2[2]+'”';
+    m2=/^matière « (.+) » (archivée|désarchivée)$/.exec(x); if(m2) return 'subject “'+m2[1]+'” '+(m2[2]==='archivée'?'archived':'unarchived');
+    m2=/^matière « (.+) » supprimée \(définitif\)$/.exec(x); if(m2) return 'subject “'+m2[1]+'” deleted (permanent)';
+    m2=/^(\d+) (en pause|reprises?)$/.exec(x); if(m2) return m2[1]+' '+(m2[2]==='en pause'?'paused':'resumed');
+    var mm=/^matière « (.+) » (créée|existait déjà)$/.exec(x); if(mm) return 'subject “'+mm[1]+'” '+(mm[2]==='créée'?'created':'already existed');
     var m=/^(\d+) (créée|modifiée|supprimée|ignorée)s?(?: \(carte modifiée entre-temps\))?$/.exec(x);
     return m ? m[1]+' '+LOT_PROF[m[2]]+(/\(carte/.test(x)?' (card edited in the meantime)':'') : null;
   }
@@ -3079,7 +3090,9 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pc-typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:pcdot 1s ease-in-out infinite}
 .pc-typing i:nth-child(2){animation-delay:.15s}.pc-typing i:nth-child(3){animation-delay:.3s}
 @keyframes pcdot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-6px);opacity:1}}
-#pc-sugg{display:flex;gap:8px;overflow-x:auto;padding:4px 14px 10px;scrollbar-width:none}
+#pc-sugg{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 14px 10px;scrollbar-width:none}
+.pc-chip.pc-ghost{position:absolute;margin:0;pointer-events:none;box-sizing:border-box}   /* v235 : pastille qui part (voir pcRenderSugg) */
+#pc-layer.ready .pc-chip{animation:none}   /* v235 : après l'ouverture, plus d'animation CSS sur les pastilles (grand écran : elle rejouait à chaque changement) ; pcRenderSugg anime lui-même */
 #pc-sugg::-webkit-scrollbar{display:none}
 .pc-chip{flex:none;padding:8px 14px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font-weight:700;font-size:13px;transition:transform .35s var(--ease-press)}
 .pc-chip:active,.pc-chip.js-press{transform:scale(.93);transition-duration:.07s}
@@ -5453,7 +5466,7 @@ const COACH_TOPN = 40, COACH_CONTEXTE_MAX = 60000, COACH_MSG_MAX = 100, COACH_HI
 const HIST_MAX = 15, HIST_TITRE_MAX = 60, HIST_BUDGET_CARS = 600000; /* v213 : historique des conversations de Prof (voir PLAN-HISTORIQUE-ET-CARNET-PROF.md) */
 let pcActsAttente = null;   /* v212 : dernier bloc « Actions proposées » pas encore appliqué ni ignoré (gardé pour la reprise) */
 let pcConv = [], pcLangue = '', pcCarte = null, pcPhoto = null, pcLot = null, pcAttente = false, pcMenuMode = '';
-const PC_MSG = { 'Résumé rapide': 'Fais-moi un résumé rapide de cette matière, dans le chat (sans ouvrir de fiche de synthèse).', 'Question suivante': 'Question suivante.', 'Indice': 'Donne-moi un indice, sans me donner la réponse.', 'Je ne sais pas': 'Je ne sais pas. Donne-moi la réponse avec une courte explication, puis enchaîne.', 'Arrêter et faire le bilan': "On arrête. Fais le bilan de la série (score, notions ratées) et propose d'ajouter en cartes celles que j'ai ratées.", 'Plus simple': 'Explique-moi ça plus simplement.', 'Un exemple': 'Donne-moi un exemple concret.', 'Aide-moi à la retenir': 'Donne-moi une astuce courte pour retenir la carte en discussion.', 'Teste-moi sur cette carte': "Teste-moi sur la carte en discussion : pose-moi sa question seule, puis enchaîne sur des notions proches.", 'Mes cartes les plus ratées': 'Prends mes 3 cartes les plus ratées : pour chacune, la confusion probable et une astuce pour retenir.', "Qu'est-ce qui manque ?": "Quelles notions importantes manquent dans mes cartes de cette matière ? Propose les cartes à ajouter.", 'Fiche de synthèse': 'Fais-moi une synthèse de cette matière.', "Je t'explique, corrige-moi": "Je t'explique une notion avec mes mots. Demande-moi laquelle.", 'Explique autrement': 'Explique-moi autrement la carte en discussion (exemples, analogies).', 'Pourquoi je rate celle-là ?': 'Pourquoi est-ce que je rate cette carte ?' };
+const PC_MSG = { 'Résumé rapide': 'Fais-moi un résumé rapide de cette matière, dans le chat (sans ouvrir de fiche de synthèse).', 'Question suivante': 'Question suivante.', 'Indice': 'Donne-moi un indice, sans me donner la réponse.', 'Je ne sais pas': 'Je ne sais pas.', 'Cherche les doublons': 'Cherche les cartes en doublon dans toutes mes matières.', 'Arrêter et faire le bilan': "On arrête. Fais le bilan de la série (score, notions ratées) et propose d'ajouter en cartes celles que j'ai ratées.", 'Plus simple': 'Explique-moi ça plus simplement.', 'Un exemple': 'Donne-moi un exemple concret.', 'Aide-moi à la retenir': 'Donne-moi une astuce courte pour retenir la carte en discussion.', 'Teste-moi sur cette carte': "Teste-moi sur la carte en discussion : pose-moi sa question seule, puis enchaîne sur des notions proches.", 'Mes cartes les plus ratées': 'Prends mes 3 cartes les plus ratées : pour chacune, la confusion probable et une astuce pour retenir.', "Qu'est-ce qui manque ?": "Quelles notions importantes manquent dans mes cartes de cette matière ? Propose les cartes à ajouter.", 'Fiche de synthèse': 'Fais-moi une synthèse de cette matière.', "Je t'explique, corrige-moi": "Je t'explique une notion avec mes mots. Demande-moi laquelle.", 'Explique autrement': 'Explique-moi autrement la carte en discussion (exemples, analogies).', 'Pourquoi je rate celle-là ?': 'Pourquoi est-ce que je rate cette carte ?' };
 
 function pcCharge(){
   pcConv = ppLireJSON('coach-conversation', [], Array.isArray)
@@ -6039,8 +6052,16 @@ function pcMenu(mode){
     h = `<p>Quelle langue ?</p>${ppCEHtml({ id: 'pc-lang-in', ph: 'ex. espagnol', max: 40, enter: 'done', cap: 'none' })}<div class="pc-mb"><button type="button" data-a="non">Annuler</button><button type="button" data-a="ok">Valider</button></div>`;
   }
   m.innerHTML = h; m.classList.add('on'); ppCEScan(m);
+  pcMenuPlace(m);
   m.querySelectorAll('button').forEach(b => b.onclick = () => pcMenuAction(b.dataset.a));
   const li = pcEl('pc-lang-in'); if(li){ li.onkeydown = e => { if(e.key === 'Enter'){ e.preventDefault(); pcMenuAction('ok'); } }; setTimeout(() => li.focus(), 60); }
+}
+/* v236 : le menu se place juste sous le bouton ⋯ (mesuré), avec 10 px d'air : avant, une valeur fixe le faisait chevaucher le bouton et son ombre. */
+function pcMenuPlace(m){
+  const b = pcEl('pc-more'), hote = m.offsetParent || m.parentElement; if(!b || !hote) return;
+  const rb = b.getBoundingClientRect(), rh = hote.getBoundingClientRect();
+  if(!rb.height) return;
+  m.style.top = Math.round(rb.bottom - rh.top + 10) + 'px';
 }
 function pcMenuAction(a){
   setTimeout(pcSideMaj, 0);
@@ -6139,7 +6160,8 @@ function pcScore(c, mots){
 function pcChoisirCartes(texte, matiere){
   pcRecentMap = pcRecentCharge();
   let liste;
-  if(matiere) liste = CARDS.filter(c => (c.matiere || 'Sans matière') === matiere);
+  if(/doublon/i.test(String(texte || ''))) liste = CARDS.slice();   /* v236 : recherche de doublons = toutes les cartes de toutes les matières (plafonné plus bas) */
+  else if(matiere) liste = CARDS.filter(c => (c.matiere || 'Sans matière') === matiere);
   else { /* « Toutes » : recherche locale par mots-clés (pas d'IA), puis les plus ratées pour compléter */
     const mots = pcMots(texte);
     liste = CARDS.map(c => ({ c, s: pcScore(c, mots) })).sort((a, b) => (b.s - a.s) || ((b.c.difficultes || 0) - (a.c.difficultes || 0))).slice(0, COACH_TOPN).map(x => x.c);
@@ -6183,25 +6205,30 @@ function ppCoachPlan(m){
 
 /* ---------- consigne système ---------- */
 function pcSysteme(matiere, cartes){
-  const mats = getMatieres().map(m => { const L = CARDS.filter(c => (c.matiere || 'Sans matière') === m); return `${m} (${L.length} cartes, ${L.filter(c => (c.palier || 0) >= MASTERED_PALIER).length} maîtrisées)`; }).join(', ') || 'aucune';
+  const mats = getMatieres().map(m => { const L = CARDS.filter(c => (c.matiere || 'Sans matière') === m); const cf = matieresConfig[m] || {}; return `${m} (${L.length} cartes, ${L.filter(c => (c.palier || 0) >= MASTERED_PALIER).length} maîtrisées${cf.archive ? ', archivée' : ''}${cf.dateControle ? ', contrôle le ' + cf.dateControle : ''})`; }).join(', ') || 'aucune';
   const carte = pcCarte ? CARDS.find(c => c.id === pcCarte) : null;
   const bilan = ppCoachBilan(), plan = matiere ? ppCoachPlan(matiere) : getPlanningSummary();
-  return `Tu es « ${PP_COACH_NOM} », l'assistant de révision de l'application Memoria. Tu connais les cartes de l'utilisateur (listées plus bas, une par ligne : [id] Q: question | R: réponse | niveau:P/4 (état) | derniers:… | ratée:N | prochaine:date). SA MAÎTRISE se lit UNIQUEMENT dans ces champs : « niveau » = palier de révision (0 = nouvelle ou ratée récemment, 4/4 = maîtrisée) ; « état » = maîtrisée / en cours / jamais révisée / en pause ; « derniers » = ses 3 dernières réponses de la plus ancienne à la plus récente (✗ pas su, ~ difficile, ✓ facile) ; « ratée:N » = nombre total de fois où il a répondu « Pas su » ou « Difficile » (ne redescend jamais : ce n'est PAS son niveau actuel) ; « prochaine » = date de la prochaine révision. Tu ne vois PAS le détail de ses mauvaises réponses. Tu expliques, tu interroges, tu corriges, tu repères les cartes faibles.
+  return `Tu es « ${PP_COACH_NOM} », l'assistant de révision et d'étude de l'application Memoria. Tu connais les cartes de l'utilisateur (listées plus bas, une par ligne : [id] Q: question | R: réponse | niveau:P/4 (état) | derniers:… | ratée:N | prochaine:date). SA MAÎTRISE se lit UNIQUEMENT dans ces champs : « niveau » = palier de révision (0 = nouvelle ou ratée récemment, 4/4 = maîtrisée) ; « état » = maîtrisée / en cours / jamais révisée / en pause ; « derniers » = ses 3 dernières réponses de la plus ancienne à la plus récente (✗ pas su, ~ difficile, ✓ facile) ; « ratée:N » = nombre total de fois où il a répondu « Pas su » ou « Difficile » (ne redescend jamais : ce n'est PAS son niveau actuel) ; « prochaine » = date de la prochaine révision. Tu ne vois PAS le détail de ses mauvaises réponses. Tu expliques, tu interroges, tu corriges, tu repères les cartes faibles.
 TON : court, adulte, jamais enfantin. Réponses brèves (écran de téléphone), pas de longs paragraphes.
 RÈGLES :
 - Réponds dans la langue de l'utilisateur${pcLangue ? ` — SAUF mode langue ci-dessous` : ''}.
 - "ajoutable" : true UNIQUEMENT quand ta réponse apporte une notion NOUVELLE qui n'est pas dans les cartes (explication, définition, exemple, règle) et qui mérite d'être gardée dans le cours : l'appli affiche alors un bouton « + Ajouter en carte ». Dans tous les autres cas : false (question posée, correction ou score d'une question, bilan, liste ou rappel de cartes existantes, reformulation, réponse sur sa maîtrise ou sur ton fonctionnement, simple échange).
-- Appuie-toi d'abord sur les cartes. Si ta réponse ne vient pas des cartes, mets "hors_cartes": true.
-- Ne propose des "actions" QUE si l'utilisateur le demande (ou dans les modes « Vérifie mes cartes » et fin de série d'« Interroge-moi »). Sinon "actions": [].
-- Action "retenir" (carnet de l'utilisateur) : seule exception à la règle précédente. Propose-la UNIQUEMENT si l'utilisateur te le demande (« retiens que… »), ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois (1 seule ligne). Jamais autrement. "texte" : une note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule action "retenir" par réponse.
+- PRIORITÉ AUX CARTES : s'il existe des cartes sur le sujet, appuie-toi d'abord dessus et reste cohérent avec elles (définitions, vocabulaire). S'il n'y a aucune carte sur le sujet, ou si elles ne suffisent pas, aide quand même avec tes connaissances : explication, exercice, correction, méthode, interrogation, sur n'importe quel cours, qu'il soit dans Memoria ou non. Ne refuse jamais une demande d'étude parce qu'il n'y a pas de carte. Dans ce cas mets "hors_cartes": true, dis-le en une phrase courte (sans t'excuser) et, si la notion mérite d'être gardée, propose-la en carte ("ajoutable": true).
+- RESTE DANS LES ÉTUDES : tu aides à apprendre, réviser, comprendre un cours ou un exercice, à t'organiser et à travailler une langue. Une demande sans rapport avec l'apprentissage (jeu, divertissement, bavardage qui s'éternise, sujets personnels…) : réponds en une phrase brève et aimable que tu es là pour les révisions, puis propose de reprendre le travail (ou un mini-quiz). Pas de sermon, pas de refus sec ; un « bonjour » ou un « merci » reçoit une réponse normale.
+- ACTIONS : ne propose des "actions" QUE si l'utilisateur le demande (ou dans les modes « Vérifie mes cartes », « Cherche les doublons » et fin de série d'« Interroge-moi »). Sinon "actions": []. N'invente JAMAIS d'id : utilise seulement ceux des lignes ci-dessous.
+- "retenir" (carnet de l'utilisateur) : seulement s'il te le demande (« retiens que… »), ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois (1 seule ligne). Jamais autrement. "texte" : note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule action "retenir" par réponse.
+- "matiere" (créer une matière vide) : tu PEUX créer une matière, ne dis jamais le contraire. Seulement si l'utilisateur le demande. "nom" : court (40 caractères maximum), avec une majuscule ; s'il n'en a pas donné, demande-le (actions: []). Si la matière existe déjà dans MATIÈRES, dis-le et ne la propose pas. Ajoute "date_controle":"AAAA-MM-JJ" s'il donne une date de contrôle. Si des cartes doivent y aller, ajoute des actions "creer" dont "matiere" est exactement ce nom.
+- Autres actions sur les matières (seulement sur demande) : "controle" {"matiere":"…","date":"AAAA-MM-JJ"} met ou change la date de contrôle ("date":"" la retire) ; "renommer" {"matiere":"ancien nom","nom":"nouveau nom"} ; "fusionner" {"matiere":"celle qui disparaît","dans":"celle qui reste"} (ses cartes passent dans l'autre) ; "archiver" {"matiere":"…","archive":true} (false pour désarchiver) ; "supprimer_matiere" {"matiere":"…"} supprime la matière ET toutes ses cartes, sans retour possible : seulement si c'est demandé clairement, et dis-le en une phrase. Les noms de matières doivent être EXACTEMENT ceux de MATIÈRES. Dates au format AAAA-MM-JJ, calculées depuis la DATE DU JOUR (« le 15 » = le prochain 15) ; si c'est ambigu, demande ; une date passée est refusée. Si la matière n'est pas précisée, prends la matière active ou demande.
+- "pause" {"id":"…","pausee":true} (false = la reprendre) : met une carte en pause, seulement sur demande ; une action par carte, 20 maximum.
+- Cours collé ou document joint avec une demande de cartes : découpe-le en cartes courtes (actions \"creer\", 20 maximum) en suivant les règles de cartes ; si le cours touche plusieurs matières, répartis les cartes (\"matiere\" exacte) et propose \"matiere\" pour celles qui n'existent pas.
+- JE NE SAIS PAS : pendant une série de questions, « je ne sais pas », « jsp », « aucune idée », « pas la moindre idée » (ou équivalent) n'est PAS une réponse à corriger : ne dis jamais « Faux ». C'est toi qui choisis, sans lui demander. (a) Si un indice peut vraiment l'aider à retrouver la réponse en réfléchissant (lien logique, catégorie, période, première lettre, nombre de mots…), donne UN indice court SANS la réponse et laisse-le réessayer. (b) Si c'est un fait brut qu'on ne peut pas deviner, ou s'il a déjà reçu un indice sur CETTE question et ne sait toujours pas, donne directement la réponse avec une explication courte, puis enchaîne. Dans tous les cas la question compte comme « pas su » dans le score.
 - Ne confonds JAMAIS le CONTENU d'une carte (Q et R, ex. « Schengen : Non ») avec la maîtrise de l'utilisateur (niveau, état, derniers, ratée). Pour parler de sa maîtrise, appuie-toi sur ces champs et dis ce que tu y lis. Si on te demande comment tu le sais, explique-le avec ces champs. N'invente rien : si une information n'est pas dans les données, dis que tu ne la vois pas.
-- N'invente JAMAIS d'id : utilise seulement ceux des lignes ci-dessous.
 - Ne parle jamais de la clé API ni du fonctionnement interne.
 - Syntaxe du texte : **gras**, formules entre $…$, puces « - » (chaque puce sur SA PROPRE ligne, en commençant la ligne par « - » ; jamais le signe « • » ni plusieurs puces dans le même paragraphe).
-- Gras : très rare. 0 à 2 expressions par réponse, seulement pour un mot-clé à retenir absolument (terme, date, conclusion). Jamais une phrase entière, jamais des mots courants, jamais sur chaque puce ni sur des titres, jamais dans une réponse de 1 à 2 phrases. Quand rien ne mérite d'être mis en valeur, n'en mets pas.
-- Formules $…$ : seulement pour une vraie formule de maths, physique ou chimie (équation, fraction, exposant, indice). Jamais pour un nombre seul, une date, une unité seule ou un mot, et pas en histoire, géographie, langues ou droit. Dans le doute, écris en texte simple. Le signe $ ne sert qu'aux formules (écris « 5 euros »).
+- ${PROMPT_GRAS_BASE} Dans tes réponses : 0 à 2 expressions en gras, jamais dans une réponse de 1 à 2 phrases. Quand rien ne mérite d'être mis en valeur, n'en mets pas.
+- ${PROMPT_FORMULES}
 FORMAT DE SORTIE : un objet JSON strict, rien d'autre, sans balises :
-{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"}]}
+{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"},{"type":"matiere","nom":"…","date_controle":"AAAA-MM-JJ"},{"type":"controle","matiere":"…","date":"AAAA-MM-JJ"},{"type":"renommer","matiere":"…","nom":"…"},{"type":"fusionner","matiere":"…","dans":"…"},{"type":"archiver","matiere":"…","archive":true},{"type":"supprimer_matiere","matiere":"…"},{"type":"pause","id":"…","pausee":true}]}
 CARTES QUE TU CRÉES (actions "creer") : applique ces règles.
 ${PROMPT_REGLES_CARTES}
 Ici il n'y a pas forcément de cours sous les yeux : appuie-toi sur la conversation, les cartes existantes ou la pièce jointe. Si tu complètes avec tes propres connaissances, mets "hors_cartes": true et dis-le en une phrase. Ne crée jamais une carte qui existe déjà dans la liste.
@@ -6211,6 +6238,7 @@ MODES (déclenchés par le message de l'utilisateur) :
 - HASARD : pour la PREMIÈRE question d'une série (« Interroge-moi », « Question d'examen », « Teste-moi »), pars de la carte indiquée à « TIRAGE AU SORT » plus bas (pour « Question d'examen », prends-en le thème) ; ne commence jamais par la première carte de la liste ni par le sujet « évident ». Ensuite change de notion à chaque question, ne suis pas l'ordre de la liste, ne repose jamais une question déjà posée dans la conversation. Le TIRAGE AU SORT change à chaque message : ignore-le dès qu'une série est en cours.
 - « Interroge-moi » : choisis une carte (priorité aux plus ratées, en variant), pose la QUESTION SEULE, attends sa réponse libre, dis juste / partiel / faux avec une explication courte, puis enchaîne avec la carte suivante. Tiens un score (ex. 3/4) dans la conversation. En fin de série (≈5 questions ou si l'utilisateur arrête), propose d'ajouter en cartes les notions ratées (actions "creer"). Cela n'a AUCUN effet sur le planning.
 - « Résume la matière » / « Résumé rapide » : résumé bref et structuré des cartes de la matière active, dans le style des synthèses (voir plus haut).
+- « Cherche les doublons » : compare TOUTES les cartes listées (toutes matières) : même question ou même réponse reformulée, ou deux cartes qui demandent la même chose. Liste brève par groupes, et pour chaque groupe propose \"supprimer\" sur les cartes en trop (garde la mieux formulée), 15 maximum. S'il n'y en a pas, dis-le simplement.
 - « Vérifie mes cartes » : cherche les cartes mal formulées, ambiguës ou en doublon dans la matière active ; réponds par une liste brève et propose des actions "modifier" / "supprimer".
 - « Question d'examen » : pose une question rédactionnelle sur la matière ; l'utilisateur écrit ; corrige avec une grille courte (points justes, points manquants, formulation).
 - « Je t'explique » / « Je t'explique, corrige-moi » : l'utilisateur explique une notion avec ses mots ; repère manques et erreurs en t'appuyant sur les cartes, sans donner tout de suite la réponse, puis résume ce qui reste à revoir.
@@ -6219,11 +6247,11 @@ MODES (déclenchés par le message de l'utilisateur) :
 - « Plan avant le contrôle » : conseil jour par jour à partir de DONNÉES PLAN ; tu NE modifies PAS le planning.
 - « Mes cartes les plus ratées » : prends les 3 cartes avec le plus grand « ratée:N » ; pour chacune, donne N et son niveau actuel (champs niveau / derniers), puis une confusion POSSIBLE (présentée comme une hypothèse : tu ne connais pas ses mauvaises réponses) et une astuce pour retenir, en 2 lignes max. Pas d'action.
 - « Qu'est-ce qui manque ? » : repère les notions importantes de la matière active absentes des cartes ; liste-les brièvement et propose les cartes à ajouter (actions "creer", 8 maximum). hors_cartes: true.
-- Pendant « Interroge-moi » ou « Question d'examen » : « Question suivante » = enchaîne ; « Indice » = un indice court SANS la réponse ; « Je ne sais pas » = donne la réponse avec une explication courte puis enchaîne ; « Arrêter et faire le bilan » = bilan de la série (score, notions ratées) et actions "creer" pour les notions ratées.
+- Pendant « Interroge-moi » ou « Question d'examen » : « Question suivante » = enchaîne ; « Indice » = un indice court SANS la réponse ; « Je ne sais pas » = applique la règle JE NE SAIS PAS (indice ou réponse, tu choisis) ; « Arrêter et faire le bilan » = bilan de la série (score, notions ratées) et actions "creer" pour les notions ratées.
 - « Plus simple » / « Un exemple » : reformule ou illustre ta DERNIÈRE réponse.
 - « Aide-moi à la retenir » (carte en discussion) : une astuce mnémotechnique courte. « Teste-moi sur cette carte » : pose la question de cette carte seule, puis enchaîne sur des notions proches.
 - Photo, document (PDF, Word, texte) ou texte collé joint (exercice ou cours) : explique ou résume en t'appuyant sur les cartes de la matière ; tu peux proposer des cartes ("creer"). La pièce jointe n'est visible que dans ce message : si l'utilisateur pose ensuite une question dessus sans la rejoindre, dis-le-lui en une phrase.
-- Synthèse demandée : action "synthese" avec la matière et des précisions courtes.${pcLangue ? `\nMODE LANGUE : parle en ${pcLangue}. Après ta réponse, ajoute une ligne vide puis « Correction : » avec une courte correction des fautes de l'utilisateur, en français (rien si aucune faute).` : ''}
+- Synthèse demandée : action "synthese" avec la matière et des précisions courtes. Après « Appliquer », l'appli ouvre l'écran de synthèse et la génère toute seule ; l'utilisateur l'ajuste puis la télécharge (Word, PDF) là-bas : dis-le en une phrase.${pcLangue ? `\nMODE LANGUE : parle en ${pcLangue}. Après ta réponse, ajoute une ligne vide puis « Correction : » avec une courte correction des fautes de l'utilisateur, en français (rien si aucune faute).` : ''}
 MATIÈRES : ${mats}${pcCarnetPourPrompt()}
 MATIÈRE ACTIVE : ${matiere ? matiere : 'Toutes (extraits triés par rapport à la question)'}
 DATE DU JOUR : ${todayStr()}${carte ? `\nCARTE EN DISCUSSION : ${pcLigne(carte)}` : ''}
@@ -6241,16 +6269,36 @@ function pcHistorique(){
   while(out.length && out[0].role !== 'user') out.shift();
   return out;
 }
+/* v236 : date AAAA-MM-JJ réelle et pas déjà passée, sinon '' */
+function pcDateValide(v){
+  if(typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return '';
+  const d = v.trim(), o = new Date(d + 'T00:00:00');
+  if(isNaN(o) || o.toISOString().slice(0, 10) !== d || d < todayStr()) return '';
+  return d;
+}
+const pcDateFr = d => String(d).split('-').reverse().join('/');
 function pcValideActions(arr, matiere){
   if(!Array.isArray(arr)) return [];
   const mats = getMatieres(), res = [];
   const defMat = (matiere && mats.includes(matiere)) ? matiere : (mats[0] || 'Sans matière');
+  const datesNouv = {};   /* v236 : date de contrôle donnée à la création d'une matière */
+  const mm = v => { const b = typeof v === 'string' ? nomMatiereCanonique(v.trim(), mats) : ''; return mats.includes(b) ? b : ''; };
+  const nouvelles = [];   /* v234 : matières à créer (action "matiere"), 3 au plus, placées AVANT les cartes qui les utilisent */
+  for(const a of arr.slice(0, 30)){
+    if(!a || typeof a !== 'object' || a.type !== 'matiere' || typeof a.nom !== 'string' || nouvelles.length >= 3) continue;
+    const nom = ppRepareTexteIA(a.nom.trim()).replace(/\s+/g, ' ').slice(0, 40).trim();
+    if(!nom || nom.toLowerCase() === 'sans matière') continue;
+    const c = nomMatiereCanonique(nom, mats.concat(nouvelles)); if(mats.includes(c) || nouvelles.includes(c)) continue;   /* existe déjà */
+    nouvelles.push(nom);
+    const dn = pcDateValide(a.date_controle); if(dn) datesNouv[nom] = dn;
+  }
   for(const a of arr.slice(0, 30)){
     if(!a || typeof a !== 'object') continue;
     const txt = v => (typeof v === 'string') ? ppRepareTexteIA(v.trim()) : '';
     if(a.type === 'creer'){
       const q = txt(a.question), r = txt(a.reponse); if(!q || !r) continue;
-      const m = (typeof a.matiere === 'string' && mats.includes(a.matiere.trim())) ? a.matiere.trim() : defMat;
+      const brut = typeof a.matiere === 'string' ? nomMatiereCanonique(a.matiere.trim(), mats.concat(nouvelles)) : '';
+      const m = (mats.includes(brut) || nouvelles.includes(brut)) ? brut : defMat;
       res.push({ type: 'creer', matiere: m, question: q, reponse: r, inversible: a.inversible === true, ecrite: a.ecrite === true && ppEcritePossible({ reponse: r }) });
     } else if(a.type === 'modifier'){
       const c = CARDS.find(k => k.id === a.id); if(!c) continue;
@@ -6263,13 +6311,40 @@ function pcValideActions(arr, matiere){
     } else if(a.type === 'synthese'){
       const m = typeof a.matiere === 'string' ? a.matiere.trim() : ''; if(!CARDS.some(c => (c.matiere || 'Sans matière') === m) || res.some(x => x.type === 'synthese')) continue;
       res.push({ type: 'synthese', matiere: m, precisions: txt(a.precisions).slice(0, 600) });
+    } else if(a.type === 'controle'){   /* v236 */
+      const m = mm(a.matiere); if(!m) continue;
+      const brut = typeof a.date === 'string' ? a.date.trim() : '', d = brut ? pcDateValide(brut) : '';
+      if(brut && !d) continue;   /* date illisible ou déjà passée */
+      const avant = (matieresConfig[m] && matieresConfig[m].dateControle) || '';
+      if(avant === d || res.some(x => x.type === 'controle' && x.matiere === m)) continue;
+      res.push({ type: 'controle', matiere: m, date: d, avant });
+    } else if(a.type === 'renommer'){
+      const m = mm(a.matiere), nom = ppRepareTexteIA(String(a.nom || '').trim()).replace(/\s+/g, ' ').slice(0, 40).trim();
+      if(!m || !nom || nom.toLowerCase() === 'sans matière' || nom === m) continue;
+      const cn = nomMatiereCanonique(nom, mats); if(mats.includes(cn) && cn !== m) continue;   /* existe déjà : ce serait une fusion */
+      if(res.some(x => x.type === 'renommer' && x.matiere === m)) continue;
+      res.push({ type: 'renommer', matiere: m, nom });
+    } else if(a.type === 'fusionner'){
+      const m = mm(a.matiere), d = mm(a.dans); if(!m || !d || m === d || res.some(x => x.type === 'fusionner' && x.matiere === m)) continue;
+      res.push({ type: 'fusionner', matiere: m, dans: d, nb: CARDS.filter(c => (c.matiere || 'Sans matière') === m).length });
+    } else if(a.type === 'archiver'){
+      const m = mm(a.matiere); if(!m || typeof a.archive !== 'boolean') continue;
+      if(!!(matieresConfig[m] && matieresConfig[m].archive) === a.archive || res.some(x => x.type === 'archiver' && x.matiere === m)) continue;
+      res.push({ type: 'archiver', matiere: m, archive: a.archive });
+    } else if(a.type === 'supprimer_matiere'){
+      const m = mm(a.matiere); if(!m || res.some(x => x.type === 'supprimer_matiere' && x.matiere === m)) continue;
+      res.push({ type: 'supprimer_matiere', matiere: m, nb: CARDS.filter(c => (c.matiere || 'Sans matière') === m).length });
+    } else if(a.type === 'pause'){
+      const c = CARDS.find(k => k.id === a.id); if(!c || typeof a.pausee !== 'boolean' || (c.pausee === true) === a.pausee) continue;
+      if(res.filter(x => x.type === 'pause').length >= 20 || res.some(x => x.type === 'pause' && x.id === c.id)) continue;
+      res.push({ type: 'pause', id: c.id, matiere: c.matiere || 'Sans matière', question: pcNet(c.question || '🖼 Image').slice(0, 120), pausee: a.pausee });
     } else if(a.type === 'retenir'){
       const t = pcCarnetNet(txt(a.texte)); if(!t || res.some(x => x.type === 'retenir')) continue; /* une seule par réponse */
       if(pcCarnetLire().some(x => x.toLowerCase() === t.toLowerCase())) continue; /* déjà dans le carnet */
       res.push({ type: 'retenir', texte: t });
     }
   }
-  return res;
+  return nouvelles.map(nom => ({ type: 'matiere', nom, date: datesNouv[nom] || '' })).concat(res);
 }
 function pcParse(raw, matiere){
   const net = String(raw).trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```[ \t]*$/, '').trim();
@@ -6370,10 +6445,17 @@ function pcActionsCarte(actions, matiere){
     if(a.type === 'creer') return `<i class="pc-t">Nouvelle carte · ${escapeHtml(a.matiere)}</i><b>${ppRichHtml(a.question)}</b><span>${ppRichHtml(a.reponse)}</span>`;
     if(a.type === 'modifier') return `<i class="pc-t">Modifier · ${escapeHtml(a.matiere)}</i><s>${ppRichHtml(a.avant.question)} → ${ppRichHtml(a.avant.reponse)}</s><b>${ppRichHtml(q)}</b><span>${ppRichHtml(a.apres.reponse)}</span>`;
     if(a.type === 'supprimer') return `<i class="pc-t">Supprimer · ${escapeHtml(a.matiere)}</i><s>${ppRichHtml(a.question)} → ${ppRichHtml(a.reponse)}</s>`;
+    if(a.type === 'matiere') return `<i class="pc-t">Nouvelle matière</i><b>${escapeHtml(a.nom)}</b>` + (a.date ? `<span>${escapeHtml(pcDateFr(a.date))}</span>` : '');
+    if(a.type === 'controle') return `<i class="pc-t">Date de contrôle</i><b>${escapeHtml(a.matiere)}</b><span>${a.avant ? escapeHtml(pcDateFr(a.avant)) + ' → ' : ''}${a.date ? escapeHtml(pcDateFr(a.date)) : 'retirée'}</span>`;
+    if(a.type === 'renommer') return `<i class="pc-t">Renommer la matière</i><s>${escapeHtml(a.matiere)}</s><b>${escapeHtml(a.nom)}</b>`;
+    if(a.type === 'fusionner') return `<i class="pc-t">Fusionner</i><b>${escapeHtml(a.matiere)} → ${escapeHtml(a.dans)}</b><span>${a.nb} carte${a.nb > 1 ? 's' : ''} déplacée${a.nb > 1 ? 's' : ''}</span>`;
+    if(a.type === 'archiver') return `<i class="pc-t">${a.archive ? 'Archiver la matière' : 'Désarchiver la matière'}</i><b>${escapeHtml(a.matiere)}</b>`;
+    if(a.type === 'supprimer_matiere') return `<i class="pc-t">Supprimer la matière</i><s>${escapeHtml(a.matiere)}</s><span>${a.nb} carte${a.nb > 1 ? 's' : ''}</span>`;
+    if(a.type === 'pause') return `<i class="pc-t">${a.pausee ? 'Mettre en pause' : 'Reprendre'}</i><b>${escapeHtml(a.question)}</b>`;
     if(a.type === 'retenir') return `<i class="pc-t">Retenir · carnet</i><b>${escapeHtml(a.texte)}</b>`;
     return `<i class="pc-t">Synthèse</i><b>${escapeHtml(a.matiere)}</b><textarea class="pc-prec" rows="2" maxlength="600" placeholder="Précisions pour la synthèse (facultatif)" aria-label="Précisions">${escapeHtml(a.precisions || '')}</textarea>`;   /* v223 : modifiable avant d'appliquer */
   };
-  box.innerHTML = `<h4>Actions proposées</h4>` + actions.map((a, i) => `<label class="pc-ar"><input type="checkbox" data-i="${i}"${a.type === 'supprimer' ? '' : ' checked'}><em></em><div>${lib(a)}</div></label>`).join('')
+  box.innerHTML = `<h4>Actions proposées</h4>` + actions.map((a, i) => `<label class="pc-ar"><input type="checkbox" data-i="${i}"${(a.type === 'supprimer' || a.type === 'supprimer_matiere') ? '' : ' checked'}><em></em><div>${lib(a)}</div></label>`).join('')
     + `<div class="pc-warn" hidden>Attention : plusieurs suppressions sont cochées.</div><div class="pc-ab"><button type="button" class="pp-cta pc-ap">Appliquer</button><button type="button" class="pp-sec pc-ig">Ignorer</button></div>`;
   pcEl('pc-feed').appendChild(box);
   pcActsAttente = { actions, matiere, box };
@@ -6381,7 +6463,9 @@ function pcActionsCarte(actions, matiere){
   const maj = () => {
     const sup = cases.filter(c => c.checked && actions[+c.dataset.i].type === 'supprimer').map(c => actions[+c.dataset.i]);
     const m = sup.length ? sup[0].matiere : null, tot = m ? CARDS.filter(c => (c.matiere || 'Sans matière') === m).length : 0;
-    warn.hidden = !(sup.length >= 3 || (tot && sup.length * 2 >= tot));
+    const sm = cases.some(c => c.checked && actions[+c.dataset.i].type === 'supprimer_matiere');
+    warn.textContent = sm ? 'Attention : la matière ET toutes ses cartes seront supprimées, sans retour possible.' : 'Attention : plusieurs suppressions sont cochées.';
+    warn.hidden = !(sm || sup.length >= 3 || (tot && sup.length * 2 >= tot));
   };
   cases.forEach(c => c.onchange = maj); maj();
   box.querySelectorAll('.pc-prec').forEach(t => {   /* v223 : le texte modifié remplace les précisions de l'IA (et est gardé par pcEtat) */
@@ -6400,7 +6484,7 @@ function pcActionsCarte(actions, matiere){
 function pcAppliquer(choix, box){
   if(pcActsAttente && pcActsAttente.box === box) pcActsAttente = null;
   const maintenant = () => new Date().toISOString();
-  const lot = { creees: [], modif: [], suppr: [] };
+  const lot = { creees: [], modif: [], suppr: [], matieres: [], defaire: [] };   /* v236 : defaire = retours en arrière des actions sur les matières et la pause */
   let ignorees = 0, synth = null, echec = false;
   for(const a of choix.filter(x => x.type === 'modifier')){
     const c = CARDS.find(k => k.id === a.id);
@@ -6413,13 +6497,61 @@ function pcAppliquer(choix, box){
     const c = CARDS.find(k => k.id === a.id); if(!c){ ignorees++; continue; }
     lot.suppr.push({ ...c }); pcSupprCarte(c.id);
   }
+  const matNotes = [];   /* v234 : matières créées par Prof (avant les cartes qui y vont) */
+  for(const a of choix.filter(x => x.type === 'matiere')){
+    if(getMatieres().includes(a.nom)){ matNotes.push('matière « ' + a.nom + ' » existait déjà'); continue; }
+    addEmptyMatiere(a.nom); lot.matieres.push(a.nom); matNotes.push('matière « ' + a.nom + ' » créée');
+    if(a.date){ if(!matieresConfig[a.nom]) matieresConfig[a.nom] = {}; matieresConfig[a.nom].dateControle = a.date; saveLocalDateControle(a.nom, a.date); clearIntervalsCache(); matNotes.push('contrôle « ' + a.nom + ' » le ' + pcDateFr(a.date)); }
+  }
   const ajouts = choix.filter(x => x.type === 'creer');
   if(ajouts.length){
     const avant = new Set(CARDS.map(c => c.id));
     finaliserImport(ajouts.map(a => ({ id: null, matiere: a.matiere, question: a.question, reponse: a.reponse, palier: 0, prochaineRevision: null, derniereRevision: null, inversible: a.inversible, ecrite: a.ecrite })), {});
     importMsg = null;
     if(dernierImportEchec) echec = true; else lot.creees = CARDS.filter(c => !avant.has(c.id)).map(c => c.id);
+    lot.matieres.forEach(m => clearEmptyMatiereIfHasCards(m));
   }
+  /* v236 : actions sur les matières et pause de cartes (après les cartes, dans l'ordre demandé) */
+  let matChange = false, nPause = 0, nReprise = 0;
+  const existe = m => getMatieres().includes(m), archivee = m => !!(matieresConfig[m] && matieresConfig[m].archive);
+  for(const a of choix){
+    if(a.type === 'pause'){
+      const c = CARDS.find(k => k.id === a.id); if(!c || (c.pausee === true) === a.pausee){ ignorees++; continue; }
+      const dm = maintenant(); c.pausee = a.pausee; c.derniereModification = dm; saveLocalOverlay(c.id, { pausee: a.pausee, derniereModification: dm });
+      if(a.pausee) nPause++; else nReprise++;
+      lot.defaire.push(() => { const k = CARDS.find(x => x.id === a.id); if(!k) return; const d2 = new Date().toISOString(); k.pausee = !a.pausee; k.derniereModification = d2; saveLocalOverlay(k.id, { pausee: !a.pausee, derniereModification: d2 }); });
+    } else if(a.type === 'controle'){
+      if(!existe(a.matiere)){ ignorees++; continue; }
+      const avant = (matieresConfig[a.matiere] && matieresConfig[a.matiere].dateControle) || '';
+      onDateControleChange(a.matiere, a.date || null);
+      lot.defaire.push(() => { if(existe(a.matiere)) onDateControleChange(a.matiere, avant || null); });
+      matNotes.push(a.date ? 'contrôle « ' + a.matiere + ' » le ' + pcDateFr(a.date) : 'date de contrôle « ' + a.matiere + ' » retirée');
+    } else if(a.type === 'renommer'){
+      if(!existe(a.matiere) || (existe(a.nom) && nomMatiereCanonique(a.nom, getMatieres()) !== a.matiere)){ ignorees++; continue; }
+      renameMatiere(a.matiere, a.nom); matChange = true;
+      if(pcMat === a.matiere) pcMat = a.nom;
+      lot.defaire.push(() => { if(existe(a.nom) && !existe(a.matiere)){ renameMatiere(a.nom, a.matiere); if(pcMat === a.nom) pcMat = a.matiere; } });
+      matNotes.push('matière « ' + a.matiere + ' » renommée en « ' + a.nom + ' »');
+    } else if(a.type === 'fusionner'){
+      if(!existe(a.matiere) || !existe(a.dans) || a.matiere === a.dans){ ignorees++; continue; }
+      const f = pcFusionner(a.matiere, a.dans); matChange = true;
+      if(pcMat === a.matiere) pcMat = a.dans;
+      lot.defaire.push(() => { pcFusionDefaire(a.matiere, f); });
+      matNotes.push('matière « ' + a.matiere + ' » fusionnée dans « ' + a.dans + ' »');
+    } else if(a.type === 'archiver'){
+      if(!existe(a.matiere) || archivee(a.matiere) === a.archive){ ignorees++; continue; }
+      toggleArchiveMatiere(a.matiere);
+      lot.defaire.push(() => { if(existe(a.matiere) && archivee(a.matiere) === a.archive) toggleArchiveMatiere(a.matiere); });
+      matNotes.push('matière « ' + a.matiere + ' » ' + (a.archive ? 'archivée' : 'désarchivée'));
+    } else if(a.type === 'supprimer_matiere'){
+      if(!existe(a.matiere)){ ignorees++; continue; }
+      deleteMatiereCompletement(a.matiere); matChange = true;
+      matNotes.push('matière « ' + a.matiere + ' » supprimée (définitif)');
+    }
+  }
+  if(nReprise){ try{ lisserRetards(); }catch(e){} }
+  if(nPause) matNotes.push(nPause + ' en pause');
+  if(nReprise) matNotes.push(nReprise + ' reprise' + (nReprise > 1 ? 's' : ''));
   synth = choix.find(x => x.type === 'synthese') || null;
   const touche = choix.some(x => x.type !== 'retenir'); /* « Retenir » ne touche pas aux cartes : ni rafraîchissement, ni lot « Annuler » */
   const notes = [];
@@ -6431,7 +6563,8 @@ function pcAppliquer(choix, box){
     else if(r === 'echec') notes.push('carnet non enregistré : stockage plein');
   }
   if(touche){ pcRefresh(); envoyerVersSync(); }
-  const p = [];
+  if(lot.matieres.length || matChange) pcMatMaj();   /* v234 : la nouvelle matière apparaît tout de suite dans les pastilles (v236 : aussi après renommer / fusionner / supprimer) */
+  const p = [...matNotes];
   if(lot.creees.length) p.push(`${lot.creees.length} créée${lot.creees.length > 1 ? 's' : ''}`);
   if(lot.modif.length) p.push(`${lot.modif.length} modifiée${lot.modif.length > 1 ? 's' : ''}`);
   if(lot.suppr.length) p.push(`${lot.suppr.length} supprimée${lot.suppr.length > 1 ? 's' : ''}`);
@@ -6439,7 +6572,7 @@ function pcAppliquer(choix, box){
   if(echec) p.push('ajouts annulés : stockage plein');
   notes.forEach(n => p.push(n));
   if(touche && pcLot && pcLot.btn) pcLot.btn.remove(); /* « Annuler » ne défait que le dernier lot */
-  const aUndo = lot.creees.length || lot.modif.length || lot.suppr.length;
+  const aUndo = lot.creees.length || lot.modif.length || lot.suppr.length || lot.matieres.length || lot.defaire.length;
   box.classList.add('done');
   box.innerHTML = `<h4>Appliqué</h4><p>${p.join(' · ') || (synth ? 'Synthèse ouverte' : 'Aucun changement')}</p>` + (aUndo ? '<button type="button" class="pp-sec pc-un">Annuler</button>' : '');
   if(aUndo){
@@ -6448,13 +6581,53 @@ function pcAppliquer(choix, box){
   }
   if(synth){
     ppCoachFermer();
-    setTimeout(() => { ouvrirSyntheseDepuisParcourir(synth.matiere); if(syntheseEtat && synth.precisions){ syntheseEtat.consignes = synth.precisions; renderSynthese(); } }, 520);
+    setTimeout(() => {   /* v236 : l'écran de synthèse s'ouvre et la génération part toute seule (ajustement et téléchargement Word / PDF restent dans cet écran) */
+      ouvrirSyntheseDepuisParcourir(synth.matiere);
+      if(syntheseEtat && syntheseEtat.matiere === synth.matiere && syntheseEtat.etape === 'consignes'){ if(synth.precisions){ syntheseEtat.consignes = synth.precisions; renderSynthese(); } genererSynthese(); }
+    }, 520);
   }
+}
+let pcMatAvant = '';
+/* v236 : met à jour la liste des matières de Prof après un changement (créer, renommer, fusionner, supprimer, annuler) */
+function pcMatMaj(){
+  pcListe = [...getMatieres(), PC_TOUTES];
+  if(!pcListe.includes(pcMat)) pcMat = pcListe[0];
+  if(pcMat !== PC_TOUTES) ppEcrire('coach-matiere', JSON.stringify(pcMat));
+  pcRenderPills(); pcRenderSugg();
+}
+/* v236 : déplace des cartes précises vers une matière (même logique que renameMatiere, mais pour une liste d'id) */
+function pcDeplacerCartes(ids, matiere){
+  const set = new Set(ids), iso = new Date().toISOString();
+  const imported = loadImportedCards(); let touche = false;
+  for(const c of imported){ if(set.has(c.id)){ c.matiere = matiere; c.derniereModification = iso; touche = true; } }
+  if(touche) saveImportedCards(imported);
+  const patches = {};
+  for(const c of CARDS){ if(set.has(c.id)){ c.matiere = matiere; c.derniereModification = iso; patches[c.id] = { matiere, derniereModification: iso }; } }
+  saveLocalOverlayLot(patches);
+}
+/* v236 : fusion = les cartes passent dans l'autre matière (la date de contrôle et l'archivage de la matière qui reste ne changent pas), puis la matière vide disparaît */
+function pcFusionner(src, dst){
+  const ids = CARDS.filter(c => (c.matiere || 'Sans matière') === src).map(c => c.id);
+  const cfg = matieresConfig[src] ? { ...matieresConfig[src] } : null;
+  pcMatAvant = src;
+  if(ids.length) pcDeplacerCartes(ids, dst);
+  clearEmptyMatiereIfHasCards(dst);
+  deleteMatiereCompletement(src);   /* ses cartes sont déjà parties : elle ne supprime que la matière (config, entrée vide, archivage) */
+  return { ids, cfg };
+}
+function pcFusionDefaire(src, f){
+  addEmptyMatiere(src);
+  if(f.cfg){ matieresConfig[src] = { ...f.cfg }; if(f.cfg.dateControle) saveLocalDateControle(src, f.cfg.dateControle); if(f.cfg.archive) saveLocalArchiveMatiere(src, true); }
+  const ids = f.ids.filter(id => CARDS.some(c => c.id === id));
+  if(ids.length) pcDeplacerCartes(ids, src);
+  clearEmptyMatiereIfHasCards(src);
 }
 function pcAnnuler(box){
   const lot = pcLot; if(!lot) return; pcLot = null;
+  for(const f of [...(lot.defaire || [])].reverse()){ try{ f(); }catch(e){} }   /* v236 : d'abord les actions faites en dernier (matières, pause) */
   const dm = new Date().toISOString(); /* un annulé est une vraie action : horodatage neuf, pour que la synchro propage le retour en arrière */
   for(const id of lot.creees) pcSupprCarte(id);
+  for(const nom of (lot.matieres || [])){ if(!CARDS.some(c => (c.matiere || 'Sans matière') === nom)) deleteMatiereCompletement(nom); }   /* v234 : la matière créée par le lot disparaît (si personne n'y a ajouté de carte entre-temps) */
   for(const x of lot.modif){
     const c = CARDS.find(k => k.id === x.id); if(!c) continue;
     c.question = x.q; c.reponse = x.r; c.derniereModification = dm;
@@ -6467,6 +6640,7 @@ function pcAnnuler(box){
     saveLocalOverlay(r.id, { derniereModification: dm });
   }
   pcRefresh(); envoyerVersSync();
+  if((lot.matieres && lot.matieres.length) || (lot.defaire && lot.defaire.length)) pcMatMaj();
   box.innerHTML = '<h4>Annulé</h4><p>Le dernier lot a été défait.</p>';
 }
 
@@ -6575,6 +6749,7 @@ function pcSuggestions(){
   if(nb && pcMode !== 'quiz') gen.push('Interroge-moi');
   if(nb) gen.push("Question d'examen");   /* v223 : rien à demander sans carte */
   if(mat && nb >= 3) gen.push('Vérifie mes cartes');
+  if(CARDS.length >= 6) gen.push('Cherche les doublons');   /* v236 : toutes matières */
   if(ratees) gen.push('Mes cartes les plus ratées');
   if(mat && nb) gen.push('Résumé rapide', "Qu'est-ce qui manque ?", 'Fiche de synthèse');   /* v223 : « Résumé rapide » = dans le chat ; « Fiche de synthèse » = l'outil de synthèse */
   if(nb) gen.push("Je t'explique, corrige-moi");
@@ -6591,19 +6766,70 @@ function pcModeDepuis(label){
    Pas de « Plus… » pour une seule pastille cachée. Replié de nouveau au changement de matière et à la nouvelle conversation (pcSuggTout = false). */
 const PC_SUGG_VISIBLES = 7;
 let pcSuggTout = false;
+/* v235 : quand les suggestions changent, elles ne sont plus remplacées d'un coup.
+   - celles qui restent glissent doucement vers leur nouvelle place ;
+   - celles qui partent s'effacent sur place (copie « fantôme » qui disparaît) ;
+   - les nouvelles arrivent en cascade, avec un tout petit rebond.
+   Rien n'est animé à l'ouverture de Prof (la cascade d'ouverture s'en occupe), pendant un changement de conversation (la fenêtre est déjà masquée),
+   ni si l'appareil demande moins d'animations. Les animations sont faites avec element.animate() : aucune classe CSS à nettoyer ensuite. */
 function pcRenderSugg(pos){
-  const box = pcEl('pc-sugg');
+  const box = pcEl('pc-sugg'); if(!box) return;
   const tout = pcSuggestions(), long = !ppWide() && tout.length > PC_SUGG_VISIBLES + 1;   /* v228 : grand écran = une seule rangée qui défile, tout est là */
   const liste = (long && !pcSuggTout) ? tout.slice(0, PC_SUGG_VISIBLES) : tout;
-  let h = liste.map((t, k) => `<button class="pc-chip" style="--k:${k}" data-l="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('');
-  if(long) h += `<button class="pc-chip pc-plus" style="--k:${liste.length}" data-plus="${pcSuggTout ? 0 : 1}">${pcSuggTout ? 'Moins' : 'Plus…'}</button>`;
-  box.innerHTML = h;
-  box.querySelectorAll('.pc-chip').forEach(b => {
-    if(b.dataset.plus !== undefined){ b.onclick = () => { pcSuggTout = b.dataset.plus === '1'; pcRenderSugg(pcSuggTout ? 'plus' : ''); }; return; }
-    b.onclick = () => { if(pcSuggMoved) return; pcEnvoyer(PC_MSG[b.dataset.l] || b.dataset.l, b.dataset.l); };
+  const voulu = liste.map(t => ({ cle: 'l:' + t, texte: t }));
+  if(long) voulu.push({ cle: 'plus', texte: pcSuggTout ? 'Moins' : 'Plus…', plus: pcSuggTout ? 0 : 1 });
+  box.querySelectorAll('.pc-ghost').forEach(g => g.remove());   /* un changement précédent encore en cours : ses fantômes disparaissent tout de suite */
+  const anciens = [...box.children], layer = pcEl('pc-layer');
+  const reduit = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const animer = !reduit && anciens.length > 0 && box.offsetWidth > 0 && !!layer && layer.classList.contains('ready') && !layer.classList.contains('sink');
+  const avant = new Map(), cadre = box.getBoundingClientRect();
+  if(animer) anciens.forEach(el => avant.set(el.dataset.cle, el.getBoundingClientRect()));   /* positions réellement vues à l'écran (même si une animation est en cours) */
+  const parCle = new Map();
+  anciens.forEach(el => { if(el.getAnimations) el.getAnimations().forEach(a => a.cancel()); parCle.set(el.dataset.cle, el); });
+  const gardes = new Set(), nouveaux = [];
+  const noeuds = voulu.map((v, k) => {
+    let el = parCle.get(v.cle);
+    if(el) gardes.add(v.cle);
+    else { el = document.createElement('button'); el.type = 'button'; el.className = 'pc-chip' + (v.plus !== undefined ? ' pc-plus' : ''); el.dataset.cle = v.cle; nouveaux.push(el); }
+    el.style.setProperty('--k', k);
+    if(v.plus !== undefined) el.dataset.plus = v.plus; else el.dataset.l = v.texte;
+    if(el._t !== v.texte){ el.textContent = v.texte; el._t = v.texte; }   /* _t : le texte peut avoir été traduit en anglais par l'observateur, on ne le remet pas en français pour rien */
+    el.onclick = v.plus !== undefined
+      ? () => { pcSuggTout = el.dataset.plus === '1'; pcRenderSugg(pcSuggTout ? 'plus' : ''); }
+      : () => { if(pcSuggMoved) return; pcEnvoyer(PC_MSG[v.texte] || v.texte, v.texte); };
+    return el;
   });
-  const nouv = pos === 'plus' ? box.children[PC_SUGG_VISIBLES] : null;
-  if(nouv) box.scrollTo({ left: Math.max(0, nouv.offsetLeft - 14), behavior: 'smooth' }); else box.scrollTo({ left: 0 });
+  const partants = anciens.filter(el => !gardes.has(el.dataset.cle));
+  if(animer){   /* les partants sortent du flux (position absolue) pour que les autres puissent déjà prendre leur place */
+    partants.forEach(el => { const r = avant.get(el.dataset.cle); el.classList.add('pc-ghost'); el.setAttribute('aria-hidden', 'true'); el.tabIndex = -1; el.style.width = r.width + 'px'; el.style.height = r.height + 'px'; });
+  } else partants.forEach(el => el.remove());
+  noeuds.forEach(el => box.appendChild(el));   /* remet dans l'ordre voulu (les noeuds gardés sont déplacés, pas recréés) */
+  const nouv = pos === 'plus' ? noeuds[PC_SUGG_VISIBLES] : null;
+  if(!nouv) box.scrollTo({ left: 0, behavior: 'instant' });
+  if(animer){
+    partants.forEach(el => {
+      const r = avant.get(el.dataset.cle);
+      el.style.left = (r.left - cadre.left - box.clientLeft + box.scrollLeft) + 'px';
+      el.style.top = (r.top - cadre.top - box.clientTop + box.scrollTop) + 'px';
+    });
+    let n = 0;
+    noeuds.forEach(el => {
+      if(nouveaux.includes(el)){
+        el.animate([{ opacity: 0, transform: 'translateY(9px) scale(.88)' }, { opacity: 1, transform: 'none' }],
+          { duration: 460, delay: 140 + Math.min(n++, 7) * 38, easing: 'cubic-bezier(.34,1.45,.64,1)', fill: 'backwards' });
+        return;
+      }
+      const r0 = avant.get(el.dataset.cle), r1 = el.getBoundingClientRect(); if(!r0) return;
+      const dx = r0.left - r1.left, dy = r0.top - r1.top;
+      if(Math.abs(dx) > 1 || Math.abs(dy) > 1)
+        el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 440, delay: 20, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    });
+    partants.forEach(el => {
+      const a = el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-5px) scale(.9)' }], { duration: 170, easing: 'ease-in', fill: 'forwards' });
+      a.onfinish = a.oncancel = () => el.remove();
+    });
+  }
+  if(nouv) box.scrollTo({ left: Math.max(0, nouv.getBoundingClientRect().left - box.getBoundingClientRect().left + box.scrollLeft - 14), behavior: 'smooth' });
   pcSuggFades(); requestAnimationFrame(pcSuggFades);
 }
 /* ===== v231 : barre de saisie de Prof =====
@@ -6839,6 +7065,13 @@ function pcActionValide(a){
   if(a.type === 'supprimer') return s(a.id) && s(a.matiere) && s(a.question) && s(a.reponse);
   if(a.type === 'synthese') return s(a.matiere);
   if(a.type === 'retenir') return s(a.texte) && !!pcCarnetNet(a.texte);
+  if(a.type === 'matiere') return s(a.nom) && !!a.nom.trim();
+  if(a.type === 'controle') return s(a.matiere) && s(a.date);
+  if(a.type === 'renommer') return s(a.matiere) && s(a.nom) && !!a.nom.trim();
+  if(a.type === 'fusionner') return s(a.matiere) && s(a.dans);
+  if(a.type === 'archiver') return s(a.matiere) && typeof a.archive === 'boolean';
+  if(a.type === 'supprimer_matiere') return s(a.matiere);
+  if(a.type === 'pause') return s(a.id) && typeof a.pausee === 'boolean';
   return false;
 }
 function pcRestaure(e){
@@ -10424,7 +10657,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v233';
+const PP_APP_VERSION = 'v239';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -11076,6 +11309,9 @@ let iaCartesPreview = null; // { matiere, dateControle, cartes: [{question, repo
 let iaCoursOriginal = ''; // gardé pour les régénérations ultérieures
 let iaFichiersOriginal = []; // copie des fichiers joints, gardée avec le cours (synthèse + ajustements)
 
+/* v238 : consignes partagées (gras et formules) pour l'IA des cartes et pour Prof ; la synthèse garde son propre style (formules en texte simple). */
+const PROMPT_GRAS_BASE = `Gras : très rare, seulement pour un mot-clé à retenir absolument (terme, date, conclusion). Jamais une phrase entière, jamais des mots courants, jamais sur chaque puce ni sur des titres.`;
+const PROMPT_FORMULES = `Formules : écris en texte simple tout ce qui se lit clairement sans LaTeX (a + b = c, x², H₂O, 5 %, 3 × 4, ≤, →, °C). N'utilise $…$ que pour ce que le texte simple ne peut pas montrer (fraction, racine, somme, intégrale, exposant ou indice composé, symbole grec dans une formule, équation chimique). Jamais pour un nombre seul, une date, une unité, un mot, ni en histoire, géographie, langues ou droit. Le signe $ ne sert qu'aux formules (écris « 5 euros »). Dans le doute, texte simple.`;
 const PROMPT_REGLES_CARTES = `Règles pour chaque carte :
 - Une carte = une seule notion précise (jamais une question qui couvre plusieurs concepts).
 - La question est claire et se comprend toute seule : jamais « selon le texte », « dans ce cours », « d'après le document », ni renvoi à un schéma ou à une autre carte.
@@ -11086,7 +11322,9 @@ const PROMPT_REGLES_CARTES = `Règles pour chaque carte :
 - Si le cours est une fiche de synthèse condensée (style télégraphique, symboles comme → ⇒ = ≠ ↑ ↓, mots-clés en gras), interprète les symboles et écris des questions et des réponses en phrases claires et complètes, jamais avec les symboles : « → » = définition ou lien, « ⇒ » = conséquence, « = » = égale ou signifie, « ≠ » = différent de ou opposé à, « ↑ » = augmente, « ↓ » = diminue. Une ligne de fiche donne une ou plusieurs cartes ; chaque carte reste compréhensible sans la fiche. Tu peux mettre en mots ce que la fiche exprime en symboles, mais n'ajoute aucune information absente de la fiche.
 - Photos de cours manuscrit : ignore ratures, marges, gribouillis et passages illisibles (ne devine pas un mot illisible).
 - Couvre les notions importantes du cours (définitions, dates, causes et conséquences, formules, exemples clés) sans cartes triviales ni doublons. Pas de nombre imposé : autant de cartes que nécessaire.
-- Maths, physique, chimie : écris chaque formule entre $ et $ en LaTeX simple (\\frac{a}{b}, x^2, x_1, \\sqrt{x}, \\sum, \\int, \\alpha, \\Delta, \\ce{H2O} pour une formule chimique), par exemple « $E = mc^2$ ». Le signe $ ne sert qu'aux formules (écris « 5 euros »). Une formule entre $ seulement si c'est une vraie formule (équation, fraction, exposant, indice, formule chimique), jamais pour un nombre seul, une date ou une unité, et pas dans les matières sans formules (histoire, géographie, langues, droit…). Dans le JSON, double chaque antislash : \\\\frac. Gras : très rare. Aucun gras sur la plupart des cartes ; au maximum un seul mot-clé par carte, seulement s'il est vraiment essentiel à retenir. Jamais une phrase entière, jamais des mots courants.
+- Mélange les types de cartes : surtout du rappel (définition, date, formule), mais aussi, quand le cours explique un lien (cause, conséquence, but, différence entre deux notions), quelques cartes de compréhension (« Pourquoi… ? », « Quelle conséquence… ? », « Quelle différence entre X et Y ? ») à réponse courte et unique, tirée du cours. Ces cartes peuvent faire exception à la lecture à l'envers. N'en crée pas si le cours n'explique pas le lien.
+- ${PROMPT_FORMULES} Quand une formule est vraiment nécessaire, écris-la entre $ et $ en LaTeX simple (\\frac{a}{b}, \\sqrt{x}, \\sum, \\int, x_1, x^2, \\alpha, \\Delta, \\ce{H2O} pour une équation chimique), par exemple « $\\frac{a}{b}$ ». Dans le JSON, double chaque antislash : \\\\frac.
+- ${PROMPT_GRAS_BASE} Aucun gras sur la plupart des cartes ; au maximum un seul mot-clé par carte.
 - Si des consignes plus précises suivent (ajuster, modifier, ajouter des cartes), elles passent avant ces règles.`;
 const GEMINI_SYSTEM_PROMPT = `Génère des flashcards question/réponse à partir du cours fourni (texte, photos ou documents), pour qu'un élève révise en se testant.
 
@@ -11786,7 +12024,7 @@ const PROMPT_STYLE_SYNTHESE = `Style à respecter toujours :
 - Un titre # pour le sujet, puis des blocs numérotés avec des titres ## (« 1. Définition », « 2. … »). Sous-parties en ###. Un bloc = une seule idée, court et clair.
 - Style télégraphique, sans phrases complètes : le sujet est écrit une seule fois (dans le titre du bloc), puis les actions en verbes seuls, sans sujet ni « il/elle », sans « puis/ensuite/et » inutiles, sans mots de liaison ni compléments évidents. Garde un article seulement s'il est utile. Exemple : « Hitler supprime l'opposition. Il crée ensuite le IIIe Reich, rejette Versailles puis réarme l'Allemagne. » → titre « Hitler chancelier · 1933 », puis « Supprime l'opposition, crée le IIIe Reich, rejette Versailles, réarme ». Dans les matières de raisonnement (sciences, économie, droit…), garde les liens de cause et de condition (« car », « donc », « si… alors ») quand ils font comprendre : ne les supprime pas.
 - Privilégie les symboles aux mots dès que c'est possible. Raccourcis à utiliser : « → » définir ou relier ; « ⇒ » conséquence ou conclusion ; « = » égale ou signifie ; « ≠ » différent de ou opposé à ; « ↑ » augmente ; « ↓ » diminue. N'utilise pas « > » ni « + » à la place de mots.
-- Gras avec parcimonie : seulement les 1 à 3 mots-clés ou dates vraiment essentiels d'un bloc, jamais une phrase entière, jamais sur chaque puce ; un bloc sans terme essentiel n'a pas de gras. Exemples en *italique* (« Exemple : … »). Une règle ou une formule est toujours suivie d'un exemple, calculé pas à pas si c'est chiffré. Formules et définitions clés en citation (>). Formules en texte simple (x², a/b, √, ×, ÷, ≤, ≥…), sans signe $ ni code LaTeX : la synthèse ne les affiche pas.
+- Gras avec parcimonie : seulement les 1 à 3 mots-clés ou dates vraiment essentiels d'un bloc, jamais une phrase entière, jamais sur chaque puce ; un bloc sans terme essentiel n'a pas de gras. Exemples en *italique* (« Exemple : … »). Une règle ou une formule est toujours suivie d'un exemple, calculé pas à pas si c'est chiffré. Formules et définitions clés en citation (>). Formules en texte simple et lisible, sans signe $ ni code LaTeX (la synthèse ne les affiche pas). Symboles à utiliser : exposants et indices en chiffres (x², m³, H₂O, CO₂), √, ×, ÷, ±, ≤, ≥, ≈, ≠, ∞, ∑, π, Δ, α, β, γ, λ, μ, θ, σ, ρ, Ω, ω, °, flèches → ⇒ ↔ ⇔. Fraction : a/b, avec parenthèses si c'est composé : (a + b)/(c + d). Racine : √x ou √(x + 1). Ce qui n'a pas de symbole (intégrale, dérivée partielle, ensembles, autres lettres grecques) s'écrit en mots ou en notation simple (« intégrale de a à b de f(x) dx », « delta »).
 - Tableau Markdown seulement pour comparer plusieurs éléments.
 - Pastilles 🟢 (positif, avantage), 🔵 (neutre, information), 🔴 (négatif, danger, tragique, inconvénient) : seulement quand un élément est clairement positif, négatif ou neutre (avantages/inconvénients, bilans…), jamais à chaque puce.
 - Histoire : blocs chronologiques, titre = sujet + date (« Munich · 1938 »), puis actions en verbes seuls. Sciences : définition, formule, exemple calculé. Autres matières (économie, droit, langues, géographie…) : définition ou principe, puis explication courte, puis exemple.
