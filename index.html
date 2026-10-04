@@ -1900,7 +1900,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 :where(#pp-ses) :where(h1,h2,h3){letter-spacing:-.03em;font-weight:800}
 .pp-top{display:flex;align-items:center;gap:10px;margin-bottom:18px}
 .pp-stage{flex:1;min-height:0;display:flex;perspective:1000px;padding-right:9px;padding-bottom:9px}
-.pp-card{flex:1;display:flex;flex-direction:column;background:var(--panel);border:2px solid var(--cream);border-radius:24px;box-shadow:9px 9px 0 var(--orange);overflow:hidden;min-height:0;transform-origin:50% 100%;touch-action:none;position:relative;cursor:grab;transition:border-color .2s,transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press)}
+.pp-card{flex:1;display:flex;flex-direction:column;background:var(--panel);border:2px solid var(--cream);border-radius:24px;box-shadow:9px 9px 0 var(--orange);overflow:hidden;min-height:0;transform-origin:50% 100%;touch-action:none;position:relative;cursor:grab;transition:border-color .2s,transform .52s var(--ease-soft),box-shadow .52s var(--ease-soft)}
 .pp-card.pp-in{animation:ppcardIn .45s var(--pps) both}
 .pp-card.pp-out-ok{animation:ppoutR .32s ease-in forwards}
 .pp-card.pp-out-ko{animation:ppoutL .32s ease-in forwards}
@@ -2117,7 +2117,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-bil em{display:block;font-style:normal;font-size:11.5px;font-weight:800;color:var(--green);margin-top:1px}
 .pp-bil em.dn{color:var(--muted)}
 @keyframes ppcardIn{0%{transform:translateY(40px) rotate(4deg) scale(.94);opacity:0}60%{transform:translateY(-7px) rotate(-1deg) scale(1.01);opacity:1}100%{transform:none;opacity:1}}
-@keyframes ppflipIn{0%{opacity:0;transform:translateY(12px)}60%{opacity:1;transform:translateY(-3px)}100%{opacity:1;transform:none}}
+@keyframes ppflipIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}   /* v245 : plus de petit rebond */
 @keyframes ppoutR{to{transform:translateX(130%) rotate(12deg);opacity:0}}
 @keyframes ppoutL{to{transform:translateX(-130%) rotate(-12deg);opacity:0}}
 @keyframes ppoutU{to{transform:translateY(-140%) rotate(3deg);opacity:0}}
@@ -2466,7 +2466,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
    Ne PAS rajouter de règle :active avec scale() ailleurs : ajouter le sélecteur
    aux deux listes ci-dessous (transition + appui), et --d/--sc si l'élément a une ombre.
    ============================================================ */
-:root:root:root{ --ease-press:cubic-bezier(.34,1.56,.64,1); --t-in:.07s; --t-out:.36s; }
+:root:root:root{ --ease-press:cubic-bezier(.34,1.56,.64,1); --t-in:.07s; --t-out:.36s; --ease-soft:cubic-bezier(.22,1,.36,1); --ease-sink:cubic-bezier(.3,.6,.4,1); }   /* v245 : --ease-soft = arrivée douce sans rebond ; --ease-sink = descente */
 @media (prefers-reduced-motion:reduce){ :root:root:root{ --t-in:.01ms; --t-out:.01ms; } }
 /* profondeur et couleur d'ombre des éléments « relief » (les autres : 2px, sans ombre) */
 .pp-cta,.pp-show{ --d:4px; --sc:var(--orange-d); }
@@ -2495,7 +2495,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
    Son ombre orange (9px 9px) est diagonale : la carte descend donc de 9px en
    bas ET à droite, jusqu'à poser sur son ombre, puis remonte au retournement.
    ============================================================ */
-.pp-card.pp-sink{ transform:translate(9px,9px); box-shadow:0 0 0 0 var(--orange); transition-duration:.2s,var(--t-in),var(--t-in); }
+.pp-card.pp-sink{ transform:translate(9px,9px); box-shadow:0 0 0 0 var(--orange); transition-duration:.2s,.13s,.13s; transition-timing-function:ease,var(--ease-sink),var(--ease-sink); }   /* v245 : descente plus douce, sans rebond */
 
 /* ============================================================
    CHROMEBOOK / ORDINATEUR (v70) — fenêtre large + souris + clavier.
@@ -2700,8 +2700,8 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   /* v87 : le panneau réponse se pose comme un bouton qui remonte (sans fondu depuis 0, sans rebond) ; son texte apparaît en fondu */
   /* v103 : la réponse a le MÊME rythme que la question : enfoncée puis relâchée avec le même rebond (--ease-press) en .44 s ; la carte question remonte aussi en .44 s (au lieu de .36 s).
      Au retour à la question, le panneau s'enfonce vite puis disparaît dans son emplacement. */
-  #pp-ses .pp-card{ transition:border-color .2s, transform .44s var(--ease-press), box-shadow .44s var(--ease-press); }
-  #pp-ses .pp-card.pp-sink{ transition-duration:.2s,var(--t-in),var(--t-in); }
+  #pp-ses .pp-card{ transition:border-color .2s, transform .52s var(--ease-soft), box-shadow .52s var(--ease-soft); }   /* v245 : remontée douce (avant .44 s avec un rebond marqué) */
+  #pp-ses .pp-card.pp-sink{ transition-duration:.2s,.13s,.13s; transition-timing-function:ease,var(--ease-sink),var(--ease-sink); }
   @keyframes ppraIn{ from{ transform:translate(9px,9px); box-shadow:0 0 0 0 var(--yellow-d); } to{ transform:none; box-shadow:9px 9px 0 var(--yellow-d); } }
   @keyframes ppraOut{ 0%{ transform:none; opacity:1; box-shadow:9px 9px 0 var(--yellow-d); } 30%{ transform:translate(9px,9px); opacity:1; box-shadow:0 0 0 0 var(--yellow-d); } 100%{ transform:translate(9px,9px); opacity:0; box-shadow:0 0 0 0 var(--yellow-d); } }
   @keyframes ppraTxt{ from{ opacity:0; } to{ opacity:1; } }
@@ -3013,8 +3013,8 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 }
 @media (min-width:900px) and (min-height:480px){
   #pp-ses.ecr .pp-rslot,#pp-ses.ecr .pp-ra{border-radius:24px}
-  #pp-ses .pp-rslot.pp-ecrslot{padding:0;border:2px solid var(--cream);background:var(--panel);box-shadow:9px 9px 0 var(--yellow-d);overflow:hidden;cursor:default;transition:transform .44s var(--ease-press),box-shadow .44s var(--ease-press)}
-  #pp-ses .pp-rslot.pp-ecrslot.pp-sink{transform:translate(9px,9px);box-shadow:0 0 0 0 var(--yellow-d);transition-duration:var(--t-in),var(--t-in)}
+  #pp-ses .pp-rslot.pp-ecrslot{padding:0;border:2px solid var(--cream);background:var(--panel);box-shadow:9px 9px 0 var(--yellow-d);overflow:hidden;cursor:default;transition:transform .52s var(--ease-soft),box-shadow .52s var(--ease-soft)}
+  #pp-ses .pp-rslot.pp-ecrslot.pp-sink{transform:translate(9px,9px);box-shadow:0 0 0 0 var(--yellow-d);transition-duration:.13s,.13s;transition-timing-function:var(--ease-sink),var(--ease-sink)}
   #pp-ses .pp-ecrslot .pp-rb{flex:1;min-height:0;max-height:none;padding:14px 22px 18px}
   #pp-ses .pp-ecrslot .pp-ecrbox{flex:1;min-height:0}
   #pp-ses .pp-ecrslot .pp-ecr-ta{max-height:none;font-size:clamp(20px,2vw,26px);padding:14px}
@@ -7962,7 +7962,7 @@ function ppSesDraw(o){
   const root = document.getElementById('pp-ses');
   if(anim === 'flip'){
     // grand écran : le texte de la question ne change pas au retournement (la réponse est dans le panneau de droite) → aucun fondu
-    const b = root.querySelector('.pp-body'); if(b && !ppKeep) b.style.animation = 'ppflipIn .32s ease-out both';
+    const b = root.querySelector('.pp-body'); if(b && !ppKeep) b.style.animation = 'ppflipIn .4s cubic-bezier(.22,1,.36,1) both';
     // la nouvelle carte naît enfoncée (même position que l'ancienne) puis remonte : le retour de « l'enfoncement »
     const cd = root.querySelector('.pp-card');
     if(cd && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
@@ -8664,7 +8664,7 @@ function exitStudySession(){
    retourner. Le retournement attend au plus PP_ENFONCE_MS depuis le début de l'enfoncement (un vrai
    tap dure déjà plus : aucun retard en pratique) ; le nouvel écran réapparaît enfoncé puis remonte
    (voir ppSesDraw). Sans carte à l'écran ou avec « réduire les animations » : retournement immédiat. */
-const PP_ENFONCE_MS = 80;
+const PP_ENFONCE_MS = 110;   /* v245 : la descente dure .13 s, le retournement attend un peu plus */
 let ppFlipEnCours = false;
 function ppRetournerApresEnfoncement(fn){
   /* carte « à écrire » : la carte réponse (téléphone) / le panneau de droite (grand écran) s'enfoncent avec la carte question */
@@ -10803,7 +10803,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v244';
+const PP_APP_VERSION = 'v245';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
