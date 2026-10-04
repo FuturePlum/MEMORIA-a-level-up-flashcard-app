@@ -9374,7 +9374,7 @@ function ppGrpMenuHtml(m){
   const toutInv = lInv.length > 0 && lInv.every(c => c.inversible);
   const lEcr = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
   const toutEcr = lEcr.length > 0 && lEcr.every(c => c.ecrite === true);
-  return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppSheetClose();ppCoachOuvrir({matiere:'${mA}'})"><i class="pp-ri">${PP_IC.spark}</i><div><b>Discuter de cette matière</b><span>Questions, explications, entraînement</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`;
+  return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppSheetClose();ppCoachOuvrir({matiere:'${mA}'});ppCoachDe(()=>ppGrpMenu('${mA}'))"><i class="pp-ri">${PP_IC.spark}</i><div><b>Discuter de cette matière</b><span>Questions, explications, entraînement</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`;
 }
 function ppGrpMenu(m){ ppSheet(ppGrpMenuHtml(m)); }
 /* redessine le menu sur place (la feuille reste ouverte, sans animation) pour montrer la pastille colorée ou non */
@@ -9487,7 +9487,7 @@ function ppFiche(id, retour){
   ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi');ppRvMaj('pp-eq')">${escapeHtml(qv)}</textarea>`)}${ppRvDiv('pp-eq-rv', qv)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea" oninput="ppRvMaj('pp-ea')">${escapeHtml(av)}</textarea>`)}${ppRvDiv('pp-ea-rv', av)}
   <div class="pp-set" style="margin-bottom:14px"><div class="pp-li${ivOff ? ' pp-off' : ''}"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
   <div class="pp-li${ecOk ? '' : ' pp-off'}"><i class="pp-ico">${PP_IC.edit}</i><span>Réponse à écrire<small>${ecLong ? 'Réponse longue : peu pratique à écrire' : 'Tu tapes ta réponse avant de la voir'}</small></span><button class="pp-tg${ppFi.ec ? ' on' : ''}" aria-label="Réponse à écrire" onclick="ppFicheEc(this)"></button></div>
-  <button class="pp-li" onclick="ppSheetClose();ppCoachOuvrir({carteId:'${iA}'})"><i class="pp-ico">${PP_IC.spark}</i><span>Discuter de la carte<small>Explication, astuce pour la retenir</small></span></button>
+  <button class="pp-li" onclick="ppSheetClose();ppCoachOuvrir({carteId:'${iA}'});ppCoachDe(()=>ppFiche('${iA}'))"><i class="pp-ico">${PP_IC.spark}</i><span>Discuter de la carte<small>Explication, astuce pour la retenir</small></span></button>
   <button class="pp-li" onclick="ppPauseBascule('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>${c.pausee === true ? 'Reprendre la carte' : 'Mettre en pause'}<small>${c.pausee === true ? 'Elle revient dans tes révisions' : 'Elle sort des révisions, sans rien perdre'}</small></span></button>
   <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre la maîtrise à zéro<small>Repart en « Nouvelle »</small></span></button></div>
   <div class="pp-duo"><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button><button class="pp-cta" onclick="ppFicheSave('${iA}')">Enregistrer</button></div>`);
@@ -10816,7 +10816,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v249';
+const PP_APP_VERSION = 'v250';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -16052,55 +16052,120 @@ function init(){
   window.addEventListener('blur', () => { envoyerVersSync(); });
   window.addEventListener('focus', () => { recupererAuRetour(); });
   document.addEventListener('keydown', gererRaccourcisClavier);
-/* Ferme, dans l'ordre, la couche la plus « au-dessus » actuellement ouverte : le calendrier,
-   sinon la feuille du bas, sinon la page ouverte (Statistiques, Fiche…) via son bouton Retour,
-   sinon une session de révision/quiz via son bouton de sortie. Renvoie true si quelque chose a
-   été fermé (pour qu'Échap et le bouton retour du téléphone sachent s'il faut aussi empêcher le
-   comportement par défaut), false si rien n'était ouvert. N'agit jamais dans un champ de saisie. */
+/* v250 : le bouton « Retour » du téléphone (et le geste Retour) ramène à l'ÉCRAN PRÉCÉDENT, à chaque changement d'écran fait avec un bouton.
+   Avant (v151-v249), Retour ne fermait que quelques couches (feuille, page, séance) : Prof sur téléphone, ses sous-écrans, les changements
+   d'onglet, le formulaire « à la main » et l'aperçu des cartes de Ajouter n'étaient pas gérés, et un Retour sortait de l'app.
+   Ordre, du plus « au-dessus » au plus « en dessous » : introduction, zoom d'image, calendrier, feuille du bas, Prof (menu ⋯, conversations
+   passées, carnet, puis Prof lui-même), page ou petite fenêtre de #modal-root, séance de révision/quiz, écran secondaire de Ajouter, puis
+   onglet précédent (pile ppTabPile). Chaque étape fait ce que fait le bouton de retour de l'écran lui-même : jamais « tout fermer d'un coup ».
+   Renvoie true si quelque chose a été fait (Échap et Retour savent alors s'il faut empêcher le comportement par défaut). N'agit jamais
+   dans un champ de saisie quand `cible` en est un (Échap). `onglets` = vrai pour Retour du téléphone seulement (Échap ne change pas d'onglet). */
+const ppTabPile = [];            // onglets quittés avec un bouton, le plus récent en dernier : Retour les rejoue à l'envers
+let ppNavSansPile = false;       // vrai pendant qu'un Retour change d'onglet : ce changement-là ne s'empile pas
+let ppProfRetour = null;         // écran à rouvrir quand on quitte Prof avec Retour (la fiche ou le menu d'où on l'a ouvert), sinon null
+/* Ajouter : écran « secondaire » (aperçu des cartes générées, formulaire à la main) qui a sa propre flèche retour. */
+function ppNavSousEcranAjout(){
+  if(activeTab !== 'add') return '';
+  if(iaCartesPreview) return 'apercu';
+  if(ppAddMode === 'man') return 'man';
+  return '';
+}
 function ppCoucheOuverte(){
+  if(document.getElementById('fci') || document.getElementById('pp-zoom')) return true;
   const cal = document.getElementById('pp-psheet');
   if(cal && cal.classList.contains('on')) return true;
   const feuille = document.getElementById('pp-sheet');
   if(feuille && feuille.classList.contains('on')) return true;
+  try{ if(pcOuvert) return true; }catch(e){}
   const racine = document.getElementById('modal-root');
   if(racine && racine.innerHTML.trim() !== '') return true;
   const ses = document.getElementById('pp-ses');
   return !!(ses && getComputedStyle(ses).display !== 'none');
 }
-function ppFermerCouche(cible){
+/* Y a-t-il un écran « avant » vers lequel un Retour peut ramener ? (sinon le Retour suivant quitte l'app normalement) */
+function ppNavAvance(){ return ppCoucheOuverte() || ppTabPile.length > 0 || !!ppNavSousEcranAjout(); }
+function ppVisible(b){ return !!b && !b.disabled && b.offsetParent !== null && getComputedStyle(b).visibility !== 'hidden'; }
+/* Une feuille du bas : son bouton « Retour » / « Annuler » (qui rouvre l'écran d'avant ou ferme), sinon on la ferme. Les Réglages n'ont pas
+   de retour : on les ferme (leurs « Annuler » internes ne concernent qu'un champ en cours de modification). */
+function ppRetourFeuille(feuille){
+  if(!feuille.querySelector('.pp-setroot')){
+    const bs = feuille.querySelectorAll('button');
+    for(let k = 0; k < bs.length; k++){
+      const t = (bs[k].textContent || '').trim().toLowerCase();
+      if((t === 'retour' || t === 'back' || t === 'annuler' || t === 'cancel') && ppVisible(bs[k])){ bs[k].click(); return; }
+    }
+  }
+  ppSheetClose();
+}
+/* Prof, sur tous les écrans (v250 ; avant : grand écran seulement). Un sous-écran d'abord, puis Prof lui-même. */
+function ppRetourProfEcran(){
+  if(!pcOuvert) return false;
+  const bh = pcEl('pch-back'), bn = pcEl('pcn-back');
+  if(bh){ bh.click(); return true; }
+  if(bn){ bn.click(); return true; }
+  if(pcMenuMode){ pcMenuAction('non'); return true; }
+  if(pcPlusOn){ pcPlus(false); return true; }
+  const retour = ppProfRetour;
+  ppCoachFermer();
+  if(typeof retour === 'function') setTimeout(retour, 80);
+  return true;
+}
+function ppFermerCouche(cible, onglets){
+  const fci = document.getElementById('fci');
+  if(fci){
+    const bk = fci.querySelector('[data-i=bk]'), hm = fci.querySelector('[data-i=hm]');
+    if(ppVisible(bk)) bk.click(); else if(hm) hm.click();
+    return true;
+  }
+  const zoom = document.getElementById('pp-zoom');
+  if(zoom){ const x = zoom.querySelector('.pz-x'); if(x) x.click(); return true; }
   const cal = document.getElementById('pp-psheet');
   if(cal && cal.classList.contains('on')){ ppPickClose(); return true; }
   const feuille = document.getElementById('pp-sheet');
-  if(feuille && feuille.classList.contains('on')){ ppSheetClose(); return true; }
-  try{ if(pcOuvert && ppWide()){   /* v227 : Échap dans Prof (même depuis le champ de saisie) : écran du dessus, sinon menu, sinon fermeture */
-    if(pcEl('pc-hist')) pcHistFerme(true); else if(pcEl('pc-carnet')) pcCarnetFerme(true); else if(pcMenuMode) pcMenu(''); else ppCoachFermer();
-    return true;
-  } }catch(e){}
+  if(feuille && feuille.classList.contains('on')){ ppRetourFeuille(feuille); return true; }
+  try{ if(ppRetourProfEcran()) return true; }catch(e){}   /* Échap dans Prof marche aussi depuis le champ de saisie */
   const tag = cible && cible.tagName ? cible.tagName.toLowerCase() : '';
   if(tag === 'input' || tag === 'textarea' || tag === 'select' || (cible && cible.isContentEditable)) return false;
   const racine = document.getElementById('modal-root');
-  if(racine){
+  if(racine && racine.innerHTML.trim() !== ''){
     const retour = racine.querySelector('.pp-page .pp-back, .pp-page .pp-bk2');
     if(retour){ retour.click(); return true; }
-    if(racine.innerHTML.trim() !== '') return true; // autre fenêtre ouverte (confirmation…) : on ne touche à rien, mais on a « consommé » le retour
+    const ov = racine.querySelector('.modal-overlay');
+    if(ov){   /* petite fenêtre (choix de matière, renommer, supprimer…) : son bouton Retour/Annuler, sinon un toucher à côté (ferme, comme le voile) */
+      const ann = ov.querySelector('.modal-cancel');
+      if(ann) ann.click(); else ov.click();
+      return true;
+    }
+    return true; // autre fenêtre ouverte : on ne touche à rien, mais on a « consommé » le retour
   }
   const ses = document.getElementById('pp-ses');
   if(ses && getComputedStyle(ses).display !== 'none'){
-    const quitter = ses.querySelector('.pp-mb .pp-bk');
+    const quitter = ses.querySelector('.pp-mb .pp-bk') || ses.querySelector('button[onclick*="exitStudySession"], button[onclick*="exitQuiz"]');
     if(quitter){ quitter.click(); return true; }
+  }
+  if(!onglets) return false;
+  const sous = ppNavSousEcranAjout();
+  if(sous === 'apercu'){ annulerIaPreview(); return true; }
+  if(sous === 'man'){ ppSetMode('ia'); return true; }
+  while(ppTabPile.length && ppTabPile[ppTabPile.length - 1] === activeTab) ppTabPile.pop();
+  if(ppTabPile.length){
+    const prec = ppTabPile.pop();
+    ppNavSansPile = true;
+    try{ switchTab(prec); }finally{ ppNavSansPile = false; }
+    return true;
   }
   return false;
 }
 /* Échap (Chromebook / clavier) : voir ppFermerCouche. */
 document.addEventListener('keydown', function(e){
   if(e.key !== 'Escape' || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
-  if(ppFermerCouche(e.target)) e.preventDefault();
+  if(ppFermerCouche(e.target, false)) e.preventDefault();
 });
 /* Bouton « Retour » du téléphone (et geste Android équivalent) : sans ceci, un seul retour
    quittait directement l'app même en pleine feuille/séance/page, faute d'entrée d'historique à
    consommer (constat remonté par l'utilisateur, v150). On pousse une entrée dès l'ouverture puis
-   à chaque fois qu'une couche s'ouvre au-dessus de l'accueil ; popstate ferme la couche du dessus
-   au lieu de laisser le navigateur/l'OS quitter l'app, et repousse une entrée pour le prochain retour. */
+   à chaque fois qu'il y a un écran « avant » ; popstate le rejoint au lieu de laisser le navigateur/l'OS
+   quitter l'app, et repousse une entrée pour le prochain retour. */
 /* v153 (constat 44) : au plus UNE entrée tampon à la fois. Avant, chaque feuille fermée par son bouton laissait
    une entrée d'historique : après N ouvertures il fallait N appuis « Retour » sans effet avant de quitter l'app. */
 let ppHistTampon = 0;
@@ -16110,19 +16175,44 @@ function ppPousserEtatRetour(){
 }
 window.addEventListener('popstate', function(){
   ppHistTampon = 0; // l'entrée tampon vient d'être consommée
-  ppFermerCouche(null);
-  // Tant qu'une couche reste ouverte (ou vient d'en fermer une), on repousse une entrée
-  // pour que le prochain retour la ferme aussi au lieu de quitter l'app ; à l'accueil nu,
+  ppFermerCouche(null, true);
+  // Tant qu'il reste un écran « avant » (couche, écran secondaire, onglet précédent), on repousse une entrée
+  // pour que le prochain retour y aille aussi au lieu de quitter l'app ; à l'accueil nu,
   // on ne repousse rien : le retour suivant quitte normalement l'app.
-  if(ppCoucheOuverte()) ppPousserEtatRetour();
+  if(ppNavAvance()) ppPousserEtatRetour();
 });
 ppPousserEtatRetour();
-// Toute ouverture de couche (feuille, calendrier, session) repousse une entrée pour que le
-// bouton retour du téléphone la referme au lieu de quitter l'app directement.
-['ppSheet','ppPickDate','ppSesShow'].forEach(nom => {
+// v250 : l'entrée tampon est (re)posée après chaque toucher qui a pu changer d'écran (onglet, page, fenêtre, Prof…) : plus besoin de
+// brancher chaque ouverture une par une, et un écran ouvert une 2e fois garde son Retour.
+function ppSyncTampon(){ if(ppHistTampon === 0 && ppNavAvance()) ppPousserEtatRetour(); }
+document.addEventListener('click', function(){ setTimeout(ppSyncTampon, 80); setTimeout(ppSyncTampon, 650); }, true);
+// Toute ouverture de couche repousse aussi une entrée tout de suite.
+['ppSheet','ppPickDate','ppSesShow','ppCoachOuvrir'].forEach(nom => {
   const orig = window[nom];
   if(typeof orig === 'function') window[nom] = function(...args){ const r = orig.apply(this, args); ppPousserEtatRetour(); return r; };
 });
+// Changement d'onglet fait avec un bouton : on garde l'onglet quitté pour que Retour y revienne (un Retour qui change d'onglet ne s'empile pas).
+(function(){
+  const orig = window.switchTab;
+  if(typeof orig !== 'function') return;
+  window.switchTab = function(tab){
+    const avant = activeTab;
+    const r = orig.apply(this, arguments);
+    if(!ppNavSansPile && avant && activeTab !== avant){
+      ppTabPile.push(avant);
+      if(ppTabPile.length > 30) ppTabPile.shift();
+      ppPousserEtatRetour();
+    }
+    return r;
+  };
+})();
+// Quand Prof se ferme, l'écran à rouvrir (fiche, menu de matière) est oublié ; ppCoachDe() l'enregistre à l'ouverture depuis ces écrans.
+(function(){
+  const orig = window.ppCoachFermer;
+  if(typeof orig !== 'function') return;
+  window.ppCoachFermer = function(){ ppProfRetour = null; return orig.apply(this, arguments); };
+})();
+window.ppCoachDe = function(fn){ ppProfRetour = (typeof fn === 'function') ? fn : null; };
 
   // Récupération unique à l'ouverture : après le rendu initial pour ne
   // pas retarder l'affichage, puis on rafraîchit si des données arrivent.
