@@ -83,6 +83,9 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
 (function(){
   var K = 'pp-derniere-activite', D = 'pp-deja-demarre', PH = 'pp-pagehide';
   var GAP_RELANCE = 1500, DEUX_H = 2 * 60 * 60 * 1000;
+  /* v184 : quand on revient par l'icône (Android relance la page), le logo natif d'Android apparaît puis disparaît d'un coup : ça « clignote ».
+     true = le faux splash animé est rejoué juste derrière, dans le prolongement du logo natif (pas de coupure) ; false = comme avant (pas de splash). */
+  var SPLASH_SUR_RELANCE = true;
   function marquer(){ try{ localStorage.setItem(K, String(Date.now())); }catch(e){} }
   function oublierPh(){ try{ localStorage.removeItem(PH); }catch(e){} }
   var verdict = 'ouverture à froid';
@@ -92,7 +95,10 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     var ph = parseInt(localStorage.getItem(PH) || '0', 10);
     var reprise = false;
     if(sessionStorage.getItem(D) === '1'){ reprise = true; verdict = 'même onglet rechargé : pas de splash'; }
-    else if(ph && now - ph >= 0 && now - ph < GAP_RELANCE){ reprise = true; verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : pas de splash'; }
+    else if(ph && now - ph >= 0 && now - ph < GAP_RELANCE){
+      if(SPLASH_SUR_RELANCE){ verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : splash rejoué (v184)'; }
+      else { reprise = true; verdict = 'relance par l\u2019icône (pagehide il y a ' + (now - ph) + ' ms) : pas de splash'; }
+    }
     else if(ph){ verdict = 'vraie fermeture puis réouverture (pagehide il y a ' + Math.round((now - ph) / 1000) + ' s) : splash'; }
     else if(t && now - t >= 0 && now - t < DEUX_H){ reprise = true; verdict = 'aucun pagehide noté, activité il y a ' + Math.round((now - t) / 1000) + ' s : pas de splash'; }
     else { verdict = 'ouverture à froid (aucune activité récente) : splash'; }
@@ -1750,6 +1756,9 @@ input[type="date"]{ color-scheme:inherit; }
 /* finitions d'animation (v24/v25 du prototype) */
 .pp-row,.pp-prog7,.pp-ctl{transition:transform .22s var(--pps),background .2s,border-color .2s,box-shadow .2s}
 .pp-row:active{background:var(--c-press)}
+.pp-row.on{border-color:var(--orange);background:var(--c-osoft)}
+.pp-row.on .pp-ri{background:var(--orange);color:#1a1208}
+.pp-row.on>div>span{color:var(--orange-t)}
 .pp-view>*:nth-child(2){animation-delay:.04s}
 .pp-view>*:nth-child(3){animation-delay:.08s}
 .pp-view>*:nth-child(4){animation-delay:.12s}
@@ -2282,10 +2291,14 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-li small.sync-statut{display:flex;margin-top:1px;font-size:12.5px;gap:6px}
 .pp-sheet .sync-btn{width:100%;margin-top:2px}
 /* v172 : Réglages — les éléments d'un MÊME paramètre (carte + champ + aide + bouton) sont resserrés ; l'espace entre deux paramètres ne change pas. */
-.pp-sheet .pp-set + .pp-hint{margin:7px 2px 6px}
+.pp-sheet .pp-set + .pp-hint:not(.pp-synh){margin:7px 2px 6px}
 .pp-sheet #sync-code-erreur:empty{display:none}
-.pp-sheet #sync-code-input{margin:4px 0 2px}
-.pp-sheet #sync-code-input + .pp-hint{margin:0 2px 8px}
+.pp-sheet #sync-code-input{margin:8px 0 8px}
+.pp-sheet #sync-code-erreur:not(:empty){margin:8px 0 0 !important}
+.pp-sheet #sync-code-erreur .import-msg{margin:0 !important}
+.pp-sheet .sync-btn{margin-top:0}
+.pp-sheet .pp-hint.pp-synh{margin:7px 2px 0;font-size:12px;line-height:1.35}
+.pp-sheet .pp-hint.pp-synh + .pp-hint.pp-synh{margin-top:3px}
 .pp-sheet .pp-set + .pp-keyrow,.pp-sheet .pp-keyrow + .pp-keyrow{margin-top:8px}
 .pp-sheet .pp-keyrow .pp-fld{margin:0}
 .pp-sheet .pp-keyrow .pp-sec{height:46px}
@@ -6816,9 +6829,20 @@ function ppBrowseToggle(btn, m){
 }
 
 /* Menu ⋯ d'une matière (prototype : grpMenu) */
-function ppGrpMenu(m){
+function ppGrpMenuHtml(m){
   const mA = escapeJsAttr(m);
-  ppSheet(`<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppSheetClose();ppInvMatiere('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>Aussi posées dans l'autre sens</span></div></button><button class="pp-row" onclick="ppSheetClose();ppEcrMatiere('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>Tu tapes ta réponse avant de la voir</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`);
+  /* v182 : « Inverser toutes les cartes » et « Tout en réponse écrite » se colorent quand c'est actif ; on retouche pour annuler */
+  const lInv = CARDS.filter(c => (c.matiere || 'Sans matière') === m && !c.ecrite);
+  const toutInv = lInv.length > 0 && lInv.every(c => c.inversible);
+  const lEcr = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
+  const toutEcr = lEcr.length > 0 && lEcr.every(c => c.ecrite === true);
+  return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`;
+}
+function ppGrpMenu(m){ ppSheet(ppGrpMenuHtml(m)); }
+/* redessine le menu sur place (la feuille reste ouverte, sans animation) pour montrer la pastille colorée ou non */
+function ppGrpMenuMaj(m){
+  const e = document.getElementById('pp-sheet');
+  if(e && e.classList.contains('on')) e.innerHTML = ppGrpMenuHtml(m);
 }
 
 /* v119 : « Partager à un pote » (menu ⋯ d'une matière dans Parcourir).
@@ -8122,7 +8146,9 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v181';
+const PP_APP_VERSION = 'v184';
+/* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
+const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -12946,7 +12972,7 @@ function ppSetHtml(){
   ${ppEstApple() ? '' : `<h4>Rappels</h4>${rappels}`}
   ${ppAppleHtml()}
   <h4>Génération IA</h4>${ia}
-  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button><button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button></div></div><div>
+  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button>${PP_JOURNAL_VISIBLE ? `<button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button>` : ''}</div></div><div>
   <h4>Synchronisation</h4>${ppSyncHtml()}
   ${ppWebHtml()}
   ${ppMobilesHtml()}
@@ -13033,11 +13059,11 @@ function ppSyncHtml(){
   const code = syncCodePerso();
   const codeAffiche = verifierSoliditeCode(code) ? '' : code;
   return `<div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
-  <p class="pp-hint">Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.</p>
   <div id="sync-code-erreur" style="margin-top:6px">${syncErreurCodeHtml()}</div>
   <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
-  <p class="pp-hint">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>
-  <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>`;
+  <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>
+  <p class="pp-hint pp-synh">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>
+  <p class="pp-hint pp-synh">Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.</p>`;
 }
 /* sélecteur d'heure à roues (prototype : timeSheet) */
 let ppPH = { h: 18, m: 0 };
@@ -13144,6 +13170,8 @@ async function ppSynSend(){
 function tryFermerSynthese(){
   const s = syntheseEtat;
   if(s && s.enCours) return; // ne pas perdre une génération en route
+  /* v182 : depuis « Modifier les précisions », la flèche retour ramène à « Ta synthèse » (et ne ferme plus tout) */
+  if(s && s.etape === 'consignes' && (s.markdown || '').trim()){ s.etape = 'resultat'; s.msg = null; renderSynthese(); return; }
   if(s && s.etape === 'resultat' && s.markdown.trim()){
     ppSheet(`<div class="pp-grab"></div><h2>Fermer la synthèse ?</h2><p class="pp-hint">Elle n'est pas enregistrée : pense à l'exporter d'abord.</p><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" style="margin:0;background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="ppSheetClose();fermerSynthese()">Fermer</button></div>`);
     return;
@@ -13397,6 +13425,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
 (function(){
   var K = 'pp-etat-ecran';
   var SECRETS = { 'gemini-key-input':1, 'sync-code-input':1, 'pp-ij-code':1 };
+  var DANS_SYNTHESE = { 'synth-consignes':1, 'synth-markdown':1, 'synth-supp-textarea':1 };   // v182 : déjà dans l'entrée « sy »
   var TRENTE_MIN = 3 * 60 * 60 * 1000;
   function jr(msg){ try{ window.ppJournal('RESTAURATION', msg); }catch(x){} }
   function txt(v, max){ return (typeof v === 'string' && v.length <= max) ? v : ''; }
@@ -13408,7 +13437,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
 
   /* Fenêtres qu'on sait rouvrir à l'identique : on note la dernière ouverte (nom + arguments simples). Les confirmations
      (supprimer, remettre à zéro…) ne sont volontairement PAS dans la liste : jamais rouvertes toutes seules. */
-  var OUVREURS = ['ppFiche', 'ppSettings', 'openRenameMatiere', 'ppGrpMenu', 'ppSubjSheet', 'ppTimeSheet', 'ppFormatAide', 'ppDrawCtrl', 'ppCtrlSheet', 'ppImportSheet', 'ppExportSheet'];
+  var OUVREURS = ['ppFiche', 'ppSettings', 'openRenameMatiere', 'ppGrpMenu', 'ppSubjSheet', 'ppTimeSheet', 'ppFormatAide', 'ppDrawCtrl', 'ppCtrlSheet', 'ppImportSheet', 'ppExportSheet', 'openStreakModal', 'ouvrirEditionIA'];
   var ouvreur = null, prof = 0;
   OUVREURS.forEach(function(nom){
     var orig = window[nom];
@@ -13431,7 +13460,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       var els = document.querySelectorAll('textarea[id], select[id], input[id]:not([type=file]):not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=password]):not([type=range])');
       for(var i = 0; i < els.length; i++){
         var e = els[i];
-        if(SECRETS[e.id] || !e.value || e.value.length > 120000 || n >= 30) continue;
+        if(SECRETS[e.id] || (syntheseEtat && DANS_SYNTHESE[e.id]) || !e.value || e.value.length > 120000 || n >= 30) continue;
         d[e.id] = e.value; n++;
       }
     }catch(x){}
@@ -13464,7 +13493,22 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     if(bc.length) o.bc = bc;
     if(ppCtrlM || ppCtrlD || ppCtrlAjout) o.cc = { m: ppCtrlM || '', d: ppCtrlD || '', a: ppCtrlAjout ? 1 : 0 };
     if(planningDatesControleOpen === false) o.pd = 0;
-    if(coucheOuverte()){
+    /* v182 : page « Synthèse » (Précisions / Ta synthèse) : étape, textes, vue. Les fichiers joints et les images ajoutées sont trop lourds : non gardés. */
+    if(syntheseEtat && (syntheseEtat.source === 'ajout' || syntheseEtat.source === 'apercu' || syntheseEtat.source === 'parcourir')){
+      var sy = syntheseEtat;
+      try{
+        var y2 = { s: sy.source, e: sy.etape === 'resultat' ? 'resultat' : 'consignes', v: sy.vue === 'apercu' ? 'apercu' : 'edition' };
+        if(sy.matiere) y2.m = sy.matiere;
+        if(sy.consignes) y2.k = sy.consignes;
+        if(sy.modeleChoisi) y2.mo = sy.modeleChoisi;
+        if(sy.markdown && sy.markdown.length < 250000) y2.md = sy.markdown;
+        if(sy.texteSupp) y2.ts = sy.texteSupp;
+        if(sy.source !== 'parcourir' && sy.cours && sy.cours.length < 50000) y2.c = sy.cours;
+        o.sy = y2;
+      }catch(x){}
+    }else if(coucheOuverte()){
+      /* v183 : « Modifier avec l'IA » : seule l'étape où l'on écrit la consigne est reprise (pas les changements proposés par l'IA) */
+      if(ouvreur && ouvreur.f === 'ouvrirEditionIA' && !(iaEdit && iaEdit.etape === 'consigne')) ouvreur = null;
       if(ouvreur){ o.L = ouvreur; if(ouvreur.f === 'ppFiche' && ppFi && ppFi.m) o.fm = ppFi.m; }
     }else ouvreur = null;
     var d = champs();
@@ -13593,9 +13637,26 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     if(!fait && tabs.indexOf(o.o) > 0){ switchTab(o.o); parts.push('onglet « ' + o.o + ' »'); }
     if(!fait && ppAddMode === 'man' && o.o !== 'add') ppAddMode = 'ia';
 
+    /* 2 bis) v182 : page « Synthèse » rouverte à la même étape, avec ses textes */
+    var Y = o.sy;
+    if(!fait && Y && (Y.s === 'ajout' || Y.s === 'apercu' || Y.s === 'parcourir')){
+      try{
+        if(Y.s === 'parcourir') ouvrirSyntheseDepuisParcourir(Y.m || '');
+        else ouvrirSynthese({ source: Y.s, matiere: Y.m || '', cours: (typeof Y.c === 'string' && Y.c) ? Y.c : (Y.s === 'apercu' ? (iaCoursOriginal || '') : ((iaBrouillon && iaBrouillon.cours) || '')), fichiers: [] });
+        var sy2 = syntheseEtat;
+        if(sy2){
+          sy2.consignes = txt(Y.k, 200000); sy2.modeleChoisi = txt(Y.mo, 500); sy2.markdown = txt(Y.md, 250000); sy2.texteSupp = txt(Y.ts, 200000);
+          sy2.vue = Y.v === 'apercu' ? 'apercu' : 'edition';
+          sy2.etape = (Y.e === 'resultat' && sy2.markdown.trim()) ? 'resultat' : 'consignes';
+          renderSynthese();
+          parts.push('synthèse (' + sy2.etape + ')');
+        }else parts.push('synthèse non rouverte');
+      }catch(e){ parts.push('synthèse : ERREUR ' + ((e && e.message) || e)); }
+    }
+
     /* 3) fenêtre ouverte (fiche d'une carte, Réglages…) : rouverte avec les mêmes arguments, puis ses champs sont remplis */
     var L = o.L;
-    if(!fait && L && OUVREURS.indexOf(L.f) >= 0 && Array.isArray(L.a) && L.a.every(simple) && typeof window[L.f] === 'function'){
+    if(!fait && !Y && L && OUVREURS.indexOf(L.f) >= 0 && Array.isArray(L.a) && L.a.every(simple) && typeof window[L.f] === 'function'){
       setTimeout(function(){
         try{
           if(L.f === 'ppFiche' && !CARDS.some(function(c){ return c.id === L.a[0]; })) return;
