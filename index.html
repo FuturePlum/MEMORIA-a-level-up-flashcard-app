@@ -150,9 +150,9 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     if(!v) return;
     clearTimeout(minuteurVoile);
     minuteurVoile = setTimeout(function(){
-      v.style.transition = 'opacity .4s ease-in-out'; v.style.opacity = '0'; /* v191 : fondu de sortie plus doux (0,4 s au lieu de 0,18 s) */
-      setTimeout(function(){ if(v.parentNode && v.style.opacity === '0') v.parentNode.removeChild(v); }, 460);
-    }, 800);
+      v.style.transition = 'opacity .3s ease-in-out'; v.style.opacity = '0'; /* v191 : fondu de sortie plus doux ; v203 : 0,3 s au lieu de 0,4 s */
+      setTimeout(function(){ if(v.parentNode && v.style.opacity === '0') v.parentNode.removeChild(v); }, 360);
+    }, 550); /* v203 : attente avant le fondu 0,55 s au lieu de 0,8 s (retour par les applis récentes : le voile reste moins longtemps) */
   }
   document.addEventListener('visibilitychange', function(){
     marquer();
