@@ -5470,6 +5470,8 @@ function pcEnsure(){
   /* glissé de fermeture : réservé à la poignée et à l'en-tête (la conversation, les pastilles et le champ défilent normalement) */
   ['pc-pills', 'pc-sugg'].forEach(id => ['touchstart', 'mousedown'].forEach(k => pcEl(id).addEventListener(k, e => e.stopPropagation(), { passive: true })));
   pcEl('pc-feed').addEventListener('mousedown', e => e.stopPropagation(), { passive: true }); /* souris : on garde la sélection du texte */
+  /* v242 : toucher une suggestion, une matière ou une flèche de défilement ne fait plus descendre le clavier (même méthode que le bouton d'envoi) */
+  ['pc-pills', 'pc-smats', 'pc-sugg', 'pc-al', 'pc-ar'].forEach(id => { const x = pcEl(id); if(x) ['pointerdown', 'mousedown'].forEach(k => x.addEventListener(k, e => e.preventDefault())); });
   l.querySelector('.pc-input').addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
   l.querySelector('.pc-input').addEventListener('mousedown', e => e.stopPropagation());
   /* v204 : glissé depuis la poignée, l'en-tête ET la conversation (seulement si elle est tout en haut : sinon elle défile) */
@@ -10761,7 +10763,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v241';
+const PP_APP_VERSION = 'v242';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
