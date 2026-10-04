@@ -112,30 +112,47 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   /* v185 : voile de retour. Quand on touche l'icône, Android montre d'abord l'ANCIENNE page (l'écran où on était), puis relance la page : on voyait
      donc l'écran de l'app, puis le splash. Dès que la page redevient visible on pose un voile uni (couleur du fond) ; si la page est relancée, il
      disparaît avec elle (le splash prend le relais) ; sinon (retour par les applis récentes, rien ne se relance) il s'efface au bout de 0,8 s. */
-  function voile(){
+  /* v186 : le voile est posé dès le DÉPART (page cachée), pas seulement au retour. Au retour par l'icône, Android affiche l'ancienne page
+     telle qu'elle était : si le voile y est déjà, la première image montrée est le voile (fond uni) et non plus l'écran d'avant. Au retour, s'il
+     ne se passe rien (applis récentes, déverrouillage), il s'efface en 0,18 s après 0,8 s ; si la page est relancée, il disparaît avec elle. */
+  var minuteurVoile = null;
+  function poserVoile(){
     try{
-      if(document.getElementById('pp-voile')) return;
-      var v = document.createElement('div');
-      v.id = 'pp-voile'; v.setAttribute('aria-hidden', 'true');
-      var clair = document.documentElement.getAttribute('data-theme') === 'light';
-      v.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:' + (clair ? '#f1f0fb' : '#0c0c12') + ';transition:opacity .18s ease-out;pointer-events:none';
-      (document.body || document.documentElement).appendChild(v);
-      setTimeout(function(){
-        v.style.opacity = '0';
-        setTimeout(function(){ if(v.parentNode) v.parentNode.removeChild(v); }, 220);
-      }, 800);
-    }catch(e){}
+      var v = document.getElementById('pp-voile');
+      if(!v){
+        v = document.createElement('div');
+        v.id = 'pp-voile'; v.setAttribute('aria-hidden', 'true');
+        var clair = document.documentElement.getAttribute('data-theme') === 'light';
+        v.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:' + (clair ? '#f1f0fb' : '#0c0c12') + ';transition:opacity .18s ease-out;pointer-events:none';
+        (document.body || document.documentElement).appendChild(v);
+      }
+      v.style.opacity = '1';
+      clearTimeout(minuteurVoile); minuteurVoile = null;
+      return v;
+    }catch(e){ return null; }
+  }
+  function leverVoile(){
+    var v = document.getElementById('pp-voile');
+    if(!v) return;
+    clearTimeout(minuteurVoile);
+    minuteurVoile = setTimeout(function(){
+      v.style.opacity = '0';
+      setTimeout(function(){ if(v.parentNode && v.style.opacity === '0') v.parentNode.removeChild(v); }, 220);
+    }, 800);
   }
   document.addEventListener('visibilitychange', function(){
     marquer();
     if(document.visibilityState === 'visible'){
       try{ localStorage.setItem(VU, String(Date.now())); }catch(e){}
       oublierPh();
-      voile();
+      poserVoile(); leverVoile();
+    }else{
+      poserVoile();
     }
   });
+  window.addEventListener('freeze', function(){ poserVoile(); });
   window.addEventListener('pageshow', function(e){ if(e.persisted) oublierPh(); });
-  window.addEventListener('pagehide', function(){ marquer(); try{ localStorage.setItem(PH, String(Date.now())); }catch(e){} });
+  window.addEventListener('pagehide', function(){ marquer(); poserVoile(); try{ localStorage.setItem(PH, String(Date.now())); }catch(e){} });
 })();
 </script>
 <script>
@@ -2324,6 +2341,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-sheet .sync-btn{margin-top:0}
 .pp-sheet .pp-hint.pp-synh{margin:7px 2px 0;font-size:12px;line-height:1.35}
 .pp-sheet .pp-hint.pp-synh + .pp-hint.pp-synh{margin-top:3px}
+.pp-sheet .pp-hint.pp-synh.pp-synh-haut{margin:0 2px 8px}
 .pp-sheet .pp-set + .pp-keyrow,.pp-sheet .pp-keyrow + .pp-keyrow{margin-top:8px}
 .pp-sheet .pp-keyrow .pp-fld{margin:0}
 .pp-sheet .pp-keyrow .pp-sec{height:46px}
@@ -8171,7 +8189,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v185';
+const PP_APP_VERSION = 'v187';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13083,12 +13101,12 @@ function ppSyncHtml(){
   if(!SYNC_WORKER_URL) return `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.cloud}</i><span>Synchro entre appareils<small>Pas encore configurée.</small></span></div></div>`;
   const code = syncCodePerso();
   const codeAffiche = verifierSoliditeCode(code) ? '' : code;
-  return `<div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
+  return `<p class="pp-hint pp-synh pp-synh-haut">Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.</p>
+  <div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
   <div id="sync-code-erreur" style="margin-top:6px">${syncErreurCodeHtml()}</div>
   <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
   <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>
-  <p class="pp-hint pp-synh">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>
-  <p class="pp-hint pp-synh">Tes cartes, ta progression et ta clé Gemini sont enregistrées sur le serveur Cloudflare du développeur, protégées seulement par ce code.</p>`;
+  <p class="pp-hint pp-synh">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>`;
 }
 /* sélecteur d'heure à roues (prototype : timeSheet) */
 let ppPH = { h: 18, m: 0 };
