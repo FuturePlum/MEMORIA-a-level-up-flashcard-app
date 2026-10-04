@@ -3098,14 +3098,18 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pc-tools{position:relative;flex:none;width:calc(var(--sq)*2 + 8px);height:var(--sq);transition:width .55s var(--pce)}
 .pc-tools .pc-sq{position:absolute;left:0;bottom:0;width:var(--sq);height:var(--sq);transition:transform .55s var(--pce),opacity .3s ease,background-color .25s,border-color .25s,color .25s}
 .pc-tools #pc-docbtn{left:calc(var(--sq) + 8px)}
-.pc-tools .pc-plusb{opacity:0;transform:scale(.3) rotate(-90deg);pointer-events:none}
+.pc-tools .pc-plusb{opacity:0;transform:scale(.3);pointer-events:none}
 .pc-tools.mini{width:var(--sq)}
 .pc-tools.mini #pc-photo{opacity:0;transform:scale(.3) rotate(-60deg);pointer-events:none}
 .pc-tools.mini #pc-docbtn{opacity:0;transform:translateX(calc(-1*(var(--sq) + 8px))) scale(.3) rotate(60deg);pointer-events:none}
 .pc-tools.mini .pc-plusb{opacity:1;transform:none;pointer-events:auto;transition-delay:.1s,.1s,0s,0s,0s}
 .pc-tools.mini .pc-plusb:active,.pc-tools.mini .pc-plusb.js-press{transform:scale(.9);transition-delay:0s;transition-duration:var(--t-in)}
-.pc-tools.mini .pc-plusb.open{transform:rotate(135deg);background:var(--orange);border-color:var(--orange);color:#1a0d08;transition-delay:0s}
-.pc-tools.mini .pc-plusb.open:active,.pc-tools.mini .pc-plusb.open.js-press{transform:rotate(135deg) scale(.9)}
+.pc-tools.mini .pc-plusb.open{transform:rotate(180deg);background:var(--orange);border-color:var(--orange);color:#1a0d08;transition-delay:0s}
+.pc-tools.mini .pc-plusb.open:active,.pc-tools.mini .pc-plusb.open.js-press{transform:rotate(180deg) scale(.9)}
+/* v233 : le BOUTON fait un demi-tour (180° horaire à l'ouverture, 180° anti-horaire à la fermeture) et emporte son icône ; les deux traits pivotent de 45° pendant le tour (+ → ×) */
+.pc-tools .pc-plusb{transition:transform .7s var(--ease-press),opacity .3s ease,background-color .25s,border-color .25s,color .25s}
+.pc-plusb svg path{transform-box:view-box;transform-origin:12px 12px;transition:transform .7s var(--ease-press)}
+.pc-plusb.open svg path{transform:rotate(45deg)}
 .pc-plusm{position:absolute;left:0;bottom:calc(100% + 12px);z-index:9;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .pc-plusm.on{pointer-events:auto}
 .pc-pi{display:flex;align-items:center;gap:12px;height:50px;padding:0 20px 0 9px;border-radius:17px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:700 15px var(--font-sans);white-space:nowrap;box-shadow:0 3px 0 var(--c-edge);opacity:0;transform:translate(-14px,26px) scale(.45);transform-origin:0 100%;transition:transform .3s cubic-bezier(.5,0,.75,.3),opacity .16s ease,box-shadow .2s;transition-delay:calc((1 - var(--k))*40ms),0s,0s}
@@ -5411,7 +5415,7 @@ function pcEnsure(){
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
     <div class="pc-suggw pc-stg" style="--i:3"><button class="pp-back pc-arr l" id="pc-al" type="button" aria-label="Suggestions précédentes">${ppSvg('<path d="M15 6l-6 6 6 6"/>', 18)}</button><div id="pc-sugg"></div><button class="pp-back pc-arr r" id="pc-ar" type="button" aria-label="Suggestions suivantes">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</button></div>
-    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
+    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
   document.body.appendChild(l);
   ppCEScan(l);   /* v228 : le champ de saisie est un champ ppCE (pas de barre d'autofill) */
   const inp = pcEl('pc-input'), sendBtn = pcEl('pc-send');
@@ -10420,7 +10424,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v231';
+const PP_APP_VERSION = 'v233';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
