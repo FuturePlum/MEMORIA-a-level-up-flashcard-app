@@ -2206,6 +2206,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-invc.on{border-color:var(--orange);color:var(--orange-t);background:var(--c-osoft)}
 .pp-pvbar{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;font-size:13px;font-weight:800;color:var(--muted)}
 .pp-pvbar b{color:var(--cream)}
+.pp-pvmat{height:30px;max-width:100%;min-width:0;white-space:nowrap}.pp-pvmat b{overflow:hidden;text-overflow:ellipsis}   /* v243 : matière de l'aperçu = bouton */
 .pp-fch{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:13px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:8px;font-size:13.5px;font-weight:600;animation:pppop .3s var(--pps) both}
 .pp-fch i{width:28px;height:28px;border-radius:8px;background:var(--c-yicon);color:var(--yellow-t);display:grid;place-items:center;flex:none}
 .pp-fch span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -3143,6 +3144,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pc-nokey,.pc-act{align-self:stretch;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:var(--cream);font-size:14px;animation:pcin .5s var(--pce) backwards}
 .pc-nokey span{color:var(--muted);font-size:13px}
 .pc-act h4{margin:0;font-size:14px;font-weight:800}
+.pc-hh{display:flex;align-items:center;justify-content:space-between;gap:8px}   /* v244 */
 .pc-act p{margin:0;color:var(--muted);font-size:13px}
 .pc-ar{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
 .pc-ar input{position:absolute;opacity:0;pointer-events:none}
@@ -6241,6 +6243,7 @@ RÈGLES :
 - "retenir" (carnet de l'utilisateur) : seulement s'il te le demande (« retiens que… »), ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois (1 seule ligne). Jamais autrement. "texte" : note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule action "retenir" par réponse.
 - "matiere" (créer une matière vide) : tu PEUX créer une matière, ne dis jamais le contraire. Seulement si l'utilisateur le demande. "nom" : court (40 caractères maximum), avec une majuscule ; s'il n'en a pas donné, demande-le (actions: []). Si la matière existe déjà dans MATIÈRES, dis-le et ne la propose pas. Ajoute "date_controle":"AAAA-MM-JJ" s'il donne une date de contrôle. Si des cartes doivent y aller, ajoute des actions "creer" dont "matiere" est exactement ce nom.
 - Autres actions sur les matières (seulement sur demande) : "controle" {"matiere":"…","date":"AAAA-MM-JJ"} met ou change la date de contrôle ("date":"" la retire) ; "renommer" {"matiere":"ancien nom","nom":"nouveau nom"} ; "fusionner" {"matiere":"celle qui disparaît","dans":"celle qui reste"} (ses cartes passent dans l'autre) ; "archiver" {"matiere":"…","archive":true} (false pour désarchiver) ; "supprimer_matiere" {"matiere":"…"} supprime la matière ET toutes ses cartes, sans retour possible : seulement si c'est demandé clairement, et dis-le en une phrase. Les noms de matières doivent être EXACTEMENT ceux de MATIÈRES. Dates au format AAAA-MM-JJ, calculées depuis la DATE DU JOUR (« le 15 » = le prochain 15) ; si c'est ambigu, demande ; une date passée est refusée. Si la matière n'est pas précisée, prends la matière active ou demande.
+- "deplacer" {"ids":["id1","id2"],"dans":"nom de la matière"} : déplace des cartes précises (ids pris dans les lignes ci-dessous) vers une matière qui existe, OU vers une matière que tu crées dans la même réponse avec l'action "matiere" (mets alors "matiere" avant "deplacer"). Tu PEUX déplacer des cartes d'une matière à une autre, ne dis jamais le contraire. Seulement sur demande ; une seule action "deplacer" par matière d'arrivée, 100 ids au maximum ; ne déplace que les cartes demandées (vérifie chaque carte avant d'en mettre l'id). Si les cartes demandées ne sont pas dans les lignes ci-dessous, dis-le et demande à l'utilisateur de choisir la bonne matière en haut de l'écran.
 - "pause" {"id":"…","pausee":true} (false = la reprendre) : met une carte en pause, seulement sur demande ; une action par carte, 20 maximum.
 - Cours collé ou document joint avec une demande de cartes : découpe-le en cartes courtes (actions \"creer\", 20 maximum) en suivant les règles de cartes ; si le cours touche plusieurs matières, répartis les cartes (\"matiere\" exacte) et propose \"matiere\" pour celles qui n'existent pas.
 - JE NE SAIS PAS : pendant une série de questions, « je ne sais pas », « jsp », « aucune idée », « pas la moindre idée » (ou équivalent) n'est PAS une réponse à corriger : ne dis jamais « Faux ». C'est toi qui choisis, sans lui demander. (a) Si un indice peut vraiment l'aider à retrouver la réponse en réfléchissant (lien logique, catégorie, période, première lettre, nombre de mots…), donne UN indice court SANS la réponse et laisse-le réessayer. (b) Si c'est un fait brut qu'on ne peut pas deviner, ou s'il a déjà reçu un indice sur CETTE question et ne sait toujours pas, donne directement la réponse avec une explication courte, puis enchaîne. Dans tous les cas la question compte comme « pas su » dans le score.
@@ -6250,7 +6253,7 @@ RÈGLES :
 - ${PROMPT_GRAS_BASE} Dans tes réponses : 0 à 2 expressions en gras, jamais dans une réponse de 1 à 2 phrases. Quand rien ne mérite d'être mis en valeur, n'en mets pas.
 - ${PROMPT_FORMULES}
 FORMAT DE SORTIE : un objet JSON strict, rien d'autre, sans balises :
-{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"},{"type":"matiere","nom":"…","date_controle":"AAAA-MM-JJ"},{"type":"controle","matiere":"…","date":"AAAA-MM-JJ"},{"type":"renommer","matiere":"…","nom":"…"},{"type":"fusionner","matiere":"…","dans":"…"},{"type":"archiver","matiere":"…","archive":true},{"type":"supprimer_matiere","matiere":"…"},{"type":"pause","id":"…","pausee":true}]}
+{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"},{"type":"matiere","nom":"…","date_controle":"AAAA-MM-JJ"},{"type":"controle","matiere":"…","date":"AAAA-MM-JJ"},{"type":"renommer","matiere":"…","nom":"…"},{"type":"fusionner","matiere":"…","dans":"…"},{"type":"archiver","matiere":"…","archive":true},{"type":"supprimer_matiere","matiere":"…"},{"type":"deplacer","ids":["…"],"dans":"…"},{"type":"pause","id":"…","pausee":true}]}
 CARTES QUE TU CRÉES (actions "creer") : applique ces règles.
 ${PROMPT_REGLES_CARTES}
 Ici il n'y a pas forcément de cours sous les yeux : appuie-toi sur la conversation, les cartes existantes ou la pièce jointe. Si tu complètes avec tes propres connaissances, mets "hors_cartes": true et dis-le en une phrase. Ne crée jamais une carte qui existe déjà dans la liste.
@@ -6356,6 +6359,13 @@ function pcValideActions(arr, matiere){
     } else if(a.type === 'supprimer_matiere'){
       const m = mm(a.matiere); if(!m || res.some(x => x.type === 'supprimer_matiere' && x.matiere === m)) continue;
       res.push({ type: 'supprimer_matiere', matiere: m, nb: CARDS.filter(c => (c.matiere || 'Sans matière') === m).length });
+    } else if(a.type === 'deplacer'){   /* v244 */
+      const brut = typeof a.dans === 'string' ? nomMatiereCanonique(a.dans.trim(), mats.concat(nouvelles)) : '';
+      const dans = (mats.includes(brut) || nouvelles.includes(brut)) ? brut : ''; if(!dans || !Array.isArray(a.ids) || res.some(x => x.type === 'deplacer' && x.dans === dans)) continue;
+      const vus = new Set(), cs = [];
+      for(const id of a.ids.slice(0, 100)){ if(typeof id !== 'string' || vus.has(id)) continue; vus.add(id); const c = CARDS.find(k => k.id === id); if(c && (c.matiere || 'Sans matière') !== dans) cs.push(c); }
+      if(!cs.length) continue;
+      res.push({ type: 'deplacer', dans, ids: cs.map(c => c.id), de: [...new Set(cs.map(c => c.matiere || 'Sans matière'))].slice(0, 4), ex: cs.slice(0, 4).map(c => pcNet(c.question || '🖼 Image').slice(0, 40)) });
     } else if(a.type === 'pause'){
       const c = CARDS.find(k => k.id === a.id); if(!c || typeof a.pausee !== 'boolean' || (c.pausee === true) === a.pausee) continue;
       if(res.filter(x => x.type === 'pause').length >= 20 || res.some(x => x.type === 'pause' && x.id === c.id)) continue;
@@ -6476,6 +6486,7 @@ function pcDecritAction(a){
     case 'fusionner': return 'matière ' + q(a.matiere) + ' fusionnée dans ' + q(a.dans);
     case 'archiver': return 'matière ' + q(a.matiere) + (a.archive ? ' archivée' : ' désarchivée');
     case 'supprimer_matiere': return 'matière ' + q(a.matiere) + ' supprimée avec ses cartes';
+    case 'deplacer': return (a.ids ? a.ids.length : 0) + ' carte(s) déplacée(s)' + (a.de && a.de.length ? ' de ' + a.de.map(q).join(', ') : '') + ' vers ' + q(a.dans);
     case 'pause': return 'carte ' + (a.pausee ? 'mise en pause' : 'reprise') + ' (' + q(a.question) + ')';
     case 'retenir': return 'ligne ajoutée au carnet (' + q(a.texte) + ')';
     case 'synthese': return 'synthèse lancée pour ' + q(a.matiere);
@@ -6541,11 +6552,13 @@ function pcActionsCarte(actions, matiere){
     if(a.type === 'fusionner') return `<i class="pc-t">Fusionner</i><b>${escapeHtml(a.matiere)} → ${escapeHtml(a.dans)}</b><span>${a.nb} carte${a.nb > 1 ? 's' : ''} déplacée${a.nb > 1 ? 's' : ''}</span>`;
     if(a.type === 'archiver') return `<i class="pc-t">${a.archive ? 'Archiver la matière' : 'Désarchiver la matière'}</i><b>${escapeHtml(a.matiere)}</b>`;
     if(a.type === 'supprimer_matiere') return `<i class="pc-t">Supprimer la matière</i><s>${escapeHtml(a.matiere)}</s><span>${a.nb} carte${a.nb > 1 ? 's' : ''}</span>`;
+    if(a.type === 'deplacer') return `<i class="pc-t">Déplacer · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''}</i><b>${a.de.map(escapeHtml).join(', ')} → ${escapeHtml(a.dans)}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;   /* v244 */
     if(a.type === 'pause') return `<i class="pc-t">${a.pausee ? 'Mettre en pause' : 'Reprendre'}</i><b>${escapeHtml(a.question)}</b>`;
     if(a.type === 'retenir') return `<i class="pc-t">Retenir · carnet</i><b>${escapeHtml(a.texte)}</b>`;
     return `<i class="pc-t">Synthèse</i><b>${escapeHtml(a.matiere)}</b><textarea class="pc-prec" rows="2" maxlength="600" placeholder="Précisions pour la synthèse (facultatif)" aria-label="Précisions">${escapeHtml(a.precisions || '')}</textarea>`;   /* v223 : modifiable avant d'appliquer */
   };
-  box.innerHTML = `<h4>Actions proposées</h4>` + actions.map((a, i) => `<label class="pc-ar"><input type="checkbox" data-i="${i}"${(a.type === 'supprimer' || a.type === 'supprimer_matiere') ? '' : ' checked'}><em></em><div>${lib(a)}</div></label>`).join('')
+  const nbSup = actions.filter(a => a.type === 'supprimer').length;   /* v244 : « Tout cocher » quand plusieurs cartes sont proposées à la suppression (elles sont décochées au départ) */
+  box.innerHTML = `<div class="pc-hh"><h4>Actions proposées</h4>${nbSup > 1 ? '<button type="button" class="pp-invc pc-all">Tout cocher</button>' : ''}</div>` + actions.map((a, i) => `<label class="pc-ar"><input type="checkbox" data-i="${i}"${(a.type === 'supprimer' || a.type === 'supprimer_matiere') ? '' : ' checked'}><em></em><div>${lib(a)}</div></label>`).join('')
     + `<div class="pc-warn" hidden>Attention : plusieurs suppressions sont cochées.</div><div class="pc-ab"><button type="button" class="pp-cta pc-ap">Appliquer</button><button type="button" class="pp-sec pc-ig">Ignorer</button></div>`;
   pcEl('pc-feed').appendChild(box);
   pcActsAttente = { actions, matiere, box };
@@ -6558,7 +6571,10 @@ function pcActionsCarte(actions, matiere){
     warn.textContent = sm ? 'Attention : la matière ET toutes ses cartes seront supprimées, sans retour possible.' : 'Attention : plusieurs suppressions sont cochées.';
     warn.hidden = !(sm || sup.length >= 3 || (tot && sup.length * 2 >= tot));
   };
-  cases.forEach(c => c.onchange = maj); maj();
+  const btnAll = box.querySelector('.pc-all'), casesSup = cases.filter(c => actions[+c.dataset.i].type === 'supprimer');
+  const majAll = () => { if(!btnAll) return; const tout = casesSup.every(c => c.checked); btnAll.textContent = tout ? 'Tout décocher' : 'Tout cocher'; btnAll.classList.toggle('on', tout); };
+  if(btnAll) btnAll.onclick = () => { const v = !casesSup.every(c => c.checked); casesSup.forEach(c => { c.checked = v; }); maj(); majAll(); };
+  cases.forEach(c => c.onchange = () => { maj(); majAll(); }); maj(); majAll();
   box.querySelectorAll('.pc-prec').forEach(t => {   /* v223 : le texte modifié remplace les précisions de l'IA (et est gardé par pcEtat) */
     const act = actions[+t.closest('.pc-ar').querySelector('input').dataset.i];
     t.oninput = () => { act.precisions = t.value.slice(0, 600); };
@@ -6631,6 +6647,16 @@ function pcAppliquer(choix, box, toutes){
       if(pcMat === a.matiere) pcMat = a.dans;
       lot.defaire.push(() => { pcFusionDefaire(a.matiere, f); });
       matNotes.push('matière « ' + a.matiere + ' » fusionnée dans « ' + a.dans + ' »');
+    } else if(a.type === 'deplacer'){   /* v244 */
+      if(!existe(a.dans)){ ignorees++; continue; }
+      const groupes = {};
+      for(const id of a.ids){ const c = CARDS.find(k => k.id === id); if(!c) continue; const src = c.matiere || 'Sans matière'; if(src === a.dans) continue; (groupes[src] = groupes[src] || []).push(id); }
+      const tous = Object.values(groupes).reduce((n, l) => n + l.length, 0);
+      if(!tous){ ignorees++; continue; }
+      for(const src of Object.keys(groupes)) pcDeplacerCartes(groupes[src], a.dans);
+      clearEmptyMatiereIfHasCards(a.dans); matChange = true;
+      lot.defaire.push(() => { for(const src of Object.keys(groupes)){ const ids = groupes[src].filter(id => CARDS.some(c => c.id === id)); if(ids.length){ addEmptyMatiere(src); pcDeplacerCartes(ids, src); clearEmptyMatiereIfHasCards(src); } } });
+      matNotes.push(tous + ' carte' + (tous > 1 ? 's' : '') + ' déplacée' + (tous > 1 ? 's' : '') + ' vers « ' + a.dans + ' »');
     } else if(a.type === 'archiver'){
       if(!existe(a.matiere) || archivee(a.matiere) === a.archive){ ignorees++; continue; }
       toggleArchiveMatiere(a.matiere);
@@ -7177,6 +7203,7 @@ function pcActionValide(a){
   if(a.type === 'fusionner') return s(a.matiere) && s(a.dans);
   if(a.type === 'archiver') return s(a.matiere) && typeof a.archive === 'boolean';
   if(a.type === 'supprimer_matiere') return s(a.matiere);
+  if(a.type === 'deplacer') return s(a.dans) && Array.isArray(a.ids) && a.ids.length > 0 && a.ids.every(s) && Array.isArray(a.de) && a.de.every(s) && Array.isArray(a.ex) && a.ex.every(s);
   if(a.type === 'pause') return s(a.id) && typeof a.pausee === 'boolean';
   return false;
 }
@@ -10645,6 +10672,19 @@ function ppAddCard(){
   if(n) n.textContent = ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert';
 }
 
+/* v243 : dans « Vérifie tes cartes », la matière est modifiable (feuille avec les matières existantes + « Nouvelle matière »). */
+let ppSubjApercu = false;
+function ppApercuMatSheet(){
+  if(!iaCartesPreview) return;
+  ppSubjApercu = false;
+  const l = getMatieresActives(), cur = iaCartesPreview.matiere;
+  ppSheet(`<div class="pp-grab"></div><h2>Matière des cartes</h2><div class="pp-pills">${l.map((m, i) => `<button class="pp-pill ${m === cur ? 'on' : ''}" style="--c:${couleurMatiere(m)}" onclick="ppApercuMatChoisir(${i})"><span class="pp-dot" style="background:${couleurMatiere(m)}"></span>${ppEsc(m)}</button>`).join('')}<button class="pp-pill pp-pill-new" onclick="ppSubjApercu=true;ppSubjSheet()">${PP_IC.plus.replace(/22/g, '16')}Nouvelle matière</button></div>`);
+}
+function ppApercuMatChoisir(i){
+  const l = getMatieresActives(); if(!l[i] || !iaCartesPreview) return;
+  iaCartesPreview.matiere = l[i];
+  ppSheetClose(); renderAdd();
+}
 /* ---- aperçu des cartes générées ---- */
 function ppViewApercu(){
   const { matiere: s, cartes: cs } = iaCartesPreview;
@@ -10656,7 +10696,7 @@ function ppViewApercu(){
   return `<h2 class="pp-t">Vérifie tes cartes</h2>
   <div class="pp-src"><i>${PP_IC.spark}</i><span><b>${n} carte${n > 1 ? 's' : ''} générée${n > 1 ? 's' : ''}</b> pour <b>${ppEsc(s)}</b>. Relis, modifie ou complète avant d'ajouter.</span></div>
   ${ppMsgBlock()}
-  <div class="pp-pvbar"><span>Matière : <b>${ppEsc(s)}</b></span><span class="pp-pvg"><button class="pp-invc ${all ? 'on' : ''}" onclick="toggleToutInverserPreview()">${PP_IC.swap}Tout inverser</button><button class="pp-invc ${allEc ? 'on' : ''}" onclick="toggleToutEcritePreview()">${PP_IC.edit.replace(/17/g, '14')}Tout à écrire</button></span></div>
+  <div class="pp-pvbar"><button type="button" class="pp-invc pp-pvmat" onclick="ppApercuMatSheet()" aria-label="Changer de matière">Matière : <b>${ppEsc(s)}</b>${PP_IC.edit.replace(/17/g, '14')}</button><span class="pp-pvg"><button class="pp-invc ${all ? 'on' : ''}" onclick="toggleToutInverserPreview()">${PP_IC.swap}Tout inverser</button><button class="pp-invc ${allEc ? 'on' : ''}" onclick="toggleToutEcritePreview()">${PP_IC.edit.replace(/17/g, '14')}Tout à écrire</button></span></div>
   ${cs.map((c, i) => `<div class="pp-pv"><div class="pp-pvh"><b>Carte ${i + 1}</b><button class="pp-invc ${c.inversible ? 'on' : ''}" onclick="toggleInversiblePreview(${i})">${PP_IC.swap}Inverser</button><button class="pp-invc ${c.ecrite ? 'on' : ''}" onclick="toggleEcritePreview(${i})">${PP_IC.edit.replace(/17/g, '14')}À écrire</button><button class="pp-ib" aria-label="Supprimer" onclick="supprimerCartePreview(${i})">${PP_IC.trash}</button></div>${ppChampImg('pv:' + i, 'q', `<textarea oninput="modifierCartePreview(${i}, 'question', this.value)">${ppEsc(c.question)}</textarea>`)}${ppChampImg('pv:' + i, 'r', `<textarea class="pp-a" oninput="modifierCartePreview(${i}, 'reponse', this.value)">${ppEsc(c.reponse)}</textarea>`)}</div>`).join('')}
   <button class="pp-dash" onclick="ajouterCartePreviewVide()">+ Ajouter une carte manuellement</button>
   <hr class="pp-hr1"><p class="pp-sub2">Dis-moi ce que tu veux</p><p class="pp-hint">Un texte, un fichier ou une demande : l'IA comprend.</p>
@@ -10763,7 +10803,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v242';
+const PP_APP_VERSION = 'v244';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -10951,6 +10991,8 @@ function ppMkSubj(){
   const fin = (n) => {
     addEmptyMatiere(n); recalcPlanning(); saveLocalPlanning();
     sauverBrouillonIA(); iaBrouillon.matiere = n;
+    if(ppSubjApercu && iaCartesPreview) iaCartesPreview.matiere = n;   /* v243 */
+    ppSubjApercu = false;
     render(); renderAdd(); if(activeTab === 'planning') renderPlanning(); ppToast('Matière « ' + n + ' » créée');
   };
   sauverBrouillonIA();
