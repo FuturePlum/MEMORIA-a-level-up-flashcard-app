@@ -246,6 +246,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Recherche des images...':'Searching for images...',
     'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','1. Touche ici · 2. « Créer une clé API » · 3. Colle-la ci-dessous.':'1. Tap here · 2. “Create API key” · 3. Paste it below.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
+  Object.assign(D,{'Mémoire':'Memory','Garder':'Keep','Supprimer cette ligne ?':'Delete this line?','Ex. Physique':'E.g. Physics','ex. espagnol':'e.g. Spanish','Suggestions précédentes':'Previous suggestions','Suggestions suivantes':'Next suggestions','Supprimer cette ligne':'Delete this line'});   /* v228 */
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
     'Renommer la matière':'Rename subject','Nouveau nom':'New name','Renommer':'Rename','Supprimer tout':'Delete all','Une de tes photos :':'One of your photos:','Une autre image…':'Another image…','Fermer':'Close',
     'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test',
@@ -454,7 +455,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     return m ? m[1]+' '+LOT_PROF[m[2]]+(/\(carte/.test(x)?' (card edited in the meantime)':'') : null;
   }
   RULES.push([/^[^·]+(?: · [^·]+)*$/,function(t){ var a=t.split(' · '), o=[]; for(var i=0;i<a.length;i++){ var z=morceauProf(a[i]); if(z===null) return t; o.push(z); } return o.join(' · '); }]);
-  var NOATT={SCRIPT:1,STYLE:1,NOSCRIPT:1}, SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,NOSCRIPT:1}, ATTRS=['placeholder','title','aria-label','alt'];
+  var NOATT={SCRIPT:1,STYLE:1,NOSCRIPT:1}, SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1,NOSCRIPT:1}, ATTRS=['placeholder','title','aria-label','alt','data-ph'];
   function tr(s){
     if(typeof s!=='string') return s; var t=s.trim(); if(!t) return s;
     var e=D[t]; if(e!==undefined) return s.replace(t,e);
@@ -463,7 +464,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   }
   function libre(el){ return !(el.closest&&el.closest('[contenteditable],[data-notr]')); }
   function txt(n){ var p=n.parentNode; if(!p||SKIP[p.nodeName]) return; var v=tr(n.nodeValue); if(v!==n.nodeValue&&libre(p)) n.nodeValue=v; }
-  function att(el){ for(var i=0;i<ATTRS.length;i++){ var a=el.getAttribute&&el.getAttribute(ATTRS[i]); if(a){ var v=tr(a); if(v!==a&&libre(el)) el.setAttribute(ATTRS[i],v); } } }
+  function att(el){ for(var i=0;i<ATTRS.length;i++){ var a=el.getAttribute&&el.getAttribute(ATTRS[i]); if(a){ var v=tr(a); if(v!==a&&(libre(el)||(el.classList&&el.classList.contains('pp-ce')))) el.setAttribute(ATTRS[i],v); } } }   /* v228 : les champs .pp-ce (contenteditable) traduisent leur exemple et leur étiquette, jamais leur contenu */
   function arbre(n){
     if(n.nodeType===3){ txt(n); return; }
     if(n.nodeType!==1||NOATT[n.nodeName]) return;
@@ -3040,7 +3041,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
   padding-top:env(safe-area-inset-top,0px);transform:translateY(102%);border-radius:28px 28px 0 0;border-top:2px solid var(--cream);box-shadow:0 -24px 60px rgba(0,0,0,.55)}
 #pc-layer.open{display:flex;transform:none;transition:transform .55s var(--pce)}
 #pc-layer.closing{display:flex;transform:translateY(102%);transition:transform .4s cubic-bezier(.5,0,.75,.3)}
-#pc-layer.ready{transform:none;transition:top .3s cubic-bezier(.2,.8,.2,1),height .3s cubic-bezier(.2,.8,.2,1),transform .45s var(--ease-press)}
+#pc-layer.ready{transform:none;transition:transform .45s var(--ease-press)}   /* v228 : plus de transition sur top/height : elles décalaient la feuille du clavier (saut vers le haut, rebond à la fermeture) */
 #pc-layer .pp-grab{margin:8px auto 0;flex:none;position:relative}
 #pc-layer .pp-grab::before{content:'';position:absolute;left:-90px;right:-90px;top:-10px;bottom:-14px}
 .pc-in{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;max-width:560px;margin:0 auto}
@@ -3082,7 +3083,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 #pc-sugg::-webkit-scrollbar{display:none}
 .pc-chip{flex:none;padding:8px 14px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font-weight:700;font-size:13px;transition:transform .35s var(--ease-press)}
 .pc-chip:active,.pc-chip.js-press{transform:scale(.93);transition-duration:.07s}
-.pc-input{display:flex;gap:8px;align-items:center;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));border-top:1.5px solid var(--line);background:var(--bg);transition:padding .3s cubic-bezier(.2,.8,.2,1)}
+.pc-input{display:flex;gap:8px;align-items:center;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));border-top:1.5px solid var(--line);background:var(--bg)}
 #pc-layer.kb .pc-input{padding-bottom:10px}
 .pc-sq{width:40px;height:40px;border-radius:13px;background:var(--panel);border:1.5px solid var(--line);display:grid;place-items:center;flex:none;color:var(--cream);transition:transform var(--t-out) var(--ease-press)}
 .pc-sq:active,.pc-sq.js-press{transform:scale(.92);transition-duration:var(--t-in)}
@@ -3099,7 +3100,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pc-add{display:block;margin-top:8px;padding:0;border:0;background:none;color:var(--muted);font:700 12.5px var(--font-sans)}
 .pc-add:active{color:var(--orange)}
 .pc-info-n{font-size:12px;font-weight:600;opacity:.8}
-.pc-new{margin-left:auto}
+.pc-new{margin-left:0}
 .pc-new,.pc-more-b{transition:transform .35s var(--ease-press)}
 .pc-new:active,.pc-new.js-press,.pc-more-b:active,.pc-more-b.js-press{transform:scale(.9);transition-duration:.07s}
 .pc-nokey,.pc-act{align-self:stretch;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:var(--cream);font-size:14px;animation:pcin .5s var(--pce) backwards}
@@ -3242,6 +3243,109 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 }
 @media (min-width:900px) and (min-height:480px) and (hover:hover) and (pointer:fine){
   :is(.pc-pill,.pc-chip,.pc-sb,.pch-it,.pc-new,.pc-more-b,.pc-sq,.pc-send):not(:disabled):hover{filter:brightness(1.12)}
+}
+/* ===== v228 : prototype Prof Chromebook + champ sans autofill + bouton « Nouvelle conversation » =====
+   Téléphone : seuls changent le bouton « Nouvelle conversation » (pastille orange, tiroir « Annuler »), l'animation de changement de conversation et le clavier.
+   Grand écran : la fenêtre de discussion passe à GAUCHE (collée à la barre de l'app), la colonne à DROITE (matières, conversations, Mémoire / langue). */
+@keyframes pcsoft{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pcnew{0%{transform:translateY(3px) scale(.96);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 var(--orange-d)}45%{transform:translateY(-2px) scale(1.04);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 5px 0 var(--orange-d)}100%{transform:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 0 var(--orange-d)}}
+@keyframes pcnewic{0%{transform:scale(.7) rotate(-14deg)}50%{transform:scale(1.25) rotate(6deg)}100%{transform:none}}
+/* champ ppCE (voir ppCEHtml) */
+.pp-ce{display:block;box-sizing:border-box;outline:0;white-space:pre;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-user-select:text;user-select:text;cursor:text;-webkit-tap-highlight-color:transparent}
+.pp-ce::-webkit-scrollbar{display:none}
+.pp-ce:empty::before{content:attr(data-ph);color:var(--c-ph);pointer-events:none}
+.pp-ce.dis{opacity:.45;pointer-events:none}
+#pc-input.pp-ce{line-height:37px}
+.pch-pied #pcn-in.pp-ce{line-height:41px}
+#pc-menu .pp-ce{margin:0 8px 6px;height:40px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--cream);font:500 16px/37px var(--font-sans);padding:0 12px}
+:root:root .pp-sheet .pp-ce.pp-q{width:100%;padding:13px 18px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:16px;line-height:1.3;margin:0 0 14px;transition:border-color .2s}
+:root:root .pp-sheet .pp-ce.pp-q:focus{border-color:var(--yellow-b)}
+/* changement de conversation : le contenu s'efface pendant le changement */
+#pc-feed,#pc-sugg{transition:opacity .18s ease}
+#pc-layer:not(.sink) #pc-feed,#pc-layer:not(.sink) #pc-sugg{transition:opacity .35s ease}
+#pc-layer.sink #pc-feed,#pc-layer.sink #pc-sugg{opacity:0}
+/* bouton « Nouvelle conversation » : pastille orange 3D (même langage que « Envoyer ») + tiroir « Annuler » */
+.pc-bar{position:relative;z-index:4}
+.pc-newwrap{position:relative;margin-left:auto;z-index:4;flex:none}
+.pc-bar .pc-new{position:relative;z-index:2;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:44px;height:36px;padding:0;margin:0;border:0;border-radius:13px;background:var(--orange);color:#1a0d08;font-weight:800;font-size:14px;letter-spacing:-.01em;white-space:nowrap;--d:3px;--sc:var(--orange-d);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 0 var(--orange-d);transition:transform .35s var(--ease-press),box-shadow .25s var(--ease-press),filter .2s}
+.pc-bar .pc-new:active,.pc-bar .pc-new.js-press{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 var(--orange-d);transition-duration:.07s}
+.pc-new-t{display:none}
+.pc-new.go{animation:pcnew .55s var(--pce)}
+.pc-new.go svg{animation:pcnewic .6s var(--pce)}
+.pc-undo{position:absolute;right:-46px;top:calc(100% + 7px);z-index:1;height:30px;padding:0 14px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:11px;background:var(--panel);border:1.5px solid var(--line);color:var(--orange);font:800 12.5px var(--font-sans);letter-spacing:-.005em;white-space:nowrap;box-shadow:0 3px 0 var(--c-edge);opacity:0;pointer-events:none;transform:translateY(-38px) scaleX(.92);transition:transform .32s cubic-bezier(.5,0,.75,.3),opacity .16s ease .12s,box-shadow .2s}
+.pc-undo.on{opacity:1;pointer-events:auto;transform:none;transition:transform .5s var(--ease-press),opacity .12s ease}
+.pc-undo.on:active{transform:translateY(3px);box-shadow:0 0 0 var(--c-edge);transition-duration:.07s}
+@media (prefers-reduced-motion:reduce){.pc-undo,.pc-undo.on{transition-duration:.01ms!important}.pc-new.go,.pc-new.go svg{animation:none}}
+.pc-suggw{position:relative}
+.pc-arr{display:none}
+.pc-ic-m{display:contents}.pc-ic-d{display:none}
+@media (min-width:900px) and (min-height:480px){
+  #pc-layer{padding:24px 10px 24px 8px}
+  .pc-in{grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:minmax(0,1fr);column-gap:22px}
+  .pc-win{order:1;position:relative;transition:transform .44s var(--ease-press),box-shadow .44s var(--ease-press)}
+  #pc-layer.sink .pc-win{transform:translate(9px,9px);box-shadow:0 0 0 0 var(--orange);transition-duration:.2s,.2s}
+  @media (prefers-reduced-motion:reduce){.pc-win,#pc-layer.sink .pc-win{transition-duration:.01ms!important}}
+  .pc-side{order:2;overflow-y:auto;scrollbar-width:none;padding:2px 9px 9px 2px}
+  .pc-side::-webkit-scrollbar{display:none}
+  /* colonne de droite */
+  .pc-sc h3{display:flex;align-items:center;justify-content:space-between}
+  .pc-sc h3 small{font-size:12px;font-weight:800;color:var(--muted);background:var(--bg);border-radius:99px;padding:2px 9px;letter-spacing:0;text-transform:none}
+  .pc-sc h3 small:empty{display:none}
+  #pc-smats{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px}
+  #pc-smats .pc-pill{width:auto;text-align:center;border-radius:99px;padding:6px 13px;font-size:13.5px;background:var(--bg)}
+  #pc-smats .pc-pill.on{background:var(--c)}
+  .pc-sc.grow{flex:1;min-height:0;display:flex;flex-direction:column}
+  .pc-sc.grow #pc-shist{flex:1;min-height:0;display:flex;flex-direction:column}
+  .pc-list{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;margin:0 -4px;padding:0 4px}
+  #pc-shist .pch-it{position:relative;text-align:left;display:flex;flex-direction:column;gap:2px;padding:8px 32px 8px 11px;border-radius:12px;background:var(--bg);border:1.5px solid var(--line);flex:none;cursor:pointer;transition:transform .35s var(--ease-press),border-color .2s,filter .2s;animation:pcin .4s var(--pce) backwards}
+  #pc-shist .pch-it:active{transform:scale(.97);transition-duration:.07s}
+  #pc-shist .pch-it:hover{border-color:color-mix(in srgb,var(--orange) 60%,var(--line))}
+  #pc-shist .pch-it span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pc-shist .pch-it .x,.pcn-l .x{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:8px;display:grid;place-items:center;color:var(--muted);opacity:0;background:none;border:0;padding:0;transition:opacity .2s,color .2s}
+  #pc-shist .pch-it:hover .x,#pc-shist .pch-it:focus-within .x{opacity:1}
+  #pc-shist .pch-it .x:hover{color:var(--pink)}
+  .pch-it.conf,.pcn-l.conf{cursor:default;gap:8px;border-color:color-mix(in srgb,var(--pink) 60%,var(--line))!important;animation:pcin .25s var(--pce)}
+  .pch-it.conf{padding:9px 11px!important}
+  .pc-cq{font-weight:800;font-size:13px;color:var(--cream)}
+  .pc-cf{display:flex;gap:6px}
+  .pc-cf button{flex:1;height:30px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel);color:var(--cream);font:800 12.5px var(--font-sans);box-shadow:0 2px 0 var(--c-edge);transition:transform .3s var(--ease-press),box-shadow .2s}
+  .pc-cf button:active{transform:translateY(2px);box-shadow:0 0 0 var(--c-edge);transition-duration:.07s}
+  .pc-cf .dng{color:var(--pink)}
+  .pc-sc.rows{padding:5px 6px}
+  .pc-row{display:flex;align-items:center;gap:11px;width:100%;min-height:46px;padding:0 9px;border:0;background:none;border-radius:14px;text-align:left;font:700 14px var(--font-sans);color:var(--cream);transition:background .2s,transform .35s var(--ease-press)}
+  .pc-row + .pc-row{box-shadow:0 -1px 0 var(--line)}
+  .pc-row:hover{background:var(--bg)}
+  .pc-row:active{transform:scale(.97);transition-duration:.07s}
+  .pc-row .ic{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--bg);color:var(--muted)}
+  .pc-row span.t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pc-row em{font-style:normal;font-size:12.5px;font-weight:800;color:var(--muted);background:var(--bg);border-radius:99px;padding:2px 9px}
+  .pc-row .ch{color:var(--muted);flex:none}
+  /* en-tête : « Nouvelle conversation » en toutes lettres, plus de ⋯ (tout est dans la colonne) */
+  .pc-bar .pc-new{width:auto;height:38px;padding:0 16px 0 13px}
+  .pc-new-t{display:inline}
+  .pc-undo{left:6px;right:6px}
+  .pc-more-b{display:none}
+  .pc-ic-m{display:none}.pc-ic-d{display:contents}
+  /* suggestions : une seule rangée qui défile */
+  #pc-sugg{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;cursor:grab}
+  #pc-sugg.drag{cursor:grabbing;scroll-behavior:auto}
+  #pc-sugg.fr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
+  #pc-sugg.fl{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px);mask-image:linear-gradient(90deg,transparent,#000 44px)}
+  #pc-sugg.fl.fr{-webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent)}
+  .pc-chip{white-space:nowrap;animation:pcin .5s var(--pce) backwards;animation-delay:calc(var(--k)*40ms)}
+  .pc-arr{display:grid;position:absolute;top:2px;width:34px;height:34px;border-radius:11px;z-index:2;opacity:0;pointer-events:none;transition:opacity .2s,transform .35s var(--ease-press)}
+  .pc-arr.l{left:14px}.pc-arr.r{right:14px}
+  .pc-arr.on{opacity:1;pointer-events:auto}
+  #pc-input.pp-ce{line-height:41px}
+  /* écrans par-dessus la conversation (Mémoire, historique, menu, avis) : DANS la fenêtre, jamais en dehors */
+  .pc-hist{inset:0;border-radius:0;border:0;box-shadow:none;padding-top:0;background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--orange) 12%,transparent),transparent 55%),var(--panel)}
+  .pc-hist .pc-bar{border-bottom:1.5px solid var(--line);max-width:none;width:100%;margin:0;padding:14px 20px}
+  .pch-corps{max-width:640px;padding:22px 28px}
+  .pch-pied{max-width:640px;padding:12px 28px 20px}
+  .pcn-l{background:var(--bg);position:relative}
+  .pcn-l.conf{flex-direction:column;align-items:stretch;padding:11px 14px}
+  .pc-info{inset:0;border-radius:0;align-items:center}
+  #pc-menu{top:70px;right:18px;max-width:320px}
 }
 </style>
 <style id="fci-css">
@@ -5267,20 +5371,23 @@ let pcOuvert = false, pcMat = '*', pcDerniere = '*', pcListe = [], pcUtilises = 
 const PC_TOUTES = '*';
 function pcEl(id){ return document.getElementById(id); }
 function pcNom(m){ return m === PC_TOUTES ? 'Toutes' : m; }
+const PC_UNDO_IC = ppSvg('<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>', 14);   /* v228 : « Annuler » après une nouvelle conversation */
+const PC_CAM_IC = ppSvg('<path d="M4 8a2 2 0 0 1 2-2h1.5l1-2h7l1 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/>', 21);   /* v228 : grand écran, appareil photo */
 const PC_NEW_IC = ppSvg('<path d="M20 14.5a2 2 0 0 1-2 2H9l-4.5 3.6V9.5a2 2 0 0 1 2-2H13"/><path d="M18 2.5v6M15 5.5h6"/>', 20);   /* v227 : bulle de discussion + petit plus au-dessus à droite */
 function pcEnsure(){
   if(pcEl('pc-layer')) return;
   const v = document.createElement('div'); v.id = 'pc-veil'; v.className = 'pp-veil'; document.body.appendChild(v);
   const l = document.createElement('div'); l.id = 'pc-layer'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-modal', 'true'); l.setAttribute('aria-hidden', 'true');
   l.innerHTML = `<div class="pp-grab"></div><div class="pc-in">
-    <aside class="pc-side" id="pc-side"><div class="pc-sc"><h3>Matière</h3><div id="pc-smats"></div></div><div class="pc-sc"><h3>Conversations passées</h3><div id="pc-shist"></div></div><div class="pc-sc"><h3>Ce que Prof retient</h3><div id="pc-snote"></div></div><div class="pc-sc" id="pc-slang"></div></aside>
-    <div class="pc-win">
-    <div class="pc-bar pc-stg" style="--i:0"><button class="pp-back" id="pc-back" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><i>${pcEtoiles(18)}</i><span>${escapeHtml(PP_COACH_NOM)}</span></div><button class="pp-back pc-new" id="pc-new" aria-label="Nouvelle conversation" type="button">${PC_NEW_IC}</button><button class="pp-back pc-more-b" id="pc-more" aria-label="Menu" type="button">${PP_DOTS_H}</button></div>
+    <aside class="pc-side" id="pc-side"><div class="pc-sc"><h3>Matière</h3><div id="pc-smats"></div></div><div class="pc-sc grow"><h3><span>Conversations passées</span><small id="pc-hn" data-notr></small></h3><div id="pc-shist"></div></div><div class="pc-sc rows" id="pc-srows"></div></aside>
+    <div class="pc-win" id="pc-win">
+    <div class="pc-bar pc-stg" style="--i:0"><button class="pp-back" id="pc-back" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><i>${pcEtoiles(18)}</i><span>${escapeHtml(PP_COACH_NOM)}</span></div><div class="pc-newwrap"><button class="pp-back pc-new" id="pc-new" aria-label="Nouvelle conversation" type="button">${PC_NEW_IC}<span class="pc-new-t">Nouvelle conversation</span></button><button class="pc-undo" id="pc-undo" type="button" tabindex="-1">${PC_UNDO_IC}Annuler</button></div><button class="pp-back pc-more-b" id="pc-more" aria-label="Menu" type="button">${PP_DOTS_H}</button></div>
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
-    <div id="pc-sugg" class="pc-stg" style="--i:3"></div>
-    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><button class="pc-sq" id="pc-photo" aria-label="Photo">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><input id="pc-input" placeholder="Pose ta question…" enterkeyhint="send" autocomplete="off" autocorrect="off" spellcheck="false"><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
+    <div class="pc-suggw pc-stg" style="--i:3"><button class="pp-back pc-arr l" id="pc-al" type="button" aria-label="Suggestions précédentes">${ppSvg('<path d="M15 6l-6 6 6 6"/>', 18)}</button><div id="pc-sugg"></div><button class="pp-back pc-arr r" id="pc-ar" type="button" aria-label="Suggestions suivantes">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</button></div>
+    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences' })}<button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
   document.body.appendChild(l);
+  ppCEScan(l);   /* v228 : le champ de saisie est un champ ppCE (pas de barre d'autofill) */
   const inp = pcEl('pc-input'), sendBtn = pcEl('pc-send');
   pcEl('pc-back').onclick = ppCoachFermer;
   pcEl('pc-photo').onclick = () => ppCameraOuvrir('pc-file');
@@ -5289,8 +5396,10 @@ function pcEnsure(){
   pcEl('pc-doc').addEventListener('change', pcPhotoChoisie);
   pcEl('pc-input').addEventListener('paste', pcCollerTexte);   /* v224 : un long texte collé devient une pièce jointe */
   pcEl('pc-more').onclick = () => pcMenu(pcMenuMode ? '' : 'liste');
-  pcEl('pc-new').onclick = () => pcMenu(pcMenuMode === 'confirme' ? '' : 'confirme');   /* v227 : « Nouvelle conversation » sort du menu ⋯ et vit à côté des trois points */
-  l.addEventListener('pointerdown', e => { if(pcMenuMode && !e.target.closest('#pc-menu,#pc-more,#pc-new')) pcMenu(''); });
+  pcEl('pc-new').onclick = pcNouvelle;   /* v228 : plus de confirmation ; la conversation est rangée tout de suite, « Annuler » reste 5 s sous le bouton */
+  pcEl('pc-undo').onclick = () => { const f = pcUndoFn; pcUndoHide(); if(f) f(); };
+  l.addEventListener('pointerdown', e => { if(pcMenuMode && !e.target.closest('#pc-menu,#pc-more,#pc-new,#pc-undo')) pcMenu(''); });
+  pcSuggInit();
   sendBtn.addEventListener('pointerdown', e => e.preventDefault()); /* garde le clavier ouvert à l'envoi */
   sendBtn.onclick = () => { pcEnvoyer(inp.value); sendBtn.classList.remove('fly'); void sendBtn.offsetWidth; sendBtn.classList.add('fly'); };
   inp.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); pcEnvoyer(inp.value); } });
@@ -5667,9 +5776,10 @@ function pcCarnetOuvrir(){
   if(!pcOuvert) return;
   pcCarnetFerme(); pcHistFerme();
   const h = document.createElement('div'); h.id = 'pc-carnet'; h.className = 'pc-hist';
-  h.innerHTML = `<div class="pc-bar"><button class="pp-back" id="pcn-back" type="button" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><span>Ce que Prof retient</span></div></div><div id="pcn-corps" class="pch-corps"></div><div id="pcn-pied" class="pch-pied"><p id="pcn-info"></p><input id="pcn-in" maxlength="${CARNET_LIGNE_MAX}" placeholder="ex. préfère des exemples concrets" autocomplete="off" enterkeyhint="done"><button id="pcn-add" class="pcn-add" type="button">Ajouter</button></div>`;
+  h.innerHTML = `<div class="pc-bar"><button class="pp-back" id="pcn-back" type="button" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><span>${ppWide() ? 'Mémoire' : 'Ce que Prof retient'}</span></div></div><div id="pcn-corps" class="pch-corps"></div><div id="pcn-pied" class="pch-pied"><p id="pcn-info"></p>${ppCEHtml({ id: 'pcn-in', ph: 'ex. préfère des exemples concrets', max: CARNET_LIGNE_MAX, enter: 'done', cap: 'sentences' })}<button id="pcn-add" class="pcn-add" type="button">Ajouter</button></div>`;
   ['touchstart', 'mousedown'].forEach(k => h.addEventListener(k, e => e.stopPropagation(), { passive: true })); /* le glissé de fermeture de Prof ne doit pas s'activer ici */
-  pcEl('pc-layer').appendChild(h);
+  pcHote().appendChild(h);
+  ppCEScan(h); pcPendN = -1; pcUndoHide();
   pcEl('pcn-back').onclick = () => pcCarnetFerme(true);
   const inp = pcEl('pcn-in'), btn = pcEl('pcn-add');
   const ajoute = () => {
@@ -5693,10 +5803,16 @@ function pcCarnetDessine(){
   intro.textContent = 'Des notes courtes que Prof lit avant chaque réponse, pour s\u2019adapter à ta façon de réviser.';
   c.appendChild(intro);
   l.forEach((t, i) => {
+    if(ppWide() && i === pcPendN){   /* v228 : grand écran, confirmation sur place (comme pour les conversations) */
+      const q = document.createElement('div'); q.className = 'pcn-l conf';
+      q.innerHTML = '<span class="pc-cq">Supprimer cette ligne ?</span><div class="pc-cf"><button type="button" data-a="non">Garder</button><button type="button" class="dng" data-a="oui">Supprimer</button></div>';
+      q.querySelectorAll('button').forEach(bt => bt.onclick = () => { if(bt.dataset.a === 'oui') pcCarnetSupprime(i); pcPendN = -1; pcCarnetDessine(); });
+      c.appendChild(q); return;
+    }
     const r = document.createElement('div'); r.className = 'pcn-l';
     const sp = document.createElement('span'); sp.textContent = t;
     const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Supprimer cette ligne'); b.textContent = '\u00d7';
-    b.onclick = () => { pcCarnetSupprime(i); pcCarnetDessine(); };
+    b.onclick = () => { if(ppWide()){ pcPendN = i; pcCarnetDessine(); return; } pcCarnetSupprime(i); pcCarnetDessine(); };
     r.appendChild(sp); r.appendChild(b); c.appendChild(r);
   });
   info.textContent = plein ? 'Le carnet est plein (' + CARNET_MAX + ' lignes). Supprime une ligne pour en ajouter.' : l.length + '/' + CARNET_MAX + ' lignes · ' + CARNET_LIGNE_MAX + ' caractères maximum par ligne';
@@ -5714,7 +5830,7 @@ function pcHistOuvrir(){
   const h = document.createElement('div'); h.id = 'pc-hist'; h.className = 'pc-hist';
   h.innerHTML = `<div class="pc-bar"><button class="pp-back" id="pch-back" type="button" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><span id="pch-titre">Conversations passées</span></div></div><div id="pch-corps" class="pch-corps"></div><div id="pch-pied" class="pch-pied"></div>`;
   ['touchstart', 'mousedown'].forEach(k => h.addEventListener(k, e => e.stopPropagation(), { passive: true })); /* le glissé de fermeture de Prof ne doit pas s'activer ici */
-  pcEl('pc-layer').appendChild(h);
+  pcHote().appendChild(h);
   pcHistListe();
 }
 function pcHistListe(){
@@ -5838,7 +5954,7 @@ function pcInfo(){
   const d = document.createElement('div'); d.id = 'pc-info'; d.className = 'pc-info';
   d.innerHTML = `<div class="pc-infoc"><b>Avant de commencer</b><p>Tes cartes sont envoyées à Google (Gemini) pour répondre.</p><button class="pp-cta" type="button">Compris</button></div>`;
   d.querySelector('button').onclick = () => { ppEcrire('coach-info-vue', 'true'); d.classList.add('out'); setTimeout(() => d.remove(), 300); };
-  pcEl('pc-layer').appendChild(d);
+  pcHote().appendChild(d);
 }
 
 /* ---------- menu ⋯ : nouvelle conversation, langue ---------- */
@@ -5854,7 +5970,7 @@ function pcMenu(mode){
     return;
   }
   clearTimeout(pcMenuT);
-  if(!m){ m = document.createElement('div'); m.id = 'pc-menu'; pcEl('pc-layer').appendChild(m); }
+  if(!m){ m = document.createElement('div'); m.id = 'pc-menu'; pcHote().appendChild(m); }
   m.classList.remove('out');
   let h = '';
   if(mode === 'liste'){
@@ -5864,9 +5980,9 @@ function pcMenu(mode){
   } else if(mode === 'confirme'){
     h = `<p>Commencer une nouvelle conversation ? L’actuelle sera rangée dans « Conversations passées ».</p><div class="pc-mb"><button type="button" data-a="non">Annuler</button><button type="button" data-a="oui">Nouvelle</button></div>`;
   } else if(mode === 'langue'){
-    h = `<p>Quelle langue ?</p><input id="pc-lang-in" maxlength="40" placeholder="ex. espagnol" autocomplete="off" autocapitalize="none" spellcheck="false"><div class="pc-mb"><button type="button" data-a="non">Annuler</button><button type="button" data-a="ok">Valider</button></div>`;
+    h = `<p>Quelle langue ?</p>${ppCEHtml({ id: 'pc-lang-in', ph: 'ex. espagnol', max: 40, enter: 'done', cap: 'none' })}<div class="pc-mb"><button type="button" data-a="non">Annuler</button><button type="button" data-a="ok">Valider</button></div>`;
   }
-  m.innerHTML = h; m.classList.add('on');
+  m.innerHTML = h; m.classList.add('on'); ppCEScan(m);
   m.querySelectorAll('button').forEach(b => b.onclick = () => pcMenuAction(b.dataset.a));
   const li = pcEl('pc-lang-in'); if(li){ li.onkeydown = e => { if(e.key === 'Enter'){ e.preventDefault(); pcMenuAction('ok'); } }; setTimeout(() => li.focus(), 60); }
 }
@@ -6117,6 +6233,7 @@ async function pcEnvoyer(t, label){
   if(pcAttente || (!t && !photo)) return;
   if(!t) t = photo ? (pcPjType(photo) === 'photo' ? 'Explique-moi cette photo.' : pcPjType(photo) === 'colle' ? 'Résume ce texte.' : 'Résume ce document.') : '';
   if(!getGeminiKey()){ pcEtatSansCle(); return; }
+  pcUndoHide();   /* v228 : on écrit dans la nouvelle conversation, plus d'« Annuler » */
   const matiere = pcMat === PC_TOUTES ? null : pcMat;
   { const inp0 = pcEl('pc-input'); if(inp0 && label === undefined && inp0.value.trim() === t) inp0.value = ''; } /* envoi depuis le champ : on le vide ; en cas d'erreur le texte revient */
   if(pcMat !== pcDerniere){
@@ -6311,39 +6428,47 @@ function pcMarque(pop){ /* met à jour les classes sans recréer les boutons : l
 /* v227 : colonne de gauche de Prof (grand écran seulement, display:none sur téléphone) : conversations récentes, carnet, langue.
    Les matières sont dans #pc-smats (voir pcRenderPills). Rafraîchie à l'ouverture, après chaque rangement de conversation, à la fermeture des écrans « Conversations passées » / carnet et après une action du menu. */
 function pcSideMaj(){
-  const bh = pcEl('pc-shist'), bn = pcEl('pc-snote'), bl = pcEl('pc-slang'); if(!bh || !bn || !bl) return;
-  const idx = pcHistLire();
+  const bh = pcEl('pc-shist'), br = pcEl('pc-srows'); if(!bh || !br) return;
+  const idx = pcHistLire(), hn = pcEl('pc-hn');
+  if(hn) hn.textContent = idx.length ? String(idx.length) : '';
+  if(pcPendH && !idx.some(e => e.id === pcPendH)) pcPendH = '';
   bh.innerHTML = '';
   if(!idx.length){ const v = document.createElement('p'); v.className = 'pc-sv'; v.textContent = 'Aucune conversation rangée pour l\u2019instant.'; bh.appendChild(v); }
-  idx.slice(0, 4).forEach(e => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'pch-it';
-    const t = document.createElement('b'); t.textContent = e.t || 'Conversation';
-    const meta = [e.id === pcConvId ? 'En cours' : '', e.m ? pcNom(e.m) : '', e.n + (e.n > 1 ? ' messages' : ' message')].filter(Boolean);
-    const sp = document.createElement('span');
-    meta.forEach((x, i) => { if(i) sp.appendChild(document.createTextNode(' · ')); sp.appendChild(document.createTextNode(x)); });
-    b.appendChild(t); b.appendChild(sp);
-    b.onclick = () => { pcMenu(''); pcHistOuvrir(); pcHistLecture(e.id); };
-    bh.appendChild(b);
-  });
-  if(idx.length){
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'pc-sb';
-    b.appendChild(document.createTextNode('Tout voir')); const n = document.createElement('small'); n.textContent = ' (' + idx.length + ')'; n.setAttribute('data-notr', ''); b.appendChild(n);
-    b.onclick = () => { pcMenu(''); pcHistOuvrir(); };
-    bh.appendChild(b);
+  else {
+    const box = document.createElement('div'); box.className = 'pc-list';
+    idx.forEach((e, i) => {
+      if(e.id === pcPendH){   /* confirmation de suppression, sur place */
+        const c = document.createElement('div'); c.className = 'pch-it conf';
+        c.innerHTML = '<span class="pc-cq">Supprimer cette conversation ?</span><div class="pc-cf"><button type="button" data-a="non">Garder</button><button type="button" class="dng" data-a="oui">Supprimer</button></div>';
+        c.querySelectorAll('button').forEach(bt => bt.onclick = () => { if(bt.dataset.a === 'oui') pcHistSupprimer(e.id); pcPendH = ''; pcSideMaj(); });
+        box.appendChild(c); return;
+      }
+      const cur = e.id === pcConvId;
+      const it = document.createElement('div'); it.className = 'pch-it'; it.setAttribute('role', 'button'); it.tabIndex = 0;
+      if(pcSideVus.has(e.id)) it.style.animation = 'none'; else it.style.animationDelay = Math.min(i, 8) * 40 + 'ms';   /* seules les nouvelles lignes apparaissent en douceur */
+      const t = document.createElement('b'); t.textContent = e.t || 'Conversation';
+      const meta = [cur ? 'En cours' : '', e.m ? pcNom(e.m) : '', e.n + (e.n > 1 ? ' messages' : ' message')].filter(Boolean);
+      const sp = document.createElement('span');
+      meta.forEach((x, k) => { if(k) sp.appendChild(document.createTextNode(' · ')); sp.appendChild(document.createTextNode(x)); });
+      it.appendChild(t); it.appendChild(sp);
+      if(!cur){ const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.setAttribute('aria-label', 'Supprimer'); x.innerHTML = ppSvg('<path d="M6 6l12 12M18 6L6 18"/>', 14); it.appendChild(x); }
+      it.onclick = ev => { if(ev.target.closest('.x')){ pcPendH = e.id; pcSideMaj(); return; } if(!cur) pcReprendreAnim(e.id); };
+      it.onkeydown = ev => { if(ev.key === 'Enter' && ev.target === it) it.click(); };
+      box.appendChild(it);
+    });
+    idx.forEach(e => pcSideVus.add(e.id));
+    bh.appendChild(box);
   }
-  const notes = pcCarnetLire();
-  bn.innerHTML = '';
-  if(!notes.length){ const v = document.createElement('p'); v.className = 'pc-sv'; v.textContent = 'Aucune note pour l\u2019instant.'; bn.appendChild(v); }
-  notes.slice(0, 3).forEach(t => { const r = document.createElement('p'); r.className = 'pc-sn'; r.textContent = t; bn.appendChild(r); });
-  const bg = document.createElement('button'); bg.type = 'button'; bg.className = 'pc-sb';
-  bg.appendChild(document.createTextNode('Gérer')); const ng = document.createElement('small'); ng.textContent = ' (' + notes.length + '/' + CARNET_MAX + ')'; ng.setAttribute('data-notr', ''); bg.appendChild(ng);
-  bg.onclick = () => { pcMenu(''); pcCarnetOuvrir(); };
-  bn.appendChild(bg);
-  bl.innerHTML = '';
-  const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'pc-sb';
-  bb.textContent = pcLangue ? 'Arrêter la langue (' + pcLangue + ')' : 'Pratiquer une langue';
-  bb.onclick = () => pcMenuAction(pcLangue ? 'stop' : 'langue');
-  bl.appendChild(bb);
+  const nb = pcCarnetLire().length;
+  const row = (ico, label, badge, fn) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pc-row';
+    b.innerHTML = '<span class="ic">' + ppSvg(ico, 17) + '</span><span class="t">' + escapeHtml(label) + '</span>' + (badge ? '<em data-notr>' + escapeHtml(badge) + '</em>' : '') + ppSvg('<path d="M9 6l6 6-6 6"/>', 16, 'class="ch"');
+    b.onclick = fn; return b;
+  };
+  br.innerHTML = '';
+  br.appendChild(row('<path d="M7 3.5h10v17l-5-3.6-5 3.6z"/>', 'Mémoire', nb + '/' + CARNET_MAX, () => { pcUndoHide(); pcCarnetOuvrir(); }));
+  br.appendChild(row('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/>',
+    pcLangue ? 'Arrêter la langue (' + pcLangue + ')' : 'Pratiquer une langue', '', () => pcMenuAction(pcLangue ? 'stop' : 'langue')));
 }
 function pcChoisir(i){
   if(pcListe[i] === pcMat) return;
@@ -6389,17 +6514,18 @@ const PC_SUGG_VISIBLES = 7;
 let pcSuggTout = false;
 function pcRenderSugg(pos){
   const box = pcEl('pc-sugg');
-  const tout = pcSuggestions(), long = tout.length > PC_SUGG_VISIBLES + 1;
+  const tout = pcSuggestions(), long = !ppWide() && tout.length > PC_SUGG_VISIBLES + 1;   /* v228 : grand écran = une seule rangée qui défile, tout est là */
   const liste = (long && !pcSuggTout) ? tout.slice(0, PC_SUGG_VISIBLES) : tout;
   let h = liste.map((t, k) => `<button class="pc-chip" style="--k:${k}" data-l="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('');
   if(long) h += `<button class="pc-chip pc-plus" style="--k:${liste.length}" data-plus="${pcSuggTout ? 0 : 1}">${pcSuggTout ? 'Moins' : 'Plus…'}</button>`;
   box.innerHTML = h;
   box.querySelectorAll('.pc-chip').forEach(b => {
     if(b.dataset.plus !== undefined){ b.onclick = () => { pcSuggTout = b.dataset.plus === '1'; pcRenderSugg(pcSuggTout ? 'plus' : ''); }; return; }
-    b.onclick = () => pcEnvoyer(PC_MSG[b.dataset.l] || b.dataset.l, b.dataset.l);
+    b.onclick = () => { if(pcSuggMoved) return; pcEnvoyer(PC_MSG[b.dataset.l] || b.dataset.l, b.dataset.l); };
   });
   const nouv = pos === 'plus' ? box.children[PC_SUGG_VISIBLES] : null;
   if(nouv) box.scrollTo({ left: Math.max(0, nouv.offsetLeft - 14), behavior: 'smooth' }); else box.scrollTo({ left: 0 });
+  pcSuggFades(); requestAnimationFrame(pcSuggFades);
 }
 /* le calque suit la zone réellement visible (clavier ouvert) et garde les derniers messages en vue */
 function pcPin(ms){ cancelAnimationFrame(pcKbRaf); const t0 = performance.now(), f = pcEl('pc-feed'); (function s(){ f.scrollTop = f.scrollHeight; if(performance.now() - t0 < ms) pcKbRaf = requestAnimationFrame(s); })(); }
@@ -6410,16 +6536,92 @@ function pcFit(){
   if(h === pcLastH && t === pcLastT) return; pcLastH = h; pcLastT = t;
   const l = pcEl('pc-layer'), f = pcEl('pc-feed');
   const bas = f.scrollHeight - f.scrollTop - f.clientHeight < 80;
-  l.style.top = t + 'px'; l.style.height = h + 'px';
-  l.classList.toggle('kb', h < window.innerHeight - 120);
+  pcBase = Math.max(pcBase, window.innerHeight, h);
+  if(t === 0 && Math.abs(window.innerHeight - h) <= 1){ l.style.top = '0'; l.style.height = '100%'; }   /* v228 : la page est déjà redimensionnée par le navigateur, le CSS suit tout seul */
+  else { l.style.top = t + 'px'; l.style.height = h + 'px'; }
+  l.classList.toggle('kb', h < pcBase - 120);
   if(bas) pcPin(360);
   if(window.scrollY !== pcScrollY) window.scrollTo(0, pcScrollY);
+}
+/* ===== v228 : « Nouvelle conversation » sans confirmation + animation de changement de conversation (prototype Chromebook) =====
+   Nouvelle conversation : la conversation en cours est rangée tout de suite (même chemin que l'ancien « Nouvelle » : pcInstantane puis id terminé), un tiroir « Annuler »
+   sort de sous le bouton pendant 5 s (il rouvre la conversation rangée par pcHistReprendre) ; il disparaît dès qu'on écrit.
+   Changement (nouvelle, reprise, annulation) : grand écran = la fenêtre s'enfonce sur son ombre orange, le contenu change pendant qu'elle est basse, elle remonte ;
+   téléphone = le contenu s'efface puis revient, bulle après bulle (classe .sink sur #pc-layer). */
+let pcSwapping = false, pcUndoT = 0, pcUndoFn = null, pcPendH = '', pcPendN = -1, pcSuggMoved = false, pcVpOrig = null, pcBase = 0;
+const pcSideVus = new Set();
+function pcHote(){ return ppWide() ? (pcEl('pc-win') || pcEl('pc-layer')) : pcEl('pc-layer'); }   /* grand écran : les écrans par-dessus (carnet, historique, menu, avis) vivent DANS la fenêtre de discussion */
+function pcSwap(fn){
+  const l = pcEl('pc-layer'); if(!l || pcSwapping){ fn(); return; }
+  pcSwapping = true; l.classList.add('sink');
+  setTimeout(() => {
+    try{ fn(); }catch(e){}
+    requestAnimationFrame(() => requestAnimationFrame(() => l.classList.remove('sink')));
+    setTimeout(() => { pcSwapping = false; }, 450);
+  }, 200);
+}
+function pcSoft(){   /* les bulles réapparaissent en douceur, l'une après l'autre */
+  const f = pcEl('pc-feed'); if(!f) return;
+  [...f.children].forEach((el, i) => { if(el.classList.contains('pc-b')) el.style.animation = 'pcsoft .6s var(--pce) ' + (80 + Math.min(i, 8) * 60) + 'ms backwards'; });
+}
+function pcUndoHide(){ clearTimeout(pcUndoT); pcUndoFn = null; const u = pcEl('pc-undo'); if(u){ u.classList.remove('on'); u.tabIndex = -1; } }
+function pcUndoShow(fn){ clearTimeout(pcUndoT); pcUndoFn = fn; const u = pcEl('pc-undo'); if(!u) return; u.tabIndex = 0; u.classList.add('on'); pcUndoT = setTimeout(pcUndoHide, 5000); }
+function pcNouvelle(){
+  const nb = pcEl('pc-new'); nb.classList.remove('go'); void nb.offsetWidth; nb.classList.add('go');
+  if(pcSwapping) return;
+  pcUndoHide(); pcMenu(''); pcHistFerme(); pcCarnetFerme();
+  pcSwap(() => {
+    if(!pcInstantane()) return;   /* écriture impossible : on garde la conversation actuelle (ppEcrire a déjà prévenu) */
+    const avait = pcConv.some(m => m && m.r === 'u'), id = pcConvId;
+    pcConvId = ''; try{ localStorage.removeItem('coach-conv-id'); }catch(e){}
+    pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = '';
+    pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcSuggTout = false; pcRenderSugg(); pcDerniere = pcMat;
+    if(!getGeminiKey()) pcEtatSansCle();
+    pcSoft(); pcSideMaj();
+    if(avait && id) pcUndoShow(() => pcSwap(() => { pcHistReprendre(id); pcSoft(); }));
+  });
+}
+function pcReprendreAnim(id){   /* un clic sur une conversation de la colonne */
+  if(pcSwapping) return;
+  pcUndoHide(); pcMenu(''); pcHistFerme(); pcCarnetFerme();
+  pcSwap(() => { pcHistReprendre(id); pcSoft(); });
+}
+/* suggestions : une seule rangée, défilement horizontal, bords en fondu, flèches et glisser à la souris (grand écran) */
+function pcSuggFades(){
+  const S = pcEl('pc-sugg'); if(!S) return;
+  const w = ppWide(), max = S.scrollWidth - S.clientWidth, x = S.scrollLeft;
+  S.classList.toggle('fl', w && x > 4); S.classList.toggle('fr', w && x < max - 4);
+  const a = pcEl('pc-al'), b = pcEl('pc-ar');
+  if(a) a.classList.toggle('on', w && x > 4); if(b) b.classList.toggle('on', w && x < max - 4);
+}
+function pcSuggInit(){
+  const S = pcEl('pc-sugg'); if(!S) return;
+  S.addEventListener('scroll', pcSuggFades, { passive: true });
+  window.addEventListener('resize', pcSuggFades);
+  S.addEventListener('wheel', e => { if(ppWide() && Math.abs(e.deltaY) > Math.abs(e.deltaX) && S.scrollWidth > S.clientWidth){ S.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+  pcEl('pc-al').onclick = () => S.scrollBy({ left: -Math.max(220, S.clientWidth * .7), behavior: 'smooth' });
+  pcEl('pc-ar').onclick = () => S.scrollBy({ left: Math.max(220, S.clientWidth * .7), behavior: 'smooth' });
+  let down = false, sx = 0, sl = 0;
+  S.addEventListener('pointerdown', e => { if(e.pointerType !== 'mouse' || !ppWide()) return; down = true; pcSuggMoved = false; sx = e.clientX; sl = S.scrollLeft; });
+  window.addEventListener('pointermove', e => { if(!down) return; const dx = e.clientX - sx; if(Math.abs(dx) > 5){ pcSuggMoved = true; S.classList.add('drag'); } if(pcSuggMoved) S.scrollLeft = sl - dx; });
+  window.addEventListener('pointerup', () => { if(!down) return; down = false; S.classList.remove('drag'); setTimeout(() => { pcSuggMoved = false; }, 0); });
+}
+/* clavier : le navigateur redimensionne lui-même la page (interactive-widget=resizes-content, seulement pendant que Prof est ouvert) :
+   plus de décalage, plus de saut de page quand le clavier monte ou descend. pcFit() ne sert plus que de secours (anciens navigateurs). */
+function pcViewportKb(on){
+  try{
+    const m = document.querySelector('meta[name="viewport"]'); if(!m) return;
+    if(pcVpOrig === null) pcVpOrig = m.getAttribute('content') || '';
+    const cible = on ? (/interactive-widget/.test(pcVpOrig) ? pcVpOrig : pcVpOrig + ', interactive-widget=resizes-content') : pcVpOrig;
+    if(m.getAttribute('content') !== cible) m.setAttribute('content', cible);
+  }catch(e){}
 }
 function pcRebond(){ document.querySelectorAll('#pp-coach-btn').forEach(b => { b.classList.remove('bounce'); void b.offsetWidth; b.classList.add('bounce'); }); }
 function ppCoachOuvrir(ctx){
   ctx = (ctx && typeof ctx === 'object' && typeof ctx.preventDefault !== 'function') ? ctx : null;
   pcEnsure(); if(pcOuvert) return; pcOuvert = true;
   clearTimeout(pcFermT); pcScrollY = window.scrollY; pcLastH = pcLastT = -1;
+  pcViewportKb(true); pcBase = Math.max(window.innerHeight, (window.visualViewport ? window.visualViewport.height : 0)); pcUndoHide();
   const l = pcEl('pc-layer'), mats = getMatieres();
   pcListe = [...mats, PC_TOUTES];
   const mem = ppLireJSON('coach-matiere', null, v => typeof v === 'string');
@@ -6443,7 +6645,7 @@ function ppCoachOuvrir(ctx){
   setTimeout(() => { if(pcOuvert) pcInfo(); }, 700);
 }
 function ppCoachFermer(){
-  if(!pcOuvert) return; pcOuvert = false; pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcInstantane();
+  if(!pcOuvert) return; pcOuvert = false; pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcUndoHide(); pcInstantane();
   const l = pcEl('pc-layer'); pcEl('pc-input').blur();
   clearTimeout(pcPretT); l.classList.remove('ready'); void l.offsetWidth;
   l.style.top = '0'; l.style.height = '100%';
@@ -6452,7 +6654,7 @@ function ppCoachFermer(){
   const tb = document.getElementById('tabbar-root'); if(tb) tb.classList.remove('tabbar-hidden');
   pcRebond();
   clearTimeout(pcFermT);
-  pcFermT = setTimeout(() => { l.classList.remove('closing', 'kb'); l.style.display = ''; l.style.top = ''; l.style.height = ''; l.setAttribute('aria-hidden', 'true'); }, 720);
+  pcFermT = setTimeout(() => { l.classList.remove('closing', 'kb', 'sink'); l.style.display = ''; l.style.top = ''; l.style.height = ''; l.setAttribute('aria-hidden', 'true'); pcViewportKb(false); pcSwapping = false; }, 720);
 }
 
 /* ===== v212 : reprise de Prof après un retour par l'icône (la page peut être rechargée) =====
@@ -7142,7 +7344,7 @@ function ppCountUp(){
    Plus de vibration sur les simples appuis de boutons, ni au retournement de la carte, ni sur Générer / Ajouter. */
 function haptique(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 (function(){
-  const sel = '.pp-head button,.pp-nav button,.pp-home button,#pp-ses button,.pp-row,.pp-prog7,.pp-ctl,.pp-mat,.pp-li,.pp-sec,.pp-snd,.pp-chip,.pp-ibt,.pp-pill,.pp-coach,.pc-pill,.pc-chip,.pc-sq,.pc-send,.pc-new,.pc-more-b,.pc-sb,.pp-invc,.pp-dash,.pp-bk2,.pp-back,.pp-alt button,.pp-pd,.pp-d,.pp-pdn,.pp-ib,.pp-mini,.pp-cta,.pp-undo,.home-cta,.home-matiere-due-item,.planning-strip,.filter-pill,.modal-actions button,#pc-menu button,.pch-it,.pc-mb button';
+  const sel = '.pp-head button,.pp-nav button,.pp-home button,#pp-ses button,.pp-row,.pp-prog7,.pp-ctl,.pp-mat,.pp-li,.pp-sec,.pp-snd,.pp-chip,.pp-ibt,.pp-pill,.pp-coach,.pc-pill,.pc-chip,.pc-sq,.pc-send,.pc-new,.pc-more-b,.pc-sb,.pp-invc,.pp-dash,.pp-bk2,.pp-back,.pp-alt button,.pp-pd,.pp-d,.pp-pdn,.pp-ib,.pp-mini,.pp-cta,.pp-undo,.home-cta,.home-matiere-due-item,.planning-strip,.filter-pill,.modal-actions button,#pc-menu button,.pch-it,.pc-mb button,.pc-undo,.pc-row,.pc-cf button';
   document.addEventListener('pointerdown', e => {
     const b = e.target.closest ? e.target.closest(sel) : null;
     if(!b || b.disabled) return;
@@ -10031,6 +10233,43 @@ function ppEnsureSheets(){
   document.body.insertAdjacentHTML('beforeend', `<div class="pp-veil" id="pp-veil" onclick="ppSheetClose()"></div><div class="pp-sheet" id="pp-sheet"></div><div class="pp-veil" id="pp-pveil" onclick="ppPickClose()"></div><div class="pp-sheet" id="pp-psheet"></div><div class="pp-toast" id="pp-toast"></div>`);
   ppSheetSwipe();
 }
+/* ===== v228 : champ de saisie « sans barre d'autofill » =====
+   Sur téléphone, Chrome affiche au-dessus du clavier la barre clé / carte / adresse sur tout <input> ou <textarea>, même avec autocomplete="off"
+   (type="search" et les attributs anti-gestionnaire de mots de passe n'y changent rien : c'est un accès manuel que Chrome garde pour tout champ de formulaire).
+   Un élément contenteditable="plaintext-only" n'est pas un champ de formulaire pour Chrome : pas de barre. ppCEHtml() fabrique le HTML (texte brut, une seule ligne),
+   ppCEInit() / ppCEScan() lui donnent le comportement d'un <input> : .value, .disabled, .placeholder, .select(), limite de longueur (data-max),
+   Entrée = événement keydown « Enter » (jamais de retour à la ligne). Utilisé par : Prof (question, langue, carnet) et « Nouvelle matière ». */
+function ppCEHtml(o){
+  o = o || {};
+  const a = (k, v) => (v == null || v === '') ? '' : ` ${k}="${escapeHtml(String(v))}"`;
+  return `<div${a('id', o.id)} class="pp-ce${o.cls ? ' ' + o.cls : ''}" contenteditable="plaintext-only" role="textbox" tabindex="0"${a('aria-label', o.label || o.ph)}${a('data-ph', o.ph)}${a('data-max', o.max)} enterkeyhint="${o.enter || 'done'}" autocapitalize="${o.cap || 'sentences'}" autocorrect="off" spellcheck="false"${o.attrs ? ' ' + o.attrs : ''}></div>`;
+}
+function ppCEInit(el){
+  if(!el || el.__ce) return el; el.__ce = true;
+  const max = parseInt(el.dataset.max, 10) || 0;
+  const fin = () => { try{ const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }catch(e){} };
+  Object.defineProperty(el, 'value', { configurable: true,
+    get(){ return String(el.textContent || '').replace(/\u00a0/g, ' ').replace(/[\r\n]+/g, ' '); },
+    set(v){ el.textContent = v == null ? '' : String(v); } });
+  Object.defineProperty(el, 'disabled', { configurable: true,
+    get(){ return el.getAttribute('contenteditable') === 'false'; },
+    set(v){ el.setAttribute('contenteditable', v ? 'false' : 'plaintext-only'); el.classList.toggle('dis', !!v); el.setAttribute('aria-disabled', v ? 'true' : 'false'); } });
+  Object.defineProperty(el, 'placeholder', { configurable: true, get(){ return el.dataset.ph || ''; }, set(v){ el.dataset.ph = v == null ? '' : String(v); } });
+  el.select = () => { try{ const r = document.createRange(); r.selectNodeContents(el); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }catch(e){} };
+  el.addEventListener('beforeinput', e => {   /* la touche « envoyer / OK » du clavier tactile : même chemin que Entrée */
+    if(e.inputType === 'insertParagraph' || e.inputType === 'insertLineBreak'){
+      e.preventDefault();
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true }));
+    }
+  });
+  el.addEventListener('input', () => {
+    if(/[\r\n]/.test(el.textContent)){ el.textContent = el.textContent.replace(/[\r\n]+/g, ' '); fin(); }   /* texte collé sur plusieurs lignes : une seule ligne */
+    if(!el.textContent && el.firstChild) el.innerHTML = '';   /* un <br> résiduel empêcherait d'afficher le texte d'exemple (:empty) */
+    if(max && el.textContent.length > max){ el.textContent = el.textContent.slice(0, max); fin(); }
+  });
+  return el;
+}
+function ppCEScan(root){ try{ (root || document).querySelectorAll('.pp-ce').forEach(ppCEInit); }catch(e){} }
 function ppSheet(html){
   ppEnsureSheets();
   const e = document.getElementById('pp-sheet'); e.classList.remove('pp-still'); e.style.translate = ''; e.style.transition = ''; e.innerHTML = html; e.scrollTop = 0;
@@ -10044,7 +10283,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v227';
+const PP_APP_VERSION = 'v228';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -10220,7 +10459,8 @@ function ppSheetSwipe(){
 
 /* « + Matière » */
 function ppSubjSheet(){
-  ppSheet(`<div class="pp-grab"></div><h2>Nouvelle matière</h2><h4>Nom</h4><input class="pp-q" id="pp-sn" type="search" name="pp-matiere-nom" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done" data-lpignore="true" data-1p-ignore data-form-type="other" placeholder="Ex. Physique" style="margin-bottom:16px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppMkSubj()}"><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppMkSubj()">Créer</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Nouvelle matière</h2><h4>Nom</h4>${ppCEHtml({ id: 'pp-sn', cls: 'pp-q', ph: 'Ex. Physique', enter: 'done', cap: 'sentences', attrs: `style="margin-bottom:16px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppMkSubj()}"` })}<div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppMkSubj()">Créer</button></div>`);
+  ppCEScan(document.getElementById('pp-sheet'));   /* v228 : champ sans barre d'autofill */
 }
 function ppMkSubj(){
   const inp = document.getElementById('pp-sn');
