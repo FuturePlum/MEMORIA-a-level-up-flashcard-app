@@ -1877,6 +1877,8 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 /* v123 : code de partage (affichage + saisie) */
 .pp-sharecode{margin:6px 0 18px;padding:20px 12px;border-radius:24px;border:2px solid rgba(var(--cr),.16);background:var(--panel);text-align:center;font-size:46px;line-height:1;font-weight:800;letter-spacing:.14em;color:var(--cream);text-shadow:3px 2px 0 var(--orange);user-select:all;-webkit-user-select:all}
 :root:root .pp-sheet input.pp-codein{width:100%;height:56px;margin:0 0 12px;padding:0 16px;border-radius:18px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font:inherit;font-size:24px;font-weight:800;letter-spacing:.2em;text-align:center;text-transform:uppercase;outline:none;box-shadow:none}
+#pp-sn,#pp-ij-code{-webkit-appearance:none;appearance:none}
+#pp-sn::-webkit-search-cancel-button,#pp-sn::-webkit-search-decoration,#pp-ij-code::-webkit-search-cancel-button,#pp-ij-code::-webkit-search-decoration{-webkit-appearance:none;appearance:none;display:none}
 :root:root .pp-sheet input.pp-codein::placeholder{letter-spacing:.04em;font-size:16px;font-weight:700;text-transform:none;color:var(--muted)}
 :root:root .pp-sheet input.pp-codein:focus{border-color:var(--yellow-b)}
 /* v122 : visionneuse d'image (agrandir au toucher) + images dans les synthèses */
@@ -8206,7 +8208,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v195';
+const PP_APP_VERSION = 'v197';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -8382,7 +8384,7 @@ function ppSheetSwipe(){
 
 /* « + Matière » */
 function ppSubjSheet(){
-  ppSheet(`<div class="pp-grab"></div><h2>Nouvelle matière</h2><h4>Nom</h4><input class="pp-q" id="pp-sn" placeholder="Ex. Physique" style="margin-bottom:16px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppMkSubj()}"><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppMkSubj()">Créer</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Nouvelle matière</h2><h4>Nom</h4><input class="pp-q" id="pp-sn" type="search" name="pp-matiere-nom" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done" data-lpignore="true" data-1p-ignore data-form-type="other" placeholder="Ex. Physique" style="margin-bottom:16px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppMkSubj()}"><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppMkSubj()">Créer</button></div>`);
 }
 function ppMkSubj(){
   const inp = document.getElementById('pp-sn');
@@ -8407,7 +8409,7 @@ function ppImportSheet(){
   const m = ppMatiereSel();
   if(!m){ ppToast("Crée d'abord une matière"); return; }
   ppSheet(`<div class="pp-grab"></div><h2>Importer des cartes</h2><p class="pp-hint">Matière : <b style="color:var(--cream)">${ppEsc(m)}</b> · cartes d'un pote ou JSON</p>
-  <input id="pp-ij-code" class="pp-codein" type="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9" placeholder="Code" onkeydown="if(event.key==='Enter'){event.preventDefault();ppDoImport();}">
+  <input id="pp-ij-code" class="pp-codein" type="search" name="pp-import-code" enterkeyhint="go" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9" placeholder="Code" onkeydown="if(event.key==='Enter'){event.preventDefault();ppDoImport();}">
   <textarea id="pp-ij" class="pp-tall" placeholder='[{"question":"…","reponse":"…"}]'></textarea>
   <div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppDoImport()">Importer</button></div>`);
 }
