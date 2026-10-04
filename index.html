@@ -8162,14 +8162,21 @@ function ppSetMode(m){ sauverBrouillonIA(); ppAddMode = m; importMsg = null; ppM
 let ppMonteT = [];
 function ppManMonter(champ){
   if(!champ || ppWide() || !ppMatiereSel()) return;
-  const vue = champ.closest('.pp-add'), sec = champ.closest('.pp-side');
-  if(!vue || !sec) return;
+  const vue = champ.closest('.pp-add'), ancre = vue && vue.querySelector('.pp-side-q');
+  if(!vue || !ancre) return;
   vue.classList.add('pp-kbpad');   // de la place sous le formulaire, sinon la page ne peut pas monter assez
+  /* Une seule hauteur pour les DEUX champs : la section « Question » en haut (v202). Passer de Question à Réponse
+     (toucher ou Entrée) ne fait donc plus remonter la page. On ne descend/monte de plus que si le champ
+     touché dépasse au-dessus du clavier (petit écran, paysage). */
   const aller = () => {
     if(document.activeElement !== champ) return;
-    const haut = sec.getBoundingClientRect().top;
-    const cible = Math.max(0, window.scrollY + haut - 56);
-    if(Math.abs(window.scrollY - cible) > 2) window.scrollTo(0, cible);
+    const y = window.scrollY;
+    let cible = y + ancre.getBoundingClientRect().top - 56;
+    const vv = window.visualViewport, haut = vv ? vv.height : window.innerHeight;
+    const basApres = champ.getBoundingClientRect().bottom - (cible - y);
+    if(basApres > haut - 12) cible += basApres - (haut - 12);
+    cible = Math.max(0, cible);
+    if(Math.abs(y - cible) > 2) window.scrollTo(0, cible);
   };
   ppMonteT.forEach(clearTimeout);
   aller();
@@ -8192,7 +8199,7 @@ document.addEventListener('focusout', e => {
 function ppEnter(e, w){
   if(e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   e.preventDefault();
-  if(w === 'q'){ if(!document.getElementById('pp-nq').value.trim()) return; document.getElementById('pp-na').focus(); }
+  if(w === 'q'){ if(!document.getElementById('pp-nq').value.trim()) return; document.getElementById('pp-na').focus({ preventScroll:true }); }
   else ppAddCard();
 }
 function ppAddCard(){
@@ -8218,7 +8225,7 @@ function ppAddCard(){
   ppIvGris('man');
   ppImgRafraichir('man', 'q'); ppImgRafraichir('man', 'r');
   ppAddedN++;
-  nq.value = na.value = ''; ppMan.tq = ppMan.ta = ''; nq.focus();
+  nq.value = na.value = ''; ppMan.tq = ppMan.ta = ''; nq.focus({ preventScroll:true });
   const n = document.getElementById('pp-addn');
   if(n) n.textContent = ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert';
 }
@@ -8302,7 +8309,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v201';
+const PP_APP_VERSION = 'v202';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
