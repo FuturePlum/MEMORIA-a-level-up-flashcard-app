@@ -2973,6 +2973,13 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
   #pp-ses.ecr .pp-ra .pp-v>div:last-child{padding:0 22px 18px}
 }
 .pp-invc.pp-off{opacity:.5}
+/* appui long sur ⇄ / À écrire : actif pour toutes les cartes suivantes */
+.pp-invc.pp-lp{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.pp-invc.pp-lock::after{content:"∞";font-size:15px;line-height:1;margin-left:1px}
+.pp-add.pp-kbpad{padding-bottom:75vh}
+.pp-add .pp-side{scroll-margin-top:56px}
+.pp-toast.haut{top:calc(var(--pp-st,0px) + 64px);bottom:auto;transform:translate(-50%,-14px)}
+.pp-toast.haut.on{transform:translate(-50%,0)}
 </style>
 <style id="fci-css">
 /* v141 : Introduction — tout est sous #fci et préfixé fi- (aucune collision avec le reste de l'app) */
@@ -8008,7 +8015,7 @@ PP_IC.file = ppSvg('<path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h6M9 17h6"/>',18);
 PP_IC.cam = ppSvg('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',20);
 
 let ppAddMode = 'ia';               // 'ia' | 'man'
-let ppMan = { inv:false, ec:false, imageQuestion:'', imageReponse:'', tq:'', ta:'' };           // « Sens inversé » du formulaire à la main
+let ppMan = { inv:false, ec:false, invKeep:false, ecKeep:false, imageQuestion:'', imageReponse:'', tq:'', ta:'' };           // « Sens inversé » du formulaire à la main
 let ppAddedN = 0;                    // cartes ajoutées à la main depuis l'ouverture de l'onglet
 let ppMsgApercu = '';                // texte du composeur de l'aperçu
 let ppApercuBusy = false;            // envoi en cours depuis le composeur de l'aperçu
@@ -8097,9 +8104,9 @@ function ppViewIA(){
 
 function ppViewMan(){
   return `<button class="pp-bk2" onclick="ppSetMode('ia')">${PP_IC.back}Avec l'IA</button><h2 class="pp-t">Écrire une carte</h2>${ppPillsHtml()}
-  <div class="pp-side pp-side-q"><div class="pp-numh"><b>1</b>Question<button class="pp-invc ${ppMan.inv ? 'on' : ''}${ppMan.ec && ppMan.imageQuestion ? ' pp-off' : ''}" id="pp-man-inv" style="margin-left:auto" onclick="ppManIv(this)">${PP_IC.swap}Sens inversé</button></div>
+  <div class="pp-side pp-side-q"><div class="pp-numh"><b>1</b>Question<button class="pp-invc pp-lp ${ppMan.inv ? 'on' : ''}${ppMan.invKeep ? ' pp-lock' : ''}${ppMan.ec && ppMan.imageQuestion ? ' pp-off' : ''}" id="pp-man-inv" style="margin-left:auto" onclick="ppLpClic(event,()=>ppManIv(this))" onpointerdown="ppLpDebut(event,'inv')" onpointerup="ppLpFin()" onpointerleave="ppLpFin()" onpointercancel="ppLpFin()" oncontextmenu="return false">${PP_IC.swap}Sens inversé</button></div>
   ${ppChampImg('man', 'q', `<textarea id="pp-nq" enterkeyhint="next" oninput="ppMan.tq=this.value;ppIvGris('man');ppRvMaj('pp-nq')" onkeydown="ppEnter(event,'q')" placeholder="Saisis le texte ici">${ppEsc(ppMan.tq || '')}</textarea>`)}${ppRvDiv('pp-nq-rv', ppMan.tq)}</div>
-  <div class="pp-side pp-side-r"><div class="pp-numh"><b>2</b>Réponse<button class="pp-invc ${ppMan.ec ? 'on' : ''}" style="margin-left:auto" onclick="ppManEc(this)">${PP_IC.edit.replace(/17/g, '14')}À écrire</button></div>
+  <div class="pp-side pp-side-r"><div class="pp-numh"><b>2</b>Réponse<button class="pp-invc pp-lp ${ppMan.ec ? 'on' : ''}${ppMan.ecKeep ? ' pp-lock' : ''}" id="pp-man-ec" style="margin-left:auto" onclick="ppLpClic(event,()=>ppManEc(this))" onpointerdown="ppLpDebut(event,'ec')" onpointerup="ppLpFin()" onpointerleave="ppLpFin()" onpointercancel="ppLpFin()" oncontextmenu="return false">${PP_IC.edit.replace(/17/g, '14')}À écrire</button></div>
   ${ppChampImg('man', 'r', `<textarea id="pp-na" enterkeyhint="done" oninput="ppMan.ta=this.value;ppRvMaj('pp-na')" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici">${ppEsc(ppMan.ta || '')}</textarea>`)}${ppRvDiv('pp-na-rv', ppMan.ta)}</div>
   <button class="pp-cta" style="margin-top:0" onclick="ppAddCard()">Ajouter la carte</button>
   <div class="pp-kbd"><kbd>Entrée</kbd> pour avancer, puis pour ajouter</div>
@@ -8109,10 +8116,79 @@ function ppViewMan(){
 /* « À écrire » du formulaire à la main : l'activer éteint ⇄ (exclusifs par défaut) ; toucher ⇄ ensuite les cumule volontairement. */
 function ppManEc(b){
   ppMan.ec = !ppMan.ec; b.classList.toggle('on', ppMan.ec);
-  if(ppMan.ec && ppMan.inv){ ppMan.inv = false; const t = document.getElementById('pp-man-inv'); if(t) t.classList.remove('on'); }
+  if(!ppMan.ec) ppMan.ecKeep = false;   // un simple toucher qui l'éteint annule aussi « toutes les cartes suivantes »
+  b.classList.toggle('pp-lock', ppMan.ecKeep);
+  if(ppMan.ec && ppMan.inv){ ppMan.inv = false; ppMan.invKeep = false; const t = document.getElementById('pp-man-inv'); if(t){ t.classList.remove('on'); t.classList.remove('pp-lock'); } }
   ppIvGris('man');
 }
+/* Appui long (≈ 0,45 s) sur « Sens inversé » ou « À écrire » : l'option vaut pour TOUTES les cartes suivantes
+   (elle n'est plus remise à zéro après chaque ajout). Un message le dit ; un nouvel appui long, ou un simple toucher qui l'éteint, l'annule. */
+let ppLpT = 0, ppLpFait = false;
+function ppLpDebut(e, w){
+  ppLpFait = false; clearTimeout(ppLpT);
+  if(e.pointerType === 'mouse' && e.button !== 0) return;
+  ppLpT = setTimeout(() => { ppLpT = 0; ppLpFait = true; ppLpAction(w); }, 450);
+}
+function ppLpFin(){ clearTimeout(ppLpT); ppLpT = 0; }
+function ppLpClic(e, fn){
+  if(ppLpFait){ ppLpFait = false; e.preventDefault(); e.stopPropagation(); return; }   // le clic qui suit l'appui long ne doit pas rebasculer le bouton
+  fn();
+}
+function ppLpAction(w){
+  const bi = document.getElementById('pp-man-inv'), be = document.getElementById('pp-man-ec');
+  const maj = () => {
+    if(bi){ bi.classList.toggle('on', ppMan.inv); bi.classList.toggle('pp-lock', ppMan.invKeep); }
+    if(be){ be.classList.toggle('on', ppMan.ec); be.classList.toggle('pp-lock', ppMan.ecKeep); }
+    ppIvGris('man');
+  };
+  haptique(15);
+  if(w === 'inv'){
+    if(ppMan.invKeep){ ppMan.invKeep = false; ppMan.inv = false; maj(); ppToast('Les cartes suivantes ne seront plus inversées', true); return; }
+    if(ppMan.ec && !((document.getElementById('pp-nq') || {}).value || '').trim() && ppMan.imageQuestion){ ppToast('Question en image : impossible à inverser', true); return; }
+    ppMan.inv = true; ppMan.invKeep = true; maj();
+    ppToast('Toutes les cartes suivantes seront inversées', true);
+  } else {
+    if(ppMan.ecKeep){ ppMan.ecKeep = false; ppMan.ec = false; maj(); ppToast('Les cartes suivantes ne seront plus à écrire', true); return; }
+    ppMan.ec = true; ppMan.ecKeep = true;
+    if(ppMan.inv){ ppMan.inv = false; ppMan.invKeep = false; }   // même exclusivité que le simple toucher
+    maj();
+    ppToast('Toutes les cartes suivantes seront à écrire', true);
+  }
+}
 function ppSetMode(m){ sauverBrouillonIA(); ppAddMode = m; importMsg = null; ppMan.imageQuestion = ppMan.imageReponse = ''; ppImgOuvert = null; renderAdd(); }
+/* Toucher une zone de texte du formulaire « À la main » : la page remonte pour poser la section (Question ou Réponse)
+   en haut de l'écran, à la même hauteur que lorsqu'on passe de Question à Réponse avec Entrée.
+   Deux passes : tout de suite, puis quand le clavier a fini de s'ouvrir (le viewport change de taille). */
+let ppMonteT = [];
+function ppManMonter(champ){
+  if(!champ || ppWide() || !ppMatiereSel()) return;
+  const vue = champ.closest('.pp-add'), sec = champ.closest('.pp-side');
+  if(!vue || !sec) return;
+  vue.classList.add('pp-kbpad');   // de la place sous le formulaire, sinon la page ne peut pas monter assez
+  const aller = () => {
+    if(document.activeElement !== champ) return;
+    const haut = sec.getBoundingClientRect().top;
+    const cible = Math.max(0, window.scrollY + haut - 56);
+    if(Math.abs(window.scrollY - cible) > 2) window.scrollTo(0, cible);
+  };
+  ppMonteT.forEach(clearTimeout);
+  aller();
+  ppMonteT = [setTimeout(aller, 120), setTimeout(aller, 330), setTimeout(aller, 650)];
+}
+document.addEventListener('focusin', e => {
+  const t = e.target;
+  if(t && (t.id === 'pp-nq' || t.id === 'pp-na')) ppManMonter(t);
+});
+document.addEventListener('focusout', e => {
+  const t = e.target;
+  if(!t || (t.id !== 'pp-nq' && t.id !== 'pp-na')) return;
+  setTimeout(() => {   // on retire la place en trop seulement si on n'est pas passé à l'autre champ
+    const a = document.activeElement;
+    if(a && (a.id === 'pp-nq' || a.id === 'pp-na')) return;
+    ppMonteT.forEach(clearTimeout);
+    const v = document.querySelector('#tab-add .pp-add'); if(v) v.classList.remove('pp-kbpad');
+  }, 250);
+});
 function ppEnter(e, w){
   if(e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   e.preventDefault();
@@ -8134,9 +8210,11 @@ function ppAddCard(){
   // Les deux bascules du formulaire ne doivent valoir que pour LA carte qu'on vient de créer,
   // sinon la carte suivante hérite silencieusement de « Sens inversé »/« À écrire » sans que
   // l'utilisateur l'ait redemandé (constat remonté par l'utilisateur, v150).
-  ppMan.inv = false; ppMan.ec = false;
-  const bInv = document.getElementById('pp-man-inv'); if(bInv) bInv.classList.remove('on');
-  const bEc = document.querySelector('#tab-add .pp-side-r .pp-invc'); if(bEc) bEc.classList.remove('on');
+  // Exception : un appui long sur le bouton (invKeep / ecKeep) le garde pour toutes les cartes suivantes.
+  if(!ppMan.invKeep) ppMan.inv = false;
+  if(!ppMan.ecKeep) ppMan.ec = false;
+  const bInv = document.getElementById('pp-man-inv'); if(bInv) bInv.classList.toggle('on', ppMan.inv);
+  const bEc = document.querySelector('#tab-add .pp-side-r .pp-invc'); if(bEc) bEc.classList.toggle('on', ppMan.ec);
   ppIvGris('man');
   ppImgRafraichir('man', 'q'); ppImgRafraichir('man', 'r');
   ppAddedN++;
@@ -8224,7 +8302,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v200';
+const PP_APP_VERSION = 'v201';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -8327,9 +8405,9 @@ async function ppCameraOuvrir(inputId){
   try{ await video.play(); }catch(e){}
 }
 
-function ppToast(m){
+function ppToast(m, haut){
   ppEnsureSheets();
-  const t = document.getElementById('pp-toast'); t.textContent = m; t.classList.add('on');
+  const t = document.getElementById('pp-toast'); t.textContent = m; t.classList.toggle('haut', !!haut); t.classList.add('on');
   clearTimeout(ppToastT); ppToastT = setTimeout(() => t.classList.remove('on'), 1800);
 }
 /* glisser vers le bas n'importe où sur une fenêtre du bas pour la fermer.
