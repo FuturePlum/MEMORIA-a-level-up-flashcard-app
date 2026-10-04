@@ -1,6 +1,6 @@
 # 🃏 Memoria
 
-## Memoria. Le level au-dessus des flashcards.
+## Le level au-dessus des flashcards.
 
 **Ton prof particulier de révision.** Photo, PDF ou texte collé : l'IA crée tes cartes et tes synthèses en quelques secondes. Tu donnes la date de ton contrôle, et chaque jour Memoria te dit quoi réviser, seulement ce que tu risques d'oublier. Un retard ? Une alerte « À risque » te prévient à temps, et tu arrives au contrôle avec de la marge.
 
