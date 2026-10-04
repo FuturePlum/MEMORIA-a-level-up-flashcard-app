@@ -8122,7 +8122,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v180';
+const PP_APP_VERSION = 'v181';
 function ppAideMail(type){
   let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
   const bug = type === 'bug';
@@ -12243,6 +12243,13 @@ function planifierSyncDiffere(){
    sans ça, un onglet laissé ouvert ne récupérait jamais rien. Ignorée pendant
    une session de révision, un quiz, une fenêtre ouverte ou une saisie, et
    limitée à une fois toutes les 30 s. */
+const SYNC_DEMARRAGE_PAUSE_MS = 5 * 60 * 1000;   // v181 : pas de lecture au démarrage si une synchro a eu lieu il y a moins de 5 min
+function syncLueRecemment(ms){
+  try{
+    const t = Date.parse(localStorage.getItem('sync-derniere-synchro') || '');
+    return !!t && Date.now() - t >= 0 && Date.now() - t < ms;
+  }catch(e){ return false; }
+}
 const SYNC_DELAI_MS = 25000;   // délai maximum d'une requête de synchro (envoi ou récupération)
 let syncDernierRetourTs = 0;
 async function recupererAuRetour(){
@@ -13343,13 +13350,19 @@ ppPousserEtatRetour();
 
   // Récupération unique à l'ouverture : après le rendu initial pour ne
   // pas retarder l'affichage, puis on rafraîchit si des données arrivent.
-  recupererDepuisSync().then(() => {
-    appliquerArchivageControlesPasses(0); // une date de contrôle reçue de l'autre appareil peut être passée
-    lisserRetards(); // les cartes reçues de l'autre appareil peuvent être en retard
-    renderSettings();
-    render();
-    renderStreak();
-  });
+  /* v181 : si une synchro (lecture ou envoi) a eu lieu il y a moins de 5 min, on saute cette lecture : toucher l'icône relance la page
+     (c'est Android), et chaque relance coûtait une lecture KV. Le retour sur l'app (30 s) et les envois gardent leur fonctionnement. */
+  if(syncLueRecemment(SYNC_DEMARRAGE_PAUSE_MS)){
+    try{ window.ppJournal('SYNC', 'lecture au démarrage sautée (synchro récente)'); }catch(e){}
+  }else{
+    recupererDepuisSync().then(() => {
+      appliquerArchivageControlesPasses(0); // une date de contrôle reçue de l'autre appareil peut être passée
+      lisserRetards(); // les cartes reçues de l'autre appareil peuvent être en retard
+      renderSettings();
+      render();
+      renderStreak();
+    });
+  }
 }
 
 /* v153 (constat 45) : si le démarrage plante avant le premier rendu, on affiche un message avec « Recharger »
@@ -13384,88 +13397,217 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
 (function(){
   var K = 'pp-etat-ecran';
   var SECRETS = { 'gemini-key-input':1, 'sync-code-input':1, 'pp-ij-code':1 };
+  var TRENTE_MIN = 3 * 60 * 60 * 1000;
   function jr(msg){ try{ window.ppJournal('RESTAURATION', msg); }catch(x){} }
-  function brouillons(){
+  function txt(v, max){ return (typeof v === 'string' && v.length <= max) ? v : ''; }
+  function simple(v){ return v === null || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean'; }
+
+  /* v181 : enregistre en local (jamais envoyé nulle part, aucune lecture KV) tout ce qui est « en cours » : écran, séance ou quiz (carte, face,
+     réponse tapée), écriture d'une carte à la main, formulaire IA, aperçu des cartes générées, recherche, contrôle en cours d'ajout,
+     fenêtre ouverte (fiche d'une carte, Réglages…), et le texte de tous les champs qui ont un id. Clés très courtes, valeurs vides omises. */
+
+  /* Fenêtres qu'on sait rouvrir à l'identique : on note la dernière ouverte (nom + arguments simples). Les confirmations
+     (supprimer, remettre à zéro…) ne sont volontairement PAS dans la liste : jamais rouvertes toutes seules. */
+  var OUVREURS = ['ppFiche', 'ppSettings', 'openRenameMatiere', 'ppGrpMenu', 'ppSubjSheet', 'ppTimeSheet', 'ppFormatAide', 'ppDrawCtrl', 'ppCtrlSheet', 'ppImportSheet', 'ppExportSheet'];
+  var ouvreur = null, prof = 0;
+  OUVREURS.forEach(function(nom){
+    var orig = window[nom];
+    if(typeof orig !== 'function') return;
+    window[nom] = function(){
+      var args = Array.prototype.slice.call(arguments);
+      if(prof === 0) ouvreur = args.every(simple) ? { f: nom, a: args } : null;
+      prof++;
+      try{ return orig.apply(this, arguments); } finally { prof--; }
+    };
+  });
+  function coucheOuverte(){
+    var p = document.getElementById('pp-psheet'), s = document.getElementById('pp-sheet'), m = document.getElementById('modal-root');
+    return !!((p && p.classList.contains('on')) || (s && s.classList.contains('on')) || (m && m.innerHTML.trim() !== ''));
+  }
+
+  function champs(){
     var d = {}, n = 0;
     try{
-      var els = document.querySelectorAll('textarea[id], input[id]:not([type=file]):not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=password])');
+      var els = document.querySelectorAll('textarea[id], select[id], input[id]:not([type=file]):not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=password]):not([type=range])');
       for(var i = 0; i < els.length; i++){
         var e = els[i];
-        if(SECRETS[e.id] || !e.value || e.value.length > 20000 || n >= 20) continue;
+        if(SECRETS[e.id] || !e.value || e.value.length > 120000 || n >= 30) continue;
         d[e.id] = e.value; n++;
       }
     }catch(x){}
     return d;
   }
-  /* v179 : l'instantané est aussi enregistré toutes les 3 s tant que l'app est visible (avant : seulement au départ et après une saisie).
-     Si Android coupe la page sans laisser le temps de réagir à « départ », l'instantané récent est quand même là.
-     'source' ne sert qu'au journal de diagnostic (départ / pagehide) ; une erreur d'enregistrement est notée une seule fois. */
-  var erreurDite = false;
+  function instantane(){
+    var o = { o: activeTab, y: Math.round(window.scrollY || 0) };
+    var c;
+    if(quizActive && quizSet && quizSet.length && quizSet.length <= 3000){
+      o.q = { i: quizIndex, ids: quizSet.map(function(x){ return x.id; }), fl: quizFlipped ? 1 : 0, er: quizErrors.map(function(x){ return x.id; }), mc: quizMoodCounts, sn: quizSeen };
+      if(ecr && ecr.typed && /^quiz:/.test(ecr.cle || '')) o.et = ecr.typed.slice(0, 20000);
+    }else if(studySessionActive && (studyMode === 'due' || studyMode === 'all') && queue && currentIndex < queue.length){
+      c = queue[currentIndex];
+      o.m = studyMode; o.f = matiereFilter;
+      if(c){ o.c = c.id; o.fl = flipped ? 1 : 0; }
+      o.sr = sessionReviewed; o.sm = sessionMastered; o.mc = sessionMoodCounts;
+      if(c && ecr && ecr.typed && ecr.cle === ('study:' + currentIndex + ':' + c.id)){ o.et = ecr.typed.slice(0, 20000); if(ecr.locked) o.lk = 1; }
+    }
+    if(ppAddMode === 'man') o.am = 'man';
+    if(ppMan && (ppMan.tq || ppMan.ta || ppMan.inv || ppMan.ec)) o.mn = { q: ppMan.tq || '', a: ppMan.ta || '', i: ppMan.inv ? 1 : 0, e: ppMan.ec ? 1 : 0 };
+    if(iaBrouillon && (iaBrouillon.cours || iaBrouillon.matiere || iaBrouillon.date)) o.ib = { c: iaBrouillon.cours || '', m: iaBrouillon.matiere || '', d: iaBrouillon.date || '' };
+    if(iaCartesPreview){
+      try{ if(JSON.stringify(iaCartesPreview).length < 150000){ o.pv = iaCartesPreview; if(iaCoursOriginal && iaCoursOriginal.length < 40000) o.co = iaCoursOriginal; } }catch(x){}
+    }
+    if(iaRefineBrouillon) o.rf = iaRefineBrouillon;
+    if(ppMsgApercu) o.ma = ppMsgApercu;
+    if(iaTexteSupp) o.ts = iaTexteSupp;
+    if(browseSearch) o.bs = browseSearch;
+    var bc = Object.keys(ppBrowseClosed || {}).filter(function(k){ return ppBrowseClosed[k]; });
+    if(bc.length) o.bc = bc;
+    if(ppCtrlM || ppCtrlD || ppCtrlAjout) o.cc = { m: ppCtrlM || '', d: ppCtrlD || '', a: ppCtrlAjout ? 1 : 0 };
+    if(planningDatesControleOpen === false) o.pd = 0;
+    if(coucheOuverte()){
+      if(ouvreur){ o.L = ouvreur; if(ouvreur.f === 'ppFiche' && ppFi && ppFi.m) o.fm = ppFi.m; }
+    }else ouvreur = null;
+    var d = champs();
+    for(var k in d){ o.d = d; break; }
+    return o;
+  }
+
+  /* L'instantané est réécrit : au départ, à la fermeture de la page, 0,6 s après une saisie, et toutes les 3 s tant que l'app est visible
+     (seulement si quelque chose a changé, ou au plus toutes les 30 s pour garder l'heure à jour : on ne ronge pas la batterie). */
+  var dernier = '', dernierTs = 0, erreurDite = false;
   function sauver(source){
     try{
-      var seance = studySessionActive && (studyMode === 'due' || studyMode === 'all') && queue && currentIndex < queue.length;
-      localStorage.setItem(K, JSON.stringify({
-        o: activeTab, y: Math.round(window.scrollY || 0), t: Date.now(),
-        m: seance ? studyMode : null, f: matiereFilter,
-        c: seance && queue[currentIndex] ? queue[currentIndex].id : null, fl: seance ? !!flipped : false,
-        sr: sessionReviewed, sm: sessionMastered, mc: sessionMoodCounts,
-        d: brouillons()
-      }));
-      if(typeof source === 'string') window.ppJournal('instantané enregistré', '(' + source + ') onglet ' + activeTab + ', séance ' + (seance ? studyMode : 'non'));
+      var o = instantane(), s = JSON.stringify(o), now = Date.now();
+      if(typeof source !== 'string' && s === dernier && now - dernierTs < 30000) return;
+      o.t = now;
+      var plein = JSON.stringify(o);
+      try{ localStorage.setItem(K, plein); }
+      catch(e){
+        /* stockage presque plein : on retente sans les éléments les plus lourds plutôt que de tout perdre */
+        delete o.pv; delete o.co; delete o.q; delete o.d;
+        localStorage.setItem(K, JSON.stringify(o));
+      }
+      dernier = s; dernierTs = now;
+      if(typeof source === 'string') window.ppJournal('instantané enregistré', '(' + source + ') ' + plein.length + ' car.');
     }catch(e){
       if(!erreurDite){ erreurDite = true; try{ window.ppJournal('instantané ERREUR', String((e && e.message) || e)); }catch(x){} }
     }
   }
-  var minuteur = null;
-  document.addEventListener('input', function(){ clearTimeout(minuteur); minuteur = setTimeout(function(){ sauver(); }, 600); }, true);
+  var minuteur = null, touche = {};
+  document.addEventListener('input', function(e){
+    if(e.isTrusted && e.target && e.target.id) touche[e.target.id] = 1;   // le champ a été retouché à la main : on ne le remplace plus
+    clearTimeout(minuteur); minuteur = setTimeout(function(){ sauver(); }, 600);
+  }, true);
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') sauver('départ'); });
   window.addEventListener('pagehide', function(){ sauver('pagehide'); });
   setInterval(function(){ if(document.visibilityState === 'visible') sauver(); }, 3000);
-  function remplir(d, y){
-    setTimeout(function(){
+
+  function remplir(d){
+    if(!d) return;
+    for(var id in d){
+      if(touche[id]) continue;
+      var el = document.getElementById(id), v = d[id];
+      if(!el || typeof v !== 'string' || el.value === v) continue;
       try{
-        if(d) for(var id in d){
-          var el = document.getElementById(id);
-          if(el && !el.value){ el.value = d[id]; el.dispatchEvent(new Event('input', { bubbles: true })); }
-        }
-        if(y > 0) window.scrollTo(0, y);
-      }catch(e){}
-    }, 80);
+        if(el.tagName === 'SELECT'){ el.value = v; if(el.value === v) el.dispatchEvent(new Event('change', { bubbles: true })); }
+        else{ el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); }
+      }catch(x){}
+    }
   }
+  function apres(o){
+    [120, 500, 1500, 4000].forEach(function(ms, i){
+      setTimeout(function(){
+        try{
+          remplir(o.d);
+          if(i < 2 && o.y > 0 && (window.scrollY || 0) < 5) window.scrollTo(0, o.y);
+        }catch(e){}
+      }, ms);
+    });
+  }
+
   try{
     var raw = localStorage.getItem(K);
     if(!window.__ppDemarre){ jr('pas faite : le démarrage n\u2019est pas allé jusqu\u2019au premier rendu'); return; }
     if(!raw){ jr('rien à restaurer (aucun instantané)'); return; }
     var o = JSON.parse(raw);
-    localStorage.removeItem(K);
+    localStorage.removeItem(K);   // si la reprise elle-même plantait, elle ne recommencerait pas à chaque ouverture
     var age = o ? Date.now() - o.t : -1;
-    if(!o || !(age >= 0 && age < 3 * 60 * 60 * 1000)){ jr('instantané trop vieux ou illisible (' + Math.round(age / 60000) + ' min)'); return; }
+    if(!o || !(age >= 0 && age < TRENTE_MIN)){ jr('instantané trop vieux ou illisible (' + Math.round(age / 60000) + ' min)'); return; }
+    var parts = [];
+
+    /* 1) variables simples, AVANT de redessiner */
+    if(o.am === 'man'){ ppAddMode = 'man'; parts.push('mode « à la main »'); }
+    if(o.mn){ ppMan = { inv: !!o.mn.i, ec: !!o.mn.e, imageQuestion: '', imageReponse: '', tq: txt(o.mn.q, 200000), ta: txt(o.mn.a, 200000) }; parts.push('carte en cours d\u2019écriture'); }
+    if(o.ib){ iaBrouillon = { cours: txt(o.ib.c, 200000), matiere: txt(o.ib.m, 500), date: txt(o.ib.d, 50) }; parts.push('formulaire IA'); }
+    if(o.pv && Array.isArray(o.pv.cartes) && o.pv.cartes.length){ iaCartesPreview = o.pv; if(typeof o.co === 'string') iaCoursOriginal = o.co; parts.push('aperçu de ' + o.pv.cartes.length + ' cartes'); }
+    if(typeof o.rf === 'string') iaRefineBrouillon = o.rf;
+    if(typeof o.ma === 'string') ppMsgApercu = o.ma;
+    if(typeof o.ts === 'string') iaTexteSupp = o.ts;
+    if(typeof o.bs === 'string' && o.bs){ browseSearch = o.bs; parts.push('recherche'); }
+    if(Array.isArray(o.bc)){ ppBrowseClosed = {}; o.bc.forEach(function(k){ if(typeof k === 'string') ppBrowseClosed[k] = true; }); }
+    if(o.cc){ ppCtrlM = txt(o.cc.m, 500); ppCtrlD = txt(o.cc.d, 50); ppCtrlAjout = !!o.cc.a; parts.push('contrôle en cours'); }
+    if(o.pd === 0) planningDatesControleOpen = false;
+
+    /* 2) quiz, séance ou onglet */
     var tabs = ['study', 'browse', 'planning', 'add', 'settings'];
-    if(o.m === 'due' || o.m === 'all'){
+    var fait = false;
+    var parId = {}; CARDS.forEach(function(c){ parId[c.id] = c; });
+    if(o.q && Array.isArray(o.q.ids)){
+      var cs = o.q.ids.map(function(id){ return parId[id]; }).filter(Boolean);
+      if(cs.length >= 1){
+        startQuiz(cs);
+        quizIndex = Math.max(0, Math.min(o.q.i | 0, cs.length));
+        quizFlipped = !!o.q.fl;
+        quizErrors = (o.q.er || []).map(function(id){ return parId[id]; }).filter(Boolean);
+        if(o.q.mc && typeof o.q.mc === 'object') quizMoodCounts = { rouge: o.q.mc.rouge | 0, orange: o.q.mc.orange | 0, vert: o.q.mc.vert | 0 };
+        if(Array.isArray(o.q.sn)) quizSeen = o.q.sn.slice();
+        if(o.et && cs[quizIndex]) ecr = { cle: 'quiz:' + quizIndex + ':' + cs[quizIndex].id, typed: String(o.et), locked: false, flipT: 0 };
+        renderQuiz();
+        parts.push('quiz carte ' + (quizIndex + 1) + '/' + cs.length + (o.et ? ' + réponse tapée' : ''));
+        fait = true;
+      }
+    }
+    if(!fait && (o.m === 'due' || o.m === 'all')){
       studyMode = o.m; matiereFilter = o.f || 'toutes';
       buildQueue(false);
       if(queue.length > 0){
         startStudySession(o.m);
-        var carteOk = false;
         try{
+          var carteOk = false, cid = null;
           if(o.c){
             var k = queue.findIndex(function(c){ return c.id === o.c; });
-            if(k >= 0){ var carte = queue.splice(k, 1)[0]; queue.unshift(carte); currentIndex = 0; flipped = !!o.fl; carteOk = true; }
+            if(k >= 0){ var carte = queue.splice(k, 1)[0]; queue.unshift(carte); currentIndex = 0; flipped = !!o.fl; carteOk = true; cid = carte.id; }
           }
           sessionReviewed = o.sr | 0; sessionMastered = o.sm | 0;
           if(o.mc && typeof o.mc === 'object') sessionMoodCounts = { rouge: o.mc.rouge | 0, orange: o.mc.orange | 0, vert: o.mc.vert | 0 };
+          if(o.et && carteOk) ecr = { cle: 'study:0:' + cid, typed: String(o.et), locked: !!o.lk, flipT: o.lk ? Date.now() - 5000 : 0 };
           renderStudy();
-        }catch(e){}
-        remplir(o.d, 0);
-        jr('séance reprise (' + o.m + ', carte ' + (carteOk ? 'retrouvée' : 'non retrouvée') + (o.fl ? ', retournée' : '') + ')');
-        return;
+          parts.push('séance ' + o.m + ' (carte ' + (carteOk ? 'retrouvée' : 'non retrouvée') + (o.fl ? ', retournée' : '') + (o.et ? ', réponse tapée' : '') + ')');
+        }catch(e){ parts.push('séance : ERREUR ' + ((e && e.message) || e)); }
+        fait = true;
+      }else{
+        parts.push('séance impossible à reprendre (file vide)');
+        studyMode = 'due'; matiereFilter = 'toutes'; buildQueue();
       }
-      jr('séance impossible à reprendre (file vide)');
-      studyMode = 'due'; matiereFilter = 'toutes'; buildQueue();
     }
-    if(tabs.indexOf(o.o) > 0){ switchTab(o.o); jr('onglet « ' + o.o + ' » remis'); }
-    else jr('accueil (rien à remettre)');
-    remplir(o.d, o.y || 0);
+    if(!fait && tabs.indexOf(o.o) > 0){ switchTab(o.o); parts.push('onglet « ' + o.o + ' »'); }
+    if(!fait && ppAddMode === 'man' && o.o !== 'add') ppAddMode = 'ia';
+
+    /* 3) fenêtre ouverte (fiche d'une carte, Réglages…) : rouverte avec les mêmes arguments, puis ses champs sont remplis */
+    var L = o.L;
+    if(!fait && L && OUVREURS.indexOf(L.f) >= 0 && Array.isArray(L.a) && L.a.every(simple) && typeof window[L.f] === 'function'){
+      setTimeout(function(){
+        try{
+          if(L.f === 'ppFiche' && !CARDS.some(function(c){ return c.id === L.a[0]; })) return;
+          window[L.f].apply(null, L.a);
+          if(L.f === 'ppFiche' && o.fm && ppFi && ppFi.l){ var j = ppFi.l.indexOf(o.fm); if(j >= 0) ppFichePickM(j); }
+          jr('fenêtre rouverte : ' + L.f);
+        }catch(e){ jr('fenêtre ERREUR : ' + ((e && e.message) || e)); }
+      }, 350);
+      parts.push('fenêtre ' + L.f);
+    }
+    apres(o);
+    jr(parts.length ? 'remis : ' + parts.join(' ; ') : 'accueil (rien à remettre)');
   }catch(e){ jr('ERREUR : ' + ((e && e.message) || e)); }
 })();
 

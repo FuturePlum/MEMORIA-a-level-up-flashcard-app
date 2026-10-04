@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v69 : « navigation preload » : la page est demandée au réseau pendant que le service worker démarre (retour par l'icône plus rapide, donc logo natif d'Android moins longtemps) ; sauvegarde complète de l'écran : index.html change aussi.
+
    v68 : le faux splash se rejoue seulement après une vraie fermeture de l'app (décision selon l'heure du dernier « pagehide ») : index.html change, donc nouvelle version du cache.
 
    v67 : journal de diagnostic (retours à l'accueil) + instantané d'écran toutes les 3 s : index.html change, donc nouvelle version du cache.
@@ -33,7 +35,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v68';
+const SW_VERSION = 'v69';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
@@ -48,6 +50,7 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((noms) => Promise.all(noms.filter((n) => n !== CACHE_NOM).map((n) => caches.delete(n))))
       .then(() => self.clients.claim())
+      .then(() => (self.registration.navigationPreload ? self.registration.navigationPreload.enable().catch(() => {}) : null))
   );
 });
 
@@ -58,21 +61,22 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if(req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  event.respondWith(
-    fetch(req)
-      .then((res) => {
-        if(res && res.status === 200){
-          const copie = res.clone();
-          caches.open(CACHE_NOM).then((c) => c.put(req, copie)).catch(() => {});
-        }
-        return res;
-      })
-      .catch(() =>
-        caches.match(req)
-          .then((r) => r || (req.mode === 'navigate' ? caches.match('./index.html') : null))
-          .then((r) => r || Response.error())
-      )
-  );
+  event.respondWith((async () => {
+    try{
+      /* v69 : pour l'ouverture de la page, la demande réseau est déjà partie (navigation preload) pendant que ce service worker démarrait. */
+      let res = null;
+      if(req.mode === 'navigate' && event.preloadResponse){ try{ res = await event.preloadResponse; }catch(e){ res = null; } }
+      if(!res) res = await fetch(req);
+      if(res && res.status === 200){
+        const copie = res.clone();
+        caches.open(CACHE_NOM).then((c) => c.put(req, copie)).catch(() => {});
+      }
+      return res;
+    }catch(e){
+      const r = await caches.match(req);
+      return r || (req.mode === 'navigate' ? await caches.match('./index.html') : null) || Response.error();
+    }
+  })());
 });
 
 /* Le client envoie le nombre de cartes dues + l'heure de rappel voulue ;
