@@ -105,6 +105,8 @@ Et ça marche **sans connexion** : métro, train, salle sans réseau, tes cartes
 
 Pas de compte, pas de pub, pas de pistage. Tes cartes et ta progression restent **sur ton appareil**. Tu peux aussi exporter toute ta progression en un fichier quand tu veux.
 
+**Un seul signal anonyme** part quand tu touches « C'est parti » à la première ouverture, ou quand l'appli est installée. Je reçois seulement « quelqu'un a installé l'appli » (avec la version et la langue) : je n'enregistre ni adresse IP, ni identifiant, ni aucune donnée sur toi.
+
 **La synchronisation et le partage sont facultatifs.** Si tu les actives, tes données (cartes, progression et clé Gemini) sont stockées sur mon serveur Cloudflare, protégées seulement par ton code perso. Je suis seul à y avoir accès techniquement, donc par transparence, je préfère te le dire clairement.
 
 J'ai développé cette appli pour moi, et je la publie pour que d'autres puissent en profiter. Je n'ai aucune intention de consulter, d'utiliser ou de revendre tes données, et je n'y ai aucun intérêt. Si tu préfères ne rien me confier, n'active pas la synchro : l'appli marche très bien sans.
