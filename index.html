@@ -361,7 +361,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   Object.assign(D,{ /* lot 4 (v137) : audit — textes oubliés, erreurs, placeholders */
     'Copié ✓':'Copied ✓','Ta synthèse':'Your summary','Tout réviser':'Study all','Tout réviser — quelle matière ?':'Study all — which subject?',"S'entraîner — quelle matière ?":'Practice — which subject?',
     'Sans matière':'No subject','Ton code perso':'Your personal code','Modèle renommé':'Template renamed','Modèle enregistré':'Template saved',"Envoyer à l'IA":'Send to the AI','Mois précédent':'Previous month',
-    '(Synthèse vide)':'(Empty summary)','Date enregistrée':'Date saved','Date de contrôle enregistrée':'Test date saved','Dates de contrôle':'Test dates','Caractères refusés':'Rejected characters',
+    '(Synthèse vide)':'(Empty summary)','Date enregistrée':'Date saved','Quelques cartes tombent juste avant le contrôle.':'A few cards land right before the test.','Déjà passée : sans effet sur le planning.':'Already passed: no effect on the planning.','Date de contrôle enregistrée':'Test date saved','Dates de contrôle':'Test dates','Caractères refusés':'Rejected characters',
     'Renommer le modèle':'Rename template','Revoir les erreurs':'Review mistakes','Jamais synchronisé sur cet appareil':'Never synced on this device','Générer la synthèse':'Generate the summary',
     'Progression par matière':'Progress by subject','Génération en cours...':'Generating...','Choisis un nouveau nom.':'Choose a new name.','Ton texte est conservé.':'Your text is kept.',"Générer d'autres cartes":'Generate more cards',
     'Continuer quand même ?':'Continue anyway?',"À réviser aujourd'hui":'To review today',"contrôle aujourd'hui":'test today','contrôle demain':'test tomorrow','Code introuvable ou expiré':'Code not found or expired',
@@ -1343,11 +1343,12 @@ body.synth-impression .synth-rendu th{background:#eee !important; -webkit-print-
 .cc-toast svg{width:16px; height:16px; stroke:currentColor;}
 .cc-toast .cc-check-circle{stroke-dasharray:24; stroke-dashoffset:24; animation:checkDraw 0.4s 0.15s ease-out forwards;}
 .cc-toast.cc-toast-avert{
-    border-radius:18px; max-width:88vw; text-align:left; align-items:flex-start;
-    animation:toastIn 0.35s cubic-bezier(.34,1.56,.64,1) both, toastOut 0.35s ease-in 4.9s forwards;
+    border-radius:16px; max-width:calc(100vw - 32px); width:max-content; text-align:left; align-items:center;
+    padding:9px 15px; gap:9px; font-size:0.84rem; line-height:1.25;
+    animation:toastIn 0.35s cubic-bezier(.34,1.56,.64,1) both, toastOut 0.35s ease-in 3.5s forwards;
   }
-.cc-toast.cc-toast-avert svg{margin-top:2px; flex-shrink:0;}
-.cc-toast-sub{display:block; font-weight:500; font-size:0.8rem; margin-top:3px; opacity:0.95;}
+.cc-toast.cc-toast-avert svg{flex-shrink:0;}
+.cc-toast-sub{display:block; font-weight:500; font-size:0.74rem; margin-top:1px; opacity:0.7;}
 @keyframes toastIn{from{opacity:0; transform:translateX(-50%) translateY(-14px);} to{opacity:1; transform:translateX(-50%) translateY(0);}}
 @keyframes toastOut{from{opacity:1;} to{opacity:0; transform:translateX(-50%) translateY(-14px);}}
 /* ---- Filter pills (remplace le <select> natif pendant une session) ---- */
@@ -4654,6 +4655,7 @@ const MARGE_CONTROLE_VISEE_JOURS = 3;
 /* Message affiché quand au moins une carte NEUVE a dû être placée dans la zone
    tampon (repli : plus aucune place avant). Jamais affiché en l'absence de repli. */
 const MSG_AVERTISSEMENT_REPLI_ZONE = "Certaines cartes neuves sont placées juste avant ton contrôle, faute de place avant.";
+const MSG_REPLI_TOAST = "Quelques cartes tombent juste avant le contrôle.";   /* v247 : version courte pour le toast (la longue reste pour les messages d'import) */
 
 /* Compression proportionnelle des intervalles quand une date de contrôle
    approche (cf. décision : option A pour l'absence de date => intervalles
@@ -9764,8 +9766,8 @@ function onDateControleChange(matiere, val){
   recalcPlanning();
   saveLocalPlanning();
   renderPlanning();
-  if(repli) showCreatedToast(MSG_AVERTISSEMENT_REPLI_ZONE, 'Date de contrôle enregistrée');
-  else if(val && val < todayStr()) showCreatedToast('Cette date est déjà passée : elle n\'influence plus le planning.', 'Date enregistrée');
+  if(repli) showCreatedToast(MSG_REPLI_TOAST, 'Date enregistrée');
+  else if(val && val < todayStr()) showCreatedToast('Déjà passée : sans effet sur le planning.', 'Date enregistrée');
 }
 
 /* Planning "avant le contrôle" — aligné sur le système de répétition espacée :
@@ -10805,7 +10807,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v246';
+const PP_APP_VERSION = 'v247';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -14385,8 +14387,8 @@ function showCreatedToast(avertissement, titre){
   el.className = 'cc-toast' + (avertissement ? ' cc-toast-avert' : '');
   el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="cc-check-circle" d="M5 13l4 4L19 7"/></svg> <span>${escapeHtml(titre || 'Carte ajoutée')}${avertissement ? '<span class="cc-toast-sub">' + escapeHtml(avertissement) + '</span>' : ''}</span>`;
   document.body.appendChild(el);
-  // Avec un avertissement, le toast reste plus longtemps pour laisser le temps de le lire.
-  setTimeout(() => el.remove(), avertissement ? 5300 : 1900);
+  // Avec un avertissement (court), le toast reste un peu plus longtemps.
+  setTimeout(() => el.remove(), avertissement ? 3900 : 1900);
 }
 
 function resetCreateCardFields(){
@@ -14433,7 +14435,7 @@ function createCardWithMatiere(matiere, question, reponse, keepOpen, images){
   if(activeTab === 'study') buildQueue();
   render();
   // Repli : la carte neuve a dû être placée dans la zone tampon → on prévient.
-  showCreatedToast(estEnRepliZoneTampon(prochaineRevision, dateControleCreate) ? MSG_AVERTISSEMENT_REPLI_ZONE : null);
+  showCreatedToast(estEnRepliZoneTampon(prochaineRevision, dateControleCreate) ? MSG_REPLI_TOAST : null);
   if(keepOpen){
     // Vide les champs en place, sans détruire/recréer la page (transition fluide).
     resetCreateCardFields();
