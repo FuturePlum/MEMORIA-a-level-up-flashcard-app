@@ -8208,7 +8208,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v197';
+const PP_APP_VERSION = 'v198';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13572,6 +13572,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       if(ouvreur && ouvreur.f === 'ouvrirEditionIA' && !(iaEdit && iaEdit.etape === 'consigne')) ouvreur = null;
       if(ouvreur){ o.L = ouvreur; if(ouvreur.f === 'ppFiche' && ppFi && ppFi.m) o.fm = ppFi.m; }
     }else ouvreur = null;
+    /* v198 : Introduction ouverte (première fois ou « Revoir l'introduction ») : écran, étape IA, clé tapée, essais. */
+    try{ if(typeof window.fcIntroEtat === 'function'){ var ie = window.fcIntroEtat(); if(ie) o.ni = ie; } }catch(x){}
     var d = champs();
     for(var k in d){ o.d = d; break; }
     return o;
@@ -13640,6 +13642,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var age = o ? Date.now() - o.t : -1;
     if(!o || !(age >= 0 && age < TRENTE_MIN)){ jr('instantané trop vieux ou illisible (' + Math.round(age / 60000) + ' min)'); return; }
     var parts = [];
+    if(o.ni && typeof o.ni === 'object' && typeof o.ni.i === 'number'){ window.__ppIntroEtat = o.ni; parts.push('introduction écran ' + ((o.ni.i | 0) + 1)); }   // v198
 
     /* 1) variables simples, AVANT de redessiner */
     if(o.am === 'man'){ ppAddMode = 'man'; parts.push('mode « à la main »'); }
@@ -14090,7 +14093,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     }
   }
 
-  function ouvrir(){
+  function ouvrir(etat){
     if(document.getElementById('fci')) return;
     T = S[(typeof langueChoisie==='function' && langueChoisie()==='en')?'en':'fr'];
     closing=false; i=0; ia=0; keyOk=false; p=0;
@@ -14143,11 +14146,36 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     sl.forEach(function(s,k){ s.classList.add(k?'fi-R':'fi-on'); });
     [].forEach.call(sl[0].querySelectorAll('.fi-rv'),function(r,j){ r.style.setProperty('--k',j); });
     ui();
+    if(etat) restaurer(etat);
   }
-  window.fcIntroOuvrir=ouvrir;
+  /* v198 : état de l'introduction pour la sauvegarde de l'écran (null si elle est fermée) */
+  window.fcIntroEtat=function(){
+    if(closing || !root || !root.parentNode) return null;
+    var e={i:i}, k=q('[data-i=ky]'), s1=q('[data-i=s1]'), c=q('[data-i=ch] button.fi-on');
+    if(ia) e.a=1;
+    if(k && k.value) e.k=k.value.slice(0,300);
+    if(s1 && s1.classList.contains('fi-ok')) e.s=1;
+    if(p) e.p=p;
+    if(c){ var n=+c.getAttribute('data-n'); if(n && n!==5) e.n=n; }
+    return e;
+  };
+  /* v198 : remet l'introduction là où elle était (écran, étape IA, clé tapée, niveau essayé, durée choisie au planning) */
+  function restaurer(e){
+    try{
+      if((e.p|0)>0) lv(e.p|0,true);
+      if(e.n){ var b=q('[data-i=ch] button[data-n="'+(e.n|0)+'"]'); if(b){ qa('[data-i=ch] button').forEach(function(x){ x.classList.toggle('fi-on',x===b); }); wk(e.n|0); } }
+      if(e.a){ ia=1; q('[data-i=ia]').classList.add('fi-b'); }
+      if(e.s){ q('[data-i=s1]').classList.replace('fi-op','fi-ok'); q('[data-i=s2]').classList.add('fi-op'); }
+      if(typeof e.k==='string' && e.k){ var ky=q('[data-i=ky]'); ky.value=e.k.slice(0,300); ky.oninput(); }
+      var n=e.i|0; if(n>0 && n<N) go(n); else ui();
+    }catch(x){}
+  }
+  window.fcIntroOuvrir=function(etat){ ouvrir(etat && typeof etat==='object' && typeof etat.i==='number' ? etat : null); };
   function auto(){
-    var force=false, vu=false;
+    var force=false, vu=false, rest=window.__ppIntroEtat||null;
     try{ force=/[?&]intro(=1|&|$)/.test(location.search); vu=!!localStorage.getItem(SEEN); }catch(e){}
+    window.__ppIntroEtat=null;
+    if(rest){ ouvrir(rest); return; }   // v198 : retour par l'icône avec l'introduction ouverte (aussi quand on la rejoue)
     if(force){ ouvrir(); return; }
     if(vu) return;
     if(dejaUtilisateur()){ markSeen(); return; }
