@@ -3589,6 +3589,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pp-fieldbox:focus-within{border-color:var(--yellow-b)}
 :root:root .pp-fieldbox textarea,:root:root .pp-fieldbox textarea:focus{border:0;background:transparent;margin:0;border-radius:18px 18px 0 0;box-shadow:none;padding:14px 16px 6px}
 .pp-fieldbox .pp-fbar{padding:0 10px 10px}
+#pp-addn:empty{display:none}
 .pp-fieldbox .pp-fbar-nl{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .pp-nl{flex:none;min-width:40px;min-height:32px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--muted);font:700 18px/1 inherit;cursor:pointer}
 .pp-nl:active{background:var(--line)}
@@ -10570,7 +10571,7 @@ function ppViewMan(){
   ${ppChampImg('man', 'r', `<textarea id="pp-na" enterkeyhint="done" oninput="ppMan.ta=this.value;ppRvMaj('pp-na')" onkeydown="ppEnter(event,'a')" placeholder="Saisis le texte ici">${ppEsc(ppMan.ta || '')}</textarea>`)}${ppRvDiv('pp-na-rv', ppMan.ta)}</div>
   <button class="pp-cta" style="margin-top:0" onclick="ppAddCard()">Ajouter la carte</button>
   <div class="pp-kbd"><kbd>Entrée</kbd> pour avancer, puis pour ajouter</div>
-  <p class="pp-note" id="pp-addn">${ppAddedN ? ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert' : 'Reste ouvert pour enchaîner sur la carte suivante'}</p>`;
+  <p class="pp-note" id="pp-addn">${ppAddedN ? ppAddedN + ' carte' + (ppAddedN > 1 ? 's' : '') + ' ajoutée' + (ppAddedN > 1 ? 's' : '') + ' · le formulaire reste ouvert' : ''}</p>`;
 }
 
 /* « À écrire » du formulaire à la main : l'activer éteint ⇄ (exclusifs par défaut) ; toucher ⇄ ensuite les cumule volontairement. */
@@ -10828,7 +10829,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v257';
+const PP_APP_VERSION = 'v258';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
