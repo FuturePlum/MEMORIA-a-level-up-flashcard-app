@@ -1,0 +1,8 @@
+Memoria is a flashcard app built around spaced repetition: you review each card at the right moment so it sticks.
+
+• Review, practice and follow your progress subject by subject
+• Add cards by hand, or generate cards and summaries with AI using your own Gemini API key (set in Settings)
+• Prof, an AI assistant that knows your cards and answers your questions
+• Optional sync between devices and sharing a subject with a code
+
+Privacy: the AI features send your request to Google (Gemini) with your own key. Sync and sharing are optional and store data on a small Cloudflare Workers server.
