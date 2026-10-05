@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v124 : v268 (correctif : l'accueil plantait au démarrage dès qu'il y avait des cartes, variable « mas » oubliée dans la carte « cartes en 7 jours ») : index.html change, donc nouvelle version du cache.
+
    v123 : v267 (carte de l'accueil : « cartes en 7 jours » à la place de la série, barres et grille des 30 jours lues dans le journal des réponses synchronisé) : index.html change, donc nouvelle version du cache.
 
    v122 : v266 (icône de Prof : étoile variante C agrandie dans l'en-tête et le chat, anneau doré pendant la réflexion) : index.html change, donc nouvelle version du cache.
@@ -45,7 +47,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v123';
+const SW_VERSION = 'v124';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

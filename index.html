@@ -7964,6 +7964,7 @@ function ppProgressHtml(){
   const cnt = ppRevisionsParJour(7), lab = [];
   for(let i = 6; i >= 0; i--) lab.push(dl[new Date(addDays(today, -i) + 'T00:00:00').getDay()]);
   const sem = cnt.reduce((a, v) => a + v, 0);
+  const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
   const mx = Math.max(1, ...cnt);
   const bars = cnt.map((v, i) => `<div><em><s class="${v ? (i === 6 ? 't' : 'a') : ''}" style="height:${v ? Math.max(22, Math.round(v / mx * 100)) : 6}%;animation-delay:${i * 50}ms"></s></em><span class="${i === 6 ? 't' : ''}">${lab[i]}</span></div>`).join('');
   return `<div class="pp-prog7" role="button" onclick="openStreakModal()"><div class="pp-p7s"><div><i style="background:var(--c-osoft);color:var(--orange-t)">${PP_IC.cards.replace(/22/g,'16')}</i><span style="display:block"><b>${sem}</b><span>carte${sem>1?'s':''} en 7 jours</span></span></div><u></u><div><i style="background:var(--c-gsoft);color:var(--green)">${ppSvg('<path d="M4 12.5l5 5L20 6.5"/>',16)}</i><span style="display:block"><b>${mas}</b><span>maîtrisée${mas>1?'s':''}</span></span></div></div><div class="pp-p7b">${bars}</div></div>`;
@@ -10957,7 +10958,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v267';
+const PP_APP_VERSION = 'v268';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
