@@ -350,7 +350,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^(\d+) fichiers?$/,function(n){ return c(n,'file'); })
   );
   Object.assign(D,{ /* v138 : textes oubliés (captures) */
-    'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
+    'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','carte en 7 jours':'card in 7 days','cartes en 7 jours':'cards in 7 days','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
   });
   Object.assign(D,{ /* v138 : Android / iOS sur grand écran */
     'Aussi sur Android et iOS':'Also on Android and iOS',"Télécharger l'app (fichier APK)":'Download the app (APK file)','Ouvrir':'Open',"Ajouter le site à l'écran d'accueil":'Add the site to the home screen',
@@ -3059,6 +3059,17 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pc-spark path{fill:var(--pcf)}/* même teinte que le fond du bouton : l'étoile de devant cache bien celle de derrière */
 .pp-coach.bounce{animation:pcsquash .6s var(--ease-press)}
 .pp-coach.bounce svg{animation:pcspin .7s var(--ease-press)}
+/* v266 : anneau doré qui tourne autour de l'icône de Prof pendant que l'IA réfléchit (bouton d'en-tête + pastille du chat) */
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+.pp-coach::before,.pc-title i::before{content:"";position:absolute;inset:-3px;border-radius:99px;padding:2px;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s;
+  background:conic-gradient(from var(--a),transparent 0 45%,color-mix(in srgb,var(--yellow) 70%,#fff) 78%,transparent 96%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+.pp-coach.think::before,.pc-title i.think::before{opacity:1;animation:pcring 1.2s linear infinite}
+@keyframes pcring{to{--a:360deg}}
+body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{animation:none}
+@media (prefers-reduced-motion:reduce){.pp-coach.think::before,.pc-title i.think::before{animation:none}}
+.pc-title i{position:relative}
 @keyframes pctwinkle{0%,80%,100%{transform:scale(1) rotate(0)}90%{transform:scale(1.2) rotate(18deg)}}
 @keyframes pcspin{from{transform:rotate(-200deg) scale(.4)}to{transform:rotate(0) scale(1)}}
 @keyframes pcsquash{0%{transform:scale(1)}30%{transform:scale(.88,1.12)}60%{transform:scale(1.1,.92)}100%{transform:scale(1)}}
@@ -5474,7 +5485,7 @@ function pcEnsure(){
   l.innerHTML = `<div class="pp-grab"></div><div class="pc-in">
     <aside class="pc-side" id="pc-side"><div class="pc-sc"><h3>Matière</h3><div id="pc-smats"></div></div><div class="pc-sc grow"><h3><span>Conversations passées</span><small id="pc-hn" data-notr></small></h3><div id="pc-shist"></div></div><div class="pc-sc rows" id="pc-srows"></div></aside>
     <div class="pc-win" id="pc-win">
-    <div class="pc-bar pc-stg" style="--i:0"><button class="pp-back" id="pc-back" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><i>${pcEtoiles(18)}</i><span>${escapeHtml(PP_COACH_NOM)}</span></div><div class="pc-newwrap"><button class="pp-back pc-new" id="pc-new" aria-label="Nouvelle conversation" type="button">${PC_NEW_IC}<span class="pc-new-t">Nouvelle conversation</span></button><button class="pc-undo" id="pc-undo" type="button" tabindex="-1">${PC_UNDO_IC}Annuler</button></div><button class="pp-back pc-more-b" id="pc-more" aria-label="Menu" type="button">${PP_DOTS_H}</button></div>
+    <div class="pc-bar pc-stg" style="--i:0"><button class="pp-back" id="pc-back" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><i class="${pcPense ? 'think' : ''}">${pcEtoiles(20)}</i><span>${escapeHtml(PP_COACH_NOM)}</span></div><div class="pc-newwrap"><button class="pp-back pc-new" id="pc-new" aria-label="Nouvelle conversation" type="button">${PC_NEW_IC}<span class="pc-new-t">Nouvelle conversation</span></button><button class="pc-undo" id="pc-undo" type="button" tabindex="-1">${PC_UNDO_IC}Annuler</button></div><button class="pp-back pc-more-b" id="pc-more" aria-label="Menu" type="button">${PP_DOTS_H}</button></div>
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
     <div class="pc-suggw pc-stg" style="--i:3"><button class="pp-back pc-arr l" id="pc-al" type="button" aria-label="Suggestions précédentes">${ppSvg('<path d="M15 6l-6 6 6 6"/>', 18)}</button><div id="pc-sugg"></div><button class="pp-back pc-arr r" id="pc-ar" type="button" aria-label="Suggestions suivantes">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</button></div>
@@ -6499,7 +6510,7 @@ async function pcEnvoyer(t, label){
   pcPhoto = null; pcPhotoMaj();
   const ty = document.createElement('div'); ty.className = 'pc-b a pc-typing'; ty.innerHTML = '<i></i><i></i><i></i>';
   setTimeout(() => { if(pcEl('pc-feed') && ty.isConnected === false && pcAttente){ pcEl('pc-feed').appendChild(ty); pcBas(); } }, 350);
-  pcAttente = true; pcPense = true; /* v206 : étoiles en rotation continue tant que l'IA n'a pas répondu */
+  pcAttente = true; pcReflechit(true); /* v206 : étoiles en rotation continue tant que l'IA n'a pas répondu */
   try{
     const r = await ppCoachRepondre(t, matiere, photo);
     ty.remove();
@@ -6518,7 +6529,7 @@ async function pcEnvoyer(t, label){
     if(photo && !pcPhoto){ pcPhoto = photo; pcPhotoMaj(); }
     if(err && err.sansCle) pcEtatSansCle(); else pcAjoute('a', (err && err.pcMsg) || "Impossible de joindre l'assistant. Réessaie dans un moment.", { err: true });
   }finally{
-    pcPense = false; pcAttente = false; /* toujours remis à false, même en cas d'erreur Gemini */
+    pcReflechit(false); pcAttente = false; /* toujours remis à false, même en cas d'erreur Gemini */
   }
 }
 
@@ -7219,6 +7230,8 @@ function pcViewportKb(on){
     if(m.getAttribute('content') !== cible) m.setAttribute('content', cible);
   }catch(e){}
 }
+/* v266 : l'IA réfléchit → étoiles en rotation continue + anneau doré sur le bouton d'en-tête et sur la pastille du chat */
+function pcReflechit(on){ pcPense = on; document.querySelectorAll('.pp-coach,.pc-title i').forEach(b => { b.classList.toggle('think', on); if(b.classList.contains('pp-coach')) b.setAttribute('aria-busy', on ? 'true' : 'false'); }); }
 function pcRebond(){ document.querySelectorAll('#pp-coach-btn').forEach(b => { b.classList.remove('bounce'); void b.offsetWidth; b.classList.add('bounce'); }); }
 function ppCoachOuvrir(ctx){
   ctx = (ctx && typeof ctx === 'object' && typeof ctx.preventDefault !== 'function') ? ctx : null;
@@ -7388,7 +7401,7 @@ function renderTopbarRight(){
   const logo = document.getElementById('pp-logo-icon');
   if(logo && !logo.innerHTML) logo.innerHTML = '<svg viewBox="139 121 246 269" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g transform="rotate(10 250 250) translate(14 -4)"><rect x="177" y="154" width="170" height="216" rx="34" style="fill:var(--lg-d)"/><rect x="165" y="142" width="170" height="216" rx="34" style="fill:var(--lg-b)"/></g><g transform="rotate(-8 250 250) translate(-6 2)"><rect x="177" y="154" width="170" height="216" rx="34" fill="#b8431d"/><rect x="165" y="142" width="170" height="216" rx="34" fill="#ff6b3d"/><path d="M204 253 L238 290 L306 210" fill="none" stroke="#f5f0e6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></g></svg>'; // logo de l'app (carte orange + coche), PAS l'icône d'onglet PP_IC.cards
   if(!el.dataset.pp){
-    el.innerHTML = `<div class="pp-streak" id="streak-pill" role="button" onclick="openStreakModal()">${PP_IC.fire.replace('<svg ', '<svg id="streak-flame" ')}<span id="streak-num">0</span></div><button class="pp-coach" id="pp-coach-btn" aria-label="${PP_COACH_NOM}" title="${PP_COACH_NOM}" onclick="ppCoachOuvrir()">${pcEtoiles(18)}</button><button class="pp-gear" aria-label="Réglages" title="Réglages" onclick="ppSettings()">${PP_IC.gear}</button>`;
+    el.innerHTML = `<div class="pp-streak" id="streak-pill" role="button" onclick="openStreakModal()">${PP_IC.fire.replace('<svg ', '<svg id="streak-flame" ')}<span id="streak-num">0</span></div><button class="pp-coach${pcPense ? ' think' : ''}" id="pp-coach-btn" aria-label="${PP_COACH_NOM}" title="${PP_COACH_NOM}" onclick="ppCoachOuvrir()">${pcEtoiles(23)}</button><button class="pp-gear" aria-label="Réglages" title="Réglages" onclick="ppSettings()">${PP_IC.gear}</button>`;
     el.dataset.pp = '1';
   }
   renderStreak();
@@ -7931,20 +7944,29 @@ function ppCbMatsHtml(){
   }
   return `<div class="cb-mats pp-plan pp-still">${h}</div>`;
 }
+/* v267 : cartes révisées par jour sur les `nb` derniers jours (le dernier = aujourd'hui). Source principale = le journal des réponses
+   (cartes-reponses), qui est synchronisé entre les appareils : on compte les cartes DIFFÉRENTES vues ce jour-là, donc une carte revue
+   lundi puis mercredi compte aux deux jours (avant : derniereRevision seule, qui ne garde que le dernier jour). On prend le plus grand
+   des deux chiffres pour chaque jour, pour que les jours d'avant le journal gardent leur valeur. Sert aux barres de l'accueil, au
+   total « cartes en 7 jours » et à la grille des 30 jours des statistiques : tout le monde lit la même source. */
+function ppRevisionsParJour(nb){
+  const today = todayStr();
+  const jours = [];
+  for(let i = nb - 1; i >= 0; i--) jours.push(addDays(today, -i));
+  const vus = {};
+  jours.forEach(d => { vus[d] = new Set(); });
+  try{ ppLireJSON('cartes-reponses', [], Array.isArray).forEach(x => { if(pcJournalOk(x) && vus[x.d]) vus[x.d].add(x.id); }); }catch(e){}
+  return jours.map(d => Math.max(vus[d].size, CARDS.filter(c => c.derniereRevision === d).length));
+}
 function ppProgressHtml(){
-  const streakN = getStreakAffichee();
-  const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
   const today = todayStr();
   const dl = (typeof langueChoisie === 'function' && langueChoisie() === 'en') ? ['S','M','T','W','T','F','S'] : ['D','L','M','M','J','V','S'];
-  const cnt = [], lab = [];
-  for(let i = 6; i >= 0; i--){
-    const d = addDays(today, -i);
-    cnt.push(CARDS.filter(c => c.derniereRevision === d).length);
-    lab.push(dl[new Date(d + 'T00:00:00').getDay()]);
-  }
+  const cnt = ppRevisionsParJour(7), lab = [];
+  for(let i = 6; i >= 0; i--) lab.push(dl[new Date(addDays(today, -i) + 'T00:00:00').getDay()]);
+  const sem = cnt.reduce((a, v) => a + v, 0);
   const mx = Math.max(1, ...cnt);
   const bars = cnt.map((v, i) => `<div><em><s class="${v ? (i === 6 ? 't' : 'a') : ''}" style="height:${v ? Math.max(22, Math.round(v / mx * 100)) : 6}%;animation-delay:${i * 50}ms"></s></em><span class="${i === 6 ? 't' : ''}">${lab[i]}</span></div>`).join('');
-  return `<div class="pp-prog7" role="button" onclick="openStreakModal()"><div class="pp-p7s"><div><i style="background:var(--c-yicon);color:var(--yellow-t)">${PP_IC.fire.replace(/18/g,'16')}</i><span style="display:block"><b>${streakN}</b><span>jour${streakN>1?'s':''} de suite</span></span></div><u></u><div><i style="background:var(--c-gsoft);color:var(--green)">${ppSvg('<path d="M4 12.5l5 5L20 6.5"/>',16)}</i><span style="display:block"><b>${mas}</b><span>maîtrisée${mas>1?'s':''}</span></span></div></div><div class="pp-p7b">${bars}</div></div>`;
+  return `<div class="pp-prog7" role="button" onclick="openStreakModal()"><div class="pp-p7s"><div><i style="background:var(--c-osoft);color:var(--orange-t)">${PP_IC.cards.replace(/22/g,'16')}</i><span style="display:block"><b>${sem}</b><span>carte${sem>1?'s':''} en 7 jours</span></span></div><u></u><div><i style="background:var(--c-gsoft);color:var(--green)">${ppSvg('<path d="M4 12.5l5 5L20 6.5"/>',16)}</i><span style="display:block"><b>${mas}</b><span>maîtrisée${mas>1?'s':''}</span></span></div></div><div class="pp-p7b">${bars}</div></div>`;
 }
 /* Compteur qui monte de 0 au chiffre (500 ms), seulement quand l'accueil vient d'apparaître ;
    attend la fin du splash d'ouverture pour que l'animation soit visible. */
@@ -10935,7 +10957,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v265';
+const PP_APP_VERSION = 'v267';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -15811,10 +15833,10 @@ function ppStatsHtml(){
   const mas = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
   const ex = ppStatExtra();
   const record = Math.max(ex.record, streak);
-  const heat = [];
+  const heat = [], cnt30 = ppRevisionsParJour(30);
   for(let i = 29; i >= 0; i--){
     const d = addDays(today, -i);
-    let n = CARDS.filter(c => c.derniereRevision === d).length;
+    let n = cnt30[29 - i];
     if(d === streakData.lastDate) n = Math.max(n, 1);
     heat.push(n === 0 ? 0 : n <= 4 ? 1 : n <= 9 ? 2 : 3);
   }
