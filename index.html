@@ -3589,6 +3589,9 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 .pp-fieldbox:focus-within{border-color:var(--yellow-b)}
 :root:root .pp-fieldbox textarea,:root:root .pp-fieldbox textarea:focus{border:0;background:transparent;margin:0;border-radius:18px 18px 0 0;box-shadow:none;padding:14px 16px 6px}
 .pp-fieldbox .pp-fbar{padding:0 10px 10px}
+.pp-fieldbox .pp-fbar-nl{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pp-nl{flex:none;min-width:40px;min-height:32px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--muted);font:700 18px/1 inherit;cursor:pointer}
+.pp-nl:active{background:var(--line)}
 .pp-fieldbox .pp-imgslot{margin:0}
 .pp-fieldbox .pp-imgchip{min-height:32px;font-size:12.5px}
 .pp-fieldbox+.pp-imgpanel{margin:-6px 0 14px}
@@ -4189,7 +4192,9 @@ function ppImgPanelWrap(ctx, cote){
 }
 /* Cadre d'un côté de carte : le champ texte ET le bouton « Image » dans le même cadre, panneau « Une de tes photos » dessous. Utilisé par 'man', 'fi' et 'pv:<i>'. */
 function ppChampImg(ctx, cote, textareaHtml){
-  return `<div class="pp-fieldbox">${textareaHtml}<div class="pp-fbar">${ppImgSlotWrap(ctx, cote)}</div></div>${ppImgPanelWrap(ctx, cote)}`;
+  /* v257 : sur téléphone Maj+Entrée n'existe pas (le clavier ne dit pas si Maj est pris) : petit bouton ↵ pour le saut de ligne, Entrée garde « case suivante » */
+  const nl = ctx === 'man' ? `<button type="button" class="pp-nl" aria-label="Saut à la ligne" onpointerdown="event.preventDefault()" onclick="ppSautLigne('${cote === 'q' ? 'pp-nq' : 'pp-na'}')">↵</button>` : '';
+  return `<div class="pp-fieldbox">${textareaHtml}<div class="pp-fbar${nl ? ' pp-fbar-nl' : ''}">${ppImgSlotWrap(ctx, cote)}${nl}</div></div>${ppImgPanelWrap(ctx, cote)}`;
 }
 function ppImgRafraichir(ctx, cote){
   const sl = document.getElementById('pp-imgs-' + ppImgId(ctx) + '-' + cote);
@@ -10651,6 +10656,13 @@ document.addEventListener('focusout', e => {
     const v = document.querySelector('#tab-add .pp-add'); if(v) v.classList.remove('pp-kbpad');
   }, 250);
 });
+function ppSautLigne(id){
+  const t = document.getElementById(id); if(!t) return;
+  const a = t.selectionStart, b = t.selectionEnd;
+  t.focus({ preventScroll:true });
+  t.setRangeText('\n', a, b, 'end');
+  t.dispatchEvent(new Event('input', { bubbles:true }));
+}
 function ppEnter(e, w){
   if(e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   e.preventDefault();
@@ -10816,7 +10828,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v255';
+const PP_APP_VERSION = 'v257';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
