@@ -544,7 +544,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html{
-    scroll-behavior:smooth; overscroll-behavior-y:contain;
+    scroll-behavior:smooth; overscroll-behavior-y:contain; overscroll-behavior-x:none; /* v253 : coupe l'animation de retour/avance de Chrome au glissement depuis le bord (elle affichait une capture périmée) */
     height:100%;
   }
 body{
@@ -566,7 +566,7 @@ body{
     font-family:var(--font-sans); line-height:1.45;
     height:100%; min-height:100vh; min-height:100dvh;
     -webkit-font-smoothing:antialiased;
-    overscroll-behavior-y:contain;
+    overscroll-behavior-y:contain; overscroll-behavior-x:none;
     -webkit-user-select:none; user-select:none;
     /* Le scroll ne s'active que si le contenu dépasse réellement l'écran
        (ex. liste longue de cartes) ; sur un écran qui tient déjà en entier
@@ -10816,7 +10816,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v252';
+const PP_APP_VERSION = 'v253';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
