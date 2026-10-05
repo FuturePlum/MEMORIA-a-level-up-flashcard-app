@@ -2103,8 +2103,10 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-mt .ov{border-top:.075em solid currentColor}
 .pp-mt .ul{border-bottom:.075em solid currentColor}
 .pp-mt sub.cs,.pp-mt sup.cs{font-size:.7em;line-height:0}
-.pp-rv{margin:6px 2px 10px;padding:9px 12px;border-radius:12px;background:var(--c-s1);color:var(--cream);font-size:15px;line-height:1.4;white-space:pre-line}
-.pp-rv[hidden]{display:none}
+/* v265 : aperçu flottant de la mise en forme (une seule phrase, au-dessus du clavier ou sous le champ) */
+.pp-rvf{position:fixed;z-index:1002;left:10px;width:calc(100% - 20px);box-sizing:border-box;display:flex;flex-direction:column;justify-content:flex-end;padding:7px 12px;border-radius:12px;border:1.5px solid var(--line);background:linear-gradient(var(--c-s1),var(--c-s1)),var(--c-sheet,var(--card));color:var(--cream);font-size:15px;line-height:1.35;white-space:pre-line;overflow:hidden;max-height:calc(3 * 1.35em + 17px);box-shadow:0 6px 18px rgba(0,0,0,.28);pointer-events:none;opacity:0;visibility:hidden;transition:opacity .14s ease,visibility 0s .14s}
+.pp-rvf.on{opacity:1;visibility:visible;transition:opacity .14s ease}
+@media (prefers-reduced-motion:reduce){.pp-rvf,.pp-rvf.on{transition:none!important}}
 .pp-fx{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:8px}
 .pp-fx code{font:600 12.5px ui-monospace,Menlo,Consolas,monospace;color:var(--muted);white-space:pre-line;min-width:0;overflow-wrap:anywhere}
 .pp-fx > span{font-size:17px;text-align:right;flex:none;max-width:48%;white-space:pre-line}
@@ -10933,7 +10935,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v264';
+const PP_APP_VERSION = 'v265';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -15614,16 +15616,115 @@ function ppStatsSeancesHtml(){
     <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${cible}</i><div><b>${auj}</b><span>aujourd'hui</span></div></div>`;
 }
 /* ---- v160 : aperçu en direct sous les champs de texte (visible seulement s'il y a une mise en forme) + aide ---- */
-function ppRvDiv(id, val){
-  const m = ppRichMarque(val);
-  return `<div class="pp-rv" id="${id}"${m ? '' : ' hidden'} data-notr>${m ? ppRichHtml(val) : ''}</div>`;
+/* v265 : l'aperçu n'est plus un cadre sous chaque champ. Un seul bloc flottant (#pp-rvf), collé juste au-dessus du clavier (écran tactile) ou sous le champ
+   (souris), qui n'affiche que la PHRASE où se trouve le curseur, et seulement si elle contient une mise en forme.
+   Une phrase s'arrête : au saut de ligne ; après « -> » ou « → » ; après . … ! ? ; quand ils sont suivis d'un espace ou de la fin du texte
+   (« 3.5 » et « site.fr » ne coupent donc pas). Une coupure à l'intérieur d'une formule #…# / $…$ est ignorée. */
+const PP_RV_CHAMPS = ['pp-eq', 'pp-ea', 'pp-nq', 'pp-na'];
+let ppRvActif = null;
+function ppRvDiv(){ return ''; }   /* l'ancien cadre sous le champ n'existe plus (appel conservé dans les gabarits) */
+/* Zones [début, fin[ occupées par une formule (mêmes règles que ppRichMaths ; un « # » encore non fermé va jusqu'à la fin de la ligne : on est en train de l'écrire) */
+function ppRvFormules(t){
+  const r = []; let i = 0;
+  while(i < t.length){
+    const c = t[i];
+    if(c === '\\' && (t[i + 1] === '$' || t[i + 1] === '#')){ i += 2; continue; }
+    if(c === '$' || c === '#'){
+      if(t[i + 1] === c){
+        const j = t.indexOf(c + c, i + 2);
+        if(j > i + 2 && t.slice(i + 2, j).indexOf('\n') < 0){ r.push([i, j + 2]); i = j + 2; continue; }
+      }
+      const n = t[i + 1];
+      if(n !== undefined && !/\s/.test(n) && n !== c){
+        let j = i + 1, f = -1;
+        while(j < t.length){
+          const d = t[j];
+          if(d === '\n') break;
+          if(d === '\\'){ j += 2; continue; }
+          if(d === c){ if(!/\s/.test(t[j - 1]) && !/\d/.test(t[j + 1] || '')) f = j; break; }
+          j++;
+        }
+        if(f > i + 1){ r.push([i, f + 1]); i = f + 1; continue; }
+        if(c === '#'){ let e = t.indexOf('\n', i); if(e < 0) e = t.length; r.push([i, e]); i = e; continue; }
+      }
+    }
+    i++;
+  }
+  return r;
 }
-function ppRvMaj(srcId){
-  const s = document.getElementById(srcId), r = document.getElementById(srcId + '-rv');
-  if(!s || !r) return;
-  const m = ppRichMarque(s.value);
-  r.hidden = !m; r.innerHTML = m ? ppRichHtml(s.value) : '';
+/* La phrase qui contient la position pos (curseur) */
+function ppRvPhrase(t, pos){
+  const dl = pos > 0 ? t.lastIndexOf('\n', pos - 1) + 1 : 0;
+  let fl = t.indexOf('\n', pos); if(fl < 0) fl = t.length;
+  const ligne = t.slice(dl, fl), fm = ppRvFormules(ligne);
+  const dans = k => fm.some(z => k >= z[0] && k < z[1]);
+  const coupes = [], re = /->|→|[.…!?;]+(?=\s|$)/g; let m;
+  while((m = re.exec(ligne))){ if(!dans(m.index)) coupes.push(dl + m.index + m[0].length); }
+  let d = dl, f = fl;
+  for(const e of coupes){ if(e < pos) d = e; else { f = e; break; } }
+  let s = t.slice(d, f).trim();
+  if(s.length > 160){   /* phrase très longue : on garde la fin (ce qu'on vient d'écrire), sans couper une formule en deux */
+    let k = s.length - 150;
+    const z = ppRvFormules(s).find(x => k > x[0] && k < x[1]);
+    if(z) k = z[0]; else { const sp = s.indexOf(' ', k); if(sp > 0 && sp < s.length - 20) k = sp + 1; }
+    s = '… ' + s.slice(k);
+  }
+  return s;
 }
+function ppRvEl(){
+  let e = document.getElementById('pp-rvf');
+  if(!e){ e = document.createElement('div'); e.id = 'pp-rvf'; e.className = 'pp-rvf'; e.setAttribute('data-notr', ''); e.setAttribute('aria-hidden', 'true'); document.body.appendChild(e); }
+  return e;
+}
+function ppRvPlacer(ta, e){
+  const vv = window.visualViewport, vh = vv ? vv.height : innerHeight, vt = vv ? vv.offsetTop : 0, vl = vv ? vv.offsetLeft : 0, vw = vv ? vv.width : innerWidth;
+  if(matchMedia('(pointer:coarse)').matches){   /* tactile : juste au-dessus du clavier */
+    e.style.left = (vl + 10) + 'px'; e.style.width = (vw - 20) + 'px'; e.style.top = 'auto';
+    e.style.bottom = (Math.max(0, innerHeight - vt - vh) + 8) + 'px';
+  } else {   /* souris : juste sous le champ (au-dessus s'il n'y a pas la place) */
+    const r = ta.getBoundingClientRect();
+    e.style.left = r.left + 'px'; e.style.width = r.width + 'px'; e.style.bottom = 'auto';
+    const h = e.offsetHeight; let top = r.bottom + 6;
+    if(top + h > vt + vh - 8) top = Math.max(vt + 8, r.top - h - 6);
+    e.style.top = top + 'px';
+  }
+}
+/* Tactile : si l'aperçu recouvre le bas du champ, on fait défiler la feuille pour que le champ reste visible */
+function ppRvDegager(ta, e){
+  if(!matchMedia('(pointer:coarse)').matches || ta.offsetHeight > 160) return;
+  const haut = e.getBoundingClientRect().top, bas = ta.getBoundingClientRect().bottom;
+  if(bas <= haut - 6) return;
+  let p = ta.parentElement;
+  while(p && p !== document.body){ const oy = getComputedStyle(p).overflowY; if((oy === 'auto' || oy === 'scroll') && p.scrollHeight > p.clientHeight) break; p = p.parentElement; }
+  if(p && p !== document.body) p.scrollTop += Math.min(bas - haut + 10, 160);
+}
+function ppRvRendre(){
+  const ta = ppRvActif, e = ppRvEl();
+  if(!ta || !ta.isConnected || document.activeElement !== ta){ e.classList.remove('on'); return; }
+  const ph = ppRvPhrase(ta.value, ta.selectionStart == null ? ta.value.length : ta.selectionStart);
+  if(!ph || !ppRichMarque(ph)){ e.classList.remove('on'); return; }
+  if(e.dataset.src !== ph){ e.innerHTML = '<div>' + ppRichHtml(ph) + '</div>'; e.dataset.src = ph; }
+  ppRvPlacer(ta, e);
+  e.classList.add('on');
+  ppRvDegager(ta, e);
+}
+function ppRvMaj(src){
+  const ta = typeof src === 'string' ? document.getElementById(src) : src;
+  if(ta) ppRvActif = ta;
+  ppRvRendre();
+}
+(function(){
+  if(window.__ppRvInit) return; window.__ppRvInit = true;
+  const ok = el => el && el.tagName === 'TEXTAREA' && PP_RV_CHAMPS.indexOf(el.id) >= 0;
+  document.addEventListener('focusin', ev => { if(ok(ev.target)){ ppRvActif = ev.target; ppRvRendre(); } });
+  document.addEventListener('focusout', ev => { if(ok(ev.target)) ppRvEl().classList.remove('on'); });
+  document.addEventListener('selectionchange', () => { if(ppRvActif) ppRvRendre(); });
+  ['keyup', 'pointerup'].forEach(k => document.addEventListener(k, ev => { if(ok(ev.target)){ ppRvActif = ev.target; ppRvRendre(); } }, true));
+  if(window.visualViewport){ visualViewport.addEventListener('resize', ppRvRendre); visualViewport.addEventListener('scroll', ppRvRendre); }
+  window.addEventListener('resize', ppRvRendre);
+  document.addEventListener('scroll', () => { if(ppRvActif) ppRvRendre(); }, true);
+  try{ new MutationObserver(() => { if(ppRvActif && !ppRvActif.isConnected) ppRvRendre(); }).observe(document.documentElement, { childList:true, subtree:true }); }catch(e){}
+})();
 function ppFormatAide(){
   const ex = ['**gras**', '/italique/', '- une puce\n- une autre', 'x^2 et cm^3', '√16 ou √(x+1)', '#a/b#', '#(a+b)/(c+d)#', '#x_1 + y_1#', '#sum_(i=1)^n i#', '#delta x <= alpha#', '#\\ce{H2O}#', '##E = mc^2##'];
   ppSheet(`<div class="pp-grab"></div><h2>Écrire des formules</h2><p class="pp-hint">Dans une question ou une réponse. L'IA les écrit aussi toute seule.</p>${ex.map(s => `<div class="pp-fx"><code>${escapeHtml(s)}</code><span data-notr>${ppRichHtml(s)}</span></div>`).join('')}<p class="pp-hint">Un vrai dollar : <code>\\$</code></p><div class="pp-duo"><button class="pp-cta" style="margin:0;grid-column:1/-1" onclick="ppSettings(true)">Retour</button></div>`);
