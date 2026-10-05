@@ -5393,7 +5393,7 @@ function switchTab(tab){
   if(tab === 'settings') renderSettings();
   render();
   renderTabbar();
-  window.scrollTo({ top:0, behavior:'instant' in window ? 'instant' : 'auto' });
+  window.scrollTo({ top:0, behavior:'instant' });   /* v252 : avant, 'instant' in window était toujours faux -> défilement animé (html{scroll-behavior:smooth}) visible à chaque changement d'écran / retour */
   reglerEntreeOnglet(tab);
 }
 
@@ -7037,7 +7037,7 @@ function pcFit(){
   else { l.style.top = t + 'px'; l.style.height = h + 'px'; }
   l.classList.toggle('kb', h < pcBase - 120);
   if(bas || pcStick) pcSuivre();   /* v231 : glissement doux (avant : pcPin recollait la conversation d'un coup) */
-  if(window.scrollY !== pcScrollY) window.scrollTo(0, pcScrollY);
+  if(window.scrollY !== pcScrollY) window.scrollTo({ top:pcScrollY, behavior:'instant' });
 }
 /* ===== v228 : « Nouvelle conversation » sans confirmation + animation de changement de conversation (prototype Chromebook) =====
    Nouvelle conversation : la conversation en cours est rangée tout de suite (même chemin que l'ancien « Nouvelle » : pcInstantane puis id terminé), un tiroir « Annuler »
@@ -9337,7 +9337,7 @@ function renderBrowse(){
   }
   el.innerHTML = `<div class="${cls}"><h2 class="pp-t">Parcourir</h2><input class="pp-q" id="browse-search-input" type="search" enterkeyhint="search" autocomplete="off" placeholder="Rechercher une carte" value="${escapeHtml(browseSearch)}" oninput="onBrowseSearchInput(this.value)">${ppBrowseGroupsHtml()}</div><div class="pp-fp" id="pp-fp"></div>`;
   ppFpAuto();
-  if(same) window.scrollTo(0, y);
+  if(same) window.scrollTo({ top:y, behavior:'instant' });
 }
 
 /* Chromebook (v84) : toucher une carte l'affiche dans le panneau de droite ; téléphone : feuille de modification comme avant. */
@@ -10024,7 +10024,7 @@ function renderPlanning(){
     html += `<button class="pp-dash" onclick="ppSubjSheet()">${PP_IC.plus.replace(/22/g, '16')}Ajouter une matière</button>`; /* v118 : ouvre « Nouvelle matière » (avant : fenêtre « Ajouter un contrôle »). Le contrôle se règle en touchant une matière. */
   }
   el.innerHTML = `<div class="pp-view pp-plan${same ? ' pp-still' : ''}">${html}</div>`;
-  if(same) window.scrollTo(0, y);
+  if(same) window.scrollTo({ top:y, behavior:'instant' });
 }
 function ppPlanReset(){ ppPlanShown = false; }
 
@@ -10631,7 +10631,7 @@ function ppManMonter(champ){
     const basApres = champ.getBoundingClientRect().bottom - (cible - y);
     if(basApres > haut - 12) cible += basApres - (haut - 12);
     cible = Math.max(0, cible);
-    if(Math.abs(y - cible) > 2) window.scrollTo(0, cible);
+    if(Math.abs(y - cible) > 2) window.scrollTo({ top:cible, behavior:'instant' });
   };
   ppMonteT.forEach(clearTimeout);
   aller();
@@ -10752,8 +10752,8 @@ function renderAdd(){
   const inner = screen === 'apercu' ? ppViewApercu() : (screen === 'man' ? ppViewMan() : ppViewIA());
   el.innerHTML = `<div class="pp-view pp-add${same ? ' pp-still' : ''}">${inner}</div>`;
   ppAddScreen = screen;
-  if(same) window.scrollTo(0, y);
-  else if(screen === 'apercu') window.scrollTo(0, 0);
+  if(same) window.scrollTo({ top:y, behavior:'instant' });
+  else if(screen === 'apercu') window.scrollTo({ top:0, behavior:'instant' });
 }
 /* retour sur l'onglet : on repart d'un écran « frais » */
 function ppAddReset(){ ppAddedN = 0; ppAddScreen = ''; }
@@ -10816,7 +10816,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v250';
+const PP_APP_VERSION = 'v252';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -11477,12 +11477,12 @@ const PROMPT_GRAS_BASE = `Gras : très rare, seulement pour un mot-clé à reten
 const PROMPT_FORMULES = `Formules : écris en texte simple tout ce qui se lit clairement sans LaTeX (a + b = c, x², H₂O, 5 %, 3 × 4, ≤, →, °C). N'utilise $…$ que pour ce que le texte simple ne peut pas montrer (fraction, racine, somme, intégrale, exposant ou indice composé, symbole grec dans une formule, équation chimique). Jamais pour un nombre seul, une date, une unité, un mot, ni en histoire, géographie, langues ou droit. Le signe $ ne sert qu'aux formules (écris « 5 euros »). Dans le doute, texte simple.`;
 const PROMPT_REGLES_CARTES = `Règles pour chaque carte :
 - Une carte = une seule notion précise (jamais une question qui couvre plusieurs concepts).
-- La question est claire et se comprend toute seule : jamais « selon le texte », « dans ce cours », « d'après le document », ni renvoi à un schéma ou à une autre carte.
-- La réponse est unique, courte et directe (quelques mots ou 1 à 2 phrases). Pas de question à réponse oui/non, pas de réponse vague ou à plusieurs versions possibles.
+- La question est courte (une ligne, sans détour), claire, et se comprend toute seule : jamais « selon le texte », « dans ce cours », « d'après le document », ni renvoi à un schéma ou à une autre carte.
+- STYLE DES CARTES : style télégraphique, comme une fiche de révision. La réponse est unique et se lit en un coup d'œil : par défaut un mot-clé, un nombre, une date ou un petit groupe de mots (2 à 6 mots en général), SANS phrase complète, sans « c'est », sans sujet ni verbe qui répète la question, sans introduction. Exemple : « Capitale de la Belgique ? » → « Bruxelles » (jamais « La capitale de la Belgique est Bruxelles. »). Passe à un fragment de phrase ou à 1 courte phrase seulement quand un mot-clé ne suffit pas à répondre (par ex. une carte « Pourquoi… ? » ou une définition qui ne se résume pas à un terme), et jamais plus de 2 phrases courtes. Juge toi-même carte par carte : mots-clés d'abord, un peu plus long seulement si c'est nécessaire pour que la réponse reste juste et complète. Pas de question à réponse oui/non, pas de réponse vague ou à plusieurs versions possibles.
 - Une liste (« les 5 causes de… », « les étapes de… ») ne tient pas sur une seule carte : fais une carte par élément, avec une question qui vise un seul élément précis (jamais « cite une des causes »).
 - Reste fidèle au cours : n'invente rien, n'ajoute aucune information absente du cours. Écris dans la langue du cours.
 - Chaque carte doit rester sensée si on la lit à l'envers (on voit la réponse et on retrouve la question) : la réponse désigne clairement une seule chose.
-- Si le cours est une fiche de synthèse condensée (style télégraphique, symboles comme → ⇒ = ≠ ↑ ↓, mots-clés en gras), interprète les symboles et écris des questions et des réponses en phrases claires et complètes, jamais avec les symboles : « → » = définition ou lien, « ⇒ » = conséquence, « = » = égale ou signifie, « ≠ » = différent de ou opposé à, « ↑ » = augmente, « ↓ » = diminue. Une ligne de fiche donne une ou plusieurs cartes ; chaque carte reste compréhensible sans la fiche. Tu peux mettre en mots ce que la fiche exprime en symboles, mais n'ajoute aucune information absente de la fiche.
+- Si le cours est une fiche de synthèse condensée (style télégraphique, symboles comme → ⇒ = ≠ ↑ ↓, mots-clés en gras), interprète les symboles et écris des questions claires et des réponses courtes en mots-clés (pas de phrases complètes), jamais avec les symboles : « → » = définition ou lien, « ⇒ » = conséquence, « = » = égale ou signifie, « ≠ » = différent de ou opposé à, « ↑ » = augmente, « ↓ » = diminue. Une ligne de fiche donne une ou plusieurs cartes ; chaque carte reste compréhensible sans la fiche. Tu peux mettre en mots ce que la fiche exprime en symboles (le strict nécessaire), mais n'ajoute aucune information absente de la fiche.
 - Photos de cours manuscrit : ignore ratures, marges, gribouillis et passages illisibles (ne devine pas un mot illisible).
 - Couvre les notions importantes du cours (définitions, dates, causes et conséquences, formules, exemples clés) sans cartes triviales ni doublons. Pas de nombre imposé : autant de cartes que nécessaire.
 - Mélange les types de cartes : surtout du rappel (définition, date, formule), mais aussi, quand le cours explique un lien (cause, conséquence, but, différence entre deux notions), quelques cartes de compréhension (« Pourquoi… ? », « Quelle conséquence… ? », « Quelle différence entre X et Y ? ») à réponse courte et unique, tirée du cours. Ces cartes peuvent faire exception à la lecture à l'envers. N'en crée pas si le cours n'explique pas le lien.
@@ -15245,7 +15245,7 @@ function ecrMesureVrai(){
   const reste = Math.max(0, kb - Math.max(0, ecrKb.ref - ih));
   const change = ecrKb.dernier !== ecrKb.ouvert; ecrKb.dernier = ecrKb.ouvert;
   ecrClavier(ecrKb.ouvert, ecrKb.ouvert ? reste : 0);
-  if(ecrKb.ouvert && top > 0) window.scrollTo(0, 0);                  /* contre le panoramique du navigateur */
+  if(ecrKb.ouvert && top > 0) window.scrollTo({ top:0, behavior:'instant' });                  /* contre le panoramique du navigateur */
   ecrChampMax();
   if(change){ clearTimeout(ecrKb.tm); ecrKb.tm = setTimeout(() => { ecrChampMax(); const t = ecrChamp(); if(t && ecr.typed) ecrGrandir(t); }, 380); }   /* la mise en page finit de bouger après .34 s : on remesure la place du champ */
 }
@@ -16168,6 +16168,7 @@ document.addEventListener('keydown', function(e){
    quitter l'app, et repousse une entrée pour le prochain retour. */
 /* v153 (constat 44) : au plus UNE entrée tampon à la fois. Avant, chaque feuille fermée par son bouton laissait
    une entrée d'historique : après N ouvertures il fallait N appuis « Retour » sans effet avant de quitter l'app. */
+try{ history.scrollRestoration = 'manual'; }catch(e){}   /* v252 : c'est l'appli qui gère le défilement, pas le navigateur au retour */
 let ppHistTampon = 0;
 function ppPousserEtatRetour(){
   if(ppHistTampon > 0) return;
@@ -16412,7 +16413,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       setTimeout(function(){
         try{
           remplir(o.d);
-          if(i < 2 && o.y > 0 && (window.scrollY || 0) < 5) window.scrollTo(0, o.y);
+          if(i < 2 && o.y > 0 && (window.scrollY || 0) < 5) window.scrollTo({ top:o.y, behavior:'instant' });
         }catch(e){}
       }, ms);
     });
