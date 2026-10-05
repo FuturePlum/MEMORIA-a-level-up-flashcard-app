@@ -10816,7 +10816,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v253';
+const PP_APP_VERSION = 'v254';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -16161,49 +16161,144 @@ document.addEventListener('keydown', function(e){
   if(e.key !== 'Escape' || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
   if(ppFermerCouche(e.target, false)) e.preventDefault();
 });
-/* Bouton « Retour » du téléphone (et geste Android équivalent) : sans ceci, un seul retour
-   quittait directement l'app même en pleine feuille/séance/page, faute d'entrée d'historique à
-   consommer (constat remonté par l'utilisateur, v150). On pousse une entrée dès l'ouverture puis
-   à chaque fois qu'il y a un écran « avant » ; popstate le rejoint au lieu de laisser le navigateur/l'OS
-   quitter l'app, et repousse une entrée pour le prochain retour. */
-/* v153 (constat 44) : au plus UNE entrée tampon à la fois. Avant, chaque feuille fermée par son bouton laissait
-   une entrée d'historique : après N ouvertures il fallait N appuis « Retour » sans effet avant de quitter l'app. */
+/* v254 : PILE D'HISTORIQUE FIDÈLE au geste Retour du téléphone.
+   Constat (v253, Android, appli installée) : en glissant depuis le bord, l'animation de Chrome montrait un écran faux (Prof, ou deux fois
+   Paramètres) avant le bon. Cause : Chrome affiche, sous la page qui glisse, la capture de l'entrée d'historique précédente, prise AU MOMENT
+   où l'entrée suivante est ajoutée (pushState). Avant la v254 l'entrée était ajoutée APRÈS l'ouverture de l'écran (et une seule « entrée
+   tampon » servait à tout) : la capture montrait donc l'écran qu'on venait d'ouvrir ou un vieil écran.
+   Maintenant : UNE entrée par pas de retour, ajoutée AVANT que l'écran change (onglet, feuille, Prof, page, séance, calendrier) ; la capture est
+   donc bien « l'écran qu'on quitte ». La profondeur logique `ppProfondeur()` (couches ouvertes + écran secondaire de Ajouter + onglets
+   précédents) et la position dans l'historique `ppPos` restent égales : si un écran se ferme avec son propre bouton, l'entrée en trop est
+   retirée en silence (history.go, popstate ignoré) ; si un écran s'ouvre sans avoir été prévu, l'entrée est ajoutée juste après. À l'accueil
+   nu, ppPos = 0 : le retour suivant quitte normalement l'app (plus d'appui « sans effet » au démarrage). */
 try{ history.scrollRestoration = 'manual'; }catch(e){}   /* v252 : c'est l'appli qui gère le défilement, pas le navigateur au retour */
-let ppHistTampon = 0;
-function ppPousserEtatRetour(){
-  if(ppHistTampon > 0) return;
-  try{ history.pushState({ ppCouche:true }, ''); ppHistTampon = 1; }catch(e){}
+let ppPos = 0;          /* position dans NOS entrées d'historique (0 = entrée de départ) */
+let ppIgnorePop = 0;    /* popstate provoqués par nous (retour silencieux) : à ignorer */
+let ppSyncT = null;
+try{ history.replaceState({ ppIdx:0 }, ''); }catch(e){}
+/* Une feuille « enfant » (confirmation, choix d'heure…) : elle a son propre Retour/Annuler et compte pour un pas de plus. */
+function ppFeuilleEnfant(feuille){
+  if(!feuille || feuille.querySelector('.pp-setroot')) return false;
+  const bs = feuille.querySelectorAll('button');
+  for(let k = 0; k < bs.length; k++){
+    const t = (bs[k].textContent || '').trim().toLowerCase();
+    if((t === 'retour' || t === 'back' || t === 'annuler' || t === 'cancel') && ppVisible(bs[k])) return true;
+  }
+  return false;
 }
-window.addEventListener('popstate', function(){
-  ppHistTampon = 0; // l'entrée tampon vient d'être consommée
-  ppFermerCouche(null, true);
-  // Tant qu'il reste un écran « avant » (couche, écran secondaire, onglet précédent), on repousse une entrée
-  // pour que le prochain retour y aille aussi au lieu de quitter l'app ; à l'accueil nu,
-  // on ne repousse rien : le retour suivant quitte normalement l'app.
-  if(ppNavAvance()) ppPousserEtatRetour();
+function ppModalVide(){
+  const r = document.getElementById('modal-root');
+  if(!r || r.innerHTML.trim() === '') return true;
+  return r.children.length === 1 && !!r.querySelector(':scope > .pp-pgout');
+}
+/* Nombre de pas de retour disponibles, comptés comme le fait ppFermerCouche (une couche = un pas). */
+function ppProfondeur(){
+  let d = 0;
+  if(document.getElementById('fci') || document.getElementById('pp-zoom')) d++;
+  const cal = document.getElementById('pp-psheet');
+  if(cal && cal.classList.contains('on')) d++;
+  const fe = document.getElementById('pp-sheet');
+  if(fe && fe.classList.contains('on')){ d++; if(ppFeuilleEnfant(fe)) d++; }
+  try{ if(pcOuvert){ d++; if(pcEl('pch-back') || pcEl('pcn-back') || pcMenuMode || pcPlusOn) d++; } }catch(e){}
+  if(!ppModalVide()) d++;
+  const ses = document.getElementById('pp-ses');
+  if(ses && getComputedStyle(ses).display !== 'none') d++;
+  if(ppNavSousEcranAjout()) d++;
+  let n = ppTabPile.length;
+  while(n > 0 && ppTabPile[n - 1] === activeTab) n--;
+  return d + n;
+}
+function ppPousse(){
+  try{ history.pushState({ ppIdx: ppPos + 1 }, ''); ppPos++; return true; }catch(e){ return false; }
+}
+/* Remet l'historique à la même hauteur que l'écran : entrée manquante -> on l'ajoute ; entrée en trop -> on la retire en silence. */
+function ppSyncHist(){
+  clearTimeout(ppSyncT); ppSyncT = null;
+  if(ppIgnorePop > 0){ ppSyncT = setTimeout(ppSyncHist, 120); return; }
+  const d = ppProfondeur();
+  for(let k = 0; k < 4 && ppPos < d; k++){ if(!ppPousse()) break; }
+  if(ppPos > d){
+    const n = ppPos - d;
+    ppIgnorePop++; ppPos = d;
+    try{ history.go(-n); }catch(e){ ppIgnorePop--; }
+  }
+}
+function ppSyncTard(ms){ clearTimeout(ppSyncT); ppSyncT = setTimeout(ppSyncHist, ms || 200); }
+window.addEventListener('popstate', function(e){
+  const np = (e.state && typeof e.state.ppIdx === 'number') ? e.state.ppIdx : 0;
+  const prev = ppPos; ppPos = np;
+  if(ppIgnorePop > 0){ ppIgnorePop--; return; }
+  if(np > prev){   /* « avancer » : on annule, l'appli n'a pas d'écran « suivant » */
+    ppIgnorePop++; ppPos = prev;
+    try{ history.go(prev - np); }catch(e2){ ppIgnorePop--; }
+    return;
+  }
+  let agi = false;
+  for(let k = prev - np; k > 0; k--){ if(ppFermerCouche(null, true)) agi = true; else break; }
+  if(!agi && ppPos > 0){   /* rien à défaire : entrées périmées, on les écrase pour que le prochain retour quitte l'app */
+    const n = ppPos; ppIgnorePop++; ppPos = 0;
+    try{ history.go(-n); }catch(e2){ ppIgnorePop--; }
+  }
+  ppSyncTard(250);
 });
-ppPousserEtatRetour();
-// v250 : l'entrée tampon est (re)posée après chaque toucher qui a pu changer d'écran (onglet, page, fenêtre, Prof…) : plus besoin de
-// brancher chaque ouverture une par une, et un écran ouvert une 2e fois garde son Retour.
-function ppSyncTampon(){ if(ppHistTampon === 0 && ppNavAvance()) ppPousserEtatRetour(); }
-document.addEventListener('click', function(){ setTimeout(ppSyncTampon, 80); setTimeout(ppSyncTampon, 650); }, true);
-// Toute ouverture de couche repousse aussi une entrée tout de suite.
-['ppSheet','ppPickDate','ppSesShow','ppCoachOuvrir'].forEach(nom => {
-  const orig = window[nom];
-  if(typeof orig === 'function') window[nom] = function(...args){ const r = orig.apply(this, args); ppPousserEtatRetour(); return r; };
-});
+/* Chaque toucher qui a pu changer d'écran (sous-écrans de Prof, écrans de Ajouter…) : on recale l'historique juste après. */
+document.addEventListener('click', function(){ ppSyncTard(120); ppSyncTard(700); }, true);
+/* Ouvertures : l'entrée est ajoutée AVANT l'ouverture (la capture de Chrome montre alors l'écran qu'on quitte).
+   Installé une fois TOUS les scripts chargés (ppSheet, ppCoachOuvrir… sont définis dans des scripts qui suivent celui-ci). */
+function ppInstallerHistorique(){
+  const sur = id => { const e = document.getElementById(id); return !!(e && e.classList.contains('on')); };
+  const AVANT = {
+    ppSheet: () => !sur('pp-sheet'),
+    ppSetDraw: () => !sur('pp-sheet'),   /* Réglages : dessinés directement dans la feuille, sans passer par ppSheet */
+    ppPickDate: () => !sur('pp-psheet'),
+    ppSesShow: () => !document.body.classList.contains('pp-ses-on'),
+    ppCoachOuvrir: () => { try{ return !pcOuvert; }catch(e){ return false; } },
+    ppPageShow: () => ppModalVide()
+  };
+  Object.keys(AVANT).forEach(nom => {
+    const orig = window[nom];
+    if(typeof orig !== 'function') return;
+    window[nom] = function(...args){
+      let pre = false; try{ pre = AVANT[nom](); }catch(e){}
+      if(pre) ppPousse();
+      const r = orig.apply(this, args);
+      ppSyncTard(60);
+      return r;
+    };
+  });
+  ppObserverEcrans();
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ppInstallerHistorique); else ppInstallerHistorique();
+/* Écrans ouverts par d'autres chemins (petites fenêtres, introduction, zoom d'image…) : on recale dès que le DOM change (avant l'affichage). */
+function ppObserverEcrans(){
+  if(!window.MutationObserver) return;
+  const vus = new WeakSet();
+  let mo = null;
+  const cb = () => { brancher(); ppSyncHist(); };
+  const brancher = () => {
+    ['pp-sheet', 'pp-psheet'].forEach(id => { const e = document.getElementById(id); if(e && !vus.has(e)){ vus.add(e); mo.observe(e, { attributes:true, attributeFilter:['class'] }); } });
+  };
+  mo = new MutationObserver(cb);
+  const mr = document.getElementById('modal-root'); if(mr) mo.observe(mr, { childList:true });
+  mo.observe(document.body, { childList:true });
+  brancher();
+}
+/* Lecture seule (tests / dépannage) : position dans l'historique et profondeur logique. Doivent rester égales au repos. */
+window.ppEtatHist = () => ({ pos: ppPos, d: ppProfondeur() });
 // Changement d'onglet fait avec un bouton : on garde l'onglet quitté pour que Retour y revienne (un Retour qui change d'onglet ne s'empile pas).
 (function(){
   const orig = window.switchTab;
   if(typeof orig !== 'function') return;
   window.switchTab = function(tab){
     const avant = activeTab;
-    const r = orig.apply(this, arguments);
-    if(!ppNavSansPile && avant && activeTab !== avant){
+    const cible = (tab === 'planning' && typeof ppWide === 'function' && ppWide()) ? 'study' : tab;
+    if(!ppNavSansPile && avant && cible !== avant){
       ppTabPile.push(avant);
       if(ppTabPile.length > 30) ppTabPile.shift();
-      ppPousserEtatRetour();
+      ppPousse();   /* AVANT le changement d'écran */
     }
+    const r = orig.apply(this, arguments);
+    ppSyncTard(60);
     return r;
   };
 })();
@@ -16211,7 +16306,7 @@ document.addEventListener('click', function(){ setTimeout(ppSyncTampon, 80); set
 (function(){
   const orig = window.ppCoachFermer;
   if(typeof orig !== 'function') return;
-  window.ppCoachFermer = function(){ ppProfRetour = null; return orig.apply(this, arguments); };
+  window.ppCoachFermer = function(){ ppProfRetour = null; const r = orig.apply(this, arguments); ppSyncTard(60); return r; };
 })();
 window.ppCoachDe = function(fn){ ppProfRetour = (typeof fn === 'function') ? fn : null; };
 
