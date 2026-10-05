@@ -74,7 +74,7 @@ Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si t
 - **Réponse à écrire ✏️** : pour les cartes où tu dois vraiment sortir la réponse de ta tête, tu la tapes avant de retourner la carte. Tu vois ensuite ta réponse à côté de la bonne et tu te notes toi-même : l'app ne corrige rien, et ce que tu as tapé n'est jamais enregistré. À régler carte par carte ou pour toute une matière, aussi dans le Quiz.
 - **Série** : ta flamme monte tant que tu révises. Elle ne casse que si tu as vraiment laissé des cartes en retard.
 - **Statistiques** : ce que tu maîtrises, matière par matière, en un coup d'œil.
-- **Parcourir** : recherche, modifie, partage ou supprime n'importe quelle carte.
+- **Parcourir** : recherche, modifie, partage ou supprime n'importe quelle carte ; le menu ⋯ de chaque matière regroupe tous ses réglages (cartes, date du contrôle, synthèse, renommer, archiver, supprimer).
 - **Les difficiles** : une entrée dans « S'entraîner » regroupe les cartes qui te résistent le plus, pour t'entraîner dessus.
 - **Mettre une carte en pause ⏸️** : elle sort de tes révisions, du planning et des rappels sans être supprimée, et revient quand tu la réactives.
 - **Cartes illustrées** : ajoute tes photos à tes cartes (schémas, cartes, formules).

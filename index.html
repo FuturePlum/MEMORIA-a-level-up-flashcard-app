@@ -1857,7 +1857,8 @@ input[type="date"]{ color-scheme:inherit; }
 .pp-view>.pp-opts .pp-row>div>span{font-size:12px;margin-top:0}
 .pp-view>.pp-opts .pp-row:nth-child(1) .pp-ri{background:var(--c-yicon);color:var(--yellow-t)}
 .pp-view>.pp-opts .pp-row:nth-child(2) .pp-ri{background:var(--c-gsoft);color:var(--green)}
-.pp-pausebar{display:flex;gap:8px;margin:2px 0 10px}
+.pp-pausebar{display:flex;gap:8px;margin:2px 0 10px;flex-wrap:wrap}
+.pp-grp.pp-garch .pp-gh{opacity:.6}
 .pp-it.pp-paused{opacity:.62}
 .pp-invt.pp-paus{color:var(--orange)}
 /* finitions d'animation (v24/v25 du prototype) */
@@ -7470,7 +7471,7 @@ function applyLocalArchiveOverlay(){
 
 /* Contrôle passé → matière archivée. Le lendemain de la date de contrôle, la matière est archivée
    (ses cartes sortent des révisions) ET sa date est retirée : sinon, en la désarchivant, elle serait
-   aussitôt re-archivée. Désarchiver est toujours possible (Planning > matière > Gérer la matière) ;
+   aussitôt re-archivée. Désarchiver est toujours possible (Parcourir > ⋯ de la matière > Désarchiver) ;
    il faudra alors saisir une nouvelle date si besoin. Ne touche JAMAIS aux cartes (palier, dates,
    derniereModification). Retourne les noms des matières archivées. */
 function archiverMatieresControlePasse(){
@@ -9382,6 +9383,7 @@ function quizAnswer(niveau, opts){
 
 let browseSearch = '';
 let browsePauseSeul = false;   // filtre « En pause » de Parcourir (mémoire seulement)
+let browseArchSeul = false;    // v270 : filtre « Archivées » de Parcourir (mémoire seulement)
 
 function onBrowseSearchInput(val){
   browseSearch = val;
@@ -9416,22 +9418,39 @@ function ppBrowseGroupsHtml(){
     ? CARDS.filter(c => normaliserMatiere(c.question).includes(requete) || normaliserMatiere(c.reponse).includes(requete))
     : CARDS;
   if(browsePauseSeul) filtrees = filtrees.filter(c => c.pausee === true);
-  const barrePause = nbPause ? `<div class="pp-pausebar"><button class="pp-pill${browsePauseSeul ? ' on' : ''}" style="--c:var(--orange)" onclick="ppBrowsePauseFiltre()">En pause (${nbPause})</button></div>` : '';
+  const estArch = (m) => !!(matieresConfig[m] || {}).archive;
+  const nbArch = getMatieres().filter(estArch).length;
+  if(!nbArch) browseArchSeul = false;
+  /* v270 : la barre de filtres (En pause / Archivées) s'affiche dès qu'il y a l'un ou l'autre */
+  const barrePause = (nbPause || nbArch) ? `<div class="pp-pausebar">${nbPause ? `<button class="pp-pill${browsePauseSeul ? ' on' : ''}" style="--c:var(--orange)" onclick="ppBrowsePauseFiltre()">En pause (${nbPause})</button>` : ''}${nbArch ? `<button class="pp-pill${browseArchSeul ? ' on' : ''}" style="--c:var(--orange)" onclick="ppBrowseArchFiltre()">Archivées (${nbArch})</button>` : ''}</div>` : '';
   const parM = {};
   for(const c of filtrees){
     const m = c.matiere || 'Sans matière';
     (parM[m] = parM[m] || []).push(c);
   }
-  const html = Object.keys(parM).sort().map(m => {
+  /* v269 : une matière sans carte reste accessible (renommer, supprimer, date…), sauf quand on cherche ou filtre */
+  if(!requete && !browsePauseSeul) for(const m of getMatieres()) if(!parM[m]) parM[m] = [];
+  /* v270 : les matières archivées sont rangées derrière le filtre « Archivées » ; pendant une recherche on les inclut quand même */
+  const listeM = Object.keys(parM).filter(m => browseArchSeul ? estArch(m) : (requete || !estArch(m))).sort();
+  const html = listeM.map(m => {
     const cartes = parM[m], n = cartes.length, mA = escapeJsAttr(m);
     const items = cartes.map((c, i) => {
       const lbl = ppBrwLabel(c);
       const cl = lbl === 'Nouvelle' ? 'pp-new' : (lbl === 'Maîtrisée' ? 'pp-okk' : '');
       return `<div class="pp-it${c.pausee === true ? ' pp-paused' : ''}" data-id="${escapeHtml(c.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms" onclick="ppItClick('${escapeJsAttr(c.id)}')"><div><b>${ppRichHtml(c.question || '🖼 Image')}</b><p>${ppRichHtml(c.reponse || '🖼 Image')}</p><em class="${cl}">${lbl}</em>${c.inversible ? '<em class="pp-invt">⇄ inversée</em>' : ''}${c.ecrite === true ? '<em class="pp-invt pp-ecrt" title="Réponse à écrire" aria-label="Réponse à écrire">' + PP_IC.edit + '</em>' : ''}${c.pausee === true ? '<em class="pp-invt pp-paus">En pause</em>' : ''}</div></div>`;
     }).join('');
-    return `<div class="pp-grp${ppBrowseClosed[m] ? ' closed' : ''}" style="--c:${couleurMatiere(m)}"><div class="pp-gh"><button class="pp-ghm" onclick="ppBrowseToggle(this,'${mA}')"><span class="pp-dot"></span>${escapeHtml(m)}<small>${n} carte${n > 1 ? 's' : ''}</small></button><button class="pp-ib" aria-label="Options" onclick="ppGrpMenu('${mA}')">${PP_DOTS_H}</button><button class="pp-ib pp-chv" aria-label="Replier" onclick="ppBrowseToggle(this,'${mA}')">${PP_IC.up}</button></div><div class="pp-list">${items}</div></div>`;
+    return `<div class="pp-grp${ppBrowseClosed[m] ? ' closed' : ''}${estArch(m) ? ' pp-garch' : ''}" style="--c:${couleurMatiere(m)}"><div class="pp-gh"><button class="pp-ghm" onclick="ppBrowseToggle(this,'${mA}')"><span class="pp-dot"></span>${escapeHtml(m)}<small>${n} carte${n > 1 ? 's' : ''}${estArch(m) ? ' · archivée' : ''}</small></button><button class="pp-ib" aria-label="Options" onclick="ppGrpMenu('${mA}')">${PP_DOTS_H}</button><button class="pp-ib pp-chv" aria-label="Replier" onclick="ppBrowseToggle(this,'${mA}')">${PP_IC.up}</button></div><div class="pp-list">${items}</div></div>`;
   }).join('');
-  return barrePause + (html || `<p class="pp-empty">Aucune carte trouvée. Essaie un autre mot.</p>`);
+  return barrePause + (html || `<p class="pp-empty">${requete ? 'Aucune carte trouvée. Essaie un autre mot.' : 'Rien à afficher ici.'}</p>`);
+}
+function ppBrowseArchFiltre(){
+  browseArchSeul = !browseArchSeul;
+  const v = document.querySelector('#tab-browse .pp-view');
+  if(!v){ renderBrowse(); return; }
+  v.classList.add('pp-still');
+  while(v.children.length > 2) v.lastElementChild.remove();
+  v.insertAdjacentHTML('beforeend', ppBrowseGroupsHtml());
+  ppFpAuto();
 }
 function ppBrowsePauseFiltre(){
   browsePauseSeul = !browsePauseSeul;
@@ -9466,7 +9485,7 @@ function renderBrowse(){
   const y = window.scrollY;
   ppBrowseShown = true;
   const cls = 'pp-view pp-brw' + (same ? ' pp-still' : '');
-  if(CARDS.length === 0){
+  if(CARDS.length === 0 && !getMatieres().length){
     el.innerHTML = `<div class="${cls}"><h2 class="pp-t">Parcourir</h2><p class="pp-empty">Aucune carte pour l'instant.<br>Va dans « Ajouter » pour en créer.</p></div>`;
     return;
   }
@@ -9509,8 +9528,15 @@ function ppGrpMenuHtml(m){
   const toutInv = lInv.length > 0 && lInv.every(c => c.inversible);
   const lEcr = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
   const toutEcr = lEcr.length > 0 && lEcr.every(c => c.ecrite === true);
-  return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`;
-}
+  const arch = !!(matieresConfig[m] || {}).archive;
+  const dc = (matieresConfig[m] || {}).dateControle;
+  const sousDate = dc ? ppFmtL(dc) : 'Aucune date';
+  /* v269 : tous les réglages d'une matière sont ici (avant : une partie dans la feuille « À venir »). Deux groupes : les cartes / la matière. */
+  return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2>
+  <h4 style="margin-top:6px">Les cartes</h4>
+  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button></div>
+  <h4>La matière</h4>
+  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ppCtrlSheet('${mA}')"><i class="pp-ri">${PP_IC.flag}</i><div><b>Date du contrôle</b><span>${escapeHtml(sousDate)}</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppSheetClose();openRenameMatiere('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button><button class="pp-row" onclick="ppMatArch('${mA}')"><i class="pp-ri">${PP_IC.dl}</i><div><b>${arch ? 'Désarchiver' : 'Archiver'}</b><span>${arch ? 'Remet la matière dans les révisions' : 'La sort des révisions, sans rien supprimer'}</span></div></button><button class="pp-row" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${mA}')"><i class="pp-ri" style="color:var(--pink)">${PP_IC.trash}</i><div><b>Supprimer la matière</b></div></button></div>`;}
 function ppGrpMenu(m){ ppSheet(ppGrpMenuHtml(m)); }
 /* redessine le menu sur place (la feuille reste ouverte, sans animation) pour montrer la pastille colorée ou non */
 function ppGrpMenuMaj(m){
@@ -10185,22 +10211,20 @@ function ppCtrlList(){
   return l.includes(ppCtrlM) ? l : [ppCtrlM, ...l];
 }
 function ppDrawCtrl(){
-  const m = ppCtrlM, has = !!(matieresConfig[m] || {}).dateControle, edition = has && !ppCtrlAjout, arch = !!(matieresConfig[m] || {}).archive, mA = escapeJsAttr(m);
+  const m = ppCtrlM, has = !!(matieresConfig[m] || {}).dateControle, edition = has && !ppCtrlAjout;
   const l = ppCtrlList();
   /* Titre = la matière. Les pastilles de choix n'apparaissent que pour AJOUTER un contrôle (plusieurs matières possibles). */
+  const archM = !!(matieresConfig[m] || {}).archive;
+  /* v270 : une matière archivée propose « Désarchiver » ici même (on est tenté de le chercher en touchant la matière) */
+  const banArch = archM ? `<div class="pp-opts" style="margin:10px 0 16px"><button class="pp-row" onclick="ppMatArch('${escapeJsAttr(m)}')"><i class="pp-ri">${PP_IC.dl}</i><div><b>Désarchiver</b><span>Matière archivée · remet la matière dans les révisions</span></div></button></div>` : '';
   const entete = edition
-    ? `<h2 class="pp-ctt"><span class="pp-dot" style="background:${couleurMatiere(m)}"></span>${escapeHtml(m)}</h2><p class="pp-cts">Date du contrôle</p>`
+    ? `<h2 class="pp-ctt"><span class="pp-dot" style="background:${couleurMatiere(m)}"></span>${escapeHtml(m)}</h2>${banArch}<p class="pp-cts">Date du contrôle</p>`
     : `<h2>Ajouter un contrôle</h2><div class="pp-pills" style="margin-bottom:14px">${l.map((x, i) => `<button class="pp-pill ${x === m ? 'on' : ''}" style="--c:${couleurMatiere(x)}" onclick="ppCtrlPickM(${i})"><span class="pp-dot" style="background:${couleurMatiere(x)}"></span>${escapeHtml(x)}</button>`).join('')}<button class="pp-pill pp-pill-new" onclick="ppSubjSheet()">${PP_IC.plus.replace(/22/g, '16')}Nouvelle matière</button></div><p class="pp-cts">Date du contrôle</p>`;
   ppSheet(`<div class="pp-grab"></div>${entete}
   <button class="pp-dt pp-dtb" id="pp-cd" style="margin-bottom:10px" onclick="ppPickDate(ppCtrlD,v=>{ppCtrlD=v;document.querySelector('#pp-cd span').textContent=ppFmtL(v);ppCtrlHint()})"><span>${ppFmtL(ppCtrlD)}</span>${PP_IC.cal}</button>
   <div id="pp-ch">${ppLoadHint(m)}</div>
   <button class="pp-cta" onclick="ppCtrlSave()">Enregistrer</button>
-  ${edition ? `<button class="pp-lnk" style="color:var(--pink)" onclick="ppCtrlDel()">Retirer la date</button>` : `<button class="pp-lnk" onclick="ppSheetClose()">Annuler</button>`}
-  <h4>Gérer la matière</h4><div class="pp-set">
-   <button class="pp-li" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ico">${PP_IC.spark}</i><span>Modifier avec l'IA</span></button>
-   <button class="pp-li" onclick="ppSheetClose();openRenameMatiere('${mA}')"><i class="pp-ico">${PP_IC.edit}</i><span>Renommer</span></button>
-   <button class="pp-li" title="${arch ? 'Remet la matière dans les révisions' : 'La sort des révisions, sans rien supprimer'}" onclick="ppCtrlArch()"><i class="pp-ico">${PP_IC.dl}</i><span>${arch ? 'Désarchiver' : 'Archiver'}</span></button>
-   <button class="pp-li" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${mA}')"><i class="pp-ico" style="color:var(--pink)">${PP_IC.trash}</i><span>Supprimer la matière</span></button></div>`);
+  ${edition ? `<button class="pp-lnk" style="color:var(--pink)" onclick="ppCtrlDel()">Retirer la date</button>` : `<button class="pp-lnk" onclick="ppSheetClose()">Annuler</button>`}`);
 }
 /* Le statut dépend de la date ENREGISTRÉE : si on change la date, on le remplace par une invite à enregistrer. */
 function ppCtrlHint(){ const e = document.getElementById('pp-ch'); if(e) e.innerHTML = ppLoadHint(ppCtrlM); }
@@ -10236,10 +10260,11 @@ function ppCtrlDel(){
   onDateControleChange(m, '');
   ppToast('Date retirée');
 }
-function ppCtrlArch(){
-  const m = ppCtrlM, was = !!(matieresConfig[m] || {}).archive;
+function ppMatArch(m){
+  const was = !!(matieresConfig[m] || {}).archive;
   ppSheetClose();
   toggleArchiveMatiere(m);
+  try{ renderBrowse(); }catch(e){}   /* v270 : la liste de Parcourir se met à jour (la matière passe dans / sort de « Archivées ») */
   ppToast(was ? 'Matière désarchivée · ' + m : 'Matière archivée · ' + m);
 }
 
@@ -10958,7 +10983,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v268';
+const PP_APP_VERSION = 'v270';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
