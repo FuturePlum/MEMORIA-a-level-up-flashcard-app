@@ -2752,7 +2752,10 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .pp-fc{ pointer-events:auto; position:sticky; top:14px; height:calc(100vh - 136px); display:flex; flex-direction:column; gap:14px; padding:22px 24px; overflow:auto; background:linear-gradient(120deg,var(--panel) 55%,var(--c-pgrad2)); border:2px solid var(--cream); border-radius:26px; box-shadow:9px 9px 0 var(--orange); }
   .pp-fc .pp-qt{ font-size:34px; }
   .pp-fc .pp-at{ font-size:30px; margin:0; }
-  .pp-fm2{ display:flex; gap:10px; margin-top:auto; align-items:stretch; flex-wrap:wrap; }
+  .pp-fm2{ display:flex; flex-direction:column; gap:10px; margin-top:auto; }
+  .pp-fm2-st{ display:flex; gap:10px; }
+  .pp-fm2-ac{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }   /* v259 : 2 infos en haut, puis les 4 actions en 2 × 2 */
+  .pp-fm2-ac .pp-sec{ width:100%; min-height:46px; }
   .cb-st{ flex:1; min-width:140px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:12px 14px; }
   .cb-st strong{ display:block; font-size:18px; font-weight:800; line-height:1.15; }
   .pp-fm2 .pp-sec{ padding:0 18px; }
@@ -3315,6 +3318,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
   body.pc-open .pp-tab.on:not(.pp-tab-prof){background:transparent;color:var(--muted);box-shadow:none}
   body.pc-open .pp-tab-prof{background:var(--yellow);color:#1a1405;font-weight:800;box-shadow:0 4px 0 var(--yellow-d),0 10px 18px -8px rgba(var(--yr),.4)}
   body.pc-open .pp-tab-prof svg{animation:vieTabHop .55s var(--pps) both}
+  body.pc-open .pp-tab-prof:hover{background:var(--yellow);color:#1a1405}   /* v259 : ne devient plus noir au survol (la règle :not(.on):hover était plus forte) */
 }
 @media (min-width:900px) and (min-height:480px) and (hover:hover) and (pointer:fine){
   :is(.pc-pill,.pc-chip,.pc-sb,.pch-it,.pc-new,.pc-more-b,.pc-sq,.pc-send):not(:disabled):hover{filter:brightness(1.12)}
@@ -5372,6 +5376,8 @@ const TOPBAR_SETTINGS_TABS = ['add', 'browse', 'settings'];
 function switchTab(tab){
   try{ if(pcOuvert) ppCoachFermer(); }catch(e){}   /* v227 : grand écran, Prof reste ouvert à côté de la barre : un clic sur un autre onglet le ferme */
   if(tab === 'planning' && ppWide()) tab = 'study'; // grand écran : le planning est directement sur l'accueil
+  /* v259 : changer d'onglet pendant une séance ne la perd plus : elle est mise de côté (file, carte en cours, compteurs gardés) et reprise au retour sur Réviser. */
+  const ppReprise = studySessionActive && tab === 'study' && activeTab !== 'study';
   if(tab === 'add' && activeTab !== 'add') ppAddReset();
   if(tab === 'planning' && activeTab !== 'planning') ppPlanReset();
   if(tab === 'browse' && activeTab !== 'browse') ppBrowseReset();
@@ -5393,7 +5399,8 @@ function switchTab(tab){
   document.getElementById('tab-quiz').style.display = 'none';
   document.getElementById('tab-add').style.display = tab === 'add' ? 'block' : 'none';
   document.getElementById('tab-settings').style.display = tab === 'settings' ? 'block' : 'none';
-  if(tab === 'study'){ studySessionActive = false; buildQueue(); }
+  if(tab === 'study' && !ppReprise){ studySessionActive = false; buildQueue(); }
+  if(ppReprise && tb) tb.classList.add('tabbar-hidden');
   if(tab === 'add') renderAdd();
   if(tab === 'planning') renderPlanning();
   if(tab === 'settings') renderSettings();
@@ -6108,7 +6115,7 @@ function pcMenuAction(a){
   setTimeout(pcSideMaj, 0);
   if(a === 'nouv') return pcMenu('confirme');
   if(a === 'langue') return pcMenu('langue');
-  if(a === 'non') return pcMenu(pcMenuMode === 'langue' ? 'liste' : '');
+  if(a === 'non') return pcMenu('');   /* v260 : Annuler ferme le menu (avant, depuis « Quelle langue ? » il rouvrait la liste : conversations passées, ce que Prof retient, pratiquer une langue) */
   if(a === 'passees'){ pcMenu(''); return pcHistOuvrir(); }
   if(a === 'carnet'){ pcMenu(''); return pcCarnetOuvrir(); }
   if(a === 'oui'){
@@ -6263,6 +6270,7 @@ RÈGLES :
 - Autres actions sur les matières (seulement sur demande) : "controle" {"matiere":"…","date":"AAAA-MM-JJ"} met ou change la date de contrôle ("date":"" la retire) ; "renommer" {"matiere":"ancien nom","nom":"nouveau nom"} ; "fusionner" {"matiere":"celle qui disparaît","dans":"celle qui reste"} (ses cartes passent dans l'autre) ; "archiver" {"matiere":"…","archive":true} (false pour désarchiver) ; "supprimer_matiere" {"matiere":"…"} supprime la matière ET toutes ses cartes, sans retour possible : seulement si c'est demandé clairement, et dis-le en une phrase. Les noms de matières doivent être EXACTEMENT ceux de MATIÈRES. Dates au format AAAA-MM-JJ, calculées depuis la DATE DU JOUR (« le 15 » = le prochain 15) ; si c'est ambigu, demande ; une date passée est refusée. Si la matière n'est pas précisée, prends la matière active ou demande.
 - "deplacer" {"ids":["id1","id2"],"dans":"nom de la matière"} : déplace des cartes précises (ids pris dans les lignes ci-dessous) vers une matière qui existe, OU vers une matière que tu crées dans la même réponse avec l'action "matiere" (mets alors "matiere" avant "deplacer"). Tu PEUX déplacer des cartes d'une matière à une autre, ne dis jamais le contraire. Seulement sur demande ; une seule action "deplacer" par matière d'arrivée, 100 ids au maximum ; ne déplace que les cartes demandées (vérifie chaque carte avant d'en mettre l'id). Si les cartes demandées ne sont pas dans les lignes ci-dessous, dis-le et demande à l'utilisateur de choisir la bonne matière en haut de l'écran.
 - "pause" {"id":"…","pausee":true} (false = la reprendre) : met une carte en pause, seulement sur demande ; une action par carte, 20 maximum.
+"ecrite" {"matiere":"nom exact","ecrite":true} (false = remettre en lecture) : rend À ÉCRIRE (l'utilisateur tape sa réponse avant de la voir) TOUTES les cartes d'une matière d'un coup, ou {"ids":["id1","id2"],"ecrite":true} pour des cartes précises (300 ids maximum). Tu PEUX le faire, ne dis jamais le contraire : sur « rends toutes les cartes de X à écrire », une seule action avec "matiere". Seulement sur demande. Les cartes sans réponse en texte sont ignorées ; activer retire aussi le sens inversé de ces cartes.
 - Cours collé ou document joint avec une demande de cartes : découpe-le en cartes courtes (actions \"creer\", 20 maximum) en suivant les règles de cartes ; si le cours touche plusieurs matières, répartis les cartes (\"matiere\" exacte) et propose \"matiere\" pour celles qui n'existent pas.
 - JE NE SAIS PAS : pendant une série de questions, « je ne sais pas », « jsp », « aucune idée », « pas la moindre idée » (ou équivalent) n'est PAS une réponse à corriger : ne dis jamais « Faux ». C'est toi qui choisis, sans lui demander. (a) Si un indice peut vraiment l'aider à retrouver la réponse en réfléchissant (lien logique, catégorie, période, première lettre, nombre de mots…), donne UN indice court SANS la réponse et laisse-le réessayer. (b) Si c'est un fait brut qu'on ne peut pas deviner, ou s'il a déjà reçu un indice sur CETTE question et ne sait toujours pas, donne directement la réponse avec une explication courte, puis enchaîne. Dans tous les cas la question compte comme « pas su » dans le score.
 - Ne confonds JAMAIS le CONTENU d'une carte (Q et R, ex. « Schengen : Non ») avec la maîtrise de l'utilisateur (niveau, état, derniers, ratée). Pour parler de sa maîtrise, appuie-toi sur ces champs et dis ce que tu y lis. Si on te demande comment tu le sais, explique-le avec ces champs. N'invente rien : si une information n'est pas dans les données, dis que tu ne la vois pas.
@@ -6388,6 +6396,15 @@ function pcValideActions(arr, matiere){
       const c = CARDS.find(k => k.id === a.id); if(!c || typeof a.pausee !== 'boolean' || (c.pausee === true) === a.pausee) continue;
       if(res.filter(x => x.type === 'pause').length >= 20 || res.some(x => x.type === 'pause' && x.id === c.id)) continue;
       res.push({ type: 'pause', id: c.id, matiere: c.matiere || 'Sans matière', question: pcNet(c.question || '🖼 Image').slice(0, 120), pausee: a.pausee });
+    } else if(a.type === 'ecrite'){   /* v260 : rendre des cartes « à écrire » en bloc (une matière entière ou des ids) */
+      if(typeof a.ecrite !== 'boolean' || res.some(x => x.type === 'ecrite')) continue;
+      let src = [];
+      const mE = typeof a.matiere === 'string' ? mm(a.matiere) : '';
+      if(mE) src = CARDS.filter(k => (k.matiere || 'Sans matière') === mE);
+      else if(Array.isArray(a.ids)) src = a.ids.slice(0, 300).map(id => CARDS.find(k => k.id === id)).filter(Boolean);
+      const cs = src.filter(k => ppEcritePossible(k) && ((k.ecrite === true) !== a.ecrite || (a.ecrite && k.inversible === true)));
+      if(!cs.length) continue;
+      res.push({ type: 'ecrite', ecrite: a.ecrite, ids: cs.map(k => k.id).slice(0, 300), de: [...new Set(cs.map(k => k.matiere || 'Sans matière'))].slice(0, 4), ex: cs.slice(0, 4).map(k => pcNet(k.question || '🖼 Image').slice(0, 40)) });
     } else if(a.type === 'retenir'){
       const t = pcCarnetNet(txt(a.texte)); if(!t || res.some(x => x.type === 'retenir')) continue; /* une seule par réponse */
       if(pcCarnetLire().some(x => x.toLowerCase() === t.toLowerCase())) continue; /* déjà dans le carnet */
@@ -6506,6 +6523,7 @@ function pcDecritAction(a){
     case 'supprimer_matiere': return 'matière ' + q(a.matiere) + ' supprimée avec ses cartes';
     case 'deplacer': return (a.ids ? a.ids.length : 0) + ' carte(s) déplacée(s)' + (a.de && a.de.length ? ' de ' + a.de.map(q).join(', ') : '') + ' vers ' + q(a.dans);
     case 'pause': return 'carte ' + (a.pausee ? 'mise en pause' : 'reprise') + ' (' + q(a.question) + ')';
+    case 'ecrite': return (a.ids ? a.ids.length : 0) + ' carte(s) ' + (a.ecrite ? 'passée(s) en réponse à écrire' : 'remise(s) en lecture') + (a.de && a.de.length ? ' (' + a.de.map(q).join(', ') + ')' : '');
     case 'retenir': return 'ligne ajoutée au carnet (' + q(a.texte) + ')';
     case 'synthese': return 'synthèse lancée pour ' + q(a.matiere);
   }
@@ -6572,6 +6590,7 @@ function pcActionsCarte(actions, matiere){
     if(a.type === 'supprimer_matiere') return `<i class="pc-t">Supprimer la matière</i><s>${escapeHtml(a.matiere)}</s><span>${a.nb} carte${a.nb > 1 ? 's' : ''}</span>`;
     if(a.type === 'deplacer') return `<i class="pc-t">Déplacer · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''}</i><b>${a.de.map(escapeHtml).join(', ')} → ${escapeHtml(a.dans)}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;   /* v244 */
     if(a.type === 'pause') return `<i class="pc-t">${a.pausee ? 'Mettre en pause' : 'Reprendre'}</i><b>${escapeHtml(a.question)}</b>`;
+    if(a.type === 'ecrite') return `<i class="pc-t">${a.ecrite ? 'Réponse à écrire' : 'Remettre en lecture'} · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''}</i><b>${a.de.map(escapeHtml).join(', ')}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;
     if(a.type === 'retenir') return `<i class="pc-t">Retenir · carnet</i><b>${escapeHtml(a.texte)}</b>`;
     return `<i class="pc-t">Synthèse</i><b>${escapeHtml(a.matiere)}</b><textarea class="pc-prec" rows="2" maxlength="600" placeholder="Précisions pour la synthèse (facultatif)" aria-label="Précisions">${escapeHtml(a.precisions || '')}</textarea>`;   /* v223 : modifiable avant d'appliquer */
   };
@@ -6647,6 +6666,16 @@ function pcAppliquer(choix, box, toutes){
       const dm = maintenant(); c.pausee = a.pausee; c.derniereModification = dm; saveLocalOverlay(c.id, { pausee: a.pausee, derniereModification: dm });
       if(a.pausee) nPause++; else nReprise++;
       lot.defaire.push(() => { const k = CARDS.find(x => x.id === a.id); if(!k) return; const d2 = new Date().toISOString(); k.pausee = !a.pausee; k.derniereModification = d2; saveLocalOverlay(k.id, { pausee: !a.pausee, derniereModification: d2 }); });
+    } else if(a.type === 'ecrite'){   /* v260 */
+      const cs = a.ids.map(id => CARDS.find(k => k.id === id)).filter(k => k && ppEcritePossible(k) && ((k.ecrite === true) !== a.ecrite || (a.ecrite && k.inversible === true)));
+      if(!cs.length){ ignorees++; continue; }
+      const avantE = cs.map(k => ({ id: k.id, ecrite: k.ecrite === true, inversible: !!k.inversible }));
+      const dmE = maintenant(), impE = loadImportedCards(); let impChange = false;
+      const poser = (k, ec, iv, dm) => { k.ecrite = ec; k.inversible = iv; k.derniereModification = dm; const ci = impE.find(x => x.id === k.id); if(ci){ ci.ecrite = ec; ci.inversible = iv; ci.derniereModification = dm; impChange = true; } saveLocalOverlay(k.id, { ecrite: ec, inversible: iv, derniereModification: dm }); };
+      for(const k of cs) poser(k, a.ecrite, a.ecrite ? false : !!k.inversible, dmE);
+      if(impChange) saveImportedCards(impE);
+            lot.defaire.push(() => { const imp2 = loadImportedCards(); let ch2 = false; const d2 = new Date().toISOString(); for(const o of avantE){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; k.ecrite = o.ecrite; k.inversible = o.inversible; k.derniereModification = d2; const ci = imp2.find(x => x.id === o.id); if(ci){ ci.ecrite = o.ecrite; ci.inversible = o.inversible; ci.derniereModification = d2; ch2 = true; } saveLocalOverlay(o.id, { ecrite: o.ecrite, inversible: o.inversible, derniereModification: d2 }); } if(ch2) saveImportedCards(imp2); try{ majEtatInversionBrowse(); }catch(e){} });
+      matNotes.push(cs.length + ' carte' + (cs.length > 1 ? 's' : '') + (a.ecrite ? ' en réponse à écrire' : ' remise' + (cs.length > 1 ? 's' : '') + ' en lecture'));
     } else if(a.type === 'controle'){
       if(!existe(a.matiere)){ ignorees++; continue; }
       const avant = (matieresConfig[a.matiere] && matieresConfig[a.matiere].dateControle) || '';
@@ -7129,6 +7158,8 @@ function ppCoachOuvrir(ctx){
   const mem = ppLireJSON('coach-matiere', null, v => typeof v === 'string');
   pcMat = (mem && mats.includes(mem)) ? mem : (mats[0] || PC_TOUTES); /* défaut = dernière matière utilisée, sinon la première ; « Toutes » seulement s'il n'y a aucune matière */
   if(ctx && ctx.matiere && mats.includes(ctx.matiere)){ pcMat = ctx.matiere; ppEcrire('coach-matiere', JSON.stringify(pcMat)); }
+  /* v259 : « Discuter de la carte » = on ouvre Prof dans la matière de la carte, sinon la carte n'est pas dans ce que Prof voit */
+  if(ctx && ctx.carteId && !ctx.matiere){ const ck = CARDS.find(c => c.id === ctx.carteId); const mk = ck && (ck.matiere || 'Sans matière'); if(mk && mats.includes(mk)){ pcMat = mk; ppEcrire('coach-matiere', JSON.stringify(pcMat)); } }
   pcCharge(); pcMenu('');
   pcCarte = (ctx && ctx.carteId && CARDS.some(c => c.id === ctx.carteId)) ? ctx.carteId : null;
   const dern = [...pcConv].reverse().find(m => m.r && m.m);
@@ -7224,6 +7255,7 @@ function pcActionValide(a){
   if(a.type === 'supprimer_matiere') return s(a.matiere);
   if(a.type === 'deplacer') return s(a.dans) && Array.isArray(a.ids) && a.ids.length > 0 && a.ids.every(s) && Array.isArray(a.de) && a.de.every(s) && Array.isArray(a.ex) && a.ex.every(s);
   if(a.type === 'pause') return s(a.id) && typeof a.pausee === 'boolean';
+  if(a.type === 'ecrite') return typeof a.ecrite === 'boolean' && Array.isArray(a.ids) && a.ids.length > 0 && a.ids.every(s) && Array.isArray(a.de) && a.de.every(s) && Array.isArray(a.ex) && a.ex.every(s);
   return false;
 }
 function pcRestaure(e){
@@ -7807,7 +7839,7 @@ function ppCbMatLigne(m, arch){
   const risque = getStatForMatiere(m) && estMatiereCritique(m, getStatForMatiere(m));
   const titre = `${a} maîtrisée${a > 1 ? 's' : ''} · ${b} en cours · ${n} nouvelle${n > 1 ? 's' : ''}`;
   return `<div class="pp-mat cb-mr${arch ? ' pp-arch' : ''}" role="button" title="${escapeHtml(titre)}" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span><span class="cb-mn">${escapeHtml(m)}</span>${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">+ contrôle</span>`}</div>
-  <div class="cb-mb"><div class="pp-seg"><i class="pp-a" style="flex:${a || .2}"></i><i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div><span class="cb-mc"><b>${a}</b>/${tot}</span></div></div>`;
+  <div class="cb-mb"><div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div><span class="cb-mc"><b>${a}</b>/${tot}</span></div></div>`;
 }
 function ppCbMatsHtml(){
   if(!ppWide()) return '';
@@ -9356,7 +9388,7 @@ function ppFp(id){
   document.querySelectorAll('#tab-browse .pp-it').forEach(n => n.classList.toggle('sel', n.dataset.id === id));
   const t = todayStr(), d = c.prochaineRevision, iA = escapeJsAttr(id);
   const nx = (!d || d <= t) ? "Aujourd'hui" : (d === addDays(t, 1) ? 'Demain' : new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'short' }));
-  el.innerHTML = `<div class="pp-fc"><div class="pp-ch" style="padding:0"><span class="pp-sticker" style="animation:none">Fiche</span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || 'Sans matière')}</span></div><h1 class="pp-qt" style="margin-top:12px">${ppRichHtml(c.question)}</h1>${c.imageQuestion ? `<img class="pp-qimg" src="${c.imageQuestion}" alt="">` : ''}<div><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at">${ppRichHtml(c.reponse)}</p>${c.imageReponse ? `<img class="pp-aimg" src="${c.imageReponse}" alt="">` : ''}</div><div class="pp-fm2"><div class="cb-st"><strong>${ppBrwLabel(c)}</strong><small>maîtrise en cours</small></div><div class="cb-st"><strong>${nx}</strong><small>prochaine révision</small></div><button class="pp-sec" onclick="ppFiche('${iA}')">Modifier</button><button class="pp-sec" onclick="ppCoachOuvrir({carteId:'${iA}'})">Discuter de la carte</button><button class="pp-sec" onclick="ppPauseBascule('${iA}')">${c.pausee === true ? 'Reprendre' : 'Mettre en pause'}</button><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button></div></div>`;
+  el.innerHTML = `<div class="pp-fc"><div class="pp-ch" style="padding:0"><span class="pp-sticker" style="animation:none">Fiche</span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || 'Sans matière')}</span></div><h1 class="pp-qt" style="margin-top:12px">${ppRichHtml(c.question)}</h1>${c.imageQuestion ? `<img class="pp-qimg" src="${c.imageQuestion}" alt="">` : ''}<div><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at">${ppRichHtml(c.reponse)}</p>${c.imageReponse ? `<img class="pp-aimg" src="${c.imageReponse}" alt="">` : ''}</div><div class="pp-fm2"><div class="pp-fm2-st"><div class="cb-st"><strong>${ppBrwLabel(c)}</strong><small>maîtrise en cours</small></div><div class="cb-st"><strong>${nx}</strong><small>prochaine révision</small></div></div><div class="pp-fm2-ac"><button class="pp-sec" onclick="ppFiche('${iA}')">Modifier</button><button class="pp-sec" onclick="ppCoachOuvrir({carteId:'${iA}'})">Discuter de la carte</button><button class="pp-sec" onclick="ppPauseBascule('${iA}')">${c.pausee === true ? 'Reprendre' : 'Mettre en pause'}</button><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button></div></div></div>`;
 }
 function ppFpAuto(){
   if(!ppWide()) return;
@@ -9380,7 +9412,7 @@ function ppGrpMenuHtml(m){
   const toutInv = lInv.length > 0 && lInv.every(c => c.inversible);
   const lEcr = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
   const toutEcr = lEcr.length > 0 && lEcr.every(c => c.ecrite === true);
-  return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppSheetClose();ppCoachOuvrir({matiere:'${mA}'});ppCoachDe(()=>ppGrpMenu('${mA}'))"><i class="pp-ri">${PP_IC.spark}</i><div><b>Discuter de cette matière</b><span>Questions, explications, entraînement</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`;
+  return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2><div class="pp-opts" style="margin-top:10px"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button></div>`;
 }
 function ppGrpMenu(m){ ppSheet(ppGrpMenuHtml(m)); }
 /* redessine le menu sur place (la feuille reste ouverte, sans animation) pour montrer la pastille colorée ou non */
@@ -9997,7 +10029,7 @@ function ppMatHtml(m, arch){
   const date = (matieresConfig[m] || {}).dateControle;
   const risque = getStatForMatiere(m) && estMatiereCritique(m, getStatForMatiere(m));
   return `<div class="pp-mat${arch ? ' pp-arch' : ''}" role="button" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span>${escapeHtml(m)}${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">+ contrôle</span>`}</div>
-  <div class="pp-seg"><i class="pp-a" style="flex:${a || .2}"></i><i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div>
+  <div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div>
   <div class="pp-leg"><span><b>${a}</b> maîtrisée${a > 1 ? 's' : ''}</span><span><b>${b}</b> en cours</span><span><b>${n}</b> nouvelle${n > 1 ? 's' : ''}</span></div></div>`;
 }
 
@@ -10829,7 +10861,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v258';
+const PP_APP_VERSION = 'v262';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
