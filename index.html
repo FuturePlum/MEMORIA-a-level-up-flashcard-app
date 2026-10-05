@@ -439,7 +439,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     /* v223 : pastilles renommées, « Plus… » / « Moins », précisions de la synthèse */
     'Résumé rapide':'Quick summary','Fiche de synthèse':'Summary sheet',"Je t'explique, corrige-moi":'I explain, you correct me','Plus…':'More…','Moins':'Less',
     'Précisions pour la synthèse (facultatif)':'Details for the summary (optional)','Précisions':'Details' });
-  Object.assign(D,{ "Plus d'options":'More options','Renommer, partager, supprimer':'Rename, share, delete','Cherche les doublons':'Find duplicates','Date de contrôle':'Test date','Renommer la matière':'Rename subject','Fusionner':'Merge','Archiver la matière':'Archive subject','Désarchiver la matière':'Unarchive subject','Supprimer la matière':'Delete subject','Mettre en pause':'Pause','Reprendre':'Resume','retirée':'removed',
+  Object.assign(D,{ "Plus d'options":'More options','Change le nom de la matière':'Change the subject name','Envoie les cartes avec un code':'Send the cards with a code','Renommer, partager, supprimer':'Rename, share, delete','Cherche les doublons':'Find duplicates','Date de contrôle':'Test date','Renommer la matière':'Rename subject','Fusionner':'Merge','Archiver la matière':'Archive subject','Désarchiver la matière':'Unarchive subject','Supprimer la matière':'Delete subject','Mettre en pause':'Pause','Reprendre':'Resume','retirée':'removed',
     'Attention : la matière ET toutes ses cartes seront supprimées, sans retour possible.':'Warning: the subject AND all its cards will be deleted, with no way back.' });
   RULES.push(
     f(/^Conversations passées \((\d+)\)$/,function(n){ return 'Past conversations ('+n+')'; }),
@@ -2179,6 +2179,11 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-sheet{overscroll-behavior:contain}
 .pp-grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
 .pp-sheet h2{font-size:26px;margin-bottom:12px}
+.pp-sbh{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.pp-sbh>div{min-width:0}
+.pp-sbh h2{font-size:22px;margin:0}
+.pp-sbh span{display:block;color:var(--muted);font-size:13.5px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pp-row .pp-chev{flex:none;color:var(--muted);display:grid;place-items:center}
 .pp-sheet h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 2px 8px;font-weight:800}
 .pp-toast{left:50%;bottom:calc(var(--sb) + 90px);transform:translate(-50%,20px);background:var(--cream);color:#1a1405;font-weight:800;font-size:13px;padding:10px 16px;border-radius:12px;box-shadow:0 4px 0 var(--c-toastsh);opacity:0;pointer-events:none;z-index:30;transition:opacity .3s var(--pps),transform .4s var(--spring);white-space:nowrap}
 .pp-toast.on{opacity:1;transform:translate(-50%,0)}
@@ -9809,13 +9814,20 @@ function ppGrpMenuHtml(m){
   const lEcr = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
   const toutEcr = lEcr.length > 0 && lEcr.every(c => c.ecrite === true);
   const arch = !!(matieresConfig[m] || {}).archive;
+  /* v273 : « Plus d'options » ouvre un sous-menu (retour en haut à gauche) au lieu de déplier des lignes sous le bouton */
+  if(ppGrpPlus) return `<div class="pp-grab"></div>
+  <div class="pp-sbh"><button class="pp-back" type="button" aria-label="Retour" onclick="ppGrpSous('${mA}',false)">${PP_IC.back}</button><div><h2>Plus d'options</h2><span>${escapeHtml(m)}</span></div></div>
+  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();openRenameMatiere('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b><span>Change le nom de la matière</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b><span>Envoie les cartes avec un code</span></div></button></div>
+  <div class="pp-opts"><button class="pp-row" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${mA}')"><i class="pp-ri" style="color:var(--pink)">${PP_IC.trash}</i><div><b>Supprimer la matière</b></div></button></div>`;
   /* v269 : tous les réglages d'une matière sont ici (avant : une partie dans la feuille « À venir »). Deux groupes : les cartes / la matière. */
   return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2>
   <h4 style="margin-top:6px">Les cartes</h4>
   <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button></div>
   <h4>La matière</h4>
-  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppMatArch('${mA}')"><i class="pp-ri">${PP_IC.dl}</i><div><b>${arch ? 'Désarchiver' : 'Archiver'}</b><span>${arch ? 'Remet la matière dans les révisions' : 'La sort des révisions, sans rien supprimer'}</span></div></button><button class="pp-row ${ppGrpPlus ? 'on' : ''}" onclick="ppGrpPlus=!ppGrpPlus;ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.dots}</i><div><b>Plus d'options</b><span>Renommer, partager, supprimer</span></div></button>${ppGrpPlus ? `<button class="pp-row" onclick="ppSheetClose();openRenameMatiere('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b></div></button><button class="pp-row" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${mA}')"><i class="pp-ri" style="color:var(--pink)">${PP_IC.trash}</i><div><b>Supprimer la matière</b></div></button>` : ''}</div>`;}
-let ppGrpPlus = false;   /* v271 : « Plus d'options » replié à l'ouverture du menu d'une matière */
+  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppMatArch('${mA}')"><i class="pp-ri">${PP_IC.dl}</i><div><b>${arch ? 'Désarchiver' : 'Archiver'}</b><span>${arch ? 'Remet la matière dans les révisions' : 'La sort des révisions, sans rien supprimer'}</span></div></button><button class="pp-row" onclick="ppGrpSous('${mA}',true)"><i class="pp-ri">${PP_IC.dots}</i><div><b>Plus d'options</b><span>Renommer, partager, supprimer</span></div><i class="pp-chev">${ppSvg('<path d="M9 6l6 6-6 6"/>',18)}</i></button></div>`;}
+let ppGrpPlus = false;   /* v271 : « Plus d'options » replié à l'ouverture du menu d'une matière ; v273 : true = sous-menu affiché */
+/* v273 : bascule menu principal ↔ sous-menu « Plus d'options », et remonte la feuille en haut */
+function ppGrpSous(m, v){ ppGrpPlus = !!v; ppGrpMenuMaj(m); const e = document.getElementById('pp-sheet'); if(e) e.scrollTop = 0; }
 function ppGrpMenu(m){ ppGrpPlus = false; ppSheet(ppGrpMenuHtml(m)); }
 /* redessine le menu sur place (la feuille reste ouverte, sans animation) pour montrer la pastille colorée ou non */
 function ppGrpMenuMaj(m){
@@ -11262,7 +11274,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v272';
+const PP_APP_VERSION = 'v273';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
