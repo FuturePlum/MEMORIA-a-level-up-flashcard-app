@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v127 : v276 (fiche d'une carte : « Mettre en pause » et « Modifier » échangent leur place) : index.html change, donc nouvelle version du cache.
+
    v126 : v270 (Parcourir : filtre « Archivées » à côté de « En pause », les matières archivées n'encombrent plus la liste ; bouton « Désarchiver » dans la feuille d'une matière archivée) : index.html change, donc nouvelle version du cache.
 
    v125 : v269 (réglages d'une matière regroupés dans le menu ⋯ de Parcourir ; la feuille « À venir » ne garde que la date du contrôle ; les matières sans carte restent visibles dans Parcourir) : index.html change, donc nouvelle version du cache.
@@ -51,7 +53,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v127';
+const SW_VERSION = 'v128';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

@@ -2761,12 +2761,15 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .pp-fc .pp-qt{ font-size:34px; }
   .pp-fc .pp-at{ font-size:30px; margin:0; }
   .pp-fm2{ display:flex; flex-direction:column; gap:10px; margin-top:auto; }
-  .pp-fm2-st{ display:flex; gap:10px; }
+  /* v275 : les 2 infos (maîtrise, prochaine révision) sont du TEXTE simple (plus de cases qui ressemblent à des boutons) ; les 4 actions sont de vrais boutons avec une icône */
+  .pp-fm2-st{ display:flex; gap:32px; padding:0 4px 14px; border-bottom:1px solid var(--line); }
   .pp-fm2-ac{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }   /* v259 : 2 infos en haut, puis les 4 actions en 2 × 2 */
   .pp-fm2-ac .pp-sec{ width:100%; min-height:46px; }
-  .cb-st{ flex:1; min-width:140px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:12px 14px; }
-  .cb-st strong{ display:block; font-size:18px; font-weight:800; line-height:1.15; }
+  .cb-st{ flex:none; display:flex; flex-direction:column-reverse; gap:4px; background:none; border:0; border-radius:0; padding:0; }
+  .cb-st strong{ display:block; font-size:20px; font-weight:800; line-height:1.15; }
+  .cb-st small{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
   .pp-fm2 .pp-sec{ padding:0 18px; }
+  .pp-fm2-ac .pp-sec.pp-del{ border-color:var(--pink); }
 }
 
 /* ============================================================
@@ -9789,7 +9792,7 @@ function ppFp(id){
   document.querySelectorAll('#tab-browse .pp-it').forEach(n => n.classList.toggle('sel', n.dataset.id === id));
   const t = todayStr(), d = c.prochaineRevision, iA = escapeJsAttr(id);
   const nx = (!d || d <= t) ? "Aujourd'hui" : (d === addDays(t, 1) ? 'Demain' : new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'short' }));
-  el.innerHTML = `<div class="pp-fc"><div class="pp-ch" style="padding:0"><span class="pp-sticker" style="animation:none">Fiche</span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || 'Sans matière')}</span></div><h1 class="pp-qt" style="margin-top:12px">${ppRichHtml(c.question)}</h1>${c.imageQuestion ? `<img class="pp-qimg" src="${c.imageQuestion}" alt="">` : ''}<div><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at">${ppRichHtml(c.reponse)}</p>${c.imageReponse ? `<img class="pp-aimg" src="${c.imageReponse}" alt="">` : ''}</div><div class="pp-fm2"><div class="pp-fm2-st"><div class="cb-st"><strong>${ppBrwLabel(c)}</strong><small>maîtrise en cours</small></div><div class="cb-st"><strong>${nx}</strong><small>prochaine révision</small></div></div><div class="pp-fm2-ac"><button class="pp-sec" onclick="ppFiche('${iA}')">Modifier</button><button class="pp-sec" onclick="ppCoachOuvrir({carteId:'${iA}'})">Discuter de la carte</button><button class="pp-sec" onclick="ppPauseBascule('${iA}')">${c.pausee === true ? 'Reprendre' : 'Mettre en pause'}</button><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button></div></div></div>`;
+  el.innerHTML = `<div class="pp-fc"><div class="pp-ch" style="padding:0"><span class="pp-sticker" style="animation:none">Fiche</span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || 'Sans matière')}</span></div><h1 class="pp-qt" style="margin-top:12px">${ppRichHtml(c.question)}</h1>${c.imageQuestion ? `<img class="pp-qimg" src="${c.imageQuestion}" alt="">` : ''}<div><div class="pp-rule" style="margin:0 0 12px"></div><p class="pp-at">${ppRichHtml(c.reponse)}</p>${c.imageReponse ? `<img class="pp-aimg" src="${c.imageReponse}" alt="">` : ''}</div><div class="pp-fm2"><div class="pp-fm2-st"><div class="cb-st"><strong>${ppBrwLabel(c)}</strong><small>maîtrise en cours</small></div><div class="cb-st"><strong>${nx}</strong><small>prochaine révision</small></div></div><div class="pp-fm2-ac"><button class="pp-sec" onclick="ppPauseBascule('${iA}')">${c.pausee === true ? ppSvg('<path d="M7 4l12 8-12 8z"/>', 18) : ppSvg('<path d="M8 5v14M16 5v14"/>', 18)}<span>${c.pausee === true ? 'Reprendre' : 'Mettre en pause'}</span></button><button class="pp-sec" onclick="ppCoachOuvrir({carteId:'${iA}'})">${PP_IC.spark}<span>Discuter de la carte</span></button><button class="pp-sec" onclick="ppFiche('${iA}')">${PP_IC.edit}<span>Modifier</span></button><button class="pp-sec pp-del" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">${PP_IC.trash}<span>Supprimer</span></button></div></div></div>`;
 }
 function ppFpAuto(){
   if(!ppWide()) return;
@@ -9814,21 +9817,28 @@ function ppGrpMenuHtml(m){
   const lEcr = CARDS.filter(c => (c.matiere || 'Sans matière') === m && ppEcritePossible(c));
   const toutEcr = lEcr.length > 0 && lEcr.every(c => c.ecrite === true);
   const arch = !!(matieresConfig[m] || {}).archive;
-  /* v273 : « Plus d'options » ouvre un sous-menu (retour en haut à gauche) au lieu de déplier des lignes sous le bouton */
-  if(ppGrpPlus) return `<div class="pp-grab"></div>
-  <div class="pp-sbh"><button class="pp-back" type="button" aria-label="Retour" onclick="ppGrpSous('${mA}',false)">${PP_IC.back}</button><div><h2>Plus d'options</h2><span>${escapeHtml(m)}</span></div></div>
-  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();openRenameMatiere('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b><span>Change le nom de la matière</span></div></button><button class="pp-row" onclick="ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b><span>Envoie les cartes avec un code</span></div></button></div>
-  <div class="pp-opts"><button class="pp-row" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${mA}')"><i class="pp-ri" style="color:var(--pink)">${PP_IC.trash}</i><div><b>Supprimer la matière</b></div></button></div>`;
   /* v269 : tous les réglages d'une matière sont ici (avant : une partie dans la feuille « À venir »). Deux groupes : les cartes / la matière. */
   return `<div class="pp-grab"></div><h2>${escapeHtml(m)}</h2>
   <h4 style="margin-top:6px">Les cartes</h4>
   <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ouvrirEditionIA('${mA}')"><i class="pp-ri">${PP_IC.spark}</i><div><b>Modifier avec l'IA</b><span>Reformuler ou compléter les cartes</span></div></button><button class="pp-row ${toutInv ? 'on' : ''}" onclick="ppInvMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.swap}</i><div><b>Inverser toutes les cartes</b><span>${toutInv ? 'Activé · touche pour annuler' : "Aussi posées dans l'autre sens"}</span></div></button><button class="pp-row ${toutEcr ? 'on' : ''}" onclick="ppEcrMatiere('${mA}');ppGrpMenuMaj('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Tout en réponse écrite</b><span>${toutEcr ? 'Activé · touche pour annuler' : 'Tu tapes ta réponse avant de la voir'}</span></div></button></div>
   <h4>La matière</h4>
-  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppMatArch('${mA}')"><i class="pp-ri">${PP_IC.dl}</i><div><b>${arch ? 'Désarchiver' : 'Archiver'}</b><span>${arch ? 'Remet la matière dans les révisions' : 'La sort des révisions, sans rien supprimer'}</span></div></button><button class="pp-row" onclick="ppGrpSous('${mA}',true)"><i class="pp-ri">${PP_IC.dots}</i><div><b>Plus d'options</b><span>Renommer, partager, supprimer</span></div><i class="pp-chev">${ppSvg('<path d="M9 6l6 6-6 6"/>',18)}</i></button></div>`;}
-let ppGrpPlus = false;   /* v271 : « Plus d'options » replié à l'ouverture du menu d'une matière ; v273 : true = sous-menu affiché */
-/* v273 : bascule menu principal ↔ sous-menu « Plus d'options », et remonte la feuille en haut */
-function ppGrpSous(m, v){ ppGrpPlus = !!v; ppGrpMenuMaj(m); const e = document.getElementById('pp-sheet'); if(e) e.scrollTop = 0; }
-function ppGrpMenu(m){ ppGrpPlus = false; ppSheet(ppGrpMenuHtml(m)); }
+  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${mA}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Faire une synthèse</b><span>À partir des cartes, fichiers en option</span></div></button><button class="pp-row" onclick="ppMatArch('${mA}')"><i class="pp-ri">${PP_IC.dl}</i><div><b>${arch ? 'Désarchiver' : 'Archiver'}</b><span>${arch ? 'Remet la matière dans les révisions' : 'La sort des révisions, sans rien supprimer'}</span></div></button><button class="pp-row" onclick="ppGrpSous('${mA}')"><i class="pp-ri">${PP_IC.dots}</i><div><b>Plus d'options</b><span>Renommer, partager, supprimer</span></div><i class="pp-chev">${ppSvg('<path d="M9 6l6 6-6 6"/>',18)}</i></button></div>`;}
+/* v274 : « Plus d'options » s'ouvre dans une 2e feuille posée PAR-DESSUS le menu de la matière (celle du calendrier : #pp-psheet / #pp-pveil).
+   Le menu de la matière reste ouvert derrière ; retour, glissé vers le bas, voile ou bouton retour du téléphone ferment seulement la 2e feuille. */
+function ppGrpSousHtml(m){
+  const mA = escapeJsAttr(m);
+  return `<div class="pp-grab"></div>
+  <div class="pp-sbh"><button class="pp-back" type="button" aria-label="Retour" onclick="ppPickClose()">${PP_IC.back}</button><div><h2>Plus d'options</h2><span>${escapeHtml(m)}</span></div></div>
+  <div class="pp-opts"><button class="pp-row" onclick="ppPickClose();ppSheetClose();openRenameMatiere('${mA}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b><span>Change le nom de la matière</span></div></button><button class="pp-row" onclick="ppPickClose();ppSheetClose();ppPartagerMatiere('${mA}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b><span>Envoie les cartes avec un code</span></div></button></div>
+  <div class="pp-opts"><button class="pp-row" style="color:var(--pink)" onclick="ppPickClose();ppSheetClose();openDeleteMatiereConfirm('${mA}')"><i class="pp-ri" style="color:var(--pink)">${PP_IC.trash}</i><div><b>Supprimer la matière</b></div></button></div>`;
+}
+function ppGrpSous(m){
+  ppEnsureSheets();
+  const e = document.getElementById('pp-psheet'); e.scrollTop = 0; e.style.translate = ''; e.style.transition = '';
+  e.innerHTML = ppGrpSousHtml(m);
+  document.getElementById('pp-pveil').classList.add('on'); e.classList.add('on');
+}
+function ppGrpMenu(m){ ppSheet(ppGrpMenuHtml(m)); }
 /* redessine le menu sur place (la feuille reste ouverte, sans animation) pour montrer la pastille colorée ou non */
 function ppGrpMenuMaj(m){
   const e = document.getElementById('pp-sheet');
@@ -11274,7 +11284,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v273';
+const PP_APP_VERSION = 'v276';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
