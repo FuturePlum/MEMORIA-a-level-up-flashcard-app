@@ -208,7 +208,8 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   var K='fc-langue';
   /* v141 : sans choix explicite (Réglages → Langue), la langue suit celle de l'appareil : français pour toute variante fr (fr, fr-CA, fr-BE…), anglais sinon.
      Rien n'est enregistré tant que l'utilisateur n'a pas choisi : si la langue de l'appareil change, l'app suit. L'intro lit aussi ce résultat (langueChoisie). */
-  function appareil(){ var l=''; try{ l=String((navigator.languages&&navigator.languages[0])||navigator.language||'fr'); }catch(e){} return /^fr/i.test(l)?'fr':'en'; }
+  /* v283 : français dès qu'UNE des langues préférées du navigateur est française (pas seulement la première) : sur un Chromebook en français, la liste des langues de Chrome peut commencer par l'anglais (compte, école…) et l'app s'ouvrait en anglais. Le choix reste modifiable dans Réglages → Langue. */
+  function appareil(){ var L=[]; try{ L=(navigator.languages&&navigator.languages.length)?Array.prototype.slice.call(navigator.languages):[navigator.language||'fr']; }catch(e){ L=['fr']; } for(var i=0;i<L.length;i++){ if(/^fr/i.test(String(L[i]))) return 'fr'; } return 'en'; }
   function lire(){ try{ var v=localStorage.getItem(K); if(v==='en'||v==='fr') return v; }catch(e){} return appareil(); }
   window.langueChoisie=lire;
   window.choisirLangue=function(c){ try{ localStorage.setItem(K,c); }catch(e){} location.reload(); };
@@ -3494,6 +3495,23 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-top .fi-bk:active{transform:scale(.9)}
 #fci .fi-top .fi-sk{text-align:right}
 #fci .fi-top .fi-hide{opacity:0;pointer-events:none}
+/* v284 : choix de la langue sur le premier écran de l'introduction. Petite capsule FR | EN en haut à gauche (à la place de la flèche « retour », cachée sur cet écran) :
+   la pastille jaune glisse d'un côté à l'autre (même ressort que les pastilles de progression), puis le contenu s'efface en douceur et l'app se recharge dans la langue choisie. */
+#fci .fi-ln{position:absolute;z-index:3;top:calc(max(16px,env(safe-area-inset-top)) + 4px);left:20px;display:flex;padding:3px;border-radius:99px;border:1.5px solid var(--line);background:rgba(var(--ov),.05);animation:fi-lnin .7s .5s var(--sp) backwards;transition:opacity .3s,transform .45s var(--sp)}
+#fci .fi-ln.fi-hide{opacity:0;pointer-events:none;transform:translateY(-6px) scale(.88)}
+#fci .fi-ln-t{position:absolute;top:3px;left:3px;width:34px;height:26px;border-radius:99px;background:var(--yellow);box-shadow:0 2px 0 var(--yellow-d);transition:transform .5s var(--sp)}
+#fci .fi-ln[data-l=en] .fi-ln-t{transform:translateX(34px)}
+#fci .fi-ln-b{position:relative;width:34px;height:26px;border-radius:99px;font-weight:800;font-size:12px;letter-spacing:.06em;color:var(--muted);transition:color .25s,transform .25s var(--sp)}
+#fci .fi-ln-b:active{transform:scale(.9)}
+#fci .fi-ln[data-l=fr] .fi-ln-b[data-l=fr],#fci .fi-ln[data-l=en] .fi-ln-b[data-l=en]{color:#1a1405}
+#fci .fi-ln.fi-bump{animation:fi-lnbump .4s var(--sp)}
+@keyframes fi-lnin{from{opacity:0;transform:translateY(-10px) scale(.8)}}
+@keyframes fi-lnbump{40%{transform:scale(1.07)}}
+/* contenu qui s'efface avant le rechargement, puis qui revient (après le changement de langue) */
+#fci .fi-top>*,#fci .fi-body,#fci .fi-foot{transition:opacity .3s,transform .35s ease,filter .3s}
+#fci.fi-lnx .fi-top>*,#fci.fi-lnx .fi-body,#fci.fi-lnx .fi-foot{opacity:0;transform:translateY(10px);filter:blur(4px);pointer-events:none}
+#fci.fi-relang .fi-stage{animation:fi-relang .5s ease backwards}
+@keyframes fi-relang{from{opacity:0;transform:translateY(10px)}}
 #fci .fi-body{position:relative;flex:1;min-height:0;overflow:clip}
 #fci .fi-sl{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:6px 2px;opacity:0;pointer-events:none;transition:transform .5s var(--sp),opacity .3s}
 #fci .fi-sl.fi-L{transform:translateX(-46px)}
@@ -3606,6 +3624,8 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #fci .fi-pills i{height:8px;width:8px}
   #fci .fi-pills i.fi-on{width:36px}
   #fci .fi-top .fi-bk:hover,#fci .fi-top .fi-sk:hover{color:var(--ink)}
+  #fci .fi-ln{top:30px;left:44px}
+  #fci .fi-ln-b:hover{color:var(--ink)}
   #fci h1{font-size:clamp(40px,7vh,56px)}
   #fci .fi-sub{font-size:18px;max-width:420px}
   #fci .fi-stk{font-size:12px}
@@ -11475,11 +11495,11 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v282';
+const PP_APP_VERSION = 'v284';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
-  let en = false; try{ en = (localStorage.getItem('fc-langue') || (/^fr/i.test(String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr')) ? 'fr' : 'en')) === 'en'; }catch(e){}
+  let en = false; try{ en = (typeof langueChoisie === 'function' ? langueChoisie() : 'fr') === 'en'; }catch(e){}   /* v283 : même règle que le reste de l'app */
   const bug = type === 'bug';
   const th = document.documentElement.getAttribute('data-theme') || '';
   const infos = 'Memoria ' + PP_APP_VERSION + ' · ' + th + ' · ' + (en ? 'en' : 'fr') + ' · ' + (navigator.userAgent || '') + ' · ' + screen.width + 'x' + screen.height;
@@ -17693,7 +17713,9 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var chk=logo();
     var ext='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
     var bk='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+    var lc=(T===S.en)?'en':'fr';
     return '<main class="fi-stage" data-i="st">'
+    +'<div class="fi-ln" data-i="ln" data-l="'+lc+'" role="group" aria-label="Langue / Language"><span class="fi-ln-t" aria-hidden="true"></span><button type="button" class="fi-ln-b" data-l="fr" lang="fr" aria-label="Français" aria-pressed="'+(lc==='fr')+'">FR</button><button type="button" class="fi-ln-b" data-l="en" lang="en" aria-label="English" aria-pressed="'+(lc==='en')+'">EN</button></div>'
     +'<div class="fi-top"><button class="fi-bk fi-hide" data-i="bk" aria-label="'+T.back+'">'+bk+'</button><div class="fi-pills" data-i="pl"></div><button class="fi-sk" data-i="sk">'+T.skip+'</button></div>'
     +'<div class="fi-body">'
     +'<section class="fi-sl"><div class="fi-fan fi-rv"><i></i><i></i><i>'+chk+'</i></div><span class="fi-stk fi-rv">'+T.wel+'</span><h1 class="fi-rv">'+T.h0+'</h1><p class="fi-sub fi-rv">'+T.s0+'</p></section>'
@@ -17725,12 +17747,27 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var pills=q('[data-i=pl]').children, k;
     for(k=0;k<pills.length;k++) pills[k].className = k===i?'fi-on':k<i?'fi-ok':'';
     q('[data-i=bk]').classList.toggle('fi-hide', i===0);
+    q('[data-i=ln]').classList.toggle('fi-hide', i!==0);   /* v284 : le choix de langue prend la place de la flèche « retour » sur le premier écran */
     q('[data-i=sk]').classList.toggle('fi-hide', i===N-1);
     q('[data-i=ft]').classList.toggle('fi-hide', i===4 && !ia);
     var lbl=[T.lets,T.next,T.next,T.next,T.cont,T.add];
     nx.textContent = (i===4 && ia) ? (keyOk?T.cont:T.contNo) : lbl[i];
     var hm=q('[data-i=hm]'); hm.style.display = i===N-1?'flex':'none'; hm.classList.remove('fi-hide');
     nx.disabled=false;
+  }
+  /* v284 : choix de la langue. La pastille glisse, le contenu s'efface, puis choisirLangue() enregistre le choix et recharge (le traducteur de l'app se met en place au chargement).
+     Un drapeau de session (fc-intro-relance) fait rouvrir l'introduction après le rechargement, même quand elle est rejouée depuis les Réglages. */
+  var lnBusy=false, relang=false;
+  function langueIntro(c){
+    if(lnBusy || closing || (c!=='fr' && c!=='en')) return;
+    var el=q('[data-i=ln]'), cur=el.getAttribute('data-l');
+    if(c===cur){ el.classList.remove('fi-bump'); void el.offsetWidth; el.classList.add('fi-bump'); vib(5); return; }
+    lnBusy=true; vib(8);
+    el.setAttribute('data-l',c);
+    qa('.fi-ln-b').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-l')===c ? 'true' : 'false'); });
+    try{ sessionStorage.setItem('fc-intro-relance', rejoue ? 'r' : 'p'); }catch(e){}
+    setTimeout(function(){ root.classList.add('fi-lnx'); },220);
+    setTimeout(function(){ try{ window.choisirLangue(c); }catch(e){ location.reload(); } },620);
   }
   function go(n){
     if(n<0||n>=N) return;
@@ -17827,6 +17864,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       addEventListener('pointerup',u); addEventListener('pointercancel',u);
     });
     nx.onclick=suivant;
+    qa('.fi-ln-b').forEach(function(b){ b.onclick=function(){ langueIntro(b.getAttribute('data-l')); }; });   /* v284 */
+    if(relang){ root.classList.add('fi-relang'); relang=false; }
     q('[data-i=hm]').onclick=function(){ fermer(false); };
     q('[data-i=bk]').onclick=precedent;
     q('[data-i=sk]').onclick=function(){ go(N-1); };
@@ -17852,6 +17891,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     /* clavier (capturé : les raccourcis de l'app, ex. Espace, ne doivent pas partir derrière l'intro) */
     onKey=function(e){
       if(e.target&&e.target.tagName==='INPUT'){ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(keyOk) suivant(); } return; }
+      if(e.target && e.target.closest && e.target.closest('.fi-ln') && (e.key==='Enter' || e.key===' ')) return;   /* v284 : la capsule de langue garde Entrée / Espace */
       e.stopPropagation();
       if(e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); if(!(i===4&&!ia)) nx.click(); }
       else if(e.key==='ArrowLeft'){ e.preventDefault(); q('[data-i=bk]').click(); }
@@ -17900,6 +17940,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var force=false, vu=false, rest=window.__ppIntroEtat||null;
     try{ force=/[?&]intro(=1|&|$)/.test(location.search); vu=!!localStorage.getItem(SEEN); }catch(e){}
     window.__ppIntroEtat=null;
+    var rl=null; try{ rl=sessionStorage.getItem('fc-intro-relance'); sessionStorage.removeItem('fc-intro-relance'); }catch(e){}
+    if(rl){ if(rl==='r') rejoue=true; relang=true; ouvrir(); return; }   /* v284 : retour après un changement de langue dans l'introduction */
     if(rest){ ouvrir(rest); return; }   // v198 : retour par l'icône avec l'introduction ouverte (aussi quand on la rejoue)
     if(force){ rejoue=true; ouvrir(); return; }
     if(vu) return;
