@@ -19,6 +19,14 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v139 : v306 (intro, écran Prof : réponses de Prof de structures variées, plus de « tu valides ? » partout) : index.html change, donc nouvelle version du cache.
+
+   v138 : v305 (intro, écran Prof : Prof ne répète plus la demande, il répond par de courts messages variés du type « C'est prêt, tu valides ? ») : index.html change, donc nouvelle version du cache.
+
+   v137 : v304 (intro, écran Prof : un peu moins rapide, pause plus longue avant le message suivant) : index.html change, donc nouvelle version du cache.
+
+   v136 : v303 (intro, écran Prof : mots, points de réflexion et enchaînement des messages plus rapides) : index.html change, donc nouvelle version du cache.
+
    v135 : v302 (menu de la fiche : icône pause/reprise comme sur PC ; intro : synchro avec un fichier qui voyage, Prof : fusion + déplacement en un seul message, « Appliquer » plus rapide) : index.html change, donc nouvelle version du cache.
 
    v133 : introduction, écran Maîtrise : les cartes se classent seules dans trois dossiers (Demain / 3 jours / 7 jours) : index.html change, donc nouvelle version du cache.
@@ -65,7 +73,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v135';
+const SW_VERSION = 'v139';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
