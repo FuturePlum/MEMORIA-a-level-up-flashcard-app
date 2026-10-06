@@ -6333,9 +6333,10 @@ function pcCollerTexte(ev){
 
 /* ---------- contexte : cartes envoyées à l'IA ---------- */
 function pcNet(s){ return String(s == null ? '' : s).replace(/\s*\n\s*/g, ' / ').trim(); }
+function pcNetL(s){ return String(s == null ? '' : s).replace(/\s*\n\s*/g, ' ⏎ ').trim(); }   /* v282 : dans les lignes de cartes envoyées à Prof, un saut de ligne s'écrit « ⏎ » (avec « / » Prof recopiait un vrai « / ») */
 function pcLigne(c){
-  const q = pcNet(c.question) + (c.imageQuestion ? (c.question ? ' ' : '') + '[image]' : '');
-  const r = pcNet(c.reponse) + (c.imageReponse ? (c.reponse ? ' ' : '') + '[image]' : '');
+  const q = pcNetL(c.question) + (c.imageQuestion ? (c.question ? ' ' : '') + '[image]' : '');
+  const r = pcNetL(c.reponse) + (c.imageReponse ? (c.reponse ? ' ' : '') + '[image]' : '');
   /* v230 : Prof voit la maîtrise réelle de chaque carte (avant, seulement « ratée:N », qu'il prenait pour le niveau) */
   const p = c.palier || 0, mai = p >= MASTERED_PALIER;
   const etat = c.pausee === true ? 'en pause' : mai ? 'maîtrisée' : (!c.derniereRevision && p === 0) ? 'jamais révisée' : 'en cours';
@@ -6420,7 +6421,7 @@ RÈGLES :
 - PRIORITÉ AUX CARTES : s'il existe des cartes sur le sujet, appuie-toi d'abord dessus et reste cohérent avec elles (définitions, vocabulaire). S'il n'y a aucune carte sur le sujet, ou si elles ne suffisent pas, aide quand même avec tes connaissances : explication, exercice, correction, méthode, interrogation, sur n'importe quel cours, qu'il soit dans Memoria ou non. Ne refuse jamais une demande d'étude parce qu'il n'y a pas de carte. Dans ce cas mets "hors_cartes": true, dis-le en une phrase courte (sans t'excuser) et, si la notion mérite d'être gardée, propose-la en carte ("ajoutable": true).
 - RESTE DANS LES ÉTUDES : tu aides à apprendre, réviser, comprendre un cours ou un exercice, à t'organiser et à travailler une langue. Une demande sans rapport avec l'apprentissage (jeu, divertissement, bavardage qui s'éternise, sujets personnels…) : réponds en une phrase brève et aimable que tu es là pour les révisions, puis propose de reprendre le travail (ou un mini-quiz). Pas de sermon, pas de refus sec ; un « bonjour » ou un « merci » reçoit une réponse normale.
 - ACTIONS : ne propose des "actions" QUE si l'utilisateur le demande (ou dans les modes « Vérifie mes cartes », « Cherche les doublons » et fin de série d'« Interroge-moi »). Sinon "actions": []. N'invente JAMAIS d'id : utilise seulement ceux des lignes ci-dessous.
-- SAUTS DE LIGNE : dans les lignes de cartes ci-dessous, « / » (entouré d'espaces) représente un SAUT DE LIGNE de la carte. Pour reformater des cartes (mettre des sauts de ligne, harmoniser la mise en forme sur d'autres cartes, comme une carte donnée en modèle), utilise des actions \"modifier\" avec l'id de chaque carte et, dans \"reponse\" (ou \"question\"), le texte complet avec de vrais sauts de ligne (\\n dans le JSON), jamais « / ». Une demande formulée comme un souhait (« j'aimerais que… », « mets les autres comme… ») EST une demande d'action : propose les actions. Tu ne peux modifier que les cartes listées plus bas ; s'il y en a trop, traite les 25 premières et dis qu'il en reste ; si les cartes voulues ne sont pas listées, dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran.
+- SAUTS DE LIGNE : dans les lignes de cartes ci-dessous, « ⏎ » représente un SAUT DE LIGNE de la carte. Pour reformater des cartes (mettre des sauts de ligne, harmoniser la mise en forme sur d'autres cartes, comme une carte donnée en modèle), utilise des actions \"modifier\" avec l'id de chaque carte et, dans \"reponse\" (ou \"question\"), le texte complet où chaque saut de ligne voulu s'écrit « ⏎ » : l'appli le transforme en vrai saut de ligne. N'écris JAMAIS « / » ni « | » à la place d'un saut de ligne. Une demande formulée comme un souhait (« j'aimerais que… », « mets les autres comme… ») EST une demande d'action : propose les actions. Si l'utilisateur donne une nouvelle consigne alors que tes actions précédentes n'ont pas été appliquées, elles sont retirées de l'écran : propose de nouveau TOUTES les actions de la nouvelle consigne. Tu ne peux modifier que les cartes listées plus bas ; s'il y en a trop, traite les 25 premières et dis qu'il en reste ; si les cartes voulues ne sont pas listées, dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran.
 - N'ÉCRIS « Appliquer » (ou « appuie sur le bouton ») QUE si \"actions\" contient au moins une action dans CETTE réponse. Sinon, ne promets aucun bouton : fais l'action maintenant, ou explique ce qui manque.
 - Une action n'est qu'une PROPOSITION tant que l'utilisateur n'a pas appuyé sur Appliquer : ne dis jamais qu'elle est déjà faite (« j'ai créé… », « a bien été créée »), dis plutôt « Je te propose… » ou « Appuie sur Appliquer ». Les messages « [Info de l'application : … ] » de la conversation ne sont pas de l'utilisateur : ils disent ce qu'il a appliqué, décoché, ignoré ou annulé. Fais-en foi (ce qui est annulé n'existe plus, ce qui est ignoré n'a pas été fait), tiens-en compte sans les recopier, et ne reproposes pas la même action sans qu'il le demande.
 - "retenir" (carnet de l'utilisateur) : seulement s'il te le demande (« retiens que… »), ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois (1 seule ligne). Jamais autrement. "texte" : note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule action "retenir" par réponse.
@@ -6516,7 +6517,7 @@ function pcValideActions(arr, matiere){
   }
   for(const a of arr.slice(0, 80)){
     if(!a || typeof a !== 'object') continue;
-    const txt = v => (typeof v === 'string') ? ppRepareTexteIA(v.trim()) : '';
+    const txt = v => (typeof v === 'string') ? ppRepareTexteIA(v.trim()).replace(/[ \t]*⏎[ \t]*/g, '\n').trim() : '';   /* v282 : « ⏎ » = saut de ligne */
     if(a.type === 'creer'){
       const q = txt(a.question), r = txt(a.reponse); if(!q || !r) continue;
       const brut = typeof a.matiere === 'string' ? nomMatiereCanonique(a.matiere.trim(), mats.concat(nouvelles)) : '';
@@ -6725,6 +6726,11 @@ async function pcEnvoyer(t, label){
     const s = '— ' + pcNom(pcMat) + ' —'; pcSep(s); pcConv.push({ s }); pcDerniere = pcMat;
   }
   const affiche = photo ? (pcPjType(photo) === 'photo' ? '📷 Photo envoyée\n' : pcPjType(photo) === 'colle' ? '📄 Texte collé envoyé\n' : '📄 Document envoyé\n') + t : t; /* la pièce jointe elle-même n'est jamais stockée */
+  if(pcActsAttente && pcActsAttente.box && pcActsAttente.box.isConnected && !pcActsAttente.box.classList.contains('done')){   /* v282 : nouvelle consigne alors que les actions précédentes ne sont ni appliquées ni ignorées */
+    const ancienne = pcActsAttente; pcActsAttente = null;
+    pcNote("[Info de l'application : les actions proposées juste avant n'ont été NI appliquées NI ignorées ; la nouvelle consigne les remplace, elles sont retirées de l'écran et rien n'a été modifié : " + pcDecritListe(ancienne.actions) + '. Si la nouvelle consigne les concerne, propose de nouveau TOUTES les actions voulues.]');
+    pcBoxEtat(ancienne.box, 'ko', 'Remplacées par ta nouvelle demande', '');
+  }
   const modeAvant = pcMode; if(label !== undefined) pcModeDepuis(label);
   const bu = pcAjoute('u', affiche); pcUtilises.add(label || t);
   pcConv.push({ r: 'u', t: affiche, m: pcMat }); pcSauve(); pcIdAssure();
@@ -6874,7 +6880,7 @@ function pcActionsCarte(actions, matiere){
     if(a.type === 'retenir') return `<i class="pc-t">Retenir · carnet</i><b>${escapeHtml(a.texte)}</b>`;
     return `<i class="pc-t">Synthèse</i><b>${escapeHtml(a.matiere)}</b><textarea class="pc-prec" rows="2" maxlength="600" placeholder="Précisions pour la synthèse (facultatif)" aria-label="Précisions">${escapeHtml(a.precisions || '')}</textarea>`;   /* v223 : modifiable avant d'appliquer */
   };
-  const nbSup = actions.filter(a => a.type === 'supprimer').length;   /* v244 : « Tout cocher » quand plusieurs cartes sont proposées à la suppression (elles sont décochées au départ) */
+  const nbSup = actions.filter(a => a.type !== 'seance').length;   /* v282 : « Tout cocher / Tout décocher » dès que 2 actions ou plus sont cochables (avant : seulement pour plusieurs suppressions, v244) */
   box.innerHTML = `<div class="pc-hh"><h4>Actions proposées</h4>${nbSup > 1 ? '<button type="button" class="pp-invc pc-all">Tout cocher</button>' : ''}</div>` + actions.map((a, i) => `<label class="pc-ar${a.type === 'seance' ? ' pc-sr' : ''}"><input type="checkbox" data-i="${i}"${(a.type === 'supprimer' || a.type === 'supprimer_matiere' || a.type === 'seance') ? '' : ' checked'}><em></em><div>${lib(a)}</div></label>`).join('')
     + `<div class="pc-warn" hidden>Attention : plusieurs suppressions sont cochées.</div><div class="pc-ab"><button type="button" class="pp-cta pc-ap">Appliquer</button><button type="button" class="pp-sec pc-ig">Ignorer</button></div>`;
   pcEl('pc-feed').appendChild(box);
@@ -6888,7 +6894,7 @@ function pcActionsCarte(actions, matiere){
     warn.textContent = sm ? 'Attention : la matière ET toutes ses cartes seront supprimées (récupérables 30 jours).' : 'Attention : plusieurs suppressions sont cochées.';
     warn.hidden = !(sm || sup.length >= 3 || (tot && sup.length * 2 >= tot));
   };
-  const btnAll = box.querySelector('.pc-all'), casesSup = cases.filter(c => actions[+c.dataset.i].type === 'supprimer');
+  const btnAll = box.querySelector('.pc-all'), casesSup = cases.filter(c => actions[+c.dataset.i].type !== 'seance');
   const majAll = () => { if(!btnAll) return; const tout = casesSup.every(c => c.checked); btnAll.textContent = tout ? 'Tout décocher' : 'Tout cocher'; btnAll.classList.toggle('on', tout); };
   if(btnAll) btnAll.onclick = () => { const v = !casesSup.every(c => c.checked); casesSup.forEach(c => { c.checked = v; }); maj(); majAll(); };
   cases.forEach(c => c.onchange = () => { maj(); majAll(); }); maj(); majAll();
@@ -11469,7 +11475,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v281';
+const PP_APP_VERSION = 'v282';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -12602,7 +12608,7 @@ function renderEditionIA(){
   const beaucoupDeSuppr = nbSuppr >= 3 || (nbSuppr > 0 && nbSuppr >= Math.ceil(e.base.length / 2));
   const libelle = { modif: 'Modifiée', ajout: 'Nouvelle', suppr: 'Supprimée' };
   const couleur = { modif: 'var(--orange)', ajout: 'var(--green)', suppr: 'var(--pink)' };
-  ppSheet(`<div class="pp-grab"></div><h2>Changements proposés</h2><p class="pp-hint">Décoche ce que tu ne veux pas appliquer.</p>${msgHtml}
+  ppSheet(`<div class="pp-grab"></div><h2>Changements proposés</h2><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><p class="pp-hint" style="margin:0">Décoche ce que tu ne veux pas appliquer.</p>${props.length > 1 ? `<button type="button" class="pp-invc${props.every(x => x.accepte) ? ' on' : ''}" id="ia-edit-tout" style="flex:none" onclick="basculerToutIA()">${props.every(x => x.accepte) ? 'Tout décocher' : 'Tout cocher'}</button>` : ''}</div>${msgHtml}
   ${beaucoupDeSuppr ? `<p class="pp-warn" style="--wc:var(--pink)">L'IA propose de supprimer ${nbSuppr} carte${nbSuppr > 1 ? 's' : ''} sur ${e.base.length}. Elles sont décochées : coche seulement celles que tu veux vraiment supprimer (c'est définitif).</p>` : ''}
   ${props.length === 0 ? `<p class="pp-hint">L'IA n'a proposé aucun changement.</p>` : ''}
   ${props.map((x, i) => `<label class="pp-pv" style="display:flex;gap:11px;align-items:flex-start;cursor:pointer;opacity:${x.accepte ? 1 : .5}"><input type="checkbox" ${x.accepte ? 'checked' : ''} style="accent-color:var(--orange);width:20px;height:20px;margin-top:1px;flex:none" onchange="basculerPropositionIA(${i},this)"><span style="flex:1;min-width:0;font-size:14px;line-height:1.4"><span class="pp-tag2" style="color:${couleur[x.type]}">${libelle[x.type]}</span>
@@ -12617,9 +12623,26 @@ function basculerPropositionIA(i, el){
   const p = iaEdit.propositions[i];
   p.accepte = el ? el.checked : !p.accepte;
   if(el){ const l = el.closest('label'); if(l) l.style.opacity = p.accepte ? 1 : .5; }
-  const nb = iaEdit.propositions.filter(x => x.accepte).length;
+  iaEditMajCompteur();
+}
+/* v282 : « Tout cocher / Tout décocher » (même bouton que dans Prof) : met à jour sur place les cases, le compteur et le libellé. */
+function iaEditMajCompteur(){
+  if(!iaEdit) return;
+  const P = iaEdit.propositions, nb = P.filter(x => x.accepte).length;
   const b = document.getElementById('ia-edit-appliquer');
   if(b){ b.textContent = 'Appliquer (' + nb + ')'; b.disabled = nb === 0; }
+  const t = document.getElementById('ia-edit-tout');
+  if(t){ const tout = P.length > 0 && nb === P.length; t.textContent = tout ? 'Tout décocher' : 'Tout cocher'; t.classList.toggle('on', tout); }
+}
+function basculerToutIA(){
+  if(!iaEdit || !iaEdit.propositions.length) return;
+  const v = !iaEdit.propositions.every(x => x.accepte);
+  iaEdit.propositions.forEach(x => { x.accepte = v; });
+  document.querySelectorAll('#pp-sheet label.pp-pv').forEach(l => {
+    const c = l.querySelector('input[type=checkbox]'); if(c) c.checked = v;
+    l.style.opacity = v ? 1 : .5;
+  });
+  iaEditMajCompteur();
 }
 
 function retourConsigneEditionIA(){
