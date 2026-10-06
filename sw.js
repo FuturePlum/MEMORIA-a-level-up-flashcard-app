@@ -19,6 +19,10 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v133 : introduction, écran Maîtrise : les cartes se classent seules dans trois dossiers (Demain / 3 jours / 7 jours) : index.html change, donc nouvelle version du cache.
+
+   v132 : v296 (introduction : écrans Maîtrise (frise où la carte saute de station en station, doigt de démo, étincelles) et Planning (jours réels, piles de cartes, drapeau qui vole, plus rapide)) : index.html change, donc nouvelle version du cache.
+
    v131 : v295 (introduction : démos automatiques — maîtrise, planning sans boutons, synchro aller-retour ; halo jaune de Prof retiré ; un seul bouton « Go réviser » à la fin) : index.html change, donc nouvelle version du cache.
 
    v129 : v278 (le mot-clé d'une image de Prof est effacé de la conversation au bout de 7 jours : l'image ne revient plus) : index.html change, donc nouvelle version du cache.
@@ -59,7 +63,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v131';
+const SW_VERSION = 'v134';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

@@ -245,7 +245,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Images trouvées sur Wikimedia Commons : vérifie-les avant d\u2019enregistrer.':'Images found on Wikimedia Commons: check them before saving.',
     'Aucune image trouvée pour les mots-clés de l\u2019IA.':'No image found for the AI keywords.',
     'Recherche des images...':'Searching for images...',
-    'Copier':'Copy','Télécharger':'Download','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','1. Touche ici · 2. « Créer une clé API » · 3. Colle-la ci-dessous.':'1. Tap here · 2. “Create API key” · 3. Paste it below.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
+    'Copier':'Copy','Télécharger':'Download','Image téléchargée':'Image downloaded','Impossible de télécharger l’image':'Could not download the image','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','1. Touche ici · 2. « Créer une clé API » · 3. Colle-la ci-dessous.':'1. Tap here · 2. “Create API key” · 3. Paste it below.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
   Object.assign(D,{'Mémoire':'Memory','Garder':'Keep','Supprimer cette ligne ?':'Delete this line?','Ex. Physique':'E.g. Physics','ex. espagnol':'e.g. Spanish','Suggestions précédentes':'Previous suggestions','Suggestions suivantes':'Next suggestions','Supprimer cette ligne':'Delete this line'});   /* v228 */
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
@@ -350,6 +350,9 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^(texte collé|\d+ cartes?) \+ (\d+) fichiers?$/,function(a,n){ var m=/^(\d+)/.exec(a); return (m?c(m[1],'card'):'pasted text')+' + '+c(n,'file'); }),
     f(/^(\d+) fichiers?$/,function(n){ return c(n,'file'); })
   );
+  Object.assign(D,{ /* v300 : copier une bulle de Prof */
+    'Copié':'Copied','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand'
+  });
   Object.assign(D,{ /* v138 : textes oubliés (captures) */
     'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','carte en 7 jours':'card in 7 days','cartes en 7 jours':'cards in 7 days','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
   });
@@ -1599,7 +1602,7 @@ body{
 }
 :root:root:root[data-theme="light"] #vie-ambiance{ mix-blend-mode:multiply }
 :root:root:root[data-theme="light"] :where(.cc-toast,.pp-toast){ color:#f1f0fb }
-:root:root:root[data-theme="light"] :where(#pp-zoom .pz-x,#pp-zoom .pz-tip){ color:#f5f0e6 }
+:root:root:root[data-theme="light"] :where(#pp-zoom .pz-x,#pp-zoom .pz-dl,#pp-zoom .pz-tip){ color:#f5f0e6 }
 html{ background:var(--bg); }
 body{
     background:
@@ -1945,7 +1948,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 #pp-zoom .pz-img{display:block;max-width:calc(100% - 24px);max-height:calc(100% - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));object-fit:contain;border-radius:24px;will-change:transform;touch-action:none;-webkit-user-drag:none;box-shadow:0 18px 60px rgba(0,0,0,.55);background:#fff;cursor:zoom-in}
 #pp-zoom .pz-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;width:46px;height:46px;padding:0;border-radius:50%;border:1.5px solid var(--line);background:rgba(20,20,32,.85);color:var(--cream);display:grid;place-items:center;opacity:0;transition:opacity .25s,transform .15s;cursor:pointer}
 #pp-zoom .pz-x:active{transform:scale(.92)}
-#pp-zoom .pz-tip{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);max-width:92%;padding:8px 14px;border-radius:999px;background:rgba(20,20,32,.88);border:1.5px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:700;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none}
+#pp-zoom .pz-dl{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;border:1.5px solid var(--line);background:rgba(20,20,32,.88);color:var(--cream);font:inherit;font-size:15px;font-weight:800;opacity:0;transition:opacity .25s,transform .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#pp-zoom .pz-dl:active{transform:translateX(-50%) scale(.95)}
+#pp-zoom .pz-tip{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);transform:translateX(-50%);max-width:92%;padding:8px 14px;border-radius:999px;background:rgba(20,20,32,.88);border:1.5px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:700;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none}
 .synth-fig{margin:12px 0;text-align:left}
 .synth-fig img{display:block;max-width:100%;max-height:340px;object-fit:contain;border-radius:26px;border:2px solid rgba(128,120,105,.28);box-shadow:0 8px 22px rgba(0,0,0,.22);cursor:zoom-in;background:#fff;-webkit-touch-callout:none}
 .synth-fig figcaption{font-size:.8rem;color:var(--muted);margin-top:6px;font-style:italic}
@@ -2290,7 +2295,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-sheet.on{bottom:var(--kbh,0px);max-height:calc(88% - var(--kbh,0px))}   /* seule la feuille ouverte monte : une feuille fermée reste entièrement cachée */
 #pp-pveil{z-index:1004}
 #pp-psheet{z-index:1005}
-.pp-toast{position:fixed;z-index:1010;bottom:calc(var(--pp-sb,0px) + 90px)}
+.pp-toast{position:fixed;z-index:2100;bottom:calc(var(--pp-sb,0px) + 90px)}
 .pp-pd{border:0}
 /* ---- ÉTAPE 4 : Planning (À venir, Matières) + fenêtre « contrôle » ---- */
 :where(.pp-plan),:where(.pp-plan) *{ margin:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -3191,6 +3196,22 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pc-b.a .pc-hc{display:inline-flex;vertical-align:-2px;margin-left:6px;color:var(--muted);opacity:.7;cursor:pointer}
 .pc-add{display:block;margin-top:8px;padding:0;border:0;background:none;color:var(--muted);font:700 12.5px var(--font-sans)}
 .pc-add:active{color:var(--orange)}
+/* v300 : toucher une bulle la copie — appui qui s'enfonce, rebond, pastille jaune « ✓ Copié » (même jaune et même ombre dure que les boutons) */
+.pc-b{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s var(--ease-press),filter .2s}
+.pc-b:active{transform:scale(.97);transition-duration:.07s}
+@media (hover:hover){.pc-b:hover{filter:brightness(1.07)}}
+.pc-b.pc-copie{animation:pccopie .5s var(--ease-press)}
+@keyframes pccopie{0%{transform:scale(.95)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
+.pc-cp{position:absolute;top:-14px;right:12px;z-index:3;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 12px 0 9px;border-radius:99px;background:var(--yellow);color:#1a1405;font:800 12px var(--font-sans);white-space:nowrap;box-shadow:0 3px 0 var(--yellow-d);pointer-events:none;animation:pccp .42s var(--ease-press) backwards}
+.pc-b.u .pc-cp{right:auto;left:12px}
+.pc-cp path{stroke-dasharray:24;stroke-dashoffset:24;animation:pccd .32s .1s ease-out forwards}
+.pc-cp.out{animation:pccpo .3s ease-in forwards}
+@keyframes pccp{from{opacity:0;transform:translateY(12px) scale(.5)}}
+@keyframes pccd{to{stroke-dashoffset:0}}
+@keyframes pccpo{to{opacity:0;transform:translateY(-8px) scale(.85)}}
+@media (prefers-reduced-motion:reduce){.pc-b.pc-copie,.pc-cp,.pc-cp path{animation-duration:.01s!important;animation-delay:0s!important}}
+.pch-feed .pc-b{cursor:default}
+.pch-feed .pc-b:active{transform:none}
 .pc-info-n{font-size:12px;font-weight:600;opacity:.8}
 .pc-new{margin-left:0}
 .pc-new,.pc-more-b{transition:transform .35s var(--ease-press)}
@@ -3538,13 +3559,6 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 @keyframes fi-fl{50%{transform:translateX(var(--x)) translateY(-7px) rotate(var(--r))}}
 /* 1 · maîtrise */
 #fci .fi-qs{font-size:20px;font-weight:800;letter-spacing:-.02em;margin:2px 0 12px}
-#fci .fi-lad{display:flex;align-items:center;margin:4px 6px 12px}
-#fci .fi-lad i{position:relative;flex:none;width:30px;height:30px;border-radius:50%;background:var(--panel);border:2px solid var(--line);display:grid;place-items:center;font:800 12px var(--f);color:var(--muted);font-style:normal;transition:.35s var(--sp)}
-#fci .fi-lad i.fi-f{background:var(--yellow);border-color:var(--yellow);color:#1a1405}
-#fci .fi-lad i.fi-t{transform:scale(1.22);box-shadow:0 3px 0 var(--yellow-d)}
-#fci .fi-lad u{flex:1;height:4px;background:var(--line);position:relative;border-radius:4px}
-#fci .fi-lad u:after{content:"";position:absolute;inset:0;background:var(--yellow);border-radius:4px;transform:scaleX(0);transform-origin:left;transition:transform .45s}
-#fci .fi-lad u.fi-f:after{transform:none}
 #fci .fi-res{display:flex;justify-content:space-between;align-items:center;font-weight:800;margin-top:12px;min-height:30px}
 #fci .fi-res span{color:var(--muted);font-weight:500}
 #fci .fi-badge{background:var(--green);color:#06281e;border-radius:99px;padding:4px 12px;font-size:14px;animation:fi-pop .5s var(--sp)}
@@ -3553,11 +3567,6 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-chips{display:flex;gap:8px}
 #fci .fi-chips button{flex:1;height:44px;border-radius:14px;border:1.5px solid var(--line);font-weight:800;font-size:15px;--d:3px;background:var(--panel)}
 #fci .fi-chips button.fi-on{background:var(--yellow);color:#1a1405;border-color:var(--yellow);--sc:var(--yellow-d)}
-#fci .fi-wk{display:flex;align-items:flex-end;gap:5px;height:150px;padding:6px 2px 0}
-#fci .fi-wk i{flex:1;border-radius:8px 8px 3px 3px;background:rgba(255,217,61,.3);height:var(--h);min-height:6px;position:relative;transition:height .5s var(--sp),background .3s}
-#fci .fi-wk i.fi-z{background:rgba(255,107,61,.55)}
-#fci .fi-wk i.fi-j{background:var(--yellow);box-shadow:0 4px 0 var(--yellow-d)}
-#fci .fi-wk i.fi-j:before{content:"";position:absolute;left:50%;bottom:calc(100% + 4px);width:16px;height:14px;margin-left:-3px;background:var(--orange);clip-path:polygon(0 0,100% 25%,0 50%,0 100%,0 100%)}
 #fci .fi-lg{display:flex;gap:14px;color:var(--muted);font-size:13px;font-weight:600}
 #fci .fi-lg s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:rgba(255,217,61,.5);text-decoration:none}
 #fci .fi-lg s.fi-o{background:rgba(255,107,61,.7)}
@@ -3640,7 +3649,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-box{border:2px solid var(--ink);border-radius:24px;box-shadow:6px 6px 0 var(--orange);padding:16px}
 :root[data-theme=light] #fci .fi-box{border-color:var(--ink)}
 #fci .fi-ans{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-#fci .fi-ans button{height:68px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:800;font-size:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel));color:var(--c);--sc:color-mix(in srgb,var(--c) 40%,#111)}
+#fci .fi-ans .fi-bt{height:68px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:800;font-size:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel));color:var(--c);--sc:color-mix(in srgb,var(--c) 40%,#111)}
 #fci .fi-ans svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 #fci .fi-ans .fi-a1{--c:var(--pink)}
 #fci .fi-ans .fi-a2{--c:var(--amber)}
@@ -3650,6 +3659,52 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 /* v144 : champs de saisie — on masque la clé à l'écran sans type="password" (ce type fait afficher la barre
    « mots de passe / cartes / adresses » du téléphone au-dessus du clavier) */
 .pp-masque{-webkit-text-security:disc;text-security:disc}
+/* v297 : maîtrise — une carte arrive, la réponse choisie ressort, les autres s'effacent, la carte file dans le dossier du bas (Demain / 3 jours / 7 jours) */
+#fci .fi-mb{position:relative;padding:14px 14px 16px}
+#fci .fi-sc{position:relative;height:62px;margin-bottom:12px;display:grid;place-items:center;z-index:3}
+#fci .fi-cd{width:80%;height:54px;border-radius:14px;border:2px solid var(--ink);background:var(--panel);box-shadow:4px 4px 0 var(--orange);display:grid;place-items:center;padding:0 10px;font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.15;text-align:center;opacity:0}
+#fci .fi-ans{position:relative;z-index:2;gap:8px;pointer-events:none}
+#fci .fi-ans .fi-bt{position:relative;height:56px;transition:transform .3s var(--sp),opacity .25s,background .2s,color .2s,box-shadow .25s var(--sp),filter .25s}
+#fci .fi-ans .fi-bt.fi-off{opacity:0;transform:scale(.7) translateY(8px);filter:blur(2px)}
+#fci .fi-ans .fi-bt.fi-sel{background:var(--c);color:var(--bg);transform:translateY(-3px) scale(1.1);box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 30%,transparent),0 5px 0 var(--sc)}
+#fci .fi-rg{position:absolute;inset:-2px;border:3px solid;border-radius:18px;pointer-events:none}
+#fci .fi-sp{position:absolute;border-radius:2px;pointer-events:none;z-index:4}
+#fci .fi-fds{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:26px}
+#fci .fi-fo{position:relative;height:60px;border:2px solid var(--c);border-radius:4px 12px 12px 12px;background:color-mix(in srgb,var(--c) 14%,var(--panel));display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;transition:background .3s,box-shadow .3s}
+#fci .fi-ft{position:absolute;left:-2px;top:-13px;width:42%;height:13px;border:2px solid var(--c);border-bottom:0;border-radius:7px 7px 0 0;background:color-mix(in srgb,var(--c) 14%,var(--panel));transition:background .3s}
+#fci .fi-fo span{font-size:12.5px;font-weight:800;color:var(--c);white-space:nowrap}
+#fci .fi-fo .fi-n{position:absolute;right:-7px;top:-10px;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--c);color:var(--bg);font:800 12px/22px var(--f);text-align:center;transform:scale(0);transition:transform .35s var(--sp);z-index:2}
+#fci .fi-fo.fi-has .fi-n{transform:scale(1)}
+#fci .fi-fo.fi-hit,#fci .fi-fo.fi-hit .fi-ft{background:color-mix(in srgb,var(--c) 32%,var(--panel))}
+#fci .fi-fo.fi-hit{box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 28%,transparent)}
+#fci .fi-f1{--c:var(--pink)}
+#fci .fi-f2{--c:var(--amber)}
+#fci .fi-f3{--c:var(--green)}
+@media(max-height:680px){#fci .fi-sc{height:50px;margin-bottom:8px}#fci .fi-cd{height:44px;font-size:15px}#fci .fi-ans .fi-bt{height:48px}#fci .fi-fo{height:52px}#fci .fi-fds{margin-top:22px}}
+#fci .fi-roll{display:inline-grid;overflow:hidden;vertical-align:bottom;line-height:1.35;justify-items:start;min-width:2.4em}
+#fci .fi-roll b{grid-area:1/1;display:block;color:var(--ink);font-weight:800}
+/* planning */
+#fci .fi-pb{padding:14px 14px 12px}
+#fci .fi-pw{position:relative;padding:36px 12px 0 0}
+#fci .fi-wk{display:flex;align-items:flex-end;gap:0;height:130px;padding:0;border-bottom:2px solid var(--line)}
+#fci .fi-wk i{flex:1 1 0;min-width:0;margin:0 2px;height:var(--h,6px);min-height:5px;border-radius:6px 6px 2px 2px;transform-origin:50% 100%;--bc:rgba(255,217,61,.9);background:repeating-linear-gradient(0deg,var(--bc) 0 6px,transparent 6px 9px);transition:height .34s var(--sp) var(--dl,0s),flex-grow .36s cubic-bezier(.2,.8,.2,1),margin .36s cubic-bezier(.2,.8,.2,1),opacity .2s}   /* v299 : barres qui se partagent toute la largeur, --dl = décalage de la vague */
+#fci .fi-wk.fi-nt i{transition:none!important}
+#fci .fi-wk i.fi-z{--bc:rgba(255,107,61,.85)}
+#fci .fi-wk i.fi-j{background:var(--yellow);box-shadow:inset 0 3px 0 rgba(255,255,255,.35)}
+#fci .fi-wk i.fi-x{background:var(--line);opacity:0;flex-grow:0;margin-left:0;margin-right:0}   /* v299 : jour après le contrôle = il se referme (plus de vide à droite) */
+#fci .fi-ax{display:flex;gap:0;padding-top:6px}
+#fci .fi-ax span{flex:1 1 0;min-width:0;margin:0 2px;overflow:hidden;white-space:nowrap;text-align:center;font:700 11px/16px var(--f);color:var(--muted);border-radius:6px;transition:flex-grow .36s cubic-bezier(.2,.8,.2,1),margin .36s cubic-bezier(.2,.8,.2,1),opacity .2s,color .3s,background .3s}
+#fci .fi-ax span.fi-x{opacity:0;flex-grow:0;margin-left:0;margin-right:0}
+#fci .fi-ax span.fi-td{color:var(--ink);box-shadow:inset 0 -2px 0 var(--yellow)}
+#fci .fi-ax span.fi-cj{color:#1a0d08;background:var(--orange)}
+#fci .fi-fl{position:absolute;top:0;left:0;width:26px;height:34px;pointer-events:none;transform-origin:3px 34px}
+#fci .fi-fl svg{display:block;overflow:visible;width:26px;height:34px}
+#fci .fi-fl .fi-po{stroke:var(--ink);stroke-width:2.6;stroke-linecap:round;fill:none}
+#fci .fi-fl .fi-pn{fill:var(--orange);stroke:var(--ink);stroke-width:2;stroke-linejoin:round;transform-box:fill-box;transform-origin:0 50%;animation:fi-flw 1.1s ease-in-out infinite}
+@keyframes fi-flw{0%,100%{transform:skewY(-6deg) scaleX(1)}50%{transform:skewY(6deg) scaleX(.84)}}
+#fci .fi-pcap{border:0;cursor:pointer;--d:4px;--sc:var(--yellow-d)}
+#fci .fi-pcap .fi-roll{min-width:3.3em;justify-items:center}
+#fci .fi-pcap .fi-roll b{color:#1a1405;min-width:0}
 /* v144 : Introduction sur Chromebook / grand écran — même seuil que le reste (900 × 480).
    Fenêtre centrée au style des autres écrans larges (bord encre + ombre orange décalée), texte à gauche, illustration à droite.
    Le téléphone n'est pas touché. */
@@ -3673,7 +3728,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #fci .fi-sl>.fi-stk,#fci .fi-v>.fi-stk{margin-top:0;justify-self:start}
   #fci .fi-sl:not([data-i=ia])>.fi-fan,#fci .fi-sl:not([data-i=ia])>.fi-box,#fci .fi-sl:not([data-i=ia])>.fi-dev,#fci .fi-sl:not([data-i=ia])>.fi-vs{grid-column:2;grid-row:1 / 8;margin-top:0;align-self:center}
   #fci .fi-fan{height:clamp(180px,34vh,260px);margin:0}
-  #fci .fi-wk{height:200px}
+    #fci .fi-wk{height:180px}
   #fci .fi-dev{height:200px}
   #fci .fi-chat{height:240px}
   #fci .fi-pc button{font-size:14px}
@@ -4572,8 +4627,9 @@ function ppZoomOuvrir(src, depuis){
   ov.id = 'pp-zoom';
   ov.innerHTML = '<div class="pz-bg"></div><div class="pz-stage"><img class="pz-img" alt="" draggable="false"></div>'
     + '<button type="button" class="pz-x" aria-label="Fermer"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+    + '<button type="button" class="pz-dl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Télécharger</span></button>'
     + '<div class="pz-tip">' + (fin ? 'Molette ou + / − pour zoomer · Échap pour fermer' : 'Pince ou double toucher · glisse vers le bas pour fermer') + '</div>';
-  const bg = ov.querySelector('.pz-bg'), im = ov.querySelector('.pz-img'), bx = ov.querySelector('.pz-x'), tip = ov.querySelector('.pz-tip');
+  const bg = ov.querySelector('.pz-bg'), im = ov.querySelector('.pz-img'), bx = ov.querySelector('.pz-x'), dl = ov.querySelector('.pz-dl'), tip = ov.querySelector('.pz-tip');
   const Z = ppZ = { s:1, tx:0, ty:0, ferme:false };
   const SMAX = 6;
   const pts = new Map();
@@ -4605,7 +4661,7 @@ function ppZoomOuvrir(src, depuis){
     const r = (depuis && depuis.isConnected) ? depuis.getBoundingClientRect() : null;
     const visible = !!r && r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
     bg.style.transition = 'opacity .28s ease'; bg.style.opacity = '0';
-    bx.style.opacity = '0'; tip.style.opacity = '0';
+    bx.style.opacity = '0'; dl.style.opacity = '0'; tip.style.opacity = '0';
     if(visible && !reduit && im.offsetWidth){
       const dx = r.left + r.width / 2 - cx(), dy = r.top + r.height / 2 - cy();
       im.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)';
@@ -4632,7 +4688,7 @@ function ppZoomOuvrir(src, depuis){
   }
 
   ov.addEventListener('pointerdown', e => {
-    if(Z.ferme || (e.target.closest && e.target.closest('.pz-x'))) return;
+    if(Z.ferme || (e.target.closest && e.target.closest('.pz-x, .pz-dl'))) return;
     if(e.pointerType === 'mouse' && e.button !== 0) return;
     try{ ov.setPointerCapture(e.pointerId); }catch(_){}
     pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
@@ -4669,7 +4725,7 @@ function ppZoomOuvrir(src, depuis){
       Z.tx = dx * 0.35; Z.ty = dy;
       const p = Math.min(1, Math.abs(dy) / 320);
       bg.style.transition = 'none'; bg.style.opacity = String(1 - p * 0.85);
-      bx.style.opacity = String(1 - p); tip.style.opacity = '0';
+      bx.style.opacity = String(1 - p); dl.style.opacity = String(1 - p); tip.style.opacity = '0';
       im.style.transition = 'none';
       im.style.transform = 'translate(' + Z.tx + 'px,' + Z.ty + 'px) scale(' + (1 - p * 0.12) + ')';
     }
@@ -4703,7 +4759,7 @@ function ppZoomOuvrir(src, depuis){
     if(Z.s > 1.02){ borner(); appliquer(true); return; }
     bg.style.transition = '';
     if(!annule && (Math.abs(Z.ty) > 110 || Math.abs(gg.vy) > 0.7)) fermer();
-    else { Z.tx = 0; Z.ty = 0; bg.style.opacity = '1'; bx.style.opacity = '1'; appliquer(true); }
+    else { Z.tx = 0; Z.ty = 0; bg.style.opacity = '1'; bx.style.opacity = '1'; dl.style.opacity = '1'; appliquer(true); }
   }
   ov.addEventListener('pointerup', relache);
   ov.addEventListener('pointercancel', relache);
@@ -4718,6 +4774,23 @@ function ppZoomOuvrir(src, depuis){
   }, { passive:false });
   ov.addEventListener('contextmenu', e => e.preventDefault());
   bx.addEventListener('click', e => { e.stopPropagation(); fermer(); });
+  dl.addEventListener('click', async e => {
+    e.stopPropagation();
+    if(Z.ferme) return;
+    try{
+      let blob;
+      const m = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(src);
+      if(m){
+        const bin = m[2] ? atob(m[3]) : decodeURIComponent(m[3]);
+        const u8 = new Uint8Array(bin.length);
+        for(let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        blob = new Blob([u8], { type: m[1] || 'image/jpeg' });
+      } else blob = await (await fetch(src)).blob();
+      const ext = /png/.test(blob.type) ? 'png' : /webp/.test(blob.type) ? 'webp' : 'jpg';
+      telechargerBlob(blob, 'Memoria - image - ' + todayStr() + '.' + ext);
+      ppToast('Image téléchargée');
+    }catch(err){ ppToast('Impossible de télécharger l’image'); }
+  });
   window.addEventListener('keydown', clavier, true);
 
   document.body.appendChild(ov);
@@ -4736,7 +4809,7 @@ function ppZoomOuvrir(src, depuis){
     void im.offsetWidth;
     requestAnimationFrame(() => {
       if(Z.ferme) return;
-      bg.style.opacity = '1'; bx.style.opacity = '1'; tip.style.opacity = '1';
+      bg.style.opacity = '1'; bx.style.opacity = '1'; dl.style.opacity = '1'; tip.style.opacity = '1';
       im.style.opacity = '1';
       im.style.transition = 'transform .4s cubic-bezier(.2,.9,.25,1), opacity .25s ease';
       im.style.transform = 'translate(0px,0px) scale(1)';
@@ -5674,6 +5747,17 @@ function pcEnsure(){
   /* glissé de fermeture : réservé à la poignée et à l'en-tête (la conversation, les pastilles et le champ défilent normalement) */
   ['pc-pills', 'pc-sugg'].forEach(id => ['touchstart', 'mousedown'].forEach(k => pcEl(id).addEventListener(k, e => e.stopPropagation(), { passive: true })));
   pcEl('pc-feed').addEventListener('mousedown', e => e.stopPropagation(), { passive: true }); /* souris : on garde la sélection du texte */
+  /* v300 : toucher une bulle = copier son texte (sauf bouton, lien, image ou texte en cours de sélection) ; au toucher, le clavier reste ouvert */
+  { const fd = pcEl('pc-feed'); let tactile = false;
+    const garde = e => { const b = e.target.closest && e.target.closest('.pc-b'); return b && !e.target.closest('a,button,input,textarea,.pc-img,.pc-hc,.pc-add,.pc-cp') ? b : null; };
+    fd.addEventListener('pointerdown', e => { tactile = e.pointerType !== 'mouse'; if(tactile && garde(e) && document.activeElement === pcEl('pc-input')) e.preventDefault(); });
+    fd.addEventListener('mousedown', e => { if(tactile && garde(e) && document.activeElement === pcEl('pc-input')) e.preventDefault(); });
+    fd.addEventListener('click', e => {
+      const b = garde(e); if(!b) return;
+      try{ if(String(window.getSelection && window.getSelection()).trim()) return; }catch(x){}
+      pcCopierBulle(b);
+    });
+  }
   /* v242 : toucher une suggestion, une matière ou une flèche de défilement ne fait plus descendre le clavier (même méthode que le bouton d'envoi) */
   ['pc-pills', 'pc-smats', 'pc-sugg', 'pc-al', 'pc-ar'].forEach(id => { const x = pcEl(id); if(x) ['pointerdown', 'mousedown'].forEach(k => x.addEventListener(k, e => e.preventDefault())); });
   l.querySelector('.pc-input').addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
@@ -6261,9 +6345,36 @@ function pcAjoute(r, t, o){
     const hc = d.querySelector('.pc-hc'); if(hc) hc.onclick = () => ppToast('Pas tiré de tes cartes');
     const ad = d.querySelector('.pc-add'); if(ad) ad.onclick = () => pcAjouteEnCarte(t);
   } else d.textContent = t;
+  d._pcSrc = t;   /* v300 : texte d'origine, copié quand on touche la bulle */
   pcEl('pc-feed').appendChild(d); if(!o.sans) pcBas(); return d;
 }
 function pcSep(t){ const d = document.createElement('div'); d.className = 'pc-sep'; d.textContent = t; pcEl('pc-feed').appendChild(d); }
+/* v300 : toucher une bulle (la tienne ou celle de Prof) copie son texte. La bulle rebondit, une pastille jaune « ✓ Copié » jaillit sur son bord puis s'envole. */
+function pcCopieAnim(b){
+  haptique(8);
+  const vieux = b.querySelector('.pc-cp'); if(vieux) vieux.remove();
+  b.classList.remove('pc-copie'); void b.offsetWidth; b.classList.add('pc-copie');
+  const c = document.createElement('span'); c.className = 'pc-cp'; c.setAttribute('aria-hidden', 'true');
+  c.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg><span>Copié</span>';
+  b.appendChild(c);
+  clearTimeout(b._pcT1); clearTimeout(b._pcT2);
+  b._pcT1 = setTimeout(() => { c.classList.add('out'); }, 1050);
+  b._pcT2 = setTimeout(() => { c.remove(); b.classList.remove('pc-copie'); }, 1380);
+}
+function pcCopierBulle(b){
+  let t = String(b._pcSrc == null ? '' : b._pcSrc);
+  t = t.replace(/^(?:📷 Photo envoyée|📄 Texte collé envoyé|📄 Document envoyé)\n/, '').replace(/\*\*([^\s*](?:[^*\n]*[^\s*])?)\*\*/g, '$1').replace(/(^|\n)([ \t]*)- (?=[^\s\d])/g, '$1$2• ').trim();
+  if(!t) return;
+  const echec = () => ppToast('Copie impossible : sélectionne le texte à la main');
+  const secours = () => {
+    try{
+      const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); document.body.removeChild(ta);
+      if(ok) pcCopieAnim(b); else echec();
+    }catch(e){ echec(); }
+  };
+  try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => pcCopieAnim(b), secours); else secours(); }catch(e){ secours(); }
+}
 function pcBas(){ const f = pcEl('pc-feed'); f.scrollTo({ top: f.scrollHeight, behavior: 'smooth' }); }
 function pcRendreConv(){
   if(!pcConv.length){ pcAjoute('a', "Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t'interroger.", { carte: false }); return; }
@@ -6498,7 +6609,7 @@ PLANNING (seulement sur demande ; tu lis « prochaine » sur chaque carte et DON
 Les cartes en pause et les matières archivées ne sont pas touchées. Si des cartes passent après la date de contrôle, dis-le. Pour les cartes précises, vérifie chaque id avant de l'écrire.
 - "reglage" (seulement sur demande, une action par réglage ; tu connais RÉGLAGES dans APPLICATION, ne propose pas un réglage déjà en place) : {"cle":"apparence","valeur":"clair"|"sombre"|"auto"} ; {"cle":"langue","valeur":"fr"|"en"} (l'appli se recharge, pas d'annulation possible) ; {"cle":"rappel","valeur":"on"|"off"} ; {"cle":"heure_rappel","valeur":"HH:MM"} ; {"cle":"relance","valeur":"on"|"off"} (relance du soir).
 - "restaurer" (CORBEILLE plus bas : ce qui a été supprimé depuis moins de 30 jours) : {"matiere":"nom exact tel qu'écrit dans CORBEILLE"} rétablit une matière supprimée avec ses cartes ; {"ids":["…"]} rétablit des cartes précises de la corbeille. Seulement sur demande (« annule la suppression », « récupère… »). Si CORBEILLE est vide, dis qu'il n'y a rien à récupérer.
-IMAGES : par défaut N'AJOUTE AUCUNE image. Seulement si l'utilisateur en demande une, ou dans un cas rare où une image est vraiment indispensable pour comprendre (carte géographique, schéma, anatomie…). Pour l'afficher dans le chat : champ "image" au niveau de la réponse = mot-clé précis de 2 à 5 mots (nom propre ou nom anglais, ex. « Treaty of Rome signing ») ; l'appli cherche sur Wikimedia Commons et affiche la première image sous ton message. Tu ne la vois pas : n'affirme jamais ce qu'elle montre, dis seulement que tu en as cherché une ; une seule image par réponse, sinon "image":"". Pour mettre une image sur une carte : dans "creer" ajoute "rechercheImage" (mot-clé) et "rechercheCote":"question" ou "reponse" ; pour une carte existante, action "image_carte" {"id":"…","terme":"mot-clé","cote":"question"|"reponse"} (6 au maximum par réponse). Tu ne peux pas créer ni dessiner d'image toi-même.
+IMAGES : par défaut N'AJOUTE AUCUNE image. Seulement si l'utilisateur en demande une, ou dans un cas rare où une image est vraiment indispensable pour comprendre (carte géographique, schéma, anatomie…). Pour l'afficher dans le chat : champ "image" au niveau de la réponse = mot-clé précis de 2 à 5 mots (nom propre ou nom anglais, ex. « Treaty of Rome signing ») ; l'appli cherche sur Wikimedia Commons et affiche la première image sous ton message. Tu ne la vois pas : n'affirme jamais ce qu'elle montre, dis seulement que tu en as cherché une ; une seule image par réponse, sinon "image":"". Pour mettre une image sur une carte : dans "creer" ajoute "rechercheImage" (mot-clé) et "rechercheCote":"question" ou "reponse" ; pour une carte existante, action "image_carte" {"id":"…","terme":"mot-clé","cote":"question"|"reponse"} : UNE action par carte, 40 au maximum par réponse. Tu PEUX mettre des images sur les cartes de l'utilisateur (« ajoute une image aux cartes », « mets une image sur chaque pays ») : ne dis jamais le contraire et ne dis jamais que c'est à faire à la main. S'il dit « toutes les cartes », « tous les pays » ou nomme la matière, propose une action pour CHAQUE carte de la matière listée plus bas, sans en oublier (pour un pays : son nom anglais + « location », ex. « Italy location Europe ») ; s'il y en a plus de 40, traite les 40 premières et dis combien il en reste. Tu ne peux pas créer ni dessiner d'image toi-même.
 - Cours collé ou document joint avec une demande de cartes : découpe-le en cartes courtes (actions \"creer\", 60 maximum ; s'il reste de la matière, crée les 60 premières, dis en une phrase où tu t'es arrêté et demande de joindre de nouveau le document pour la suite) en suivant les règles de cartes ; si le cours touche plusieurs matières, répartis les cartes (\"matiere\" exacte) et propose \"matiere\" pour celles qui n'existent pas.
 - JE NE SAIS PAS : pendant une série de questions, « je ne sais pas », « jsp », « aucune idée », « pas la moindre idée » (ou équivalent) n'est PAS une réponse à corriger : ne dis jamais « Faux ». C'est toi qui choisis, sans lui demander. (a) Si un indice peut vraiment l'aider à retrouver la réponse en réfléchissant (lien logique, catégorie, période, première lettre, nombre de mots…), donne UN indice court SANS la réponse et laisse-le réessayer. (b) Si c'est un fait brut qu'on ne peut pas deviner, ou s'il a déjà reçu un indice sur CETTE question et ne sait toujours pas, donne directement la réponse avec une explication courte, puis enchaîne. Dans tous les cas la question compte comme « pas su » dans le score.
 - Ne confonds JAMAIS le CONTENU d'une carte (Q et R, ex. « Schengen : Non ») avec la maîtrise de l'utilisateur (niveau, état, derniers, ratée). Pour parler de sa maîtrise, appuie-toi sur ces champs et dis ce que tu y lis. Si on te demande comment tu le sais, explique-le avec ces champs. N'invente rien : si une information n'est pas dans les données, dis que tu ne la vois pas.
@@ -6647,7 +6758,7 @@ function pcValideActions(arr, matiere){
       res.push({ type: 'inverser', inversible: a.inversible, ids: cs.map(k => k.id).slice(0, 300), de: [...new Set(cs.map(k => k.matiere || 'Sans matière'))].slice(0, 4), ex: cs.slice(0, 4).map(k => pcNet(k.question || '🖼 Image').slice(0, 40)) });
     } else if(a.type === 'image_carte'){   /* v263 : une image Wikimedia sur une carte existante */
       const c = CARDS.find(k => k.id === a.id), t = pcTermeImage(a.terme), cote = a.cote === 'reponse' ? 'reponse' : 'question';
-      if(!c || !t || res.filter(x => x.type === 'image_carte').length >= 6 || res.some(x => x.type === 'image_carte' && x.id === c.id && x.cote === cote)) continue;
+      if(!c || !t || res.filter(x => x.type === 'image_carte').length >= 40 || res.some(x => x.type === 'image_carte' && x.id === c.id && x.cote === cote)) continue;
       res.push({ type: 'image_carte', id: c.id, matiere: c.matiere || 'Sans matière', question: pcNet(c.question || '🖼 Image').slice(0, 120), terme: t, cote });
     } else if(a.type === 'seance'){   /* v272 */
       if(res.some(x => x.type === 'seance')) continue;
@@ -6734,7 +6845,7 @@ function pcParse(raw, matiere){
   return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton };
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
-async function ppCoachRepondre(texte, matiere, photo){
+async function ppCoachRepondre(texte, matiere, photo, rappel){   /* v298 : `rappel` = note de l'appli jointe au message (nouvel essai) */
   const key = getGeminiKey();
   if(!key) throw { pcMsg: "Ajoute ta clé API Gemini dans Réglages d'abord.", sansCle: true };
   if(!/^[\x21-\x7e]+$/.test(key)) throw { pcMsg: 'La clé Gemini contient des caractères non valides : copie-la de nouveau depuis Google.' };
@@ -6743,6 +6854,7 @@ async function ppCoachRepondre(texte, matiere, photo){
   if(photo){ parts.push(...ppPartsFichiers([photo], 0).parts); }
   const hist = pcHistorique();
   if(hist.length && hist[hist.length - 1].role === 'user'){ const dn = hist.pop(); parts[0].text = dn.parts[0].text + '\n' + parts[0].text; }   /* v241 : une note en fin d'historique se joint au message envoyé (pas deux tours « user » de suite) */
+  if(rappel) parts[0].text += '\n\n' + rappel;
   const contents = hist.concat([{ role: 'user', parts }]);
   let response;
   try{
@@ -6798,7 +6910,13 @@ async function pcEnvoyer(t, label){
   setTimeout(() => { if(pcEl('pc-feed') && ty.isConnected === false && pcAttente){ pcEl('pc-feed').appendChild(ty); pcBas(); } }, 350);
   pcAttente = true; pcReflechit(true); /* v206 : étoiles en rotation continue tant que l'IA n'a pas répondu */
   try{
-    const r = await ppCoachRepondre(t, matiere, photo);
+    let r = await ppCoachRepondre(t, matiere, photo);
+    if(r.sansBouton){   /* v298 : Prof annonce « Appliquer » mais aucune action valide : un seul nouvel essai automatique, sans rien afficher */
+      try{
+        const r2 = await ppCoachRepondre(t, matiere, photo, "[Info de l'application : ta réponse précédente annonçait un bouton « Appliquer » mais « actions » était vide ou invalide. Réponds de nouveau à la même demande avec la liste COMPLÈTE des actions (UNE action par carte, ids pris uniquement dans les lignes de cartes).]");
+        if(r2 && r2.actions.length) r = r2;
+      }catch(e){}
+    }
     ty.remove();
     const msgA = { r: 'a', t: r.texte, h: r.hors || undefined, a: (r.ajoutable && !r.actions.length && pcMode !== 'quiz') || undefined, m: pcMat };
     if(r.image){ msgA.i = r.image; msgA.ij = Date.now(); }   /* v277 : le mot-clé de l'image est gardé avec le message (l'image, trop lourde, est cherchée de nouveau à la réouverture) */
@@ -6982,7 +7100,9 @@ function pcActionsCarte(actions, matiere){
 /* v263 : cherche sur Wikimedia les images demandées (cartes créées ou existantes) et les pose ; mémorise l'état d'avant pour « Annuler ». */
 async function pcImagesApres(jobs, anciennes){
   let ok = 0, ratees = 0, pleines = 0;
-  const urls = await Promise.all(jobs.map(j => ppImgChercherWikimedia(j.terme)));
+  const urls = new Array(jobs.length).fill('');   /* v298 : 5 recherches en parallèle au plus (jusqu'à 40 images d'un coup) */
+  let suiv = 0;
+  await Promise.all(Array.from({ length: Math.min(5, jobs.length) }, async () => { while(suiv < jobs.length){ const i = suiv++; try{ urls[i] = await ppImgChercherWikimedia(jobs[i].terme); }catch(e){ urls[i] = ''; } } }));
   jobs.forEach((j, i) => {
     const c = CARDS.find(k => k.id === j.id), url = urls[i];
     if(!c || !url){ ratees++; return; }
@@ -11534,7 +11654,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v295';
+const PP_APP_VERSION = 'v301';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -17692,8 +17812,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
    fr:{lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
     wel:'Bienvenue',h0:'Retiens tout, sans y penser.',s0:"Quelques cartes par jour. L'app s'occupe du reste.",
     mas:'Maîtrise',h1:'Chaque carte monte en niveau.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
-    tryit:'Teste : touche un bouton',backIn:'Revient dans ',d:' j',noNeed:"Plus besoin d\u2019y penser",mastered:'Maîtrisée',
-    pla:'Planning',h2:'Un contrôle ? Donne la date.',d5:'Dans 5 j',d10:'Dans 10 j',d14:'Dans 2 sem',lgR:'Révisions',lgB:'Zone tampon',
+    f1:'Demain',f2:'Dans 3 jours',f3:'Dans 7 jours',qs:["Capitale de l'Australie ?",'7 × 8 ?',"Capitale du Canada ?","Symbole de l'or ?"],backIn:'Revient dans ',d:' j',noNeed:"Plus besoin d\u2019y penser",mastered:'Maîtrisée',
+    pla:'Planning',h2:'Un contrôle ? Donne la date.',d5:'Dans 5 j',d10:'Dans 10 j',d14:'Dans 2 sem',lgR:'Révisions',lgB:'Juste avant le contrôle',
     syn:'Synchro',h3:'Même progression partout.',s3:'Téléphone, Chromebook : entre le même code et tout suit.',where:'Réglages › Synchronisation',
     pr:'Prof · IA',h6:'Ton prof perso.',s6:"Il sait où tu bloques, t'interroge dans le chat, et agit sur tes cartes, matières et planning.",ap:'Appliquer',ok:'Appliqué',
     ch:['Matières','Planning','Difficultés'],
@@ -17705,8 +17825,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
    en:{lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
     wel:'Welcome',h0:'Remember everything, effortlessly.',s0:'A few cards a day. The app handles the rest.',
     mas:'Mastery',h1:'Every card levels up.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
-    tryit:'Try it: tap a button',backIn:'Back in ',d:' d',noNeed:'No need to think about it',mastered:'Mastered',
-    pla:'Planning',h2:'A test coming up? Set the date.',d5:'In 5 d',d10:'In 10 d',d14:'In 2 wk',lgR:'Reviews',lgB:'Buffer zone',
+    f1:'Tomorrow',f2:'In 3 days',f3:'In 7 days',qs:['Capital of Australia?','7 × 8?','Capital of Canada?','Symbol for gold?'],backIn:'Back in ',d:' d',noNeed:'No need to think about it',mastered:'Mastered',
+    pla:'Planning',h2:'A test coming up? Set the date.',d5:'In 5 d',d10:'In 10 d',d14:'In 2 wk',lgR:'Reviews',lgB:'Right before the test',
     syn:'Sync',h3:'Same progress everywhere.',s3:'Phone, Chromebook: enter the same code and everything follows.',where:'Settings › Sync',
     pr:'Prof · AI',h6:'Your personal tutor.',s6:'It knows where you struggle, quizzes you in the chat, and acts on your cards, subjects and planning.',ap:'Apply',ok:'Applied',
     ch:['Subjects','Planning','Struggles'],
@@ -17764,11 +17884,11 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     +'<div class="fi-top"><button class="fi-bk fi-hide" data-i="bk" aria-label="'+T.back+'">'+bk+'</button><div class="fi-pills" data-i="pl"></div><button class="fi-sk" data-i="sk">'+T.skip+'</button></div>'
     +'<div class="fi-body">'
     +'<section class="fi-sl"><div class="fi-fan fi-rv"><i></i><i></i><i>'+chk+'</i></div><span class="fi-stk fi-rv">'+T.wel+'</span><h1 class="fi-rv">'+T.h0+'</h1><p class="fi-sub fi-rv">'+T.s0+'</p></section>'
-    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.mas+'</span><h1 class="fi-rv">'+T.h1+'</h1><div class="fi-box fi-rv"><div class="fi-qs">'+T.q1+'</div><div class="fi-lad" data-i="lad"></div>'
-      +'<div class="fi-ans"><button class="fi-bt fi-a1" data-v="-1">'+ic('x')+T.miss+'</button><button class="fi-bt fi-a2" data-v="0">'+ic('wave')+T.hard+'</button><button class="fi-bt fi-a3" data-v="1">'+ic('ok')+T.easy+'</button></div>'
-      +'<div class="fi-res"><span data-i="rj">'+T.tryit+'</span><b data-i="rb"></b></div></div><p class="fi-sub fi-rv">'+T.s1+'</p></section>'
-    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.pla+'</span><h1 class="fi-rv">'+T.h2+'</h1><div class="fi-vs"><div class="fi-pcap fi-rv" data-i="pc"></div>'
-      +'<div class="fi-box fi-rv"><div class="fi-wk" data-i="wk"></div></div><div class="fi-lg fi-rv"><span><s></s>'+T.lgR+'</span><span><s class="fi-o"></s>'+T.lgB+'</span></div></div></section>'
+    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.mas+'</span><h1 class="fi-rv">'+T.h1+'</h1><div class="fi-box fi-rv fi-mb" data-i="mb"><div class="fi-sc"><div class="fi-cd" data-i="cd"></div></div>'
+      +'<div class="fi-ans" data-i="an" aria-hidden="true"><div class="fi-bt fi-a1">'+ic('x')+T.miss+'</div><div class="fi-bt fi-a2">'+ic('wave')+T.hard+'</div><div class="fi-bt fi-a3">'+ic('ok')+T.easy+'</div></div>'
+      +'<div class="fi-fds" data-i="fds">'+[T.f1,T.f2,T.f3].map(function(t,k){ return '<div class="fi-fo fi-f'+(k+1)+'" data-i="fo'+k+'"><i class="fi-ft"></i><b class="fi-n">0</b><span>'+t+'</span></div>'; }).join('')+'</div></div><p class="fi-sub fi-rv">'+T.s1+'</p></section>'
+    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.pla+'</span><h1 class="fi-rv">'+T.h2+'</h1><div class="fi-vs"><button type="button" class="fi-pcap fi-bt fi-rv" data-i="pc"></button>'
+      +'<div class="fi-box fi-rv fi-pb"><div class="fi-pw"><div class="fi-fl" data-i="fl"><svg viewBox="0 0 26 34"><path class="fi-po" d="M3 34V3"/><path class="fi-pn" d="M4 3l20 6.5L4 16z"/></svg></div><div class="fi-wk" data-i="wk"></div><div class="fi-ax" data-i="ax"></div></div></div><div class="fi-lg fi-rv"><span><s></s>'+T.lgR+'</span><span><s class="fi-o"></s>'+T.lgB+'</span></div></div></section>'
     +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.syn+'</span><h1 class="fi-rv">'+T.h3+'</h1><div class="fi-dev fi-rv"><div class="fi-ph" data-i="dp"><em data-i="c1"></em></div><div class="fi-trk"><b data-i="fl"></b></div><div class="fi-lp" data-i="dl"><em data-i="c2"></em></div></div>'
       +'<p class="fi-sub fi-rv">'+T.s3+'</p><div class="fi-where fi-rv"><i>\u2699</i>'+T.where+'</div></section>'
     +'<section class="fi-sl" data-i="pr"><span class="fi-stk fi-rv">'+T.pr+'</span><h1 class="fi-rv">'+T.h6+'</h1><div class="fi-box fi-prof fi-rv"><div class="fi-chips fi-pc" data-i="pch">'+T.ch.map(function(c,k){ return '<button class="fi-bt'+(k?'':' fi-on')+'" data-k="'+k+'">'+c+'</button>'; }).join('')+'</div><div class="fi-chat" data-i="chat" aria-live="polite"></div></div><p class="fi-sub fi-rv">'+T.s6+'</p></section>'
@@ -17826,8 +17946,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       if(k===n) [].forEach.call(s.querySelectorAll('.fi-rv'),function(r,j){ r.style.setProperty('--k',j); });
     });
     i=n; ui();
-    if(n===1) at(function(){ if(!closing && i===1) mjoue(); },700);
-    if(n===2) at(function(){ if(!closing && i===2) pljoue(); },500);
+    if(n===1) at(function(){ if(!closing && i===1) mjoue(); },480);
+    if(n===2) at(function(){ if(!closing && i===2) pljoue(); },340);
     if(n===3) at(function(){ if(!closing && i===3) sjoue(); },700);
     if(n===6) boom();
     if(n===4) setTimeout(function(){ if(!closing && i===4) pjoue(0,true); },750);
@@ -17858,66 +17978,142 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     else go(i-1);
   }
 
-  /* maîtrise */
-  /* v295 : chaque action a sa propre animation (kind) : 'up' rebond, 'hard' balancement, 'miss' secousse + chute, 'star' tour complet. Démo automatique (mjoue), arrêtée au premier toucher. */
-  var mt=[], tmt=[];
+  /* maîtrise — v297 : tout se joue seul, sans toucher. Une carte arrive ; une des trois réponses (rouge / orange / vert) ressort fort pendant que les autres s'effacent ;
+     la carte file alors dans le dossier du bas qui correspond (Demain / Dans 3 jours / Dans 7 jours), dont le compteur monte. Puis carte suivante, en boucle. */
+  var mt=[], tmt=[], SP='cubic-bezier(.34,1.56,.64,1)', MQ=[2,0,1,2], MC=['var(--pink)','var(--amber)','var(--green)'], mc=[0,0,0];
   function at(f,d){ var t=setTimeout(f,d); tmt.push(t); return t; }
-  function mstop(){ mt.forEach(clearTimeout); mt=[]; }
-  function lv(d,muet){
-    var lad=q('[data-i=lad]'), av=p; p=Math.max(0,Math.min(4,p+d));
-    [].forEach.call(lad.children,function(c,k){
-      if(c.tagName==='I'){ var z=k/2; c.className = z<=p ? 'fi-f'+(z===p?' fi-t':'') : ''; }
-      else c.className = k/2<=p ? 'fi-f' : '';
-    });
-    q('[data-i=rj]').innerHTML = p===4 ? T.noNeed : T.backIn+'<b style="color:var(--ink)">'+J[p]+T.d+'</b>';
-    q('[data-i=rb]').innerHTML = p===4 ? '<span class="fi-badge">'+T.mastered+' \u2713</span>' : '';
-    if(!muet) vib(p===4?[10,40,10]:10);
-    if(muet===true && !arguments[2]) return;   /* restauration silencieuse : pas d'animation */
-    var cur=lad.children[p*2], kind = p===4 && av!==4 ? 'star' : d>0 ? 'up' : d<0 ? 'miss' : 'hard', e=easing_sp();
-    if(kind==='up') anim(cur,[{transform:'translateY(0) scale(1)'},{transform:'translateY(-16px) scale(1.4)',offset:.45},{transform:'translateY(0) scale(1.22)'}],{duration:560,easing:e});
-    else if(kind==='hard') anim(cur,[{transform:'rotate(0) scale(1.22)'},{transform:'rotate(-16deg) scale(1.22)'},{transform:'rotate(14deg) scale(1.22)'},{transform:'rotate(-8deg) scale(1.22)'},{transform:'rotate(0) scale(1.22)'}],{duration:520,easing:'ease-in-out'});
-    else if(kind==='miss'){ anim(cur,[{transform:'translateX(0) scale(1.22)'},{transform:'translateX(-9px) scale(1.22)'},{transform:'translateX(9px) scale(1.22)'},{transform:'translateX(-6px) scale(1.22)'},{transform:'translateX(6px) scale(1.22)'},{transform:'translateX(0) scale(1.22)'}],{duration:480,easing:'ease-out'}); anim(q('.fi-qs'),[{transform:'translateY(0)'},{transform:'translateY(5px)'},{transform:'translateY(0)'}],{duration:320}); }
-    else anim(cur,[{transform:'rotate(0) scale(1)'},{transform:'rotate(200deg) scale(1.6)',offset:.55},{transform:'rotate(360deg) scale(1.22)'}],{duration:850,easing:'cubic-bezier(.22,1,.36,1)'});
+  function mat(f,d){ mt.push(setTimeout(f,d)); }
+  function mclear(){
+    try{
+      var cd=q('[data-i=cd]'); if(cd.getAnimations) cd.getAnimations().forEach(function(a){ a.cancel(); }); cd.style.opacity='0';
+      qa('.fi-ans .fi-bt').forEach(function(b){ b.classList.remove('fi-sel','fi-off'); });
+      qa('.fi-fo').forEach(function(f){ f.classList.remove('fi-has','fi-hit'); f.querySelector('.fi-n').textContent='0'; });
+      mc=[0,0,0];
+    }catch(e){}
   }
-  function easing_sp(){ return 'cubic-bezier(.34,1.56,.64,1)'; }
-  /* démo : le « doigt » appuie tout seul sur Facile / Difficile / Pas su, puis recommence */
+  function mstop(){ mt.forEach(clearTimeout); mt=[]; mclear(); }
+  /* un nombre qui défile (ancien vers le haut / bas, nouveau qui arrive) */
+  function roll(r,t,dir){
+    var old=r.lastElementChild; if(old && old.innerHTML===t) return;
+    var nb=document.createElement('b'); nb.innerHTML=t; r.appendChild(nb);
+    if(old){
+      anim(old,[{transform:'translateY(0)',opacity:1},{transform:'translateY('+(-dir*110)+'%)',opacity:0}],{duration:300,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'});
+      setTimeout(function(){ if(old.parentNode) old.parentNode.removeChild(old); },340);
+    }
+    anim(nb,[{transform:'translateY('+(dir*110)+'%)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:420,easing:SP});
+  }
+  function mburst(host,el,col,n){
+    try{
+      if(RM) return;
+      var hr=host.getBoundingClientRect(), er=el.getBoundingClientRect(), cx=er.left-hr.left+er.width/2, cy=er.top-hr.top+er.height/2;
+      for(var j=0;j<n;j++){
+        var e=document.createElement('i'), a=Math.PI*2*j/n+Math.random()*.6, d=24+Math.random()*30, z=5+Math.random()*4;
+        e.className='fi-sp'; e.style.left=cx+'px'; e.style.top=cy+'px'; e.style.width=e.style.height=z+'px'; e.style.margin=(-z/2)+'px 0 0 '+(-z/2)+'px'; e.style.background=col;
+        host.appendChild(e);
+        var an=e.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+Math.cos(a)*d+'px,'+(Math.sin(a)*d-6)+'px) rotate('+Math.round(Math.random()*360)+'deg) scale(.2)',opacity:0}],{duration:460+Math.random()*300,easing:'cubic-bezier(.2,.7,.3,1)'});
+        an.onfinish=(function(e){ return function(){ if(e.parentNode) e.parentNode.removeChild(e); }; })(e);
+      }
+    }catch(x){}
+  }
+  /* une carte : arrivée (0) → réponse choisie (800) → vol vers le dossier (1250) → dossier qui encaisse (1700) → retour au calme (2150) */
+  function mcard(k){
+    var v=MQ[k], cd=q('[data-i=cd]'), bs=qa('.fi-ans .fi-bt'), b=bs[v], fo=q('[data-i=fo'+v+']'), box=q('[data-i=mb]');
+    if(!cd||!b||!fo) return;
+    if(cd.getAnimations) cd.getAnimations().forEach(function(a){ a.cancel(); });
+    cd.textContent=T.qs[k%T.qs.length];
+    bs.forEach(function(x){ x.classList.remove('fi-sel','fi-off'); });
+    anim(cd,[{opacity:0,transform:'translateY(-22px) scale(.82) rotate(-4deg)'},{opacity:1,transform:'none'}],{duration:420,easing:SP,fill:'forwards'});
+    mat(function(){
+      bs.forEach(function(x,j){ x.classList.add(j===v?'fi-sel':'fi-off'); });
+      vib(8);
+      var r=document.createElement('b'); r.className='fi-rg'; r.style.borderColor=MC[v]; b.appendChild(r);
+      anim(r,[{transform:'scale(.9)',opacity:.9},{transform:'scale(1.6,1.9)',opacity:0}],{duration:560,easing:'cubic-bezier(.2,.7,.3,1)'});
+      setTimeout(function(){ if(r.parentNode) r.parentNode.removeChild(r); },620);
+      anim(b,[{rotate:'0deg'},{rotate:'-3deg',offset:.3},{rotate:'2deg',offset:.6},{rotate:'0deg'}],{duration:420,easing:'ease-in-out'});
+    },800);
+    mat(function(){
+      var cr=cd.getBoundingClientRect(), fr=fo.getBoundingClientRect(), dx=fr.left+fr.width/2-(cr.left+cr.width/2), dy=fr.top+fr.height*.45-(cr.top+cr.height/2), R=dx<0?-10:10;
+      anim(cd,[{transform:'none',opacity:1},{transform:'translate('+dx*.3+'px,'+(dy*.28-12)+'px) scale(.8) rotate('+R*.6+'deg)',opacity:1,offset:.35},{transform:'translate('+dx+'px,'+dy+'px) scale(.2) rotate('+R+'deg)',opacity:1,offset:.88},{transform:'translate('+dx+'px,'+dy+'px) scale(.15) rotate('+R+'deg)',opacity:0}],{duration:520,easing:'cubic-bezier(.55,0,.8,.5)',fill:'forwards'});
+    },1250);
+    mat(function(){
+      mc[v]++; var n=fo.querySelector('.fi-n'); n.textContent=mc[v]; fo.classList.add('fi-has','fi-hit');
+      anim(fo,[{transform:'none'},{transform:'translateY(5px) scale(1.07,.93)',offset:.25},{transform:'translateY(-4px) scale(.97,1.05)',offset:.55},{transform:'none'}],{duration:480,easing:'ease-out'});
+      anim(n,[{transform:'scale(.4)'},{transform:'scale(1.4)',offset:.5},{transform:'scale(1)'}],{duration:420,easing:SP});
+      mburst(box,fo,MC[v],9); vib(10);
+    },1740);
+    mat(function(){ fo.classList.remove('fi-hit'); bs.forEach(function(x){ x.classList.remove('fi-sel','fi-off'); }); },2200);
+  }
   function mjoue(){
-    mstop(); lv(-4,true);   /* remise à zéro sans animation */
-    var seq=[1,1,0,-1,1,1,1], t=500;
-    seq.forEach(function(v){
-      var b=q('.fi-ans [data-v="'+v+'"]');
-      mt.push(setTimeout(function(){ if(b) b.classList.add('fi-p'); },t));
-      mt.push(setTimeout(function(){ if(b) b.classList.remove('fi-p'); lv(v,true,true); },t+170));
-      t+=1300;
-    });
-    mt.push(setTimeout(function(){ mjoue(); },t+1700));   /* mastered affiché un moment, puis on repart de zéro */
+    mstop();
+    var t=250, per=2400;
+    MQ.forEach(function(v,k){ mat(function(){ mcard(k); },t); t+=per; });
+    mat(function(){ mjoue(); },t+1200);   /* les trois dossiers restent remplis un instant, puis on repart de zéro */
   }
-  /* planning */
-  function wk(n){
-    var w=q('[data-i=wk]'); w.innerHTML='';
-    for(var k=0;k<n;k++){
-      (function(k){
-        var e=document.createElement('i'); e.className = k===n-1?'fi-j':k>=n-3?'fi-z':''; e.style.setProperty('--h','6px'); w.appendChild(e);
-        var h = k===n-1?118:k>=n-3?34:44+Math.abs(Math.sin(k*1.7))*58;
-        setTimeout(function(){ e.style.setProperty('--h',h+'px'); },60+k*40);
-      })(k);
+
+  /* planning — v296 : 14 jours réels (initiales de la vraie semaine, aujourd'hui souligné), les barres sont des piles de cartes.
+     Le contrôle (drapeau) change tout seul toutes les 2,3 s (5 j → 10 j → 2 sem) ; le drapeau vole d'un jour à l'autre, les barres se rééquilibrent en vague
+     (plus de temps = moins de cartes par jour, zone tampon en orange, jours après le contrôle effacés). Un toucher sur la pastille passe au suivant. */
+  var plt=[], PN=14, plk=0, fln=-1;
+  function plstop(){ plt.forEach(clearTimeout); plt=[]; }
+  function wkInit(){
+    var w=q('[data-i=wk]'), a=q('[data-i=ax]'), loc=(T===S.en)?'en':'fr', d0=new Date(), k;
+    w.innerHTML=''; a.innerHTML='';
+    for(k=0;k<PN;k++){
+      var e=document.createElement('i'); e.style.setProperty('--h','6px'); w.appendChild(e);
+      var sp=document.createElement('span'), dd=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+k), l='';
+      try{ l=dd.toLocaleDateString(loc,{weekday:'narrow'}); }catch(x){}
+      sp.textContent=(l||['D','L','M','M','J','V','S'][dd.getDay()]).toUpperCase(); a.appendChild(sp);
     }
   }
-  /* v295 : planning — plus de boutons : la date du contrôle change toute seule (5 j → 10 j → 2 sem → …) et les barres se recalculent */
-  var plt=[];
-  function plstop(){ plt.forEach(clearTimeout); plt=[]; }
-  function pljoue(){
-    plstop();
-    var seq=[5,10,14], pcz=q('[data-i=pc]'), k=0;
-    var tour=function(){
-      var n=seq[k%3]; k++;
-      pcz.innerHTML=T.ctl+'<b>'+(n===14?'2 '+(T===S.en?'wk':'sem'):n+T.d)+'</b>';
-      anim(pcz,[{transform:'scale(.9)'},{transform:'scale(1.08)',offset:.55},{transform:'scale(1)'}],{duration:480,easing:'cubic-bezier(.34,1.56,.64,1)'});
-      wk(n); vib(6);
-      plt.push(setTimeout(tour,3000));
-    };
-    tour();
+  function wkReset(){
+    var w=q('[data-i=wk]'); if(!w.children.length) wkInit();
+    w.classList.add('fi-nt');
+    [].forEach.call(w.children,function(e){ e.style.setProperty('--h','6px'); e.className='fi-x'; e.style.setProperty('--dl','0s'); });
+    void w.offsetWidth; w.classList.remove('fi-nt');
+    fln=-1; q('[data-i=fl]').style.opacity='0';
   }
+  function flag(n,instant){
+    var fl=q('[data-i=fl]'), w=q('[data-i=wk]'), e=w.children[n-1]; if(!fl||!e) return;
+    var x=(w.clientWidth||300)*(n-.5)/n-3, ox=fl.style.left?parseFloat(fl.style.left):x;   /* v299 : centre du dernier jour une fois les barres élargies */
+    fl.style.left=x+'px'; fl.style.opacity='';
+    if(instant){ fln=n; return; }
+    if(fln<0){ fln=n; anim(fl,[{transform:'translateY(-30px) scale(.6)',opacity:0},{transform:'translateY(2px) scale(1.05)',opacity:1,offset:.7},{transform:'none',opacity:1}],{duration:520,easing:'ease-out'}); return; }
+    var dx=ox-x; fln=n;
+    anim(fl,[{transform:'translate('+dx+'px,0) rotate(0)'},{transform:'translate('+(dx*.45)+'px,-18px) rotate('+(dx<0?14:-14)+'deg)',offset:.45},{transform:'translate('+(dx*.08)+'px,2px) rotate(0)',offset:.85},{transform:'none'}],{duration:420,easing:'cubic-bezier(.4,.1,.2,1)'});
+  }
+  function wk(n,instant){
+    var w=q('[data-i=wk]'); if(!w) return; if(!w.children.length) wkInit();
+    var bars=w.children, labs=q('[data-i=ax]').children, H=w.clientHeight||130, f=n<=5?.95:n<=10?.72:.55, k;
+    for(k=0;k<PN;k++){
+      var on=k<n, j=k===n-1, z=on && !j && k>=n-3;
+      var h=!on?6:j?H:z?H*.24:H*f*(.52+.4*Math.abs(Math.sin(k*1.7+n*.6)));
+      bars[k].className=!on?'fi-x':j?'fi-j':z?'fi-z':'';
+      bars[k].style.setProperty('--dl',instant?'0s':(k*14)+'ms');
+      bars[k].style.setProperty('--h',Math.round(h)+'px');
+      labs[k].className=!on?'fi-x':j?'fi-cj':k===0?'fi-td':'';
+    }
+    flag(n,instant);
+  }
+  function pill(n){
+    var pcz=q('[data-i=pc]'), t=n===14?'2 '+(T===S.en?'wk':'sem'):n+T.d, r=pcz.querySelector('.fi-roll');
+    if(!r) pcz.innerHTML=T.ctl+'<span class="fi-roll"><b>'+t+'</b></span>'; else roll(r,t,1);
+    anim(pcz,[{transform:'scale(1)'},{transform:'scale(.92)',offset:.25},{transform:'scale(1.07)',offset:.6},{transform:'scale(1)'}],{duration:420,easing:SP});
+  }
+  /* v299 : le drapeau se pose → petite gerbe d'étincelles, la zone tampon (orange) rebondit, la lettre du jour du contrôle gonfle */
+  function plfin(){
+    if(closing || i!==2) return;
+    var w=q('[data-i=wk]'), fl=q('[data-i=fl]'), pw=w&&w.parentNode; if(!w||!fl||!pw) return;
+    mburst(pw,fl,'var(--orange)',8);
+    [].forEach.call(w.querySelectorAll('i.fi-z'),function(b,k){ anim(b,[{transform:'scaleY(1)'},{transform:'scaleY(1.14)',offset:.4},{transform:'scaleY(1)'}],{duration:380,delay:k*70,easing:'ease-out'}); });
+    var cj=q('.fi-ax span.fi-cj'); if(cj) anim(cj,[{transform:'scale(1)'},{transform:'scale(1.4)',offset:.4},{transform:'scale(1)'}],{duration:380,easing:SP});
+  }
+  function plstep(){
+    var n=[5,10,14][plk%3]; plk++;
+    wk(n,false); pill(n); vib(6);
+    plt.push(setTimeout(plfin,400));
+    plt.push(setTimeout(plstep,1800));   /* v299 : 2,3 s → 1,8 s */
+  }
+  function pljoue(){ plstop(); plk=0; wkReset(); plt.push(setTimeout(plstep,80)); }
   /* synchro */
   function sync(d){
     var f=q('[data-i=fl]'); f.className=''; void f.offsetWidth; f.className='fi-go'+(d?'':' fi-r');
@@ -18056,7 +18252,6 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     document.body.appendChild(root);
     sl=qa('.fi-sl'); nx=q('[data-i=nx]');
     var pl=q('[data-i=pl]'); pl.innerHTML=new Array(N+1).join('<i></i>');
-    var lad=q('[data-i=lad]'); lad.innerHTML=J.map(function(_,k){ return (k?'<u></u>':'')+'<i>'+(k+1)+'</i>'; }).join('');
     /* bouton qui s'enfonce (appui minimum 120 ms) */
     root.addEventListener('pointerdown',function(e){
       var b=e.target.closest&&e.target.closest('.fi-bt'); if(!b) return;
@@ -18070,7 +18265,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     q('[data-i=hm]').onclick=function(){ fermer(false); };
     q('[data-i=bk]').onclick=precedent;
     q('[data-i=sk]').onclick=function(){ go(N-1); };
-    qa('.fi-ans button').forEach(function(b){ b.onclick=function(){ mstop(); lv(+b.getAttribute('data-v'),false,true); }; });
+    q('[data-i=pc]').onclick=function(){ plstop(); plstep(); vib(8); };   /* v296 : un toucher sur la pastille passe à la date suivante */
     qa('[data-i=pch] button').forEach(function(b){ b.onclick=function(){ pjoue(+b.getAttribute('data-k'),true); }; });   /* v285 ; v295 : après un toucher, l'enchaînement automatique continue */
     q('[data-i=dp]').onclick=function(){ sstop(); sync(1); stt.push(setTimeout(function(){ if(!closing && i===3) sync(0); },950+900+1100)); }; q('[data-i=dl]').onclick=function(){ sstop(); sync(0); };
     q('[data-i=yes]').onclick=function(){ ia=1; q('[data-i=ia]').classList.add('fi-b'); ui(); };
@@ -18106,7 +18301,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       if(sx===null) return; var d=e.clientX-sx; sx=null;
       if(d<-45 && !(i===5&&!ia)) nx.click(); else if(d>45) q('[data-i=bk]').click();
     });
-    wk(5); lv(0,true); q('[data-i=rj]').textContent=T.tryit;
+    wk(5,true); q('[data-i=pc]').innerHTML=T.ctl+'<span class="fi-roll"><b>5'+T.d+'</b></span>'; mclear();
     sl.forEach(function(s,k){ s.classList.add(k?'fi-R':'fi-on'); });
     [].forEach.call(sl[0].querySelectorAll('.fi-rv'),function(r,j){ r.style.setProperty('--k',j); });
     ui();
@@ -18120,14 +18315,12 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     if(rejoue) e.r=1;   // v200 : introduction rejouée (pour le bon signal « C'est parti »)
     if(k && k.value) e.k=k.value.slice(0,300);
     if(s1 && s1.classList.contains('fi-ok')) e.s=1;
-    if(p) e.p=p;
     return e;
   };
   /* v198 : remet l'introduction là où elle était (écran, étape IA, clé tapée, niveau essayé, durée choisie au planning) */
   function restaurer(e){
     try{
       if(e.r) rejoue=true;
-      if((e.p|0)>0) lv(e.p|0,true);
       if(e.n){ var b=q('[data-i=ch] button[data-n="'+(e.n|0)+'"]'); if(b){ qa('[data-i=ch] button').forEach(function(x){ x.classList.toggle('fi-on',x===b); }); wk(e.n|0); } }
       if(e.a){ ia=1; q('[data-i=ia]').classList.add('fi-b'); }
       if(e.s){ q('[data-i=s1]').classList.replace('fi-op','fi-ok'); q('[data-i=s2]').classList.add('fi-op'); }
