@@ -2284,6 +2284,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 /* feuilles du bas : fixées à l'écran, centrées comme l'app (480 px max) */
 .pp-veil{position:fixed;z-index:1000}
 .pp-sheet{position:fixed;left:0;right:0;margin:0 auto;max-width:480px;z-index:1001;padding:10px 16px calc(var(--pp-sb,0px) + 20px)}
+/* v279 : le clavier du téléphone fait monter la feuille (hauteur --kbh, mesurée par ppFkMesure) en .34 s avec la même courbe que « réponse à écrire » (--kbe) ; elle redescend de même à la fermeture */
+.pp-sheet{transition:transform .35s var(--ease-press),bottom .34s var(--kbe),max-height .34s var(--kbe)}
+.pp-sheet.on{bottom:var(--kbh,0px);max-height:calc(88% - var(--kbh,0px))}   /* seule la feuille ouverte monte : une feuille fermée reste entièrement cachée */
 #pp-pveil{z-index:1004}
 #pp-psheet{z-index:1005}
 .pp-toast{position:fixed;z-index:1010;bottom:calc(var(--pp-sb,0px) + 90px)}
@@ -4304,6 +4307,7 @@ function ppImgIAOuvrir(){
   <h4>Ce que tu veux voir</h4>${ppCEHtml({ id: 'pp-iai', cls: 'pp-q', ph: 'Ex. le traité de Rome, une cellule en mitose…', max: 120, enter: 'search', cap: 'sentences', attrs: `style="margin-bottom:14px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppImgIAChercher(false)}"` })}
   <div class="pp-iaprev" id="pp-iap" hidden></div><div id="pp-iab"></div>`;
   ppCEScan(e); ppImgIADessiner();
+  if(st.etat !== 'ok' && st.etat !== 'cherche') ppFocusChamp('pp-iai');   /* v279 : le clavier se déploie tout de suite */
 }
 function ppImgIADessiner(){
   const st = ppImgIA, p = document.getElementById('pp-iap'), b = document.getElementById('pp-iab');
@@ -11403,6 +11407,48 @@ function ppCEInit(el){
   return el;
 }
 function ppCEScan(root){ try{ (root || document).querySelectorAll('.pp-ce').forEach(ppCEInit); }catch(e){} }
+/* v279 : feuilles (#pp-sheet et #pp-psheet) et clavier du téléphone.
+   Le navigateur ne rétrécit pas la page quand le clavier s'ouvre : le champ de la feuille restait caché derrière. On mesure le clavier uniquement par le viewport
+   (même méthode que ecrMesureVrai, jamais par focus/blur) et on pose --kbh sur les deux feuilles ; le CSS les fait monter / redescendre en douceur.
+   Sur grand écran (Chromebook) rien ne bouge : pas de clavier à l'écran. */
+const ppFk = { ref: window.innerHeight, w: window.innerWidth, ouvert: false, raf: 0 };
+function ppFkMesure(){
+  if(ppFk.raf) return;
+  ppFk.raf = requestAnimationFrame(() => { ppFk.raf = 0; ppFkMesureVrai(); });
+}
+function ppFkMesureVrai(){
+  const vv = window.visualViewport, ih = window.innerHeight, h = vv ? vv.height : ih, top = vv ? vv.offsetTop : 0;
+  if(vv && vv.scale > 1.02) return;                                   /* pincement pour zoomer ≠ clavier */
+  if(window.innerWidth !== ppFk.w){ ppFk.w = window.innerWidth; ppFk.ref = Math.max(ih, h + top); }   /* rotation : nouvelle référence */
+  else if(h + top >= ppFk.ref - 2 || ih > ppFk.ref) ppFk.ref = Math.max(ppFk.ref, ih, h + top);       /* clavier fermé : la plus grande hauteur vue */
+  const kb = Math.max(0, ppFk.ref - h - top);
+  if(!ppFk.ouvert && kb > 100) ppFk.ouvert = true;                    /* hystérésis : ouvre > 100 px, ferme < 60 px */
+  else if(ppFk.ouvert && kb < 60) ppFk.ouvert = false;
+  const reste = (ppFk.ouvert && !ppWide()) ? Math.max(0, kb - Math.max(0, ppFk.ref - ih)) : 0;   /* si la page a déjà rétréci, la feuille suit toute seule */
+  const px = Math.round(reste) + 'px';
+  ['pp-sheet', 'pp-psheet'].forEach(id => { const e = document.getElementById(id); if(e && e.style.getPropertyValue('--kbh') !== px) e.style.setProperty('--kbh', px); });
+}
+(function(){
+  const vv = window.visualViewport;
+  if(vv){ vv.addEventListener('resize', ppFkMesure); vv.addEventListener('scroll', ppFkMesure); }
+  window.addEventListener('resize', ppFkMesure);
+  window.addEventListener('orientationchange', () => setTimeout(ppFkMesure, 250));
+})();
+/* Donne le focus au champ d'une feuille dès qu'elle s'ouvre (le clavier se déploie tout de suite), sans faire défiler la page, curseur à la fin. */
+function ppFocusChamp(id){
+  const el = document.getElementById(id); if(!el) return;
+  try{
+    el.focus({ preventScroll: true });
+    if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'){ const n = (el.value || '').length; try{ el.setSelectionRange(n, n); }catch(e){} }   /* v280 : champs <input> / <textarea> */
+    else { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+  }catch(e){}
+}
+/* À la fermeture d'une feuille, le champ perd le focus : le clavier se ferme en même temps que la feuille redescend (sinon il restait ouvert un instant). */
+function ppFkBlur(id){
+  const a = document.activeElement;
+  if(a && a !== document.body && a.closest && a.closest('#' + id) && a.blur) a.blur();
+}
 function ppSheet(html){
   ppEnsureSheets();
   const e = document.getElementById('pp-sheet'); e.classList.remove('pp-still'); e.style.translate = ''; e.style.transition = ''; e.innerHTML = html; e.scrollTop = 0;
@@ -11411,12 +11457,13 @@ function ppSheet(html){
 function ppSheetClose(){
   ppEnsureSheets();
   ppSetBrouillon = {};
+  ppFkBlur('pp-sheet');
   document.getElementById('pp-veil').classList.remove('on'); document.getElementById('pp-sheet').classList.remove('on');
 }
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v278';
+const PP_APP_VERSION = 'v280';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -11596,6 +11643,7 @@ function ppSheetSwipe(){
 function ppSubjSheet(){
   ppSheet(`<div class="pp-grab"></div><h2>Nouvelle matière</h2><h4>Nom</h4>${ppCEHtml({ id: 'pp-sn', cls: 'pp-q', ph: 'Ex. Physique', enter: 'done', cap: 'sentences', attrs: `style="margin-bottom:16px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppMkSubj()}"` })}<div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppMkSubj()">Créer</button></div>`);
   ppCEScan(document.getElementById('pp-sheet'));   /* v228 : champ sans barre d'autofill */
+  ppFocusChamp('pp-sn');   /* v279 : le clavier se déploie tout de suite */
 }
 function ppMkSubj(){
   const inp = document.getElementById('pp-sn');
@@ -11625,6 +11673,7 @@ function ppImportSheet(){
   <input id="pp-ij-code" class="pp-codein" type="search" name="pp-import-code" enterkeyhint="go" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9" placeholder="Code" onkeydown="if(event.key==='Enter'){event.preventDefault();ppDoImport();}">
   <textarea id="pp-ij" class="pp-tall" placeholder='[{"question":"…","reponse":"…"}]'></textarea>
   <div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppDoImport()">Importer</button></div>`);
+  ppFocusChamp('pp-ij-code');   /* v280 : le clavier se déploie tout de suite */
 }
 function ppDoImport(){
   const champ = document.getElementById('pp-ij-code');
@@ -11693,6 +11742,7 @@ const ppMOIS = ['janvier','février','mars','avril','mai','juin','juillet','aoû
 const ppTodayISO = () => { const d = new Date(); return d.getFullYear() + '-' + ppP2(d.getMonth() + 1) + '-' + ppP2(d.getDate()); };
 function ppPickClose(){
   ppEnsureSheets();
+  ppFkBlur('pp-psheet');
   document.getElementById('pp-pveil').classList.remove('on'); document.getElementById('pp-psheet').classList.remove('on'); ppPK = null;
 }
 function ppPdGrid(){
@@ -12537,6 +12587,7 @@ function renderEditionIA(){
     ppSheet(`<div class="pp-grab"></div><h2 style="font-size:22px;line-height:1.15">Modifier « ${escapeHtml(e.matiere)} » avec l'IA</h2><p class="pp-hint">${e.base.length} carte${e.base.length > 1 ? 's' : ''} dans cette matière. Tu vérifies chaque changement avant de l'appliquer.</p>${msgHtml}
     <textarea class="pp-tall" id="ia-edit-consigne" oninput="iaEdit.consigne = this.value" placeholder="Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur…">${escapeHtml(e.consigne)}</textarea>
     <div class="pp-duo"><button class="pp-sec" onclick="fermerEditionIA()"${dis}>Annuler</button><button class="pp-cta${e.enCours ? ' busy' : ''}" id="ia-edit-envoyer" onclick="envoyerEditionIA()"${dis}>${e.enCours ? 'Envoi en cours...' : "Envoyer à l'IA"}</button></div>`);
+    if(!e.enCours) ppFocusChamp('ia-edit-consigne');   /* v280 : le clavier se déploie tout de suite */
     return;
   }
   const props = e.propositions;
@@ -16646,6 +16697,7 @@ function renommerModeleSynthese(){
 function ppSynModSheet(ren){
   const s = syntheseEtat;
   ppSheet(`<div class="pp-grab"></div><h2>${ren ? 'Renommer le modèle' : 'Enregistrer comme modèle'}</h2><p class="pp-hint">${ren ? 'Choisis un nouveau nom.' : 'Tes précisions seront réutilisables en un tap.'}</p><input class="pp-fld" id="pp-mn" value="${attrEchappe(ren ? s.modeleChoisi : (s.modeleChoisi || ''))}" placeholder="Ex. Fiche d'examen" style="margin:0 0 14px" autocomplete="off"><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" style="margin:0" onclick="ppSynModSave(${ren ? 'true' : 'false'})">Enregistrer</button></div>`);
+  ppFocusChamp('pp-mn');   /* v280 : le clavier se déploie tout de suite */
 }
 function ppSynModSave(ren){
   const s = syntheseEtat; if(!s) return;
