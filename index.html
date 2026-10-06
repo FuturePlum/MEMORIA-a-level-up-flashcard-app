@@ -3578,10 +3578,12 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-dev .fi-hit{transform:scale(1.1) rotate(-3deg)}
 #fci .fi-dev em{font:800 22px var(--f);font-style:normal;color:var(--green)}
 #fci .fi-trk{flex:1;height:4px;margin:0 12px;border-radius:4px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px);position:relative}
-#fci .fi-trk b{position:absolute;top:-8px;left:0;width:20px;height:20px;border-radius:5px;background:var(--orange);opacity:0;border:2px solid var(--ink)}
+#fci .fi-trk b{position:absolute;top:-12px;left:0;width:26px;height:26px;opacity:0;display:block}
+#fci .fi-trk b svg{display:block;width:100%;height:100%;fill:var(--orange);stroke:var(--ink);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+#fci .fi-trk b svg path+path{fill:none}
 #fci .fi-trk b.fi-go{animation:fi-fly 1s cubic-bezier(.5,0,.3,1)}
 #fci .fi-trk b.fi-go.fi-r{animation-direction:reverse}
-@keyframes fi-fly{0%{left:0;opacity:1;transform:rotate(-12deg)}90%{opacity:1}100%{left:calc(100% - 20px);opacity:0;transform:rotate(12deg)}}
+@keyframes fi-fly{0%{left:0;opacity:1;transform:rotate(-12deg)}90%{opacity:1}100%{left:calc(100% - 26px);opacity:0;transform:rotate(12deg)}}
 #fci .fi-where{display:flex;gap:10px;align-items:center;font-weight:700;font-size:15px}
 #fci .fi-where i{font-style:normal;color:var(--yellow);font-size:20px}
 /* 4 · IA */
@@ -10277,7 +10279,7 @@ function ppFiche(id, retour){
   <div class="pp-set" style="margin-bottom:14px"><div class="pp-li${ivOff ? ' pp-off' : ''}"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
   <div class="pp-li${ecOk ? '' : ' pp-off'}"><i class="pp-ico">${PP_IC.edit}</i><span>Réponse à écrire<small>${ecLong ? 'Réponse longue : peu pratique à écrire' : 'Tu tapes ta réponse avant de la voir'}</small></span><button class="pp-tg${ppFi.ec ? ' on' : ''}" aria-label="Réponse à écrire" onclick="ppFicheEc(this)"></button></div>
   <button class="pp-li" onclick="ppSheetClose();ppCoachOuvrir({carteId:'${iA}'});ppCoachDe(()=>ppFiche('${iA}'))"><i class="pp-ico">${PP_IC.spark}</i><span>Discuter de la carte<small>Explication, astuce pour la retenir</small></span></button>
-  <button class="pp-li" onclick="ppPauseBascule('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>${c.pausee === true ? 'Reprendre la carte' : 'Mettre en pause'}<small>${c.pausee === true ? 'Elle revient dans tes révisions' : 'Elle sort des révisions, sans rien perdre'}</small></span></button>
+  <button class="pp-li" onclick="ppPauseBascule('${iA}')"><i class="pp-ico">${c.pausee === true ? ppSvg('<path d="M7 4l12 8-12 8z"/>', 15) : ppSvg('<path d="M8 5v14M16 5v14"/>', 15)}</i><span>${c.pausee === true ? 'Reprendre la carte' : 'Mettre en pause'}<small>${c.pausee === true ? 'Elle revient dans tes révisions' : 'Elle sort des révisions, sans rien perdre'}</small></span></button>
   <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre la maîtrise à zéro<small>Repart en « Nouvelle »</small></span></button></div>
   <div class="pp-duo"><button class="pp-sec" style="color:var(--pink)" onclick="ppFicheAsk('${iA}')">Supprimer</button><button class="pp-cta" onclick="ppFicheSave('${iA}')">Enregistrer</button></div>`);
 }
@@ -11654,7 +11656,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v301';
+const PP_APP_VERSION = 'v302';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -17817,7 +17819,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     syn:'Synchro',h3:'Même progression partout.',s3:'Téléphone, Chromebook : entre le même code et tout suit.',where:'Réglages › Synchronisation',
     pr:'Prof · IA',h6:'Ton prof perso.',s6:"Il sait où tu bloques, t'interroge dans le chat, et agit sur tes cartes, matières et planning.",ap:'Appliquer',ok:'Appliqué',
     ch:['Matières','Planning','Difficultés'],
-    sc:[[["Crée Géographie avec les capitales, une image par carte","Je te propose : matière créée, 5 cartes déplacées, une image chacune.",1],["Fusionne « Géo » dedans","Je te propose de fusionner « Géo » : 9 cartes déplacées.",1],["Passe Rome en Histoire","Je te propose de déplacer 6 cartes vers Histoire.",1]],[["Étale mes révisions d'ici vendredi","Je te propose d'étaler 31 cartes : environ 8 par jour.",1],["Pause mercredi","Je te propose de tout décaler d'un jour dès mercredi.",1]],[["Où est-ce que je bloque ?","Ottawa, Brasilia, Canberra. Je t'interroge ?",0],["Oui","Capitale de l'Australie ?",0],["Sydney ?","Non, Canberra. Suivante : capitale du Brésil ?",0]]],
+    sc:[[["Crée Géographie avec les capitales, une image par carte","Je te propose : matière créée, 5 cartes déplacées, une image chacune.",1],["Fusionne « Géo » dedans et passe Rome en Histoire","Je te propose de fusionner « Géo » (9 cartes) et de passer Rome en Histoire (6 cartes).",1]],[["Étale mes révisions d'ici vendredi","Je te propose d'étaler 31 cartes : environ 8 par jour.",1],["Pause mercredi","Je te propose de tout décaler d'un jour dès mercredi.",1]],[["Où est-ce que je bloque ?","Ottawa, Brasilia, Canberra. Je t'interroge ?",0],["Oui","Capitale de l'Australie ?",0],["Sydney ?","Non, Canberra. Suivante : capitale du Brésil ?",0]]],
     ia:'IA · gratuit',h4:'Cartes générées à partir de ton cours ?',s4:"L'IA écrit les questions à partir de ton cours et fait tourner Prof. Il te faut une clé gratuite (2 min).",yes:'Oui, je la branche',later:'Plus tard',
     steps:'3 étapes',st1:'Ouvre Google AI Studio',st1s:'Avec ton compte Google',open:'Ouvrir Google AI Studio',
     st2:'Touche «\u00a0Créer\u00a0une\u00a0clé\u00a0API\u00a0»',st2s:'Copie-la, puis reviens ici.',how:'Comment faire ?',hide:'Masquer l\u2019aide',c1:'Touche ce bouton',c2:'Puis copie ta clé',ph:'Colle ta clé ici',paste:'Coller',
@@ -17830,7 +17832,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     syn:'Sync',h3:'Same progress everywhere.',s3:'Phone, Chromebook: enter the same code and everything follows.',where:'Settings › Sync',
     pr:'Prof · AI',h6:'Your personal tutor.',s6:'It knows where you struggle, quizzes you in the chat, and acts on your cards, subjects and planning.',ap:'Apply',ok:'Applied',
     ch:['Subjects','Planning','Struggles'],
-    sc:[[['Create Geography with the capitals, one image per card','I suggest: new subject, 5 cards moved, one image each.',1],['Merge \u201cGeo\u201d into it','I suggest merging \u201cGeo\u201d: 9 cards move over.',1],['Move Rome to History','I suggest moving 6 cards to History.',1]],[['Spread my reviews until Friday','I suggest spreading 31 cards: about 8 a day.',1],['Rest day Wednesday','I suggest pushing everything back a day from Wednesday.',1]],[['Where do I struggle?','Ottawa, Brasilia, Canberra. Quiz you on them?',0],['Yes','Capital of Australia?',0],['Sydney?','No, Canberra. Next: capital of Brazil?',0]]],
+    sc:[[['Create Geography with the capitals, one image per card','I suggest: new subject, 5 cards moved, one image each.',1],['Merge \u201cGeo\u201d into it and move Rome to History','I suggest merging \u201cGeo\u201d (9 cards) and moving Rome to History (6 cards).',1]],[['Spread my reviews until Friday','I suggest spreading 31 cards: about 8 a day.',1],['Rest day Wednesday','I suggest pushing everything back a day from Wednesday.',1]],[['Where do I struggle?','Ottawa, Brasilia, Canberra. Quiz you on them?',0],['Yes','Capital of Australia?',0],['Sydney?','No, Canberra. Next: capital of Brazil?',0]]],
     ia:'AI · free',h4:'Generate cards from your course?',s4:'The AI writes questions from your course and powers Prof. You need a free key (2 min).',yes:'Yes, set it up',later:'Later',
     steps:'3 steps',st1:'Open Google AI Studio',st1s:'With your Google account',open:'Open Google AI Studio',
     st2:'Tap \u201cCreate\u00a0API\u00a0key\u201d',st2s:'Copy it, then come back here.',how:'How to?',hide:'Hide help',c1:'Tap this button',c2:'Then copy your key',ph:'Paste your key here',paste:'Paste',
@@ -17889,7 +17891,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       +'<div class="fi-fds" data-i="fds">'+[T.f1,T.f2,T.f3].map(function(t,k){ return '<div class="fi-fo fi-f'+(k+1)+'" data-i="fo'+k+'"><i class="fi-ft"></i><b class="fi-n">0</b><span>'+t+'</span></div>'; }).join('')+'</div></div><p class="fi-sub fi-rv">'+T.s1+'</p></section>'
     +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.pla+'</span><h1 class="fi-rv">'+T.h2+'</h1><div class="fi-vs"><button type="button" class="fi-pcap fi-bt fi-rv" data-i="pc"></button>'
       +'<div class="fi-box fi-rv fi-pb"><div class="fi-pw"><div class="fi-fl" data-i="fl"><svg viewBox="0 0 26 34"><path class="fi-po" d="M3 34V3"/><path class="fi-pn" d="M4 3l20 6.5L4 16z"/></svg></div><div class="fi-wk" data-i="wk"></div><div class="fi-ax" data-i="ax"></div></div></div><div class="fi-lg fi-rv"><span><s></s>'+T.lgR+'</span><span><s class="fi-o"></s>'+T.lgB+'</span></div></div></section>'
-    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.syn+'</span><h1 class="fi-rv">'+T.h3+'</h1><div class="fi-dev fi-rv"><div class="fi-ph" data-i="dp"><em data-i="c1"></em></div><div class="fi-trk"><b data-i="fl"></b></div><div class="fi-lp" data-i="dl"><em data-i="c2"></em></div></div>'
+    +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.syn+'</span><h1 class="fi-rv">'+T.h3+'</h1><div class="fi-dev fi-rv"><div class="fi-ph" data-i="dp"><em data-i="c1"></em></div><div class="fi-trk"><b data-i="sq"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h8l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20V4a1.5 1.5 0 0 1 1-1.5z"/><path d="M14 2.5v5h5"/></svg></b></div><div class="fi-lp" data-i="dl"><em data-i="c2"></em></div></div>'
       +'<p class="fi-sub fi-rv">'+T.s3+'</p><div class="fi-where fi-rv"><i>\u2699</i>'+T.where+'</div></section>'
     +'<section class="fi-sl" data-i="pr"><span class="fi-stk fi-rv">'+T.pr+'</span><h1 class="fi-rv">'+T.h6+'</h1><div class="fi-box fi-prof fi-rv"><div class="fi-chips fi-pc" data-i="pch">'+T.ch.map(function(c,k){ return '<button class="fi-bt'+(k?'':' fi-on')+'" data-k="'+k+'">'+c+'</button>'; }).join('')+'</div><div class="fi-chat" data-i="chat" aria-live="polite"></div></div><p class="fi-sub fi-rv">'+T.s6+'</p></section>'
     +'<section class="fi-sl" data-i="ia"><div class="fi-v fi-a"><span class="fi-stk fi-rv">'+T.ia+'</span><h1 class="fi-rv">'+T.h4+'</h1><p class="fi-sub fi-rv">'+T.s4+'</p>'
@@ -18116,7 +18118,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   function pljoue(){ plstop(); plk=0; wkReset(); plt.push(setTimeout(plstep,80)); }
   /* synchro */
   function sync(d){
-    var f=q('[data-i=fl]'); f.className=''; void f.offsetWidth; f.className='fi-go'+(d?'':' fi-r');
+    var f=q('[data-i=sq]'); f.className=''; void f.offsetWidth; f.className='fi-go'+(d?'':' fi-r');
     var t=d?q('[data-i=dl]'):q('[data-i=dp]'), c=d?q('[data-i=c2]'):q('[data-i=c1]');
     setTimeout(function(){
       t.classList.add('fi-hit'); c.textContent='\u2713'; vib(12);
@@ -18206,8 +18208,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
         ap.style.minWidth=(ap.offsetWidth+16)+'px'; ap.style.textAlign='center';                                       // largeur stable : « ✓ Appliqué » ne fait pas sauter la bulle
         anim(ty,[{height:hA+'px'},{height:ty.getBoundingClientRect().height+'px'}],{duration:440,easing:'cubic-bezier(.34,1.3,.64,1)'});
         vib(6);
-        pt.push(setTimeout(function(){ ap.classList.add('fi-p'); vib(10); },950));                                    // le doigt appuie
-        pt.push(setTimeout(function(){ ap.classList.remove('fi-p'); ap.classList.add('fi-done'); ap.textContent='\u2713 '+T.ok; },1130));
+        pt.push(setTimeout(function(){ ap.classList.add('fi-p'); vib(10); },620));                                    // le doigt appuie
+        pt.push(setTimeout(function(){ ap.classList.remove('fi-p'); ap.classList.add('fi-done'); ap.textContent='\u2713 '+T.ok; },800));
       },Math.max(fin+120,680)));
     }
     return fin;
@@ -18230,7 +18232,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
           pt.push(setTimeout(function(){ prepondre(ty,m); vib(6); },t));
         })(m);
         t+=160+nr*78;                                                    // la réponse s'écrit
-        t+=Math.max(700+m[1].length*28, m[2]?2150:0);                    // le temps de la lire (le bouton se fait toucher puis passe au vert pendant ce temps)
+        t+=Math.max(700+m[1].length*28, m[2]?1700:0);                    // le temps de la lire (le bouton se fait toucher puis passe au vert pendant ce temps)
       });
       if(auto && k<T.sc.length-1){
         t+=700;                                                          // dernier coup d'œil avant de changer de sujet
