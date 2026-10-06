@@ -6420,6 +6420,8 @@ RÈGLES :
 - PRIORITÉ AUX CARTES : s'il existe des cartes sur le sujet, appuie-toi d'abord dessus et reste cohérent avec elles (définitions, vocabulaire). S'il n'y a aucune carte sur le sujet, ou si elles ne suffisent pas, aide quand même avec tes connaissances : explication, exercice, correction, méthode, interrogation, sur n'importe quel cours, qu'il soit dans Memoria ou non. Ne refuse jamais une demande d'étude parce qu'il n'y a pas de carte. Dans ce cas mets "hors_cartes": true, dis-le en une phrase courte (sans t'excuser) et, si la notion mérite d'être gardée, propose-la en carte ("ajoutable": true).
 - RESTE DANS LES ÉTUDES : tu aides à apprendre, réviser, comprendre un cours ou un exercice, à t'organiser et à travailler une langue. Une demande sans rapport avec l'apprentissage (jeu, divertissement, bavardage qui s'éternise, sujets personnels…) : réponds en une phrase brève et aimable que tu es là pour les révisions, puis propose de reprendre le travail (ou un mini-quiz). Pas de sermon, pas de refus sec ; un « bonjour » ou un « merci » reçoit une réponse normale.
 - ACTIONS : ne propose des "actions" QUE si l'utilisateur le demande (ou dans les modes « Vérifie mes cartes », « Cherche les doublons » et fin de série d'« Interroge-moi »). Sinon "actions": []. N'invente JAMAIS d'id : utilise seulement ceux des lignes ci-dessous.
+- SAUTS DE LIGNE : dans les lignes de cartes ci-dessous, « / » (entouré d'espaces) représente un SAUT DE LIGNE de la carte. Pour reformater des cartes (mettre des sauts de ligne, harmoniser la mise en forme sur d'autres cartes, comme une carte donnée en modèle), utilise des actions \"modifier\" avec l'id de chaque carte et, dans \"reponse\" (ou \"question\"), le texte complet avec de vrais sauts de ligne (\\n dans le JSON), jamais « / ». Une demande formulée comme un souhait (« j'aimerais que… », « mets les autres comme… ») EST une demande d'action : propose les actions. Tu ne peux modifier que les cartes listées plus bas ; s'il y en a trop, traite les 25 premières et dis qu'il en reste ; si les cartes voulues ne sont pas listées, dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran.
+- N'ÉCRIS « Appliquer » (ou « appuie sur le bouton ») QUE si \"actions\" contient au moins une action dans CETTE réponse. Sinon, ne promets aucun bouton : fais l'action maintenant, ou explique ce qui manque.
 - Une action n'est qu'une PROPOSITION tant que l'utilisateur n'a pas appuyé sur Appliquer : ne dis jamais qu'elle est déjà faite (« j'ai créé… », « a bien été créée »), dis plutôt « Je te propose… » ou « Appuie sur Appliquer ». Les messages « [Info de l'application : … ] » de la conversation ne sont pas de l'utilisateur : ils disent ce qu'il a appliqué, décoché, ignoré ou annulé. Fais-en foi (ce qui est annulé n'existe plus, ce qui est ignoré n'a pas été fait), tiens-en compte sans les recopier, et ne reproposes pas la même action sans qu'il le demande.
 - "retenir" (carnet de l'utilisateur) : seulement s'il te le demande (« retiens que… »), ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois (1 seule ligne). Jamais autrement. "texte" : note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule action "retenir" par réponse.
 - "matiere" (créer une matière vide) : tu PEUX créer une matière, ne dis jamais le contraire. Seulement si l'utilisateur le demande. "nom" : court (40 caractères maximum), avec une majuscule ; s'il n'en a pas donné, demande-le (actions: []). Si la matière existe déjà dans MATIÈRES, dis-le et ne la propose pas. Ajoute "date_controle":"AAAA-MM-JJ" s'il donne une date de contrôle. Si des cartes doivent y aller, ajoute des actions "creer" dont "matiere" est exactement ce nom.
@@ -6666,7 +6668,10 @@ function pcParse(raw, matiere){
   const net = String(raw).trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```[ \t]*$/, '').trim();
   let o = null; try{ o = JSON.parse(ppJsonAntislashs(net)); }catch(e){}
   if(!o || typeof o !== 'object' || Array.isArray(o) || typeof o.reponse !== 'string') return { texte: ppRepareTexteIA(String(raw).trim()), hors: false, ajoutable: false, actions: [] }; /* JSON illisible : texte brut, sans actions */
-  return { texte: ppRepareTexteIA(o.reponse.trim()) || '…', hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: pcValideActions(o.actions, matiere) };
+  const acts = pcValideActions(o.actions, matiere), texteRep = ppRepareTexteIA(o.reponse.trim()) || '…';
+  /* v281 : l'IA promet un bouton « Appliquer » alors qu'aucune action valide n'est arrivée (aucune action, id inconnu, carte identique) : l'appli le dit au lieu de laisser croire à un bug */
+  const sansBouton = !acts.length && /appliquer/i.test(texteRep) && !/\?\s*$/.test(texteRep.trim());
+  return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton };
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
 async function ppCoachRepondre(texte, matiere, photo){
@@ -6739,6 +6744,7 @@ async function pcEnvoyer(t, label){
     const bulleA = pcAjoute('a', r.texte, { hors: r.hors, carte: r.ajoutable === true && !r.actions.length && pcMode !== 'quiz' });
     if(r.image) pcImageChat(bulleA, r.image);   /* v230 : le bouton seulement pour une notion nouvelle (pas pendant une série, pas quand des cartes sont déjà proposées) */
     if(r.info){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = r.info; pcEl('pc-feed').appendChild(s); }
+    if(r.sansBouton){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = matiere ? "Aucune modification n'a pu être préparée. Redemande en précisant les cartes (ou « modifie-les »)." : "Aucune modification n'a pu être préparée. Choisis la matière en haut de l'écran, puis redemande."; pcEl('pc-feed').appendChild(s); }   /* v281 */
     if(r.actions.length) pcActionsCarte(r.actions, matiere);
     pcRenderSugg(); pcBas();
   }catch(err){
@@ -11463,7 +11469,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v280';
+const PP_APP_VERSION = 'v281';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
