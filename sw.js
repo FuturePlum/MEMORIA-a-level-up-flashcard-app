@@ -19,6 +19,10 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v129 : v278 (le mot-clé d'une image de Prof est effacé de la conversation au bout de 7 jours : l'image ne revient plus) : index.html change, donc nouvelle version du cache.
+
+   v128 : v277 (titres de conversation donnés par l'IA dès le premier message ; l'image demandée à Prof revient quand on rouvre la conversation ; bouton « Image » d'une carte : menu Galerie / IA ; phrase retirée dans « Modifier avec l'IA ») : index.html change, donc nouvelle version du cache.
+
    v127 : v276 (fiche d'une carte : « Mettre en pause » et « Modifier » échangent leur place) : index.html change, donc nouvelle version du cache.
 
    v126 : v270 (Parcourir : filtre « Archivées » à côté de « En pause », les matières archivées n'encombrent plus la liste ; bouton « Désarchiver » dans la feuille d'une matière archivée) : index.html change, donc nouvelle version du cache.
@@ -53,7 +57,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v128';
+const SW_VERSION = 'v130';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

@@ -380,7 +380,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     "Cette date est déjà passée : elle n'influence plus le planning.":'This date has already passed: it no longer affects the planning.',"Tu n'as pas de connexion internet. Reconnecte-toi puis réessaie.":"You're not connected to the internet. Reconnect and try again.",
     'Clé API invalide ou requête refusée. Vérifie ta clé dans Réglages.':'Invalid API key or request refused. Check your key in Settings.','Clé API refusée ou sans accès à ce modèle. Vérifie ta clé dans Réglages.':'API key refused or without access to this model. Check your key in Settings.',
     'Ex. Fais un tableau pour comparer les régimes, garde les dates en gras.':'E.g. Make a table to compare the regimes, keep the dates in bold.','Colle un texte de cours, ou écris ex. « plus court », « plus de dates »…':'Paste course text, or write e.g. “shorter”, “more dates”…',
-    'Écris ex. « raccourcis », « ajoute un tableau », ou colle un texte en plus…':'Write e.g. “shorten”, “add a table”, or paste extra text…','Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur… (tu peux aussi coller un texte)':'E.g. shorten the answers, remove duplicates, add 5 cards about… (you can also paste a text)',
+    'Écris ex. « raccourcis », « ajoute un tableau », ou colle un texte en plus…':'Write e.g. “shorten”, “add a table”, or paste extra text…','Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur…':'E.g. shorten the answers, remove duplicates, add 5 cards about…',
     'Estimation prudente : on compte environ 30 % de cartes à revoir en plus':'Cautious estimate: we count about 30% more cards to review','Certaines cartes neuves sont placées juste avant ton contrôle, faute de place avant.':'Some new cards are placed right before your test, for lack of room earlier.',
     'Elle se place à l\'endroit du curseur. Pour la retirer, efface sa ligne « ![](img:N) ».':'It is placed at the cursor. To remove it, delete its “![](img:N)” line.',
     'Impossible de créer le fichier Word. Utilise « Copier » puis colle dans Word.':'Unable to create the Word file. Use “Copy” then paste into Word.','Le cours envoyé est trop volumineux. Retire un fichier ou raccourcis le texte.':'The submitted course is too large. Remove a file or shorten the text.',
@@ -441,6 +441,12 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Précisions pour la synthèse (facultatif)':'Details for the summary (optional)','Précisions':'Details' });
   Object.assign(D,{ "Plus d'options":'More options','Change le nom de la matière':'Change the subject name','Envoie les cartes avec un code':'Send the cards with a code','Renommer, partager, supprimer':'Rename, share, delete','Cherche les doublons':'Find duplicates','Date de contrôle':'Test date','Renommer la matière':'Rename subject','Fusionner':'Merge','Archiver la matière':'Archive subject','Désarchiver la matière':'Unarchive subject','Supprimer la matière':'Delete subject','Mettre en pause':'Pause','Reprendre':'Resume','retirée':'removed',
     'Attention : la matière ET toutes ses cartes seront supprimées, sans retour possible.':'Warning: the subject AND all its cards will be deleted, with no way back.' });
+  Object.assign(D,{ /* v277 : bouton Image (Galerie / IA) */
+    'Image de la question':'Question image','Image de la réponse':'Answer image','IA':'AI','Galerie':'Gallery','Une photo de ton appareil':'A photo from your device',"Décris l'image que tu veux":'Describe the image you want',
+    'Image par IA':'AI image','Ce que tu veux voir':'What you want to see','Ex. le traité de Rome, une cellule en mitose…':'E.g. the Treaty of Rome, a cell in mitosis…',
+    'Chercher l’image':'Find the image','Recherche…':'Searching…','Régénérer':'Regenerate','Je cherche une image…':'Looking for an image…',
+    'Aucune image trouvée. Essaie avec d’autres mots.':'No image found. Try other words.','Image trouvée sur Wikimedia Commons':'Image from Wikimedia Commons',
+    'Écris ce que tu veux voir':'Write what you want to see','Plus d’autres images : on reprend au début':'No more images: starting over' });
   RULES.push(
     f(/^Conversations passées \((\d+)\)$/,function(n){ return 'Past conversations ('+n+')'; }),
     f(/^Ce que Prof retient \((\d+)\)$/,function(n){ return 'What Prof remembers ('+n+')'; }),
@@ -1948,6 +1954,11 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-imgchip{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 13px;border-radius:12px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font-family:var(--font-sans);font-weight:700;font-size:13px;cursor:pointer}
 .pp-imgchip.has{border-style:solid;padding:4px 6px 4px 4px;color:var(--cream);background:var(--panel)}
 .pp-imgchip svg{flex:none}
+.pp-iaprev{margin:2px 0 14px;border-radius:20px;border:1.5px solid var(--line);background:var(--panel);overflow:hidden}
+.pp-iaprev[hidden]{display:none}
+.pp-iaprev img{display:block;width:100%;max-height:34vh;object-fit:contain}
+.pp-iaprev small{display:block;padding:6px 10px 8px;font-size:11px;color:var(--muted);text-align:center}
+.pp-iawait{padding:28px 16px;color:var(--muted);font-size:14px;font-weight:700;text-align:center}
 .pp-imgth{width:36px;height:36px;border-radius:13px;object-fit:cover;display:block}
 .pp-imgx{width:26px;height:26px;border-radius:50%;border:0;background:#2a2a3a;color:var(--cream);font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
 .pp-imgpanel{margin:0 0 12px;padding:10px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel)}
@@ -4237,6 +4248,7 @@ function ppImgRafraichir(ctx, cote){
 }
 /* Toucher une pastille : si l'IA a reçu des photos (aperçu), on propose d'abord ces photos ; sinon on ouvre directement le choix d'une image. */
 function ppImgChoisir(ctx, cote){
+  if(ctx === 'man' || ctx === 'fi'){ ppImgMenu(ctx, cote); return; }   /* v277 : menu Galerie / IA */
   if(String(ctx).indexOf('pv:') === 0 && iaImgBanque.some(Boolean)){
     const cle = ctx + '|' + cote, ancien = ppImgOuvert;
     ppImgOuvert = (ancien === cle) ? null : cle;
@@ -4271,6 +4283,78 @@ function ppImgPoser(ctx, cote, url, fermer){
 }
 function ppImgRetirer(ctx, cote){ ppImgPoser(ctx, cote, '', true); }
 function ppImgDeBanque(ctx, cote, k){ const url = iaImgBanque[k]; if(url) ppImgPoser(ctx, cote, url, true); }
+/* ===== v277 : bouton « Image » d'une carte (écrire une carte, fiche) = petit menu Galerie / IA dans la 2e feuille (#pp-psheet).
+   IA : l'utilisateur décrit l'image voulue, l'IA en tire un mot-clé, l'image vient de Wikimedia Commons ; Valider la pose, Régénérer en propose une autre.
+   Fermeture : glissé vers le bas, voile ou bouton retour, comme les autres feuilles. ===== */
+let ppImgIA = null;   // { ctx, cote, desc, mot, passer, url, etat: 'vide' | 'cherche' | 'ok' | 'rien', n }
+function ppImgMenu(ctx, cote){
+  ppEnsureSheets();
+  ppImgIA = { ctx, cote, desc: '', mot: '', passer: 0, url: '', etat: 'vide', n: 0 };
+  const e = document.getElementById('pp-psheet'); e.scrollTop = 0; e.style.translate = ''; e.style.transition = '';
+  e.innerHTML = `<div class="pp-grab"></div><div class="pp-sbh"><div><h2>Image ${cote === 'q' ? 'de la question' : 'de la réponse'}</h2></div></div>
+  <div class="pp-opts"><button class="pp-row" type="button" onclick="ppImgMenuGalerie('${ctx}','${cote}')"><i class="pp-ri">${PP_IMG_IC}</i><div><b>Galerie</b><span>Une photo de ton appareil</span></div></button><button class="pp-row" type="button" onclick="ppImgIAOuvrir()"><i class="pp-ri">${PP_IC.spark}</i><div><b>IA</b><span>Décris l'image que tu veux</span></div></button></div>`;
+  document.getElementById('pp-pveil').classList.add('on'); e.classList.add('on');
+}
+function ppImgMenuGalerie(ctx, cote){ ppPickClose(); ppImgIA = null; ppImgFichier(ctx, cote); }
+function ppImgIAOuvrir(){
+  const st = ppImgIA; if(!st) return;
+  const e = document.getElementById('pp-psheet'); e.scrollTop = 0;
+  e.innerHTML = `<div class="pp-grab"></div>
+  <div class="pp-sbh"><button class="pp-back" type="button" aria-label="Retour" onclick="ppImgMenu('${st.ctx}','${st.cote}')">${PP_IC.back}</button><div><h2>Image par IA</h2><span>${st.cote === 'q' ? 'Question' : 'Réponse'}</span></div></div>
+  <h4>Ce que tu veux voir</h4>${ppCEHtml({ id: 'pp-iai', cls: 'pp-q', ph: 'Ex. le traité de Rome, une cellule en mitose…', max: 120, enter: 'search', cap: 'sentences', attrs: `style="margin-bottom:14px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppImgIAChercher(false)}"` })}
+  <div class="pp-iaprev" id="pp-iap" hidden></div><div id="pp-iab"></div>`;
+  ppCEScan(e); ppImgIADessiner();
+}
+function ppImgIADessiner(){
+  const st = ppImgIA, p = document.getElementById('pp-iap'), b = document.getElementById('pp-iab');
+  if(!st || !p || !b) return;
+  if(st.etat === 'ok'){ p.hidden = false; p.className = 'pp-iaprev'; p.innerHTML = `<img src="${st.url}" alt=""><small>Image trouvée sur Wikimedia Commons</small>`; }
+  else if(st.etat === 'cherche'){ p.hidden = false; p.className = 'pp-iaprev pp-iawait'; p.textContent = 'Je cherche une image…'; }
+  else if(st.etat === 'rien'){ p.hidden = false; p.className = 'pp-iaprev pp-iawait'; p.textContent = 'Aucune image trouvée. Essaie avec d’autres mots.'; }
+  else { p.hidden = true; p.innerHTML = ''; }
+  b.innerHTML = st.etat === 'ok'
+    ? `<div class="pp-duo"><button class="pp-sec" type="button" onclick="ppImgIAChercher(true)">Régénérer</button><button class="pp-cta" type="button" onclick="ppImgIAValider()">Valider</button></div>`
+    : `<button class="pp-cta" type="button"${st.etat === 'cherche' ? ' disabled' : ''} onclick="ppImgIAChercher(false)">${st.etat === 'cherche' ? 'Recherche…' : 'Chercher l’image'}</button>`;
+}
+/* Transforme la description en mot-clé Wikimedia (2 à 5 mots). Sans clé Gemini ou en cas d'échec : '' (on cherche alors avec le texte tel quel). */
+async function ppImgMotCle(desc){
+  const key = getGeminiKey();
+  if(!key || !/^[\x21-\x7e]+$/.test(key)) return '';
+  try{
+    const rep = await fetchGeminiAvecRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: "Tu transformes la description d'une image voulue en mot-clé de recherche pour Wikimedia Commons : 2 à 5 mots, nom propre ou nom anglais précis (ex. Treaty of Rome signing, Mitosis diagram). Réponds UNIQUEMENT par le mot-clé, sans guillemets ni phrase." }] }, contents: [{ role: 'user', parts: [{ text: desc }] }] })
+    });
+    if(!rep.ok) return '';
+    const data = await rep.json(), cand = data && data.candidates && data.candidates[0];
+    const pr = cand && cand.content && Array.isArray(cand.content.parts) ? cand.content.parts : [];
+    return pcTermeImage(pr.map(x => x.text || '').join('')).replace(/["«»“”]/g, '').trim();
+  }catch(e){ return ''; }
+}
+async function ppImgIAChercher(regen){
+  const st = ppImgIA; if(!st || st.etat === 'cherche') return;
+  const inp = document.getElementById('pp-iai'), desc = ((inp && inp.value) || '').replace(/\s+/g, ' ').trim();
+  if(!desc){ ppToast('Écris ce que tu veux voir'); if(inp) inp.focus(); return; }
+  const nouveau = !regen || desc !== st.desc || !st.mot, seq = ++st.n;
+  const vivant = () => ppImgIA === st && st.n === seq && !!document.getElementById('pp-iap');
+  st.etat = 'cherche'; ppImgIADessiner(); if(inp && inp.blur) inp.blur();
+  if(nouveau){ st.desc = desc; st.passer = 0; st.mot = (await ppImgMotCle(desc)) || desc; if(!vivant()) return; }
+  else st.passer++;
+  let url = ''; try{ url = await ppImgChercherWikimedia(st.mot, st.passer); }catch(e){}
+  if(!vivant()) return;
+  if(!url && st.passer > 0){
+    st.passer = 0; try{ url = await ppImgChercherWikimedia(st.mot, 0); }catch(e){}
+    if(!vivant()) return;
+    if(url) ppToast('Plus d’autres images : on reprend au début');
+  }
+  st.url = url; st.etat = url ? 'ok' : 'rien'; ppImgIADessiner();
+}
+function ppImgIAValider(){
+  const st = ppImgIA; if(!st || !st.url) return;
+  const ctx = st.ctx, cote = st.cote, url = st.url;
+  ppPickClose(); ppImgIA = null;
+  ppImgPoser(ctx, cote, url, true);
+}
 /* IA : envoie les fichiers à Gemini en numérotant les photos (« Image 1 », « Image 2 »…) ; `debut` = nb de photos déjà numérotées. */
 function ppPartsFichiers(liste, debut){
   const parts = []; let n = debut || 0;
@@ -4357,7 +4441,8 @@ async function ppFetchDelai(url, ms){
   try{ return await fetch(url, { signal: ctl.signal }); }finally{ clearTimeout(t); }
 }
 /* Une recherche -> data URL réduite, ou '' si rien d'utilisable (aucun résultat, réseau, format non lisible). */
-async function ppImgEssaiWikimedia(q){
+async function ppImgEssaiWikimedia(q, passer){
+  let saut = passer || 0;   /* v277 : « Régénérer » saute les images déjà proposées */
   try{
     const url = IMG_WIKI_API + '?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=' + encodeURIComponent(q)
       + '&prop=imageinfo&iiprop=url%7Cmime%7Csize&iiurlwidth=' + IMG_COTE_MAX;
@@ -4371,6 +4456,7 @@ async function ppImgEssaiWikimedia(q){
       if(!ii || !ii.thumburl || !/^https:\/\/upload\.wikimedia\.org\//.test(ii.thumburl)) continue;
       if(!/^image\/(jpeg|png|webp|svg\+xml)$/.test(ii.mime || '')) continue;
       if((ii.width || 0) < 200 || (ii.height || 0) < 150) continue;
+      if(saut > 0){ saut--; continue; }
       try{
         const img = await ppFetchDelai(ii.thumburl, 12000);
         if(!img.ok) continue;
@@ -4383,13 +4469,13 @@ async function ppImgEssaiWikimedia(q){
   return '';
 }
 /* Mots-clés précis d'abord ; si Wikimedia ne trouve rien (trop de mots = aucun résultat), on retente avec les 5 puis les 3 premiers mots. */
-async function ppImgChercherWikimedia(mot){
+async function ppImgChercherWikimedia(mot, passer){
   const mots = String(mot || '').replace(/\s+/g, ' ').trim().slice(0, 120).split(' ').filter(Boolean);
   if(!mots.length) return '';
   const essais = [mots.join(' ')];
   if(mots.length > 5) essais.push(mots.slice(0, 5).join(' '));
   if(mots.length > 3) essais.push(mots.slice(0, 3).join(' '));
-  for(const q of essais){ const r = await ppImgEssaiWikimedia(q); if(r) return r; }
+  for(const q of essais){ const r = await ppImgEssaiWikimedia(q, passer); if(r) return r; }
   return '';
 }
 /* Pour chaque carte portant `rechercheImage`, cherche l'image (en parallèle, 6 au plus) et la pose du bon côté.
@@ -5599,6 +5685,7 @@ function pcInstantane0(pasEnvoi){
   if(ancien && deja === corps){ if(!pasEnvoi) pcEnvoyerConv(id); return true; }   /* rien n'a changé depuis le dernier instantané (v221 : l'envoi au serveur est quand même tenté, il a ses propres garde-fous : nombre de messages inchangé, 5 min entre deux envois) */
   const prem = conv.find(m => m && m.r === 'u' && typeof m.t === 'string');
   let titre = ((prem && prem.t) || '').replace(/(?:📷 Photo envoyée|📄 Document envoyé|📄 Texte collé envoyé)/g, '').replace(/\s+/g, ' ').trim().slice(0, HIST_TITRE_MAX);
+  if(prem && prem.ti){ const ia = pcTitreNet(prem.ti); if(ia) titre = ia; }   /* v277 : titre donné par l'IA */
   if(!titre) titre = 'Conversation';
   const dm = [...conv].reverse().find(m => m && m.r && typeof m.m === 'string' && m.m);
   const entree = { id, t: titre, d: new Date().toISOString(), m: dm ? dm.m : '', n };
@@ -6026,12 +6113,15 @@ function pcHistLecture(id, dejaCharge, confirmer, reprise){
     const v = document.createElement('p'); v.className = 'pch-vide'; v.textContent = 'Cette conversation n\u2019est pas disponible sur cet appareil.'; c.appendChild(v);
   } else {
     const f = document.createElement('div'); f.className = 'pch-feed';
+    if(pcImgPurge(corps)) ppEcrire('coach-conv-' + id, JSON.stringify({ v: 1, m: corps }));   /* v278 */
+    const imgsL = new Set(corps.filter(m => m && m.r === 'a' && typeof m.i === 'string' && m.i).slice(-4));   /* v277 */
     corps.forEach(m => {
       if(m.s){ const d = document.createElement('div'); d.className = 'pc-sep'; d.textContent = m.s; f.appendChild(d); return; }
       if(typeof m.n === 'string') return;   /* v241 : note de l'appli, pas une bulle */
       const d = document.createElement('div'); d.className = 'pc-b ' + m.r;
       if(m.r === 'a') d.innerHTML = ppRichHtml(m.t); else d.textContent = m.t;
       f.appendChild(d);
+      if(imgsL.has(m)) pcImageChat(d, m.i, true);
     });
     c.appendChild(f);
   }
@@ -6062,7 +6152,39 @@ function pcHistReprendre(id){
   pcDerniere = dern ? dern.m : pcMat;
   if(!getGeminiKey()) pcEtatSansCle();
 }
-function pcSauve(){ pcConv = pcConv.slice(-COACH_MSG_MAX); ppEcrire('coach-conversation', JSON.stringify(pcConv)); }
+function pcSauve(){
+  const tiv = (pcConv.find(m => m && m.r === 'u') || {}).ti;   /* v277 : le titre donné par l'IA est dans le premier message de l'utilisateur : on le recopie si ce message sort de la fenêtre */
+  pcConv = pcConv.slice(-COACH_MSG_MAX);
+  if(tiv){ const pr = pcConv.find(m => m && m.r === 'u'); if(pr && !pr.ti) pr.ti = tiv; }
+  ppEcrire('coach-conversation', JSON.stringify(pcConv));
+}
+/* v277 : titre de la conversation donné par Prof dès son premier échange (champ "titre" de la réponse : aucun appel de plus).
+   Gardé dans le premier message de l'utilisateur (m.ti) ; pcInstantane0 l'utilise à la place du début du message. */
+/* v278 : au bout de PC_IMG_JOURS jours, le mot-clé d'une image de Prof est effacé de la conversation : l'image ne revient plus.
+   Les mots-clés d'avant la v278 (sans date) reçoivent la date du premier passage. Renvoie true si quelque chose a changé. */
+const PC_IMG_JOURS = 7;
+function pcImgPurge(msgs){
+  let ch = false; const lim = Date.now() - PC_IMG_JOURS * 86400000;
+  (msgs || []).forEach(m => {
+    if(!m || typeof m.i !== 'string' || !m.i) return;
+    if(typeof m.ij !== 'number'){ m.ij = Date.now(); ch = true; }
+    else if(m.ij < lim){ delete m.i; delete m.ij; ch = true; }
+  });
+  return ch;
+}
+function pcTitreAttendu(){
+  const us = pcConv.filter(m => m && m.r === 'u');
+  return us.length >= 1 && us.length <= 3 && !us[0].ti;
+}
+function pcTitreRegle(){
+  return pcTitreAttendu() ? `TITRE DE LA CONVERSATION : c'est le début d'une conversation, remplis donc aussi le champ "titre" : 2 à 6 mots (40 caractères maximum), clair, précis et concis, qui nomme le vrai sujet de la demande (ex. Traité de Rome, Cartes sur la mitose, Interrogation en droit civil). Dans la langue de l'utilisateur, sans guillemets ni point final, jamais « Conversation », « Question » ni « Aide ». Si la demande est vague (un simple bonjour), un titre neutre sur ce qui est fait (ex. Prise de contact).\n` : '';
+}
+function pcTitreNet(t){
+  let x = String(t == null ? '' : t).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+  x = x.replace(/^["«»“”'`]+|["«»“”'`]+$/g, '').replace(/[.!?…:;,\s]+$/, '').trim();
+  if(!x || /^conversation$/i.test(x)) return '';
+  return x.slice(0, 50);
+}
 
 /* ---------- affichage des messages ---------- */
 const PC_IC_HC = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.01"/></svg>';
@@ -6082,7 +6204,9 @@ function pcSep(t){ const d = document.createElement('div'); d.className = 'pc-se
 function pcBas(){ const f = pcEl('pc-feed'); f.scrollTo({ top: f.scrollHeight, behavior: 'smooth' }); }
 function pcRendreConv(){
   if(!pcConv.length){ pcAjoute('a', "Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t'interroger.", { carte: false }); return; }
-  pcConv.forEach(m => { if(typeof m.n === 'string') return; if(m.s) pcSep(m.s); else pcAjoute(m.r, m.t, { hors: m.h === true, carte: m.r === 'a' && m.a === true, sans: true }); });   /* v246 : plus d'arrivée animée de toutes les bulles à la fois */
+  if(pcImgPurge(pcConv)) pcSauve();   /* v278 */
+  const imgs = new Set(pcConv.filter(m => m && m.r === 'a' && typeof m.i === 'string' && m.i).slice(-4));   /* v277 : images des 4 dernières réponses qui en avaient */
+  pcConv.forEach(m => { if(typeof m.n === 'string') return; if(m.s) pcSep(m.s); else { const bl = pcAjoute(m.r, m.t, { hors: m.h === true, carte: m.r === 'a' && m.a === true, sans: true }); if(imgs.has(m)) pcImageChat(bl, m.i, true); } });   /* v246 : plus d'arrivée animée de toutes les bulles à la fois */
   const f = pcEl('pc-feed'); f.scrollTop = f.scrollHeight;
 }
 
@@ -6317,8 +6441,8 @@ IMAGES : par défaut N'AJOUTE AUCUNE image. Seulement si l'utilisateur en demand
 - ${PROMPT_GRAS_BASE} Dans tes réponses : 0 à 2 expressions en gras, jamais dans une réponse de 1 à 2 phrases. Quand rien ne mérite d'être mis en valeur, n'en mets pas.
 - ${PROMPT_FORMULES}
 FORMAT DE SORTIE : un objet JSON strict, rien d'autre, sans balises :
-{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"image":"","actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"},{"type":"matiere","nom":"…","date_controle":"AAAA-MM-JJ"},{"type":"controle","matiere":"…","date":"AAAA-MM-JJ"},{"type":"renommer","matiere":"…","nom":"…"},{"type":"fusionner","matiere":"…","dans":"…"},{"type":"archiver","matiere":"…","archive":true},{"type":"supprimer_matiere","matiere":"…"},{"type":"deplacer","ids":["…"],"dans":"…"},{"type":"pause","id":"…","pausee":true},{"type":"ecrite","matiere":"…","ecrite":true},{"type":"inverser","matiere":"…","inversible":true},{"type":"image_carte","id":"…","terme":"…","cote":"question"},{"type":"seance","matiere":"…","difficiles":false,"mode":""},{"type":"decaler","de":"AAAA-MM-JJ","jours":1,"matiere":""},{"type":"replanifier","date":"AAAA-MM-JJ","ids":["…"]},{"type":"etaler","debut":"AAAA-MM-JJ","fin":"AAAA-MM-JJ","matiere":"…"},{"type":"reglage","cle":"apparence","valeur":"clair"},{"type":"restaurer","matiere":"…"}]}
-CARTES QUE TU CRÉES (actions "creer") : applique ces règles.
+{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"image":"","titre":"","actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"},{"type":"matiere","nom":"…","date_controle":"AAAA-MM-JJ"},{"type":"controle","matiere":"…","date":"AAAA-MM-JJ"},{"type":"renommer","matiere":"…","nom":"…"},{"type":"fusionner","matiere":"…","dans":"…"},{"type":"archiver","matiere":"…","archive":true},{"type":"supprimer_matiere","matiere":"…"},{"type":"deplacer","ids":["…"],"dans":"…"},{"type":"pause","id":"…","pausee":true},{"type":"ecrite","matiere":"…","ecrite":true},{"type":"inverser","matiere":"…","inversible":true},{"type":"image_carte","id":"…","terme":"…","cote":"question"},{"type":"seance","matiere":"…","difficiles":false,"mode":""},{"type":"decaler","de":"AAAA-MM-JJ","jours":1,"matiere":""},{"type":"replanifier","date":"AAAA-MM-JJ","ids":["…"]},{"type":"etaler","debut":"AAAA-MM-JJ","fin":"AAAA-MM-JJ","matiere":"…"},{"type":"reglage","cle":"apparence","valeur":"clair"},{"type":"restaurer","matiere":"…"}]}
+${pcTitreRegle()}CARTES QUE TU CRÉES (actions "creer") : applique ces règles.
 ${PROMPT_REGLES_CARTES}
 Ici il n'y a pas forcément de cours sous les yeux : appuie-toi sur la conversation, les cartes existantes ou la pièce jointe. Si tu complètes avec tes propres connaissances, mets "hors_cartes": true et dis-le en une phrase. Ne crée jamais une carte qui existe déjà dans la liste.
 STYLE DES SYNTHÈSES : quand tu écris un résumé ou une synthèse dans la conversation (« Résume la matière », demande de synthèse), reprends le style des fiches de synthèse de l'application, dans la limite de ce que le chat affiche : puces « - », **gras** rare, *italique*, symboles → ⇒ = ≠ ↑ ↓ ; pas de titres #, pas de tableaux, pas de citations >. Quand tu proposes l'action "synthese", ses "precisions" doivent rester compatibles avec ce style (jamais de phrases complètes, de paragraphes ou d'un autre format demandés) et servent seulement à orienter le contenu (parties à développer, exemples, comparaisons). La synthèse est écrite par un autre appel, avec ces consignes de style :
@@ -6538,7 +6662,7 @@ function pcParse(raw, matiere){
   const net = String(raw).trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```[ \t]*$/, '').trim();
   let o = null; try{ o = JSON.parse(ppJsonAntislashs(net)); }catch(e){}
   if(!o || typeof o !== 'object' || Array.isArray(o) || typeof o.reponse !== 'string') return { texte: ppRepareTexteIA(String(raw).trim()), hors: false, ajoutable: false, actions: [] }; /* JSON illisible : texte brut, sans actions */
-  return { texte: ppRepareTexteIA(o.reponse.trim()) || '…', hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), actions: pcValideActions(o.actions, matiere) };
+  return { texte: ppRepareTexteIA(o.reponse.trim()) || '…', hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: pcValideActions(o.actions, matiere) };
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
 async function ppCoachRepondre(texte, matiere, photo){
@@ -6602,7 +6726,11 @@ async function pcEnvoyer(t, label){
   try{
     const r = await ppCoachRepondre(t, matiere, photo);
     ty.remove();
-    pcConv.push({ r: 'a', t: r.texte, h: r.hors || undefined, a: (r.ajoutable && !r.actions.length && pcMode !== 'quiz') || undefined, m: pcMat }); pcSauve();
+    const msgA = { r: 'a', t: r.texte, h: r.hors || undefined, a: (r.ajoutable && !r.actions.length && pcMode !== 'quiz') || undefined, m: pcMat };
+    if(r.image){ msgA.i = r.image; msgA.ij = Date.now(); }   /* v277 : le mot-clé de l'image est gardé avec le message (l'image, trop lourde, est cherchée de nouveau à la réouverture) */
+    pcConv.push(msgA);
+    { const prem1 = pcConv.find(x => x && x.r === 'u'); if(prem1 && !prem1.ti && r.titre) prem1.ti = r.titre; }   /* v277 : titre de la conversation */
+    pcSauve();
     try{ pcInstantane(true); }catch(e){}   /* v219 : copie locale + index après chaque réponse (aucun envoi réseau) */
     const bulleA = pcAjoute('a', r.texte, { hors: r.hors, carte: r.ajoutable === true && !r.actions.length && pcMode !== 'quiz' });
     if(r.image) pcImageChat(bulleA, r.image);   /* v230 : le bouton seulement pour une notion nouvelle (pas pendant une série, pas quand des cartes sont déjà proposées) */
@@ -6795,16 +6923,20 @@ async function pcImagesApres(jobs, anciennes){
   if(ok){ try{ pcRefresh(); if(activeTab === 'browse') renderBrowse(); }catch(e){} envoyerVersSync(); }
   ppToast(ok ? (ok + ' image' + (ok > 1 ? 's' : '') + ' ajoutée' + (ok > 1 ? 's' : '')) + (ratees ? ' · ' + ratees + ' introuvable' + (ratees > 1 ? 's' : '') : '') : (pleines ? 'Stockage plein : image non ajoutée' : 'Aucune image trouvée'));
 }
-/* v263 : image demandée par Prof dans sa réponse, affichée sous la bulle (non conservée si on quitte la conversation) */
-async function pcImageChat(bulle, terme){
+/* v263 : image demandée par Prof dans sa réponse, affichée sous la bulle.
+   v277 : le mot-clé est gardé avec le message (m.i) : en rouvrant la conversation, l'image est cherchée de nouveau (elle n'est pas stockée, trop lourde).
+   `sans` = bulle d'une conversation rechargée : pas de défilement, et rien d'affiché si l'image est introuvable. */
+async function pcImageChat(bulle, terme, sans){
   if(!bulle || !terme) return;
   const z = document.createElement('div'); z.className = 'pc-imgz'; z.textContent = 'Je cherche une image…'; bulle.appendChild(z);
   let url = ''; try{ url = await ppImgChercherWikimedia(terme); }catch(e){}
   if(!z.isConnected) return;
-  if(!url){ z.textContent = 'Pas d’image trouvée pour « ' + terme + ' »'; return; }
+  if(!url){ if(sans) z.remove(); else z.textContent = 'Pas d’image trouvée pour « ' + terme + ' »'; return; }
+  const f = bulle.closest('#pc-feed'), bas = !!(f && f.scrollHeight - f.scrollTop - f.clientHeight < 200);
   z.innerHTML = ''; const im = document.createElement('img'); im.className = 'pc-img'; im.src = url; im.alt = terme; im.onclick = () => ppZoomOuvrir(url, im);
+  if(bas) im.onload = () => { f.scrollTop = f.scrollHeight; };
   const cap = document.createElement('small'); cap.textContent = terme + ' · Wikimedia Commons';
-  z.appendChild(im); z.appendChild(cap); pcBas();
+  z.appendChild(im); z.appendChild(cap); if(!sans) pcBas();
 }
 function pcAppliquer(choix, box, toutes){
   if(pcActsAttente && pcActsAttente.box === box) pcActsAttente = null;
@@ -11284,7 +11416,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v276';
+const PP_APP_VERSION = 'v278';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -12403,7 +12535,7 @@ function renderEditionIA(){
   if(e.etape === 'consigne'){
     const dis = e.enCours ? ' disabled' : '';
     ppSheet(`<div class="pp-grab"></div><h2 style="font-size:22px;line-height:1.15">Modifier « ${escapeHtml(e.matiere)} » avec l'IA</h2><p class="pp-hint">${e.base.length} carte${e.base.length > 1 ? 's' : ''} dans cette matière. Tu vérifies chaque changement avant de l'appliquer.</p>${msgHtml}
-    <textarea class="pp-tall" id="ia-edit-consigne" oninput="iaEdit.consigne = this.value" placeholder="Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur… (tu peux aussi coller un texte)">${escapeHtml(e.consigne)}</textarea>
+    <textarea class="pp-tall" id="ia-edit-consigne" oninput="iaEdit.consigne = this.value" placeholder="Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur…">${escapeHtml(e.consigne)}</textarea>
     <div class="pp-duo"><button class="pp-sec" onclick="fermerEditionIA()"${dis}>Annuler</button><button class="pp-cta${e.enCours ? ' busy' : ''}" id="ia-edit-envoyer" onclick="envoyerEditionIA()"${dis}>${e.enCours ? 'Envoi en cours...' : "Envoyer à l'IA"}</button></div>`);
     return;
   }
@@ -16818,6 +16950,7 @@ function ppInstallerHistorique(){
     ppSheet: () => !sur('pp-sheet'),
     ppSetDraw: () => !sur('pp-sheet'),   /* Réglages : dessinés directement dans la feuille, sans passer par ppSheet */
     ppPickDate: () => !sur('pp-psheet'),
+    ppImgMenu: () => !sur('pp-psheet'),   /* v277 : menu Galerie / IA du bouton Image */
     ppSesShow: () => !document.body.classList.contains('pp-ses-on'),
     ppCoachOuvrir: () => { try{ return !pcOuvert; }catch(e){ return false; } },
     ppPageShow: () => ppModalVide()
