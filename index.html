@@ -14,7 +14,7 @@
    (série, statistiques, séances, matières vides, modèles de synthèse, réglages). Elles sont posées UNE seule fois par
    export, seulement pour les clés encore absentes, avant tout le reste (le thème et la langue sont lus juste après).
    La clé Gemini et le code de synchro n'en font jamais partie. */
-const CLES_STOCKAGE_SEED = ['cartes-streak','cartes-stats-extra','cartes-seances','cartes-matieres-vides','cartes-matieres-vides-dates','cartes-matieres-supprimees','cartes-supprimees-tombstones','cartes-datecontrole-maj','synthese-modeles','rappel-heure-preferee','rappel-relance-active','fc-langue','fc-apparence'];
+const CLES_STOCKAGE_SEED = ['cartes-streak','cartes-stats-extra','cartes-seances','cartes-matieres-vides','cartes-matieres-vides-dates','cartes-matieres-supprimees','cartes-supprimees-tombstones','cartes-datecontrole-maj','cartes-archive-maj','synthese-modeles','rappel-heure-preferee','rappel-relance-active','fc-langue','fc-apparence'];
 const SEED_STOCKAGE = { "id": "", "donnees": {} };
 (function(){
   try{
@@ -4164,6 +4164,8 @@ function renameMatiere(ancienNom, nouveauNom){
       delete ov[ancienNom];
       ov[nouveauNom] = true;
       ppEcrire('cartes-archive-overlay', JSON.stringify(ov));
+      saveLocalArchiveMatiere(nouveauNom, true);    // v326 : l'autre appareil reçoit la matière renommée toujours archivée
+      saveLocalArchiveMatiere(ancienNom, false);
     }
   }
 
@@ -6960,7 +6962,7 @@ function pcValideActions(arr, matiere){
       res.push({ type: 'synthese', matiere: m, precisions: txt(a.precisions).slice(0, 600) });
     } else if(a.type === 'controle'){   /* v236 */
       const m = mm(a.matiere); if(!m) continue;
-      const brut = typeof a.date === 'string' ? a.date.trim() : '', d = brut ? pcDateValide(brut) : '';
+      const brut = (typeof a.date === 'string' && a.date.trim()) ? a.date.trim() : (typeof a.valeur === 'string' ? a.valeur.trim() : ''), d = brut ? pcDateValide(brut) : '';   /* v324 : si l'IA met la date dans « valeur », on la lit quand même (avant : lue comme « retirer la date », donc action écartée) */
       if(brut && !d) continue;   /* date illisible ou déjà passée */
       const avant = (matieresConfig[m] && matieresConfig[m].dateControle) || '';
       if(avant === d || res.some(x => x.type === 'controle' && x.matiere === m)) continue;
@@ -7110,7 +7112,7 @@ function pcParse(raw, matiere){
 /* v320 : FORMAT DE SORTIE IMPOSÉ à Gemini (schéma JSON) : « actions » est toujours présent, chaque action a ses champs obligatoires.
    Si l'API refuse la configuration (erreur 400), on rejoue l'appel avec l'ancienne configuration (JSON libre) et on s'en souvient jusqu'au rechargement : rien ne peut se casser.
    `actionsFirst` : « actions » est écrit AVANT « reponse » (le texte décrit alors des actions déjà décidées : fini le « Appuie sur Appliquer » sans actions) ; `forcer` : au moins UNE action (nouveaux essais). */
-const PC_TYPES_AUTRES = ['supprimer', 'synthese', 'retenir', 'controle', 'renommer', 'fusionner', 'archiver', 'supprimer_matiere', 'deplacer', 'pause', 'ecrite', 'inverser', 'image_carte', 'seance', 'decaler', 'replanifier', 'etaler', 'reglage', 'restaurer'];
+const PC_TYPES_AUTRES = ['supprimer', 'synthese', 'renommer', 'fusionner', 'archiver', 'supprimer_matiere', 'deplacer', 'pause', 'ecrite', 'inverser', 'seance', 'decaler', 'replanifier', 'etaler', 'restaurer'];   /* v324 : « controle », « reglage », « retenir » et « image_carte » ont leur propre variante (avant : champs mélangés, l'IA écrivait la date d'un contrôle dans « valeur ») */
 let pcCfgKO = false;
 function pcSchema(actionsFirst, forcer){
   const S = { type: 'STRING' }, B = { type: 'BOOLEAN' }, I = { type: 'INTEGER' };
@@ -7119,7 +7121,11 @@ function pcSchema(actionsFirst, forcer){
     { type: 'OBJECT', properties: { type: un('creer'), matiere: S, question: S, reponse: S, inversible: B, ecrite: B, rechercheImage: S, rechercheCote: S }, required: ['type', 'matiere', 'question', 'reponse'] },
     { type: 'OBJECT', properties: { type: un('modifier'), id: S, question: S, reponse: S }, required: ['type', 'id'] },
     { type: 'OBJECT', properties: { type: un('matiere'), nom: S, date_controle: S }, required: ['type', 'nom'] },
-    { type: 'OBJECT', properties: { type: { type: 'STRING', format: 'enum', enum: PC_TYPES_AUTRES }, id: S, ids: { type: 'ARRAY', items: S }, matiere: S, nom: S, dans: S, texte: S, precisions: S, date: S, de: S, debut: S, fin: S, jours: I, nombre: I, choix: S, archive: B, pausee: B, inversible: B, ecrite: B, terme: S, cote: S, difficiles: B, mode: S, cle: S, valeur: S }, required: ['type'] }
+    { type: 'OBJECT', properties: { type: un('controle'), matiere: S, date: S }, required: ['type', 'matiere', 'date'] },
+    { type: 'OBJECT', properties: { type: un('reglage'), cle: S, valeur: S }, required: ['type', 'cle', 'valeur'] },
+    { type: 'OBJECT', properties: { type: un('retenir'), texte: S }, required: ['type', 'texte'] },
+    { type: 'OBJECT', properties: { type: un('image_carte'), id: S, terme: S, cote: S }, required: ['type', 'id', 'terme', 'cote'] },
+    { type: 'OBJECT', properties: { type: { type: 'STRING', format: 'enum', enum: PC_TYPES_AUTRES }, id: S, ids: { type: 'ARRAY', items: S }, matiere: S, nom: S, dans: S, precisions: S, date: S, de: S, debut: S, fin: S, jours: I, nombre: I, choix: S, archive: B, pausee: B, inversible: B, ecrite: B, difficiles: B, mode: S }, required: ['type'] }
   ];
   const actions = { type: 'ARRAY', items: { anyOf: variantes } };
   if(forcer) actions.minItems = '1';
@@ -8415,10 +8421,18 @@ function toggleArchiveMatiere(nom){
 function loadLocalArchiveOverlay(){
   return ppLireJSON('cartes-archive-overlay', {}, ppEstObjet);
 }
-function saveLocalArchiveMatiere(nom, archive){
+function saveLocalArchiveMatiere(nom, archive, majIso){
   const overlay = loadLocalArchiveOverlay();
   if(archive) overlay[nom] = true; else delete overlay[nom];
   ppEcrire('cartes-archive-overlay', JSON.stringify(overlay));
+  // v326 : date du dernier changement (archiver OU désarchiver), par matière, pour la synchro : le changement le plus
+  // récent l'emporte (majIso = horodatage reçu de l'autre appareil quand le changement vient de la synchro, sinon « maintenant »).
+  const maj = loadArchiveMaj();
+  maj[nom] = majIso || new Date().toISOString();
+  ppEcrire('cartes-archive-maj', JSON.stringify(maj));
+}
+function loadArchiveMaj(){
+  return ppLireJSON('cartes-archive-maj', {}, ppEstObjet);
 }
 function applyLocalArchiveOverlay(){
   const overlay = loadLocalArchiveOverlay();
@@ -11563,7 +11577,8 @@ function statsFromCards(cards){
    "Progression par matière" dans l'ancien onglet Historique, aujourd'hui
    retiré). Retourne null si la matière n'a aucune carte. */
 function getStatForMatiere(m){
-  const cards = CARDS.filter(c => (c.matiere || 'Sans matière') === m);
+  /* v325 : les cartes en pause ne comptent pas (compteurs maîtrisées / en cours / nouvelles, taux, badge « À risque »). */
+  const cards = cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === m);
   if(cards.length === 0) return null;
   return statsFromCards(cards);
 }
@@ -12003,7 +12018,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v323';
+const PP_APP_VERSION = 'v326';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -14571,6 +14586,7 @@ function construireDonneesProgression(options){
     matieresVidesDates: loadMatieresVidesDates(),
     matieresSupprimees: loadMatieresSupprimees(),
     matieresArchivees,
+    matieresArchiveesMaj: loadArchiveMaj(),   // v326 : date du dernier changement d'archivage, par matière
     streak,
     geminiApiKey,
     geminiApiKeyMaj,
@@ -15380,6 +15396,36 @@ function fusionnerDatesControleDepuisSync(data, tsOf, nomsChanges){
   return changees;
 }
 
+/* v326 : archivage des matières reçu de l'autre appareil (avant, `matieresArchivees` était envoyé mais jamais lu).
+   Pour chaque matière, le changement le plus récent (archiver ou désarchiver) l'emporte, comme pour les dates de contrôle.
+   Une archive reçue sans horodatage (ancienne version) ne s'applique que si on n'a jamais touché à l'archivage de
+   cette matière ici ; un « désarchivé » sans horodatage ne s'applique jamais. Les matières inconnues ici sont ignorées
+   (pas de matière fantôme) : on appelle cette fonction APRÈS les cartes et les matières vides. Renvoie le nombre de changements. */
+function fusionnerArchivesDepuisSync(data, tsOf){
+  const liste = (data && Array.isArray(data.matieresArchivees)) ? data.matieresArchivees.filter(m => typeof m === 'string' && m) : [];
+  const majRecu = (data && ppEstObjet(data.matieresArchiveesMaj)) ? data.matieresArchiveesMaj : {};
+  const majLocal = loadArchiveMaj();
+  const archRecu = new Set(liste);
+  const noms = new Set([...liste, ...Object.keys(majRecu)]);
+  const existantes = new Set(getMatieres());
+  let changees = 0;
+  noms.forEach(m => {
+    if(!existantes.has(m)) return;
+    const recu = archRecu.has(m);
+    const local = !!(matieresConfig[m] && matieresConfig[m].archive);
+    if(recu === local) return;
+    const tsRecu = tsOf(majRecu[m]) || (recu ? 1 : 0);
+    const tsLocal = tsOf(majLocal[m]);
+    if(!(tsRecu > tsLocal)) return;
+    if(!matieresConfig[m]) matieresConfig[m] = {};
+    matieresConfig[m].archive = recu;
+    saveLocalArchiveMatiere(m, recu, (typeof majRecu[m] === 'string' && majRecu[m]) ? majRecu[m] : new Date(1).toISOString());
+    if(recu && matiereFilter === m) matiereFilter = 'toutes';
+    changees++;
+  });
+  return changees;
+}
+
 /* Clé Gemini reçue de l'autre appareil : reprise si elle est plus récente que la
    nôtre, ou si on n'en a pas (et qu'on ne l'a pas volontairement retirée après). */
 function fusionnerCleGeminiDepuisSync(data, tsOf){
@@ -15576,9 +15622,10 @@ function fusionnerDepuisSync(data){
   const datesChangees = reglagesRecus ? fusionnerDatesControleDepuisSync(reglagesRecus, tsOf, nomsDatesChangees) : 0;
   if(reglagesRecus) fusionnerCleGeminiDepuisSync(reglagesRecus, tsOf);
   const videsChangees = reglagesRecus ? fusionnerMatieresVidesDepuisSync(reglagesRecus, tsOf) : 0;
+  const archivesChangees = reglagesRecus ? fusionnerArchivesDepuisSync(reglagesRecus, tsOf) : 0;   // v326
   if(reglagesRecus){ try{ pcFusionnerDepuisSync(reglagesRecus); }catch(e){} try{ pcJournalFusionner(reglagesRecus.reponses); }catch(e){} }   // v217 : index des conversations de Prof + carnet ; v224 : journal des réponses (bilan)
 
-  if(ajoutees > 0 || misesAJour > 0 || supprimees > 0 || datesChangees > 0 || videsChangees > 0){
+  if(ajoutees > 0 || misesAJour > 0 || supprimees > 0 || datesChangees > 0 || videsChangees > 0 || archivesChangees > 0){
     if(matiereFilter !== 'toutes' && !getMatieres().includes(matiereFilter)) matiereFilter = 'toutes';
     // Une date de contrôle reçue : chaque appareil recale SES cartes (sans toucher à derniereModification, donc sans
     // jamais écraser une révision de l'autre appareil).
@@ -15588,6 +15635,11 @@ function fusionnerDepuisSync(data){
     }
     recalcPlanning();
     saveLocalPlanning();
+    if(archivesChangees > 0){   // v326 : comme après un archivage fait ici (toggleArchiveMatiere), sans toucher à une séance en cours
+      try{ renderPlanning(); }catch(e){}
+      try{ renderBrowse(); }catch(e){}
+      if(activeTab === 'study' && !studySessionActive && !quizActive){ try{ buildQueue(); }catch(e){} }
+    }
   }
 }
 
