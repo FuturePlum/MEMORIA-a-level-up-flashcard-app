@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v140 : v307 (RAPPELS APP FERMÉE par Web Push : l'app s'abonne et le Worker envoie le rappel et la relance via D1 ; Réglages : « Tester la notification », rappels aussi sur iPhone et Mac ; relance désactivée par défaut) : écoute « push », le cache « memoria-etat » survit au nettoyage des caches.
+
    v139 : v306 (intro, écran Prof : réponses de Prof de structures variées, plus de « tu valides ? » partout) : index.html change, donc nouvelle version du cache.
 
    v138 : v305 (intro, écran Prof : Prof ne répète plus la demande, il répond par de courts messages variés du type « C'est prêt, tu valides ? ») : index.html change, donc nouvelle version du cache.
@@ -73,7 +75,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v139';
+const SW_VERSION = 'v140';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
@@ -86,7 +88,7 @@ self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((noms) => Promise.all(noms.filter((n) => n !== CACHE_NOM).map((n) => caches.delete(n))))
+      .then((noms) => Promise.all(noms.filter((n) => n !== CACHE_NOM && n !== 'memoria-etat').map((n) => caches.delete(n))))
       .then(() => self.clients.claim())
       .then(() => (self.registration.navigationPreload ? self.registration.navigationPreload.enable().catch(() => {}) : null))
   );
@@ -184,6 +186,68 @@ async function checkAndNotify(){
     });
   }catch(e){}
 }
+
+
+/* v307 : Web Push. Le Worker réveille ce service worker à l'heure du rappel (puis pour la relance), même app fermée. L'envoi n'a pas de
+   contenu : le texte est écrit ici, avec le nombre de cartes que l'app a mis de côté dans le cache « memoria-etat » (/etat-rappel).
+   Une notification est TOUJOURS affichée (obligatoire, surtout sur iPhone). 1er envoi du jour = rappel ; 2e = relance. */
+async function lireCacheEtat(chemin){
+  try{
+    const c = await caches.open('memoria-etat');
+    const r = await c.match(chemin);
+    return r ? await r.json() : null;
+  }catch(e){ return null; }
+}
+async function ecrireCacheEtat(chemin, obj){
+  try{
+    const c = await caches.open('memoria-etat');
+    await c.put(chemin, new Response(JSON.stringify(obj), { headers: { 'Content-Type': 'application/json' } }));
+  }catch(e){}
+}
+function jourLocalSw(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+async function afficherPush(){
+  const etat = await lireCacheEtat('/etat-rappel');
+  const en = enAnglais(etat && etat.lang);
+  const jour = jourLocalSw();
+  const base = { icon: './icon-192x192-any.png', badge: './icon-192x192-any.png' };
+  if(etat && etat.test && Date.now() - etat.test < 3 * 60 * 1000){
+    await self.registration.showNotification('Memoria', Object.assign({
+      body: en ? 'Test OK: reminders reach you even when the app is closed.' : 'Test réussi : les rappels arrivent même quand l\'app est fermée.',
+      tag: 'revision-test', renotify: true
+    }, base));
+    return;
+  }
+  const rangBrut = await lireCacheEtat('/push-jour');
+  const rang = (rangBrut && rangBrut.jour === jour ? rangBrut.n : 0) + 1;
+  await ecrireCacheEtat('/push-jour', { jour, n: rang });
+  const n = (etat && etat.jour === jour) ? (etat.count || 0) : 0; // nombre connu seulement s'il date d'aujourd'hui
+  let corps;
+  if(rang >= 2){
+    corps = n > 0
+      ? (en ? (n === 1 ? 'Still 1 card waiting today.' : 'Still ' + n + ' cards waiting today.')
+            : (n === 1 ? 'Toujours 1 carte en attente aujourd\'hui.' : 'Toujours ' + n + ' cartes en attente aujourd\'hui.'))
+      : (en ? 'You still have cards to review today.' : 'Il te reste des cartes à réviser aujourd\'hui.');
+  }else{
+    corps = n > 0
+      ? (en ? (n === 1 ? '1 card to review today.' : n + ' cards to review today.')
+            : (n === 1 ? '1 carte à réviser aujourd\'hui.' : n + ' cartes à réviser aujourd\'hui.'))
+      : (en ? 'Remember to review your cards today!' : 'Pense à réviser tes cartes aujourd\'hui !');
+  }
+  /* Même tag que les rappels locaux : une notification déjà affichée est remplacée (pas de pile). Pas de nouvelle vibration pour un 1er
+     envoi qui remplace une notification encore là ; la relance vibre toujours. */
+  let existe = false;
+  try{ existe = (await self.registration.getNotifications({ tag: 'revision-rappel' })).length > 0; }catch(e){}
+  await self.registration.showNotification('Memoria', Object.assign({ body: corps, tag: 'revision-rappel', renotify: !(rang < 2 && existe) }, base));
+}
+self.addEventListener('push', (event) => {
+  event.waitUntil(afficherPush().catch(() => self.registration.showNotification('Memoria', {
+    body: enAnglais() ? 'Remember to review your cards today!' : 'Pense à réviser tes cartes aujourd\'hui !',
+    icon: './icon-192x192-any.png', badge: './icon-192x192-any.png', tag: 'revision-rappel'
+  })));
+});
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

@@ -239,6 +239,14 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     "Safari peut effacer les données d'un site peu visité. Active la synchronisation ou exporte ta progression de temps en temps.":'Safari may erase the data of a rarely visited site. Turn on sync or export your progress from time to time.',
     "Sur iPhone et Mac, le rappel s'affiche seulement quand Memoria est ouverte (pas d'envoi en arrière-plan).":'On iPhone and Mac, the reminder only shows while Memoria is open (no background delivery).',
     'Rappels indisponibles':'Reminders unavailable',
+    'Tester la notification':'Test the notification',
+    "Reçue même quand l'app est fermée":'Delivered even when the app is closed',
+    "Test envoyé : ferme l'app, il arrive dans quelques secondes":'Test sent: close the app, it arrives in a few seconds',
+    'Patiente quelques secondes avant un nouveau test':'Wait a few seconds before another test',
+    'Abonnement perdu : désactive puis réactive le rappel':'Subscription lost: turn the reminder off and on again',
+    "Le serveur de notifications n'est pas encore prêt":"The notification server isn't ready yet",
+    "Le serveur n'a pas pu envoyer le test":"The server couldn't send the test",
+    "Impossible d'activer l'envoi : réessaie en ligne":"Couldn't turn on delivery: try again online",
     "Ajoute d'abord Memoria à l'écran d'accueil pour pouvoir activer les rappels.":'First add Memoria to your Home Screen to turn on reminders.',
     'Ce navigateur ne permet pas les notifications.':'This browser does not support notifications.',
     'Safari (Mac)':'Safari (Mac)',
@@ -7427,7 +7435,7 @@ function pcReglageAppliquer(a){
     }
     if(a.cle === 'heure_rappel'){ onChangeRappelHeure(v); return { note: pcReglageLib(a).toLowerCase(), defaire: () => onChangeRappelHeure(avant) }; }
     if(a.cle === 'relance'){
-      localStorage.setItem('rappel-relance-active', v === 'on' ? '1' : '0');
+      localStorage.setItem('rappel-relance-active', v === 'on' ? '1' : '0'); pushPlusTard();
       return { note: pcReglageLib(a).toLowerCase(), defaire: () => { try{ localStorage.setItem('rappel-relance-active', avant === 'on' ? '1' : '0'); }catch(e){} } };
     }
   }catch(e){}
@@ -11656,7 +11664,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v306';
+const PP_APP_VERSION = 'v307';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -14148,6 +14156,7 @@ function onChangeRappelHeure(val){
   if(!/^\d{2}:\d{2}$/.test(val || '')) return;
   try{ localStorage.setItem('rappel-heure-preferee', val); }catch(e){}
   verifierEtNotifierSiNecessaire();
+  pushPlusTard();
 }
 
 let rappelPermissionMsg = null;
@@ -15501,6 +15510,7 @@ async function activerRappelQuotidien(){
     }
   }catch(e){}
   verifierEtNotifierSiNecessaire();
+  pushSynchroniser(true); // v307 : abonnement aux notifications envoyées par le serveur (app fermée)
   return true;
 }
 
@@ -15512,11 +15522,12 @@ async function activerRappelQuotidien(){
 
 function desactiverRappelQuotidien(){
   try{ localStorage.setItem('rappel-notifs-actif', '0'); }catch(e){}
+  pushSynchroniser(true); // v307 : retire l'appareil du serveur
 }
 
 function rappelEstActif(){
   /* v165 : iPhone / iPad / Safari Mac — pas de rappel en arrière-plan : le bloc « Rappels » est masqué dans Réglages et plus aucun rappel n'est envoyé (même un ancien réglage activé). */
-  try{ if(ppEstApple()) return false; }catch(e){}
+  try{ if(ppEstApple() && !('Notification' in window)) return false; }catch(e){}
   try{ return localStorage.getItem('rappel-notifs-actif') === '1'; }catch(e){ return false; }
 }
 
@@ -15558,6 +15569,7 @@ async function envoyerNotifRappel(count, type){
 async function verifierEtNotifierSiNecessaire(){
   if(!rappelEstActif()) return;
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  if(pushActif()) return; // v307 : le serveur envoie déjà le rappel (app fermée) ; on évite un doublon. Repli local seulement si l'abonnement a échoué.
   if(!heureRappelAtteinte()) return;
 
   const today = todayStr();
@@ -15580,6 +15592,123 @@ async function verifierEtNotifierSiNecessaire(){
     }
   }
   // etape === 'relance' : rien de plus à faire aujourd'hui
+}
+
+
+/* ---------------- v307 : rappels app fermée (Web Push, base D1 du Worker) ----------------
+   L'app s'abonne aux notifications du navigateur (PushManager) et dit au Worker : identifiant de l'appareil, adresse d'envoi, fuseau,
+   heure du rappel, relance oui/non, et si des cartes restent aujourd'hui (reste 0/1) + la prochaine date de révision. Le Worker envoie la
+   notification à l'heure (puis la relance 2 h plus tard si des cartes restent), même app fermée. Aucune écriture KV (tout est dans D1).
+   Écritures limitées : un envoi seulement si quelque chose a changé (signature « push-sig ») : environ 1 par jour et par appareil,
+   + 1 quand les cartes du jour sont finies ou qu'un réglage change. Le texte (nombre de cartes) vient du service worker, qui lit
+   « etat-rappel » (cache « memoria-etat », écrit ici, jamais envoyé). Repli : si l'abonnement échoue (ex. iPhone en UE), le rappel
+   local d'avant fonctionne toujours (verifierEtNotifierSiNecessaire). */
+const PUSH_VAPID_PUBLIC = 'BKgTFujZloqY3qX961k91Qsg8Nk1Hpnt0Pz7aFd6zBxCB8pu2A3usQR50MzxRcGdSWMhXe70qWcJWVXYjmLw5DE';
+function pushUrl(){ return SYNC_WORKER_URL + '/push'; }
+function pushPris(){ return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window); }
+function pushActif(){ try{ return !!localStorage.getItem('push-sig'); }catch(e){ return false; }  }
+function pushId(){
+  try{
+    let id = localStorage.getItem('push-appareil-id') || '';
+    if(!/^[a-z0-9]{16,40}$/.test(id)){
+      const o = crypto.getRandomValues(new Uint8Array(24));
+      id = Array.prototype.map.call(o, function(b){ return (b % 36).toString(36); }).join('');
+      localStorage.setItem('push-appareil-id', id); // propre à l'appareil : absent de CLES_STOCKAGE_SEED, jamais synchronisé
+    }
+    return id;
+  }catch(e){ return ''; }
+}
+function pushCleVersOctets(b64){
+  const s = (b64 + '='.repeat((4 - b64.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(s), o = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i);
+  return o;
+}
+/* Prochaine date (après aujourd'hui) où des cartes seront dues, ou null. */
+function prochaineDateDeRevision(){
+  const today = todayStr(), actives = getMatieresActives();
+  let min = null;
+  cartesNonPausees().forEach(c => {
+    if(!actives.includes(c.matiere || 'Sans matière')) return;
+    const d = c.prochaineRevision || today;
+    if(d > today && (min === null || d < min)) min = d;
+  });
+  return min;
+}
+/* Mémo local pour le service worker (texte de la notification). Reste sur l'appareil. */
+async function pushEcrireEtat(extra){
+  try{
+    const c = await caches.open('memoria-etat');
+    const etat = Object.assign({ jour: todayStr(), count: compterCartesDuesAujourdhui(), lang: (typeof langueChoisie === 'function' ? langueChoisie() : 'fr') }, extra || {});
+    await c.put('/etat-rappel', new Response(JSON.stringify(etat), { headers: { 'Content-Type': 'application/json' } }));
+  }catch(e){}
+}
+let pushEnCours = false, pushRelancer = false, pushDelai = null;
+async function pushSynchroniser(forcer){
+  if(!pushPris()) return false;
+  if(pushEnCours){ pushRelancer = true; return false; }
+  pushEnCours = true;
+  let ok = false;
+  try{
+    if(!rappelEstActif() || Notification.permission !== 'granted'){
+      if(pushActif()) await pushDesactiver();
+      return false;
+    }
+    const reg = await serviceWorkerPret();
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: pushCleVersOctets(PUSH_VAPID_PUBLIC) });
+    const id = pushId();
+    if(!id) return false;
+    const reste = compterCartesDuesAujourdhui() > 0 ? 1 : 0;
+    let tz = 'Europe/Paris';
+    try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; }catch(e){}
+    const sig = JSON.stringify({ id, endpoint: sub.endpoint, tz, heure: rappelHeurePreferee(), relance: ppRelanceActive() ? 1 : 0, jour: todayStr(), reste, prochaine: reste ? null : prochaineDateDeRevision() });
+    await pushEcrireEtat();
+    if(!forcer && sig === localStorage.getItem('push-sig')){ ok = true; return true; }
+    const rep = await fetch(pushUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: sig });
+    if(!rep.ok) return false;
+    localStorage.setItem('push-sig', sig);
+    ok = true;
+    return true;
+  }catch(e){
+    return false;
+  }finally{
+    pushEnCours = false;
+    if(pushRelancer){ pushRelancer = false; setTimeout(function(){ pushSynchroniser(false); }, 300); }
+  }
+}
+function pushPlusTard(){
+  clearTimeout(pushDelai);
+  pushDelai = setTimeout(function(){ pushSynchroniser(false); }, 4000);
+}
+async function pushDesactiver(){
+  try{
+    const id = pushId();
+    if(id){
+      const rep = await fetch(pushUrl(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, off: 1 }) });
+      if(!rep.ok) return;
+    }
+    const reg = await serviceWorkerPret();
+    const sub = await reg.pushManager.getSubscription();
+    if(sub) await sub.unsubscribe();
+    localStorage.removeItem('push-sig');
+  }catch(e){}
+}
+/* Réglages → « Tester la notification » : le Worker envoie tout de suite une notification de test à cet appareil. */
+async function ppTesterPush(){
+  if(!pushActif()){
+    const fait = await pushSynchroniser(true);
+    if(!fait){ ppToast("Impossible d'activer l'envoi : réessaie en ligne"); return; }
+  }
+  await pushEcrireEtat({ test: Date.now() });
+  try{
+    const rep = await fetch(pushUrl() + '/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: pushId() }) });
+    if(rep.ok) ppToast("Test envoyé : ferme l'app, il arrive dans quelques secondes");
+    else if(rep.status === 429) ppToast('Patiente quelques secondes avant un nouveau test');
+    else if(rep.status === 410){ try{ localStorage.removeItem('push-sig'); }catch(e){} ppToast('Abonnement perdu : désactive puis réactive le rappel'); }
+    else if(rep.status === 503 || rep.status === 404) ppToast("Le serveur de notifications n'est pas encore prêt");
+    else ppToast("Le serveur n'a pas pu envoyer le test");
+  }catch(e){ ppToast('Pas de connexion'); }
 }
 
 /* ---------------- Synchro cross-device (Cloudflare Worker + KV) ----------------
@@ -16582,12 +16711,13 @@ function ppStatsHtml(){
 
 /* ================= Réglages (feuille du bas) ================= */
 function ppRelanceActive(){
-  try{ return localStorage.getItem('rappel-relance-active') !== '0'; }catch(err){ return true; }
+  try{ return localStorage.getItem('rappel-relance-active') === '1'; }catch(err){ return false; } /* v307 : désactivée par défaut */
 }
 function ppToggleRelance(el){
   const on = !ppRelanceActive();
   try{ localStorage.setItem('rappel-relance-active', on ? '1' : '0'); }catch(err){}
   if(el) el.classList.toggle('on', on);
+  try{ pushPlusTard(); }catch(err){}
 }
 /* Saisies en cours dans les Réglages (clé Gemini, code de synchro) : notées au fil de la frappe (oninput), puis reposées quand la feuille
    est redessinée (synchro, bouton Rappel, retour depuis « Heure du rappel » / « Exporter »…). Vidées à la fermeture et dès que la saisie est validée. */
@@ -16647,7 +16777,7 @@ function ppSetHtml(){
     : `<div class="pp-set">
   <div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Rappel de révision</span><button class="pp-tg${actif ? ' on' : ''}" aria-label="Rappel" onclick="toggleRappelQuotidien()"></button></div>
   <button class="pp-li" onclick="ppTimeSheet()"><i class="pp-ico">${PP_IC.cal}</i><span>Heure du rappel</span><span class="pp-time" style="flex:none">${ppEsc(rappelHeurePreferee())}</span></button>
-  <div class="pp-li"><i class="pp-ico">${PP_IC.loop}</i><span>Relancer si ignoré<small>Après 2 h</small></span><button class="pp-tg${ppRelanceActive() ? ' on' : ''}" aria-label="Relance" onclick="ppToggleRelance(this)"></button></div></div>${rappelPermissionMsg ? `<p class="pp-warn">${ppEsc(rappelPermissionMsg)}</p>` : ''}`;
+  <div class="pp-li"><i class="pp-ico">${PP_IC.loop}</i><span>Relancer si ignoré<small>Après 2 h</small></span><button class="pp-tg${ppRelanceActive() ? ' on' : ''}" aria-label="Relance" onclick="ppToggleRelance(this)"></button></div>${actif ? `<button class="pp-li" onclick="ppTesterPush()"><i class="pp-ico">${PP_IC.bell}</i><span>Tester la notification<small>Reçue même quand l'app est fermée</small></span></button>` : ''}</div>${rappelPermissionMsg ? `<p class="pp-warn">${ppEsc(rappelPermissionMsg)}</p>` : ''}`;
   const key = getGeminiKey();
   const ia = (key && !geminiKeyEdit)
     ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé Gemini connectée<small>${ppEsc(key.slice(0, 6) + '••••••' + key.slice(-4))}</small></span><button class="pp-time" style="flex:none" onclick="editerGeminiKey()">Changer</button></div></div>`
@@ -16660,7 +16790,7 @@ function ppSetHtml(){
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
   <h4>Langue</h4>${ppLangueHtml()}
   <h4>Apparence</h4>${ppApparenceHtml()}
-  ${ppEstApple() ? '' : `<h4>Rappels</h4>${rappels}`}
+  <h4>Rappels</h4>${rappels}
   ${ppAppleHtml()}
   <h4>Génération IA</h4>${ia}
   <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button>${PP_JOURNAL_VISIBLE ? `<button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button>` : ''}</div></div><div>
@@ -16984,9 +17114,10 @@ function init(){
   (function(n){ var iv = setInterval(function(){ if(document.body.classList.contains('splash-done')){ clearInterval(iv); annoncerEtalement(n, 350); } }, 50); })(nbEtalees);
   if(matiereArchiveesControle.length) setTimeout(() => { try{ ppToast(messageControlePasse(matiereArchiveesControle)); }catch(e){} }, nbEtalees > 0 ? 3700 : 1700);
   verifierEtNotifierSiNecessaire();
+  pushPlusTard(); // v307 : abonnement / état envoyé au Worker (seulement si quelque chose a changé)
   // Reconfirme pendant que l'app reste ouverte (heure atteinte en cours de
   // session, ou délai de relance écoulé) sans attendre une réouverture.
-  setInterval(() => { verifierEtNotifierSiNecessaire(); ppVerifierChangementJour(); }, 5 * 60 * 1000);
+  setInterval(() => { verifierEtNotifierSiNecessaire(); ppVerifierChangementJour(); pushPlusTard(); }, 5 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
     if(document.visibilityState === 'visible'){
       // App restée ouverte (ou en arrière-plan) pendant un changement de jour : de
@@ -16999,11 +17130,13 @@ function init(){
         annoncerEtalement(n, 0);
       }
       verifierEtNotifierSiNecessaire();
+      pushPlusTard();
       recupererAuRetour();
     } else {
       // Passage en arrière-plan : on pousse l'état actuel vers le Worker
       // pour que le prochain appareil récupère les dernières modifs.
       envoyerVersSync({ urgent: true });
+      pushSynchroniser(false); // v307 : « cartes finies aujourd'hui » est connu du serveur avant la fermeture
     }
   });
   // Filet de sécurité pour une fermeture franche (pas toujours de
