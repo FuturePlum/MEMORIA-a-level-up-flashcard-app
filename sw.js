@@ -19,6 +19,10 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v142 : v309 (Chromebook : les fenêtres épousent leur contenu, Réglages plus aérés ; import de cartes par code uniquement, plus de JSON collé).
+
+   v141 : v308 (correctif synchro : une carte reçue sans image n'efface plus l'image locale, et une image manquante ici revient si l'autre appareil l'a ; miniatures des images dans Parcourir).
+
    v140 : v307 (RAPPELS APP FERMÉE par Web Push : l'app s'abonne et le Worker envoie le rappel et la relance via D1 ; Réglages : « Tester la notification », rappels aussi sur iPhone et Mac ; relance désactivée par défaut) : écoute « push », le cache « memoria-etat » survit au nettoyage des caches.
 
    v139 : v306 (intro, écran Prof : réponses de Prof de structures variées, plus de « tu valides ? » partout) : index.html change, donc nouvelle version du cache.
@@ -75,7 +79,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v140';
+const SW_VERSION = 'v142';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

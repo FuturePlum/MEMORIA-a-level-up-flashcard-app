@@ -276,7 +276,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Écrire une carte':'Write a card','Ajouter la carte':'Add card','pour avancer, puis pour ajouter':'to move on, then to add','Vérifie tes cartes':'Check your cards','pour':'for',
     ". Relis, modifie ou complète avant d'ajouter.":'. Review, edit or complete before adding.','Matière :':'Subject:','+ Ajouter une carte manuellement':'+ Add a card manually','Dis-moi ce que tu veux':'Tell me what you want',
     "Un texte, un fichier ou une demande : l'IA comprend.":'A text, a file or a request: the AI understands.','Ajouter ces cartes':'Add these cards','Nouvelle matière':'New subject','Nom':'Name','Créer':'Create',
-    'Importer des cartes':'Import cards',"· cartes d'un pote ou JSON":"· a friend's cards or JSON",'Importer':'Import','Changements proposés':'Proposed changes',"Décoche ce que tu ne veux pas appliquer.":"Uncheck what you don't want to apply.",
+    'Importer des cartes':'Import cards',"· cartes d'un pote":"· a friend's cards",'Entre un code':'Enter a code','Importer':'Import','Changements proposés':'Proposed changes',"Décoche ce que tu ne veux pas appliquer.":"Uncheck what you don't want to apply.",
     "L'IA n'a proposé aucun changement.":'The AI proposed no changes.','Matière déjà existante ?':'Subject already exists?','», déjà dans ta liste.':'”, already in your list.',
     'Synchronisation…':'Syncing…','Synchronisé':'Synced','Échec, réessayer':'Failed, retry','Enregistrer ce code':'Save this code','Ta progression':'Your progress','Statistiques':'Statistics','temps':'time','réussite':'success','cette semaine':'this week','objectif du jour':'daily goal',"aujourd'hui":'today','Objectif du jour':'Daily goal','Objectif atteint':'Goal reached','Cartes par jour':'Cards per day','Facultatif':'Optional','Aucun':'None','Diminuer':'Decrease','Augmenter':'Increase','Écrire des formules':'Writing formulas','Gras, listes, maths, chimie':'Bold, lists, maths, chemistry',"Dans une question ou une réponse. L'IA les écrit aussi toute seule.":'In a question or an answer. The AI writes them too.','Un vrai dollar : ':'A real dollar sign: ',
     'révisions au total':'reviews in total','record de série':'streak record','30 derniers jours':'Last 30 days','Plus la case est claire, plus tu as révisé ce jour-là.':'The lighter the square, the more you reviewed that day.',
@@ -359,7 +359,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^(\d+) fichiers?$/,function(n){ return c(n,'file'); })
   );
   Object.assign(D,{ /* v300 : copier une bulle de Prof */
-    'Copié':'Copied','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand'
+    'Copié':'Copied','Copier':'Copy','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand'
   });
   Object.assign(D,{ /* v138 : textes oubliés (captures) */
     'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','carte en 7 jours':'card in 7 days','cartes en 7 jours':'cards in 7 days','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
@@ -451,7 +451,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     /* v223 : pastilles renommées, « Plus… » / « Moins », précisions de la synthèse */
     'Résumé rapide':'Quick summary','Fiche de synthèse':'Summary sheet',"Je t'explique, corrige-moi":'I explain, you correct me','Plus…':'More…','Moins':'Less',
     'Précisions pour la synthèse (facultatif)':'Details for the summary (optional)','Précisions':'Details' });
-  Object.assign(D,{ "Plus d'options":'More options','Change le nom de la matière':'Change the subject name','Envoie les cartes avec un code':'Send the cards with a code','Renommer, partager, supprimer':'Rename, share, delete','Cherche les doublons':'Find duplicates','Date de contrôle':'Test date','Renommer la matière':'Rename subject','Fusionner':'Merge','Archiver la matière':'Archive subject','Désarchiver la matière':'Unarchive subject','Supprimer la matière':'Delete subject','Mettre en pause':'Pause','Reprendre':'Resume','retirée':'removed',
+  Object.assign(D,{ 'Répondre':'Reply','Toi':'You','Annuler la réponse':'Cancel reply',"Plus d'options":'More options','Change le nom de la matière':'Change the subject name','Envoie les cartes avec un code':'Send the cards with a code','Renommer, partager, supprimer':'Rename, share, delete','Cherche les doublons':'Find duplicates','Date de contrôle':'Test date','Renommer la matière':'Rename subject','Fusionner':'Merge','Archiver la matière':'Archive subject','Désarchiver la matière':'Unarchive subject','Supprimer la matière':'Delete subject','Mettre en pause':'Pause','Reprendre':'Resume','retirée':'removed',
     'Attention : la matière ET toutes ses cartes seront supprimées, sans retour possible.':'Warning: the subject AND all its cards will be deleted, with no way back.' });
   Object.assign(D,{ /* v277 : bouton Image (Galerie / IA) */
     'Image de la question':'Question image','Image de la réponse':'Answer image','IA':'AI','Galerie':'Gallery','Une photo de ton appareil':'A photo from your device',"Décris l'image que tu veux":'Describe the image you want',
@@ -2227,6 +2227,10 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-stt{display:flex;gap:9px;align-items:flex-start;margin:0 0 14px;padding:10px 13px;border-radius:14px;background:rgba(var(--ov),.04);border:1.5px solid var(--line);color:color-mix(in srgb,var(--c,var(--muted)) var(--tm),var(--ink));font-size:13.5px;font-weight:700;line-height:1.35}
 .pp-stt::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted));flex:none;margin-top:5px}
 .pp-lnk{display:block;margin:6px auto 4px;padding:10px 14px;color:var(--muted);font-weight:800;font-size:14px}
+/* v314 : « Supprimer la matière » (feuille d'une matière, PC et mobile) : cadre rouge léger, pour le distinguer des liens simples */
+.pp-lnk.pp-lnk-del{width:100%;margin:12px 0 2px;padding:11px 14px;border:1.5px solid color-mix(in srgb,var(--pink) 42%,transparent);border-radius:14px;background:color-mix(in srgb,var(--pink) 5%,transparent);transition:transform .3s var(--ease-press),background-color .2s,border-color .2s;-webkit-tap-highlight-color:transparent}
+.pp-lnk.pp-lnk-del:active{transform:scale(.98);background:color-mix(in srgb,var(--pink) 14%,transparent);border-color:color-mix(in srgb,var(--pink) 62%,transparent);transition-duration:.07s}
+@media (hover:hover){.pp-lnk.pp-lnk-del:hover{background:color-mix(in srgb,var(--pink) 11%,transparent);border-color:color-mix(in srgb,var(--pink) 58%,transparent)}}
 .pp-sheet h4{margin-top:14px}
 
 .pp-duo{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -2376,6 +2380,8 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-it{padding:14px 0;border-top:1.5px solid var(--line);display:flex;gap:10px;cursor:pointer;animation:pppop .3s var(--pps) backwards;transition:transform .22s var(--pps),background .2s}
 .pp-it:active{background:rgba(var(--ov),.03)}
 .pp-it>div{flex:1;min-width:0}
+.pp-thumbs{display:flex;gap:6px;flex:none;align-self:center}
+.pp-thumb{width:58px;height:58px;object-fit:cover;border-radius:12px;background:rgba(var(--ov),.06);display:block}
 .pp-it b{display:block;font-size:15px;font-weight:800;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere}
 .pp-it p{color:var(--muted);font-size:14px;margin:4px 0 7px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .pp-it em{font-style:normal;font-weight:800;letter-spacing:.1em;font-size:11px;color:var(--muted);text-transform:uppercase}
@@ -2863,9 +2869,10 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .pp-sheet{ top:50%; bottom:auto; left:50%; right:auto; margin:0; width:min(560px,calc(100% - 48px)); max-width:none; max-height:min(86vh,820px);
     padding:20px 24px 24px; border:2px solid var(--cream); border-radius:26px; box-shadow:9px 9px 0 var(--orange);
     transform:translate(-50%,-44%) scale(.96); opacity:0; pointer-events:none; transition:transform .35s var(--ease-press), opacity .2s; }
-  .pp-sheet.on{ transform:translate(-50%,-50%); opacity:1; pointer-events:auto; }
+  .pp-sheet.on{ transform:translate(-50%,-50%); opacity:1; pointer-events:auto; bottom:auto; max-height:min(86vh,820px); }   /* v309 : sans bottom:auto, .pp-sheet.on (règle mobile) étirait la fenêtre jusqu'en bas de l'écran */
   .pp-sheet .pp-grab{ display:none; }
-  .pp-sheet:has(.pp-setroot){ width:min(900px,calc(100% - 48px)); }
+  .pp-sheet:has(.pp-setroot){ width:min(900px,calc(100% - 48px)); padding:30px 32px 34px; max-height:min(90vh,860px); }   /* v309 : Réglages plus aérés en haut et en bas */
+  .pp-sheet:has(.pp-setroot) .pp-setroot{ margin-bottom:16px; }
   .pp-setcols{ display:grid; grid-template-columns:1fr 1fr; gap:0 30px; align-items:start; }
   .pp-setcols>div>h4:first-child{ margin-top:6px; }
   /* Statistiques et Synthèse : fenêtre centrée, fond assombri autour */
@@ -3210,14 +3217,37 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 @media (hover:hover){.pc-b:hover{filter:brightness(1.07)}}
 .pc-b.pc-copie{animation:pccopie .5s var(--ease-press)}
 @keyframes pccopie{0%{transform:scale(.95)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
-.pc-cp{position:absolute;top:-14px;right:12px;z-index:3;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 12px 0 9px;border-radius:99px;background:var(--yellow);color:#1a1405;font:800 12px var(--font-sans);white-space:nowrap;box-shadow:0 3px 0 var(--yellow-d);pointer-events:none;animation:pccp .42s var(--ease-press) backwards}
-.pc-b.u .pc-cp{right:auto;left:12px}
+.pc-cp{position:absolute;bottom:-15px;left:12px;z-index:3;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 12px 0 9px;border-radius:99px;background:var(--yellow);color:#1a1405;font:800 12px var(--font-sans);white-space:nowrap;box-shadow:0 3px 0 var(--yellow-d);pointer-events:none;animation:pccp .42s var(--ease-press) backwards}
+.pc-b.u .pc-cp{left:auto;right:12px}   /* v313 : la pastille est en bas de la bulle : côté droit pour toi, côté gauche pour Prof */
+.pc-cp-q{pointer-events:auto;cursor:pointer;border:0;height:32px;bottom:-18px;padding:0 14px 0 11px}   /* v312 : pastille « Copier » touchable */
+.pc-cp-q:active{transform:translateY(2px);box-shadow:0 1px 0 var(--yellow-d)}
+.pc-cp-q path{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
 .pc-cp path{stroke-dasharray:24;stroke-dashoffset:24;animation:pccd .32s .1s ease-out forwards}
 .pc-cp.out{animation:pccpo .3s ease-in forwards}
-@keyframes pccp{from{opacity:0;transform:translateY(12px) scale(.5)}}
+@keyframes pccp{from{opacity:0;transform:translateY(-8px) scale(.5)}}
 @keyframes pccd{to{stroke-dashoffset:0}}
-@keyframes pccpo{to{opacity:0;transform:translateY(-8px) scale(.85)}}
+@keyframes pccpo{to{opacity:0;transform:translateY(8px) scale(.85)}}
 @media (prefers-reduced-motion:reduce){.pc-b.pc-copie,.pc-cp,.pc-cp path{animation-duration:.01s!important;animation-delay:0s!important}}
+/* v314 : répondre à un message précis. Toucher une bulle propose « Répondre » + « Copier » ; une pastille discrète « Répondre ↳ … × » s'installe au-dessus du champ ; la bulle envoyée porte une petite citation. */
+.pc-cps{display:inline-flex;gap:6px;align-items:center;padding:0;height:auto;background:none;box-shadow:none;border-radius:0;pointer-events:none}
+.pc-cps .pc-cpb{pointer-events:auto;cursor:pointer;border:0;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 13px 0 10px;border-radius:99px;background:var(--yellow);color:#1a1405;font:800 12px var(--font-sans);white-space:nowrap;box-shadow:0 3px 0 var(--yellow-d);transition:transform .3s var(--ease-press),box-shadow .3s var(--ease-press);-webkit-tap-highlight-color:transparent}
+.pc-cps .pc-cpb:active{transform:translateY(2px);box-shadow:0 1px 0 var(--yellow-d);transition-duration:.07s}
+.pc-cps .pc-cpb+.pc-cpb{animation:pccp .42s .06s var(--ease-press) backwards}
+.pc-q{display:block;margin:-2px -3px 7px;padding:5px 9px 6px 10px;border-radius:11px;border-left:3px solid rgba(26,13,8,.42);background:rgba(26,13,8,.13);color:rgba(26,13,8,.8);font-size:12px;line-height:1.35;font-weight:600;white-space:normal;text-align:left}
+.pc-q b{display:block;font-size:10.5px;font-weight:800;letter-spacing:.02em;opacity:.78;margin-bottom:1px}
+.pc-q span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+#pc-reply{flex:none;padding:7px 14px 0;align-items:center}
+.pc-rep{display:inline-flex;align-items:center;gap:7px;min-width:0;max-width:min(100%,380px);height:30px;padding:0 4px 0 10px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font-size:12.5px;animation:pcrepin .38s var(--ease-press) backwards}
+.pc-rep svg{flex:none;color:var(--orange)}
+.pc-rep b{flex:none;font-weight:800}
+.pc-rep em{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:normal;font-weight:600;color:var(--muted)}
+.pc-rep-x{flex:none;width:22px;height:22px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;color:var(--muted);transition:transform .3s var(--ease-press),background-color .2s,color .2s;-webkit-tap-highlight-color:transparent}
+.pc-rep-x:active{transform:scale(.86);background:var(--line);color:var(--cream);transition-duration:.07s}
+@media (hover:hover){.pc-rep-x:hover{background:var(--line);color:var(--cream)}}
+.pc-rep.out{animation:pcrepout .2s ease-in forwards}
+@keyframes pcrepin{from{opacity:0;transform:translateY(8px) scale(.94)}}
+@keyframes pcrepout{to{opacity:0;transform:translateY(6px) scale(.94)}}
+@media (prefers-reduced-motion:reduce){.pc-rep,.pc-rep.out,.pc-cps .pc-cpb+.pc-cpb{animation-duration:.01s!important;animation-delay:0s!important}}
 .pch-feed .pc-b{cursor:default}
 .pch-feed .pc-b:active{transform:none}
 .pc-info-n{font-size:12px;font-weight:600;opacity:.8}
@@ -5733,7 +5763,7 @@ function pcEnsure(){
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
     <div class="pc-suggw pc-stg" style="--i:3"><button class="pp-back pc-arr l" id="pc-al" type="button" aria-label="Suggestions précédentes">${ppSvg('<path d="M15 6l-6 6 6 6"/>', 18)}</button><div id="pc-sugg"></div><button class="pp-back pc-arr r" id="pc-ar" type="button" aria-label="Suggestions suivantes">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</button></div>
-    <div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
+    <div id="pc-reply" style="display:none"></div><div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
   document.body.appendChild(l);
   ppCEScan(l);   /* v228 : le champ de saisie est un champ ppCE (pas de barre d'autofill) */
   const inp = pcEl('pc-input'), sendBtn = pcEl('pc-send');
@@ -5763,9 +5793,10 @@ function pcEnsure(){
     fd.addEventListener('pointerdown', e => { tactile = e.pointerType !== 'mouse'; if(tactile && garde(e) && document.activeElement === pcEl('pc-input')) e.preventDefault(); });
     fd.addEventListener('mousedown', e => { if(tactile && garde(e) && document.activeElement === pcEl('pc-input')) e.preventDefault(); });
     fd.addEventListener('click', e => {
-      const b = garde(e); if(!b) return;
+      if(e.target.closest && e.target.closest('.pc-cp-q')) return;   /* v312 : le bouton « Copier » a son propre clic */
+      const b = garde(e); if(!b){ pcRetirePropositions(); return; }
       try{ if(String(window.getSelection && window.getSelection()).trim()) return; }catch(x){}
-      pcCopierBulle(b);
+      pcProposeCopie(b);   /* v312 : toucher une bulle PROPOSE de copier (bouton « Copier »), elle ne copie plus toute seule */
     });
   }
   /* v242 : toucher une suggestion, une matière ou une flèche de défilement ne fait plus descendre le clavier (même méthode que le bouton d'envoi) */
@@ -5830,6 +5861,7 @@ function pcIdAssure(){
 /* Copie la conversation en cours dans l'historique (si elle contient au moins un message de l'utilisateur) : corps coach-conv-<id> + entrée d'index mise à jour,
    placée en tête. Renvoie true si c'est fait ou s'il n'y avait rien à faire ; false si l'écriture a échoué (rien n'est perdu, ppEcrire a déjà prévenu). */
 function pcInstantane(pasEnvoi){ const r = pcInstantane0(pasEnvoi); pcSideMaj(); return r; }   /* v227 : la colonne de gauche suit chaque rangement */
+let pcRepriseDate = '';   /* date de l'ancienne entrée pendant une reprise (voir pcHistReprendre) */
 function pcInstantane0(pasEnvoi){
   /* v219 : tant qu'une réponse est attendue, le dernier message de l'utilisateur n'est pas rangé (il serait resté seul dans la copie) */
   const conv = (pcAttente && pcConv.length && pcConv[pcConv.length - 1] && pcConv[pcConv.length - 1].r === 'u') ? pcConv.slice(0, -1) : pcConv;
@@ -5845,9 +5877,13 @@ function pcInstantane0(pasEnvoi){
   if(prem && prem.ti){ const ia = pcTitreNet(prem.ti); if(ia) titre = ia; }   /* v277 : titre donné par l'IA */
   if(!titre) titre = 'Conversation';
   const dm = [...conv].reverse().find(m => m && m.r && typeof m.m === 'string' && m.m);
-  const entree = { id, t: titre, d: new Date().toISOString(), m: dm ? dm.m : '', n };
+  const entree = { id, t: titre, d: pcRepriseDate || new Date().toISOString(), m: dm ? dm.m : '', n };
   if(!ppEcrire('coach-conv-' + id, corps)) return false;
   const idx = [entree, ...pcHistLire().filter(e => e.id !== id)];
+  if(pcRepriseDate){   /* reprise d'une conversation sans nouveau message : elle garde sa date et sa place dans la liste (elle ne remonte qu'à l'envoi d'un message) */
+    const tsd = x => { const t = Date.parse(x && x.d); return Number.isFinite(t) ? t : 0; };
+    idx.shift(); let k = idx.findIndex(e => tsd(e) < tsd(entree)); if(k < 0) k = idx.length; idx.splice(k, 0, entree);
+  }
   while(idx.length > HIST_MAX){ const x = idx.pop(); pcCorpsEfface(x.id); pcServeurEfface(x.id); }
   let tot = idx.reduce((a, e) => a + pcHistTaille(e.id), 0);
   while(tot > HIST_BUDGET_CARS && idx.length > 1){ const x = idx.pop(); tot -= pcHistTaille(x.id); pcCorpsEfface(x.id); pcServeurEfface(x.id); }
@@ -6276,7 +6312,7 @@ function pcHistLecture(id, dejaCharge, confirmer, reprise){
       if(m.s){ const d = document.createElement('div'); d.className = 'pc-sep'; d.textContent = m.s; f.appendChild(d); return; }
       if(typeof m.n === 'string') return;   /* v241 : note de l'appli, pas une bulle */
       const d = document.createElement('div'); d.className = 'pc-b ' + m.r;
-      if(m.r === 'a') d.innerHTML = ppRichHtml(m.t); else d.textContent = m.t;
+      if(m.r === 'a') d.innerHTML = ppRichHtml(m.t); else{ d.textContent = m.t; const qe = pcQuoteEl(m.q); if(qe) d.insertBefore(qe, d.firstChild); }   /* v314 */
       f.appendChild(d);
       if(imgsL.has(m)) pcImageChat(d, m.i, true);
     });
@@ -6301,8 +6337,11 @@ function pcHistReprendre(id){
   const corps = pcCorpsLire(id); if(!corps || !corps.length) return;
   if(id === pcConvId) return;
   if(!pcFinaliser()) return;
+  const ancD = (pcHistLire().find(e => e.id === id) || {}).d;   /* la conversation reprise garde sa date : elle ne remonte qu'à l'envoi d'un message */
   pcHistSupprimer(id);
-  pcConv = corps; pcSauve(); pcConvId = ''; pcIdAssure(); pcInstantane(true); /* la conversation reprise reçoit un NOUVEL id (un id = une seule conversation, jamais de conflit entre appareils) */
+  pcConv = corps; pcSauve(); pcConvId = ''; pcIdAssure();
+  pcRepriseDate = (typeof ancD === 'string' && Date.parse(ancD)) ? ancD : '';
+  try{ pcInstantane(true); }finally{ pcRepriseDate = ''; } /* la conversation reprise reçoit un NOUVEL id (un id = une seule conversation, jamais de conflit entre appareils) */
   pcLot = null; pcUtilises = new Set(); pcMode = ''; pcActsAttente = null; pcHistFerme();
   pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcRenderSugg();
   const dern = [...pcConv].reverse().find(m => m.r && m.m);
@@ -6354,7 +6393,7 @@ function pcAjoute(r, t, o){
     if(o.carte) d.insertAdjacentHTML('beforeend', `<button class="pc-add" type="button">+ Ajouter en carte</button>`);
     const hc = d.querySelector('.pc-hc'); if(hc) hc.onclick = () => ppToast('Pas tiré de tes cartes');
     const ad = d.querySelector('.pc-add'); if(ad) ad.onclick = () => pcAjouteEnCarte(t);
-  } else d.textContent = t;
+  } else{ d.textContent = t; const qe = pcQuoteEl(o.q); if(qe) d.insertBefore(qe, d.firstChild); }   /* v314 : citation du message auquel on répond */
   d._pcSrc = t;   /* v300 : texte d'origine, copié quand on touche la bulle */
   pcEl('pc-feed').appendChild(d); if(!o.sans) pcBas(); return d;
 }
@@ -6366,10 +6405,101 @@ function pcCopieAnim(b){
   b.classList.remove('pc-copie'); void b.offsetWidth; b.classList.add('pc-copie');
   const c = document.createElement('span'); c.className = 'pc-cp'; c.setAttribute('aria-hidden', 'true');
   c.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg><span>Copié</span>';
-  b.appendChild(c);
+  b.appendChild(c); pcPlaceFaire(c);
   clearTimeout(b._pcT1); clearTimeout(b._pcT2);
-  b._pcT1 = setTimeout(() => { c.classList.add('out'); }, 1050);
+  b._pcT1 = setTimeout(() => { c.classList.add('out'); pcPlaceRend(); }, 1050);
   b._pcT2 = setTimeout(() => { c.remove(); b.classList.remove('pc-copie'); }, 1380);
+}
+/* v312 : toucher une bulle fait apparaître une pastille « Copier » sur son bord ; la copie n'a lieu que si on touche la pastille (elle se retire seule après 4 s, ou si on touche ailleurs / de nouveau la bulle) */
+function pcFermeProp(c){ if(!c || !c.isConnected || c.classList.contains('out')) return; c.classList.add('out'); setTimeout(() => c.remove(), 300); pcPlaceRend(); }
+function pcRetirePropositions(sauf){ document.querySelectorAll('.pc-cp').forEach(c => { if(!sauf || !sauf.contains(c)) pcFermeProp(c); }); }
+/* v313 : la pastille dépasse sous la bulle : si elle est collée au bas de la conversation (bande de suggestions), on ajoute un peu de place en bas puis la conversation remonte doucement ; la place est rendue en douceur quand la pastille part */
+function pcPlaceFaire(c){
+  const f = c.closest('#pc-feed'); if(!f) return;
+  requestAnimationFrame(() => {
+    if(!c.isConnected) return;
+    const need = c.getBoundingClientRect().bottom + 12 - f.getBoundingClientRect().bottom;
+    if(need <= 0) return;
+    const base = parseFloat(getComputedStyle(f).paddingBottom) || 0;
+    f.style.transition = 'opacity .18s ease'; f.style.paddingBottom = (base + need + 4) + 'px'; void f.offsetHeight;
+    f.scrollBy({ top: need + 4, behavior: 'smooth' });
+  });
+}
+function pcPlaceRend(){
+  const f = document.getElementById('pc-feed'); if(!f || !f.style.paddingBottom) return;
+  if(document.querySelector('.pc-cp:not(.out)')) return;
+  f.style.transition = 'opacity .18s ease, padding-bottom .4s cubic-bezier(.22,1,.36,1)'; f.style.paddingBottom = '';
+  setTimeout(() => { if(!f.style.paddingBottom) f.style.transition = ''; }, 460);
+}
+function pcProposeCopie(b){
+  pcRetirePropositions(b);
+  const vieux = b.querySelector('.pc-cp-q'); if(vieux){ clearTimeout(b._pcTq); pcFermeProp(vieux); return; }
+  const c = document.createElement('div'); c.className = 'pc-cp pc-cp-q pc-cps';
+  const bouton = (svg, label, fn) => {
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'pc-cpb';
+    x.innerHTML = svg + '<span>' + label + '</span>';
+    ['pointerdown', 'mousedown'].forEach(k => x.addEventListener(k, e => e.preventDefault()));   /* le clavier reste ouvert */
+    x.addEventListener('click', e => { e.stopPropagation(); clearTimeout(b._pcTq); fn(); });
+    c.appendChild(x);
+  };
+  if(!b.classList.contains('err') && !b.classList.contains('pc-typing') && pcRepExtrait(b._pcSrc)) bouton('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v7a4 4 0 0 0 4 4h12"/><path d="M15 10l5 5-5 5"/></svg>', 'Répondre', () => { pcFermeProp(c); pcRepDefinir(b); });
+  bouton('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg>', 'Copier', () => pcCopierBulle(b));
+  b.appendChild(c); haptique(6); pcPlaceFaire(c);
+  clearTimeout(b._pcTq); b._pcTq = setTimeout(() => pcFermeProp(c), 4000);
+}
+/* ===== v314 : répondre à un message précis (Prof) =====
+   pcRep = { a: 'u' | 'a' (auteur du message cité), t: extrait en texte brut (300 car. max) } : en mémoire seulement, jamais gardé tant qu'on n'a pas envoyé.
+   À l'envoi, l'extrait est gardé dans le message de l'utilisateur (pcConv[i].q), affiché en petite citation dans la bulle, et envoyé à Gemini sous forme d'une note
+   « [Info de l'application : l'utilisateur répond à … « … »] » (message courant : ppCoachRepondre 5e paramètre ; messages passés : pcHistorique). */
+let pcRep = null;
+const PC_REP_MAX = 300;
+function pcRepExtrait(src){
+  let t = String(src == null ? '' : src).replace(/^(?:📷 Photo envoyée|📄 Texte collé envoyé|📄 Document envoyé)\n/, '');
+  t = t.replace(/\*\*([^\s*](?:[^*\n]*[^\s*])?)\*\*/g, '$1').replace(/(^|\n)[ \t]*[-•]\s+/g, '$1').replace(/\s+/g, ' ').trim();
+  return t.length > PC_REP_MAX ? t.slice(0, PC_REP_MAX - 1).trim() + '…' : t;
+}
+function pcRepValide(q){ return ppEstObjet(q) && (q.a === 'u' || q.a === 'a') && typeof q.t === 'string' && q.t.trim() ? { a: q.a, t: q.t.slice(0, PC_REP_MAX + 1) } : null; }
+function pcQuoteEl(q){
+  q = pcRepValide(q); if(!q) return null;
+  const e = document.createElement('span'); e.className = 'pc-q';
+  const b = document.createElement('b'); b.textContent = q.a === 'u' ? 'Toi' : PP_COACH_NOM;
+  const t = document.createElement('span'); t.textContent = q.t; t.setAttribute('data-notr', '');
+  e.appendChild(b); e.appendChild(t); return e;
+}
+function pcRepNote(q){
+  q = pcRepValide(q); if(!q) return '';
+  const de = q.a === 'u' ? "un de ses propres messages précédents" : 'un de tes messages précédents (' + PP_COACH_NOM + ')';
+  return "[Info de l'application : l'utilisateur répond à " + de + ' : « ' + q.t.replace(/[«»\n]+/g, ' ').slice(0, PC_REP_MAX) + ' ». Tiens-en compte ; ne recopie pas cette citation.]';
+}
+function pcRepDefinir(b){
+  const t = pcRepExtrait(b && b._pcSrc); if(!t) return;
+  pcRep = { a: b.classList.contains('u') ? 'u' : 'a', t };
+  pcRepMaj(true); haptique(8);
+  const inp = pcEl('pc-input'); if(inp){ try{ inp.focus({ preventScroll: true }); }catch(e){ try{ inp.focus(); }catch(x){} } }
+}
+function pcRepMaj(anim){
+  const z = pcEl('pc-reply'); if(!z) return;
+  clearTimeout(z._t);
+  const f = pcEl('pc-feed'), colle = f ? f.scrollHeight - f.scrollTop - f.clientHeight < 80 : false;
+  if(!pcRep){ z.innerHTML = ''; z.style.display = 'none'; }
+  else {
+    z.style.display = 'flex';
+    z.innerHTML = '<div class="pc-rep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v7a4 4 0 0 0 4 4h12"/><path d="M15 10l5 5-5 5"/></svg><b>Répondre</b><em data-notr></em><button type="button" class="pc-rep-x" aria-label="Annuler la réponse"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+    z.querySelector('em').textContent = pcRep.t;
+    if(!anim) z.firstChild.style.animation = 'none';
+    const x = z.querySelector('.pc-rep-x');
+    ['pointerdown', 'mousedown'].forEach(k => x.addEventListener(k, e => e.preventDefault()));   /* le clavier reste ouvert */
+    x.onclick = () => pcRepVide();
+  }
+  if(colle && f) requestAnimationFrame(() => { f.scrollTop = f.scrollHeight; });   /* la conversation était en bas : elle y reste malgré la place prise */
+}
+function pcRepVide(vite){
+  const avait = pcRep; pcRep = null;
+  const z = pcEl('pc-reply'); if(!z) return;
+  clearTimeout(z._t);
+  if(vite || !avait || !z.firstChild){ z.innerHTML = ''; z.style.display = 'none'; return; }
+  z.firstChild.classList.add('out');
+  z._t = setTimeout(() => { if(!pcRep){ z.innerHTML = ''; z.style.display = 'none'; } }, 210);
 }
 function pcCopierBulle(b){
   let t = String(b._pcSrc == null ? '' : b._pcSrc);
@@ -6390,7 +6520,7 @@ function pcRendreConv(){
   if(!pcConv.length){ pcAjoute('a', "Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t'interroger.", { carte: false }); return; }
   if(pcImgPurge(pcConv)) pcSauve();   /* v278 */
   const imgs = new Set(pcConv.filter(m => m && m.r === 'a' && typeof m.i === 'string' && m.i).slice(-4));   /* v277 : images des 4 dernières réponses qui en avaient */
-  pcConv.forEach(m => { if(typeof m.n === 'string') return; if(m.s) pcSep(m.s); else { const bl = pcAjoute(m.r, m.t, { hors: m.h === true, carte: m.r === 'a' && m.a === true, sans: true }); if(imgs.has(m)) pcImageChat(bl, m.i, true); } });   /* v246 : plus d'arrivée animée de toutes les bulles à la fois */
+  pcConv.forEach(m => { if(typeof m.n === 'string') return; if(m.s) pcSep(m.s); else { const bl = pcAjoute(m.r, m.t, { hors: m.h === true, carte: m.r === 'a' && m.a === true, sans: true, q: m.q }); if(imgs.has(m)) pcImageChat(bl, m.i, true); } });   /* v246 : plus d'arrivée animée de toutes les bulles à la fois */
   const f = pcEl('pc-feed'); f.scrollTop = f.scrollHeight;
 }
 
@@ -6601,7 +6731,7 @@ RÈGLES :
 - PRIORITÉ AUX CARTES : s'il existe des cartes sur le sujet, appuie-toi d'abord dessus et reste cohérent avec elles (définitions, vocabulaire). S'il n'y a aucune carte sur le sujet, ou si elles ne suffisent pas, aide quand même avec tes connaissances : explication, exercice, correction, méthode, interrogation, sur n'importe quel cours, qu'il soit dans Memoria ou non. Ne refuse jamais une demande d'étude parce qu'il n'y a pas de carte. Dans ce cas mets "hors_cartes": true, dis-le en une phrase courte (sans t'excuser) et, si la notion mérite d'être gardée, propose-la en carte ("ajoutable": true).
 - RESTE DANS LES ÉTUDES : tu aides à apprendre, réviser, comprendre un cours ou un exercice, à t'organiser et à travailler une langue. Une demande sans rapport avec l'apprentissage (jeu, divertissement, bavardage qui s'éternise, sujets personnels…) : réponds en une phrase brève et aimable que tu es là pour les révisions, puis propose de reprendre le travail (ou un mini-quiz). Pas de sermon, pas de refus sec ; un « bonjour » ou un « merci » reçoit une réponse normale.
 - ACTIONS : ne propose des "actions" QUE si l'utilisateur le demande (ou dans les modes « Vérifie mes cartes », « Cherche les doublons » et fin de série d'« Interroge-moi »). Sinon "actions": []. N'invente JAMAIS d'id : utilise seulement ceux des lignes ci-dessous.
-- SAUTS DE LIGNE : dans les lignes de cartes ci-dessous, « ⏎ » représente un SAUT DE LIGNE de la carte. Pour reformater des cartes (mettre des sauts de ligne, harmoniser la mise en forme sur d'autres cartes, comme une carte donnée en modèle), utilise des actions \"modifier\" avec l'id de chaque carte et, dans \"reponse\" (ou \"question\"), le texte complet où chaque saut de ligne voulu s'écrit « ⏎ » : l'appli le transforme en vrai saut de ligne. N'écris JAMAIS « / » ni « | » à la place d'un saut de ligne. Une demande formulée comme un souhait (« j'aimerais que… », « mets les autres comme… ») EST une demande d'action : propose les actions. Si l'utilisateur donne une nouvelle consigne alors que tes actions précédentes n'ont pas été appliquées, elles sont retirées de l'écran : propose de nouveau TOUTES les actions de la nouvelle consigne. Tu ne peux modifier que les cartes listées plus bas ; s'il y en a trop, traite les 25 premières et dis qu'il en reste ; si les cartes voulues ne sont pas listées, dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran.
+- RÉPONSE À UN MESSAGE : quand le message de l'utilisateur commence par « [Info de l'application : l'utilisateur répond à … », il répond à CE message précis (la citation est entre « »). Réponds à ce point précis, sans recopier la citation et sans mentionner cette info.\n- SAUTS DE LIGNE : dans les lignes de cartes ci-dessous, « ⏎ » représente un SAUT DE LIGNE de la carte. Pour reformater des cartes (mettre des sauts de ligne, harmoniser la mise en forme sur d'autres cartes, comme une carte donnée en modèle), utilise des actions \"modifier\" avec l'id de chaque carte et, dans \"reponse\" (ou \"question\"), le texte complet où chaque saut de ligne voulu s'écrit « ⏎ » : l'appli le transforme en vrai saut de ligne. N'écris JAMAIS « / » ni « | » à la place d'un saut de ligne. Une demande formulée comme un souhait (« j'aimerais que… », « mets les autres comme… ») EST une demande d'action : propose les actions. Si l'utilisateur donne une nouvelle consigne alors que tes actions précédentes n'ont pas été appliquées, elles sont retirées de l'écran : propose de nouveau TOUTES les actions de la nouvelle consigne. Tu ne peux modifier que les cartes listées plus bas ; s'il y en a trop, traite les 25 premières et dis qu'il en reste ; si les cartes voulues ne sont pas listées, dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran.
 - N'ÉCRIS « Appliquer » (ou « appuie sur le bouton ») QUE si \"actions\" contient au moins une action dans CETTE réponse. Sinon, ne promets aucun bouton : fais l'action maintenant, ou explique ce qui manque.
 - Une action n'est qu'une PROPOSITION tant que l'utilisateur n'a pas appuyé sur Appliquer : ne dis jamais qu'elle est déjà faite (« j'ai créé… », « a bien été créée »), dis plutôt « Je te propose… » ou « Appuie sur Appliquer ». Les messages « [Info de l'application : … ] » de la conversation ne sont pas de l'utilisateur : ils disent ce qu'il a appliqué, décoché, ignoré ou annulé. Fais-en foi (ce qui est annulé n'existe plus, ce qui est ignoré n'a pas été fait), tiens-en compte sans les recopier, et ne reproposes pas la même action sans qu'il le demande.
 - "retenir" (carnet de l'utilisateur) : seulement s'il te le demande (« retiens que… »), ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois (1 seule ligne). Jamais autrement. "texte" : note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule action "retenir" par réponse.
@@ -6666,7 +6796,7 @@ ${cartes.lignes.join('\n') || '(aucune carte)'}`;
 
 /* ---------- appel Gemini ---------- */
 function pcHistorique(){
-  const h = pcConv.filter(m => m.r || typeof m.n === 'string').slice(0, -1).slice(-COACH_HIST).map(m => (typeof m.n === 'string') ? { role: 'user', parts: [{ text: m.n }] } : { role: m.r === 'u' ? 'user' : 'model', parts: [{ text: m.t }] });   /* v241 : + notes de l'appli */
+  const h = pcConv.filter(m => m.r || typeof m.n === 'string').slice(0, -1).slice(-COACH_HIST).map(m => (typeof m.n === 'string') ? { role: 'user', parts: [{ text: m.n }] } : { role: m.r === 'u' ? 'user' : 'model', parts: [{ text: (m.r === 'u' && m.q && pcRepNote(m.q) ? pcRepNote(m.q) + '\n' : '') + m.t }] });   /* v241 : + notes de l'appli ; v314 : + citation du message auquel l'utilisateur répondait */
   const out = [];
   for(const x of h){ if(out.length && out[out.length - 1].role === x.role) out[out.length - 1].parts[0].text += '\n' + x.parts[0].text; else out.push(x); }
   while(out.length && out[0].role !== 'user') out.shift();
@@ -6855,12 +6985,13 @@ function pcParse(raw, matiere){
   return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton };
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
-async function ppCoachRepondre(texte, matiere, photo, rappel){   /* v298 : `rappel` = note de l'appli jointe au message (nouvel essai) */
+async function ppCoachRepondre(texte, matiere, photo, rappel, citation){   /* v314 : `citation` = { a, t } du message auquel l'utilisateur répond */   /* v298 : `rappel` = note de l'appli jointe au message (nouvel essai) */
   const key = getGeminiKey();
   if(!key) throw { pcMsg: "Ajoute ta clé API Gemini dans Réglages d'abord.", sansCle: true };
   if(!/^[\x21-\x7e]+$/.test(key)) throw { pcMsg: 'La clé Gemini contient des caractères non valides : copie-la de nouveau depuis Google.' };
-  const cartes = pcChoisirCartes(texte, matiere);
-  const parts = [{ text: texte }];
+  const cit = pcRepValide(citation);
+  const cartes = pcChoisirCartes(cit ? texte + ' ' + cit.t : texte, matiere);
+  const parts = [{ text: cit ? pcRepNote(cit) + '\n' + texte : texte }];
   if(photo){ parts.push(...ppPartsFichiers([photo], 0).parts); }
   const hist = pcHistorique();
   if(hist.length && hist[hist.length - 1].role === 'user'){ const dn = hist.pop(); parts[0].text = dn.parts[0].text + '\n' + parts[0].text; }   /* v241 : une note en fin d'historique se joint au message envoyé (pas deux tours « user » de suite) */
@@ -6892,6 +7023,9 @@ async function pcEnvoyer(t, label){
   if(pcAttente || (!t && !photo)) return;
   if(!t) t = photo ? (pcPjType(photo) === 'photo' ? 'Explique-moi cette photo.' : pcPjType(photo) === 'colle' ? 'Résume ce texte.' : 'Résume ce document.') : '';
   if(!getGeminiKey()){ pcEtatSansCle(); return; }
+  const rep = pcRep ? { a: pcRep.a, t: pcRep.t } : null;   /* v314 : message auquel on répond */
+  if(rep) pcRepVide();
+  pcRetirePropositions();   /* v313 : un message part : les boutons « Copier » encore visibles disparaissent en douceur */
   pcUndoHide();   /* v228 : on écrit dans la nouvelle conversation, plus d'« Annuler » */
   const matiere = pcMat === PC_TOUTES ? null : pcMat;
   { const inp0 = pcEl('pc-input'); if(inp0 && label === undefined && inp0.value.trim() === t){ inp0.value = ''; pcBrouillon = ''; try{ localStorage.removeItem('coach-brouillon'); }catch(e){} } } /* envoi depuis le champ : on le vide ; en cas d'erreur le texte revient */
@@ -6907,25 +7041,32 @@ async function pcEnvoyer(t, label){
     const s = '— ' + pcNom(pcMat) + ' —'; pcSep(s); pcConv.push({ s }); pcDerniere = pcMat;
   }
   const affiche = photo ? (pcPjType(photo) === 'photo' ? '📷 Photo envoyée\n' : pcPjType(photo) === 'colle' ? '📄 Texte collé envoyé\n' : '📄 Document envoyé\n') + t : t; /* la pièce jointe elle-même n'est jamais stockée */
+  /* v310 : l'ancienne carte d'actions n'est retirée de l'écran qu'APRÈS l'arrivée de la nouvelle réponse (avant, elle disparaissait tout de suite : si la réponse échouait, il ne restait rien) */
+  let ancienne = null, noteRempl = null;
   if(pcActsAttente && pcActsAttente.box && pcActsAttente.box.isConnected && !pcActsAttente.box.classList.contains('done')){   /* v282 : nouvelle consigne alors que les actions précédentes ne sont ni appliquées ni ignorées */
-    const ancienne = pcActsAttente; pcActsAttente = null;
+    ancienne = pcActsAttente;
     pcNote("[Info de l'application : les actions proposées juste avant n'ont été NI appliquées NI ignorées ; la nouvelle consigne les remplace, elles sont retirées de l'écran et rien n'a été modifié : " + pcDecritListe(ancienne.actions) + '. Si la nouvelle consigne les concerne, propose de nouveau TOUTES les actions voulues.]');
-    pcBoxEtat(ancienne.box, 'ko', 'Remplacées par ta nouvelle demande', '');
+    noteRempl = pcConv[pcConv.length - 1];
   }
   const modeAvant = pcMode; if(label !== undefined) pcModeDepuis(label);
-  const bu = pcAjoute('u', affiche); pcUtilises.add(label || t);
-  pcConv.push({ r: 'u', t: affiche, m: pcMat }); pcSauve(); pcIdAssure();
+  const bu = pcAjoute('u', affiche, rep ? { q: rep } : undefined); pcUtilises.add(label || t);
+  pcConv.push(rep ? { r: 'u', t: affiche, m: pcMat, q: rep } : { r: 'u', t: affiche, m: pcMat }); pcSauve(); pcIdAssure();
   pcPhoto = null; pcPhotoMaj();
   const ty = document.createElement('div'); ty.className = 'pc-b a pc-typing'; ty.innerHTML = '<i></i><i></i><i></i>';
   setTimeout(() => { if(pcEl('pc-feed') && ty.isConnected === false && pcAttente){ pcEl('pc-feed').appendChild(ty); pcBas(); } }, 350);
   pcAttente = true; pcReflechit(true); /* v206 : étoiles en rotation continue tant que l'IA n'a pas répondu */
   try{
-    let r = await ppCoachRepondre(t, matiere, photo);
-    if(r.sansBouton){   /* v298 : Prof annonce « Appliquer » mais aucune action valide : un seul nouvel essai automatique, sans rien afficher */
+    let r = await ppCoachRepondre(t, matiere, photo, '', rep);
+    for(let essai = 0; essai < 2 && r.sansBouton; essai++){   /* v298 : Prof annonce « Appliquer » mais aucune action valide : nouveaux essais automatiques (v310 : jusqu'à 2), sans rien afficher */
       try{
-        const r2 = await ppCoachRepondre(t, matiere, photo, "[Info de l'application : ta réponse précédente annonçait un bouton « Appliquer » mais « actions » était vide ou invalide. Réponds de nouveau à la même demande avec la liste COMPLÈTE des actions (UNE action par carte, ids pris uniquement dans les lignes de cartes).]");
-        if(r2 && r2.actions.length) r = r2;
-      }catch(e){}
+        const r2 = await ppCoachRepondre(t, matiere, photo, "[Info de l'application : ta réponse précédente annonçait un bouton « Appliquer » mais « actions » était vide ou invalide. Réponds de nouveau à la même demande avec la liste COMPLÈTE des actions (UNE action par carte, ids pris uniquement dans les lignes de cartes).]", rep);
+        if(r2 && r2.actions.length){ r = r2; break; }
+      }catch(e){ break; }
+    }
+    /* v310 : la nouvelle réponse est là : on retire maintenant l'ancienne carte d'actions, sauf si la réponse est un échec « bouton promis, aucune action » (l'ancienne reste utilisable) */
+    if(ancienne){
+      if(r.sansBouton && !r.actions.length){ pcConv = pcConv.filter(x => x !== noteRempl); }
+      else { pcActsAttente = null; if(ancienne.box.isConnected && !ancienne.box.classList.contains('done')) pcBoxEtat(ancienne.box, 'ko', 'Remplacées par ta nouvelle demande', ''); }
     }
     ty.remove();
     const msgA = { r: 'a', t: r.texte, h: r.hors || undefined, a: (r.ajoutable && !r.actions.length && pcMode !== 'quiz') || undefined, m: pcMat };
@@ -6943,7 +7084,7 @@ async function pcEnvoyer(t, label){
   }catch(err){
     ty.remove();
     /* erreur : on retire la bulle envoyée et on rend le texte (et la photo) à l'utilisateur */
-    bu.remove(); pcConv = pcConv.slice(0, pcConv.length - 1); pcSauve(); pcUtilises.delete(label || t); pcMode = modeAvant;
+    bu.remove(); if(rep && !pcRep){ pcRep = rep; pcRepMaj(true); } pcConv = pcConv.slice(0, pcConv.length - 1); if(noteRempl) pcConv = pcConv.filter(x => x !== noteRempl); pcSauve();   /* v310 : l'ancienne carte reste à l'écran, sa note est retirée */ pcUtilises.delete(label || t); pcMode = modeAvant;
     const inp = pcEl('pc-input'); if(inp && !inp.value) inp.value = PC_DEFAUTS.includes(t) && photo ? '' : t;
     if(photo && !pcPhoto){ pcPhoto = photo; pcPhotoMaj(); }
     if(err && err.sansCle) pcEtatSansCle(); else pcAjoute('a', (err && err.pcMsg) || "Impossible de joindre l'assistant. Réessaie dans un moment.", { err: true });
@@ -7022,6 +7163,7 @@ function pcBoxEtat(box, ton, titre, reste){
   box.classList.remove('pc-ok', 'pc-ko', 'pc-undo');
   box.classList.add('done', 'pc-' + ton);
   box.innerHTML = '<h4 class="pc-hd"><span class="pc-chk" aria-hidden="true">' + PC_ICONES[ton] + '</span>' + titre + '</h4>' + (reste || '');
+  { const bas = () => { try{ pcBas(); }catch(e){} }; bas(); setTimeout(bas, 480); }   /* v311 : la carte change de hauteur (Appliqué / Ignoré / Annulé) : la conversation redescend tout en bas, tout de suite puis à la fin de l'animation */
   if(!ghost) return;
   const ease = 'cubic-bezier(.22,1,.36,1)';
   box.appendChild(ghost);
@@ -7753,6 +7895,7 @@ function pcBarreInit(l){
   pcEl('pc-pi-doc').onclick = () => { pcPlus(false); pcEl('pc-doc').click(); };
   l.addEventListener('pointerdown', ev => { if(pcPlusOn && !ev.target.closest('#pc-plusm,#pc-plus')) pcPlus(false); });
   l.addEventListener('keydown', ev => { if(ev.key === 'Escape' && pcPlusOn){ pcPlus(false); ev.stopPropagation(); } });
+  l.addEventListener('keydown', ev => { if(ev.key === 'Escape' && pcRep){ pcRepVide(); ev.stopPropagation(); } });   /* v314 : Échap annule d'abord la réponse à un message */
   /* conversation collée en bas */
   f.addEventListener('scroll', () => { if(!pcFollowing) pcStick = f.scrollHeight - f.scrollTop - f.clientHeight < 60; }, { passive: true });
   ['touchstart', 'wheel', 'mousedown'].forEach(k => f.addEventListener(k, () => { cancelAnimationFrame(pcFollowRaf); pcFollowing = false; }, { passive: true }));
@@ -7803,7 +7946,7 @@ function pcUndoShow(fn){ clearTimeout(pcUndoT); pcUndoFn = fn; const u = pcEl('p
 function pcNouvelle(){
   const nb = pcEl('pc-new'); nb.classList.remove('go'); void nb.offsetWidth; nb.classList.add('go');
   if(pcSwapping) return;
-  pcUndoHide(); pcMenu(''); pcHistFerme(); pcCarnetFerme();
+  pcUndoHide(); pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcRepVide(true);
   pcSwap(() => {
     if(!pcInstantane()) return;   /* écriture impossible : on garde la conversation actuelle (ppEcrire a déjà prévenu) */
     const avait = pcConv.some(m => m && m.r === 'u'), id = pcConvId;
@@ -7832,7 +7975,7 @@ function pcReprendreAnim(id){   /* un clic sur une conversation de la colonne */
     });
     return;
   }
-  pcUndoHide(); pcMenu(''); pcHistFerme(); pcCarnetFerme();
+  pcUndoHide(); pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcRepVide(true);
   pcSwap(() => { pcHistReprendre(id); pcSoft(); });
 }
 /* suggestions : une seule rangée, défilement horizontal, bords en fondu, flèches et glisser à la souris (grand écran) */
@@ -7912,7 +8055,7 @@ function pcBrouillonLire(){
   return t || '';
 }
 function ppCoachFermer(){
-  if(!pcOuvert) return; pcBrouillonSauve(); pcOuvert = false; pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcUndoHide(); pcInstantane();
+  if(!pcOuvert) return; pcBrouillonSauve(); pcRepVide(true); pcOuvert = false; pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcUndoHide(); pcInstantane();
   const l = pcEl('pc-layer'); pcPlus(false); pcEl('pc-input').blur();
   clearTimeout(pcPretT); l.classList.remove('ready'); void l.offsetWidth;
   l.style.top = '0'; l.style.height = '100%';
@@ -10077,7 +10220,7 @@ function ppBrowseGroupsHtml(){
     const items = cartes.map((c, i) => {
       const lbl = ppBrwLabel(c);
       const cl = lbl === 'Nouvelle' ? 'pp-new' : (lbl === 'Maîtrisée' ? 'pp-okk' : '');
-      return `<div class="pp-it${c.pausee === true ? ' pp-paused' : ''}" data-id="${escapeHtml(c.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms" onclick="ppItClick('${escapeJsAttr(c.id)}')"><div><b>${ppRichHtml(c.question || '🖼 Image')}</b><p>${ppRichHtml(c.reponse || '🖼 Image')}</p><em class="${cl}">${lbl}</em>${c.inversible ? '<em class="pp-invt">⇄ inversée</em>' : ''}${c.ecrite === true ? '<em class="pp-invt pp-ecrt" title="Réponse à écrire" aria-label="Réponse à écrire">' + PP_IC.edit + '</em>' : ''}${c.pausee === true ? '<em class="pp-invt pp-paus">En pause</em>' : ''}</div></div>`;
+      return `<div class="pp-it${c.pausee === true ? ' pp-paused' : ''}" data-id="${escapeHtml(c.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms" onclick="ppItClick('${escapeJsAttr(c.id)}')"><div><b>${ppRichHtml(c.question || '🖼 Image')}</b><p>${ppRichHtml(c.reponse || '🖼 Image')}</p><em class="${cl}">${lbl}</em>${c.inversible ? '<em class="pp-invt">⇄ inversée</em>' : ''}${c.ecrite === true ? '<em class="pp-invt pp-ecrt" title="Réponse à écrire" aria-label="Réponse à écrire">' + PP_IC.edit + '</em>' : ''}${c.pausee === true ? '<em class="pp-invt pp-paus">En pause</em>' : ''}</div>${ppBrwMiniHtml(c)}</div>`;
     }).join('');
     return `<div class="pp-grp${ppBrowseClosed[m] ? ' closed' : ''}${estArch(m) ? ' pp-garch' : ''}" style="--c:${couleurMatiere(m)}"><div class="pp-gh"><button class="pp-ghm" onclick="ppBrowseToggle(this,'${mA}')"><span class="pp-dot"></span>${escapeHtml(m)}<small>${n} carte${n > 1 ? 's' : ''}${estArch(m) ? ' · archivée' : ''}</small></button><button class="pp-ib" aria-label="Options" onclick="ppGrpMenu('${mA}')">${PP_DOTS_H}</button><button class="pp-ib pp-chv" aria-label="Replier" onclick="ppBrowseToggle(this,'${mA}')">${PP_IC.up}</button></div><div class="pp-list">${items}</div></div>`;
   }).join('');
@@ -10118,6 +10261,11 @@ function ppPauseBascule(id){
   planifierSyncDiffere();
 }
 
+/* correctif v308 : miniatures des images de la carte (question, réponse) dans la liste de Parcourir */
+function ppBrwMiniHtml(c){
+  const l = [c.imageQuestion, c.imageReponse].filter(ppImgValide);
+  return l.length ? '<span class="pp-thumbs">' + l.map(u => '<img class="pp-thumb" src="' + u + '" alt="" loading="lazy" decoding="async">').join('') + '</span>' : '';
+}
 function renderBrowse(){
   const el = document.getElementById('tab-browse');
   if(!el) return;
@@ -10877,7 +11025,7 @@ function ppDrawCtrl(){
   <button class="pp-dt pp-dtb" id="pp-cd" style="margin-bottom:10px" onclick="ppPickDate(ppCtrlD,v=>{ppCtrlD=v;document.querySelector('#pp-cd span').textContent=ppFmtL(v);ppCtrlHint()})"><span>${ppFmtL(ppCtrlD)}</span>${PP_IC.cal}</button>
   <div id="pp-ch">${ppLoadHint(m)}</div>
   <button class="pp-cta" onclick="ppCtrlSave()">Enregistrer</button>
-  ${edition ? `<button class="pp-lnk" style="color:var(--pink)" onclick="ppCtrlDel()">Retirer la date</button><button class="pp-lnk" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${escapeJsAttr(m)}')">Supprimer la matière</button>` : `<button class="pp-lnk" onclick="ppSheetClose()">Annuler</button>`}`);
+  ${edition ? `<button class="pp-lnk" style="color:var(--pink)" onclick="ppCtrlDel()">Retirer la date</button><button class="pp-lnk pp-lnk-del" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${escapeJsAttr(m)}')">Supprimer la matière</button>` : `<button class="pp-lnk" onclick="ppSheetClose()">Annuler</button>`}`);
 }
 /* Le statut dépend de la date ENREGISTRÉE : si on change la date, on le remplace par une invite à enregistrer. */
 function ppCtrlHint(){ const e = document.getElementById('pp-ch'); if(e) e.innerHTML = ppLoadHint(ppCtrlM); }
@@ -11679,7 +11827,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v307';
+const PP_APP_VERSION = 'v314';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -11885,19 +12033,16 @@ function ppMkSubj(){
 function ppImportSheet(){
   const m = ppMatiereSel();
   if(!m){ ppToast("Crée d'abord une matière"); return; }
-  ppSheet(`<div class="pp-grab"></div><h2>Importer des cartes</h2><p class="pp-hint">Matière : <b style="color:var(--cream)">${ppEsc(m)}</b> · cartes d'un pote ou JSON</p>
+  ppSheet(`<div class="pp-grab"></div><h2>Importer des cartes</h2><p class="pp-hint">Matière : <b style="color:var(--cream)">${ppEsc(m)}</b> · cartes d'un pote</p>
   <input id="pp-ij-code" class="pp-codein" type="search" name="pp-import-code" enterkeyhint="go" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9" placeholder="Code" onkeydown="if(event.key==='Enter'){event.preventDefault();ppDoImport();}">
-  <textarea id="pp-ij" class="pp-tall" placeholder='[{"question":"…","reponse":"…"}]'></textarea>
   <div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppDoImport()">Importer</button></div>`);
   ppFocusChamp('pp-ij-code');   /* v280 : le clavier se déploie tout de suite */
 }
 function ppDoImport(){
   const champ = document.getElementById('pp-ij-code');
   const code = champ ? champ.value.replace(/[\s-]+/g, '').toUpperCase() : '';
-  if(code){ ppImportParCode(code); return; }
-  let data;
-  try{ data = JSON.parse(ppJsonAntislashs(document.getElementById('pp-ij').value)); }catch(e){ ppToast('JSON invalide'); return; }
-  ppImporterDonnees(data);
+  if(!code){ ppToast('Entre un code'); return; }   /* v309 : import par code uniquement */
+  ppImportParCode(code);
 }
 /* v123 : récupère un partage par son code (GET /partage) puis passe par le même import que le fichier. */
 let ppImportCodeEnCours = false;
@@ -15186,14 +15331,28 @@ function fusionnerDepuisSync(data){
     }
 
     if(tsOf(derniereModificationRecue) > tsOf(localCarte.derniereModification)){
-      Object.assign(localCarte, patch, imgs);
+      /* correctif v308 : une carte reçue SANS image (l'autre appareil n'avait pas encore l'image, et l'a juste révisée) ne doit plus effacer l'image d'ici */
+      const imgsM = { imageQuestion: imgs.imageQuestion || (ppImgValide(localCarte.imageQuestion) ? localCarte.imageQuestion : null), imageReponse: imgs.imageReponse || (ppImgValide(localCarte.imageReponse) ? localCarte.imageReponse : null) };
+      Object.assign(localCarte, patch, imgsM);
       const importedCarte = importedParId.get(id);
-      if(importedCarte){ Object.assign(importedCarte, patch, imgs); ppOverlayRetirerImages(id); }
-      saveLocalOverlay(id, importedCarte ? patch : { ...patch, ...imgs });
+      if(importedCarte){ Object.assign(importedCarte, patch, imgsM); ppOverlayRetirerImages(id); }
+      saveLocalOverlay(id, importedCarte ? patch : { ...patch, ...imgsM });
       matieresTouchees.add(matiere);
       misesAJour++;
+    } else {
+      /* correctif v308 : version locale plus récente ou égale : rien ne change, sauf une image qui manque ici et que l'autre appareil a encore (elle revient) */
+      const manque = {};
+      if(imgs.imageQuestion && !localCarte.imageQuestion && ppImgPlace(imgs.imageQuestion, 0)) manque.imageQuestion = imgs.imageQuestion;
+      if(imgs.imageReponse && !localCarte.imageReponse && ppImgPlace(imgs.imageReponse, 0)) manque.imageReponse = imgs.imageReponse;
+      if(Object.keys(manque).length){
+        Object.assign(localCarte, manque);
+        const importedCarte = importedParId.get(id);
+        if(importedCarte){ Object.assign(importedCarte, manque); ppOverlayRetirerImages(id); }
+        else saveLocalOverlay(id, manque);
+        matieresTouchees.add(matiere);
+        misesAJour++;
+      }
     }
-    // Sinon : version locale plus récente ou égale, on ne touche à rien.
   }
   saveImportedCards(imported);
   // Une carte revenue ne doit plus figurer dans « cartes-deleted » (sinon elle disparaît au démarrage hors ligne) ni dans le tombstone local.
