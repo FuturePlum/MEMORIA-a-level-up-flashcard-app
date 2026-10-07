@@ -361,7 +361,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^(\d+) fichiers?$/,function(n){ return c(n,'file'); })
   );
   Object.assign(D,{ /* v300 : copier une bulle de Prof */
-    'Copié':'Copied','Copier':'Copy','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand'
+    'Copié':'Copied','Copier':'Copy','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand','Sélectionner le texte':'Select text','Ajouter en carte':'Add as card','Réutiliser ce message':'Reuse this message'
   });
   Object.assign(D,{ /* v138 : textes oubliés (captures) */
     'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','carte en 7 jours':'card in 7 days','cartes en 7 jours':'cards in 7 days','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
@@ -3250,6 +3250,15 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pc-rep.out{animation:pcrepout .2s ease-in forwards}
 @keyframes pcrepin{from{opacity:0;transform:translateY(8px) scale(.94)}}
 @keyframes pcrepout{to{opacity:0;transform:translateY(6px) scale(.94)}}
+/* v319 : menu d'un message (appui long sur mobile, clic sur ordinateur) : Répondre, Copier, Sélectionner, + selon l'auteur */
+#pc-msgmenu{position:absolute;z-index:7;min-width:210px;max-width:270px;background:var(--panel);border:1.5px solid var(--line);border-radius:16px;padding:6px;display:flex;flex-direction:column;gap:2px;box-shadow:0 14px 30px -12px rgba(0,0,0,.55);animation:pcin .26s var(--pce)}
+#pc-msgmenu.out{opacity:0;transform:scale(.97);transition:opacity .16s,transform .16s;pointer-events:none}
+#pc-msgmenu button{display:flex;align-items:center;gap:10px;text-align:left;padding:11px 12px;border:0;border-radius:10px;background:none;color:var(--cream);font:700 14px var(--font-sans);-webkit-tap-highlight-color:transparent;transition:transform .35s var(--ease-press),background .2s}
+#pc-msgmenu button:active{background:var(--line);transform:scale(.98);transition-duration:.07s}
+#pc-msgmenu button svg{flex:none;color:var(--yellow)}
+.pc-b.pc-sel{outline:2px solid var(--yellow);outline-offset:2px}
+.pc-b.pc-texte{-webkit-user-select:text;user-select:text}
+@media (pointer:coarse){.pc-b{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}}
 @media (prefers-reduced-motion:reduce){.pc-rep,.pc-rep.out,.pc-cps .pc-cpb+.pc-cpb{animation-duration:.01s!important;animation-delay:0s!important}}
 .pch-feed .pc-b{cursor:default}
 .pch-feed .pc-b:active{transform:none}
@@ -5790,17 +5799,34 @@ function pcEnsure(){
   /* glissé de fermeture : réservé à la poignée et à l'en-tête (la conversation, les pastilles et le champ défilent normalement) */
   ['pc-pills', 'pc-sugg'].forEach(id => ['touchstart', 'mousedown'].forEach(k => pcEl(id).addEventListener(k, e => e.stopPropagation(), { passive: true })));
   pcEl('pc-feed').addEventListener('mousedown', e => e.stopPropagation(), { passive: true }); /* souris : on garde la sélection du texte */
-  /* v300 : toucher une bulle = copier son texte (sauf bouton, lien, image ou texte en cours de sélection) ; au toucher, le clavier reste ouvert */
-  { const fd = pcEl('pc-feed'); let tactile = false;
+  /* v319 : menu d'un message : appui long sur mobile, clic sur ordinateur (avant : un simple toucher proposait « Copier ») */
+  { const fd = pcEl('pc-feed'); let tactile = false, lpTimer = 0, lpX = 0, lpY = 0, lpT = 0;
     const garde = e => { const b = e.target.closest && e.target.closest('.pc-b'); return b && !e.target.closest('a,button,input,textarea,.pc-img,.pc-hc,.pc-add,.pc-cp') ? b : null; };
-    fd.addEventListener('pointerdown', e => { tactile = e.pointerType !== 'mouse'; if(tactile && garde(e) && document.activeElement === pcEl('pc-input')) e.preventDefault(); });
+    const stopLp = () => { clearTimeout(lpTimer); lpTimer = 0; };
+    fd.addEventListener('pointerdown', e => {
+      tactile = e.pointerType !== 'mouse';
+      if(tactile && garde(e) && document.activeElement === pcEl('pc-input')) e.preventDefault();
+      stopLp();
+      if(tactile){ const b = garde(e); if(b){ lpX = e.clientX; lpY = e.clientY; lpTimer = setTimeout(() => { lpTimer = 0; lpT = Date.now(); pcMsgMenu(b); }, 480); } }
+    });
+    fd.addEventListener('pointermove', e => { if(lpTimer && Math.hypot(e.clientX - lpX, e.clientY - lpY) > 10) stopLp(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(k => fd.addEventListener(k, stopLp));
+    fd.addEventListener('scroll', () => { stopLp(); pcMsgMenuFerme(); }, { passive: true });
+    fd.addEventListener('contextmenu', e => { if(tactile && e.target.closest && e.target.closest('.pc-b')) e.preventDefault(); });   /* appui long tactile : pas de menu du navigateur */
     fd.addEventListener('mousedown', e => { if(tactile && garde(e) && document.activeElement === pcEl('pc-input')) e.preventDefault(); });
     fd.addEventListener('click', e => {
-      if(e.target.closest && e.target.closest('.pc-cp-q')) return;   /* v312 : le bouton « Copier » a son propre clic */
-      const b = garde(e); if(!b){ pcRetirePropositions(); return; }
+      if(Date.now() - lpT < 700) return;   /* le relâchement après un appui long ne compte pas comme un clic */
+      const b = garde(e); if(!b){ pcRetirePropositions(); pcMsgMenuFerme(); return; }
+      if(tactile){ pcMsgMenuFerme(); return; }   /* mobile : un simple toucher ne fait rien (appui long pour le menu) */
       try{ if(String(window.getSelection && window.getSelection()).trim()) return; }catch(x){}
-      pcProposeCopie(b);   /* v312 : toucher une bulle PROPOSE de copier (bouton « Copier »), elle ne copie plus toute seule */
+      if(pcMsgFerm && pcMsgFerm.b === b && Date.now() - pcMsgFerm.t < 600){ pcMsgFerm = null; return; }   /* re-cliquer la bulle dont le menu est ouvert le ferme */
+      pcMsgMenu(b);
     });
+    /* toucher ailleurs ferme le menu ; la sélection du texte rend à la bulle son état normal quand elle est vide */
+    const L = pcEl('pc-layer');
+    if(L) L.addEventListener('pointerdown', e => { const mm = document.getElementById('pc-msgmenu'); if(mm && !e.target.closest('#pc-msgmenu')){ pcMsgFerm = { b: mm._b, t: Date.now() }; pcMsgMenuFerme(); } });
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') pcMsgMenuFerme(); });
+    document.addEventListener('selectionchange', () => { try{ if(!String(window.getSelection()).trim()) document.querySelectorAll('.pc-b.pc-texte').forEach(x => x.classList.remove('pc-texte')); }catch(x){} });
   }
   /* v242 : toucher une suggestion, une matière ou une flèche de défilement ne fait plus descendre le clavier (même méthode que le bouton d'envoi) */
   ['pc-pills', 'pc-smats', 'pc-sugg', 'pc-al', 'pc-ar'].forEach(id => { const x = pcEl(id); if(x) ['pointerdown', 'mousedown'].forEach(k => x.addEventListener(k, e => e.preventDefault())); });
@@ -6434,6 +6460,61 @@ function pcPlaceRend(){
   f.style.transition = 'opacity .18s ease, padding-bottom .4s cubic-bezier(.22,1,.36,1)'; f.style.paddingBottom = '';
   setTimeout(() => { if(!f.style.paddingBottom) f.style.transition = ''; }, 460);
 }
+/* v319 : menu d'un message. Mobile : appui long. Ordinateur : clic. Remplace la pastille « Copier » du v312. */
+let pcMsgFerm = null;
+function pcMsgMenuFerme(vite){
+  const m = document.getElementById('pc-msgmenu');
+  document.querySelectorAll('.pc-b.pc-sel').forEach(x => x.classList.remove('pc-sel'));
+  if(!m) return;
+  if(vite || m.classList.contains('out')){ m.remove(); return; }
+  m.classList.add('out'); setTimeout(() => { if(m.isConnected && m.classList.contains('out')) m.remove(); }, 180);
+}
+function pcTexteSansPrefixe(b){ return String(b && b._pcSrc != null ? b._pcSrc : '').replace(/^(?:📷 Photo envoyée|📄 Texte collé envoyé|📄 Document envoyé)\n/, '').trim(); }
+function pcSelTexte(b){
+  document.querySelectorAll('.pc-b.pc-texte').forEach(x => { if(x !== b) x.classList.remove('pc-texte'); });
+  b.classList.add('pc-texte');
+  try{ const r = document.createRange(); r.selectNodeContents(b); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }catch(e){}
+}
+function pcMsgMenu(b){
+  const L = document.getElementById('pc-layer'); if(!L || !b || !b.isConnected) return;
+  pcMsgMenuFerme(true); pcRetirePropositions();
+  if(b.classList.contains('pc-typing')) return;
+  const ico = d => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  const IC = {
+    rep: ico('<path d="M4 4v7a4 4 0 0 0 4 4h12"/><path d="M15 10l5 5-5 5"/>'),
+    cop: ico('<rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/>'),
+    sel: ico('<path d="M4 7h16M4 12h16M4 17h10"/>'),
+    car: ico('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 9v6M9 12h6"/>'),
+    reu: ico('<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/>')
+  };
+  const m = document.createElement('div'); m.id = 'pc-msgmenu'; m.setAttribute('role', 'menu'); m._b = b;
+  const estU = b.classList.contains('u'), err = b.classList.contains('err');
+  const txt = pcTexteSansPrefixe(b);
+  const item = (svg, label, fn) => {
+    const x = document.createElement('button'); x.type = 'button'; x.setAttribute('role', 'menuitem');
+    x.innerHTML = svg + '<span>' + label + '</span>';
+    ['pointerdown', 'mousedown'].forEach(k => x.addEventListener(k, e => { e.preventDefault(); e.stopPropagation(); }));   /* le clavier reste ouvert */
+    x.addEventListener('click', e => { e.stopPropagation(); pcMsgMenuFerme(); fn(); });
+    m.appendChild(x);
+  };
+  if(!err && pcRepExtrait(b._pcSrc)) item(IC.rep, 'Répondre', () => pcRepDefinir(b));
+  if(txt) item(IC.cop, 'Copier', () => pcCopierBulle(b));
+  if(txt) item(IC.sel, 'Sélectionner le texte', () => pcSelTexte(b));
+  if(!estU && !err && txt.length >= 20) item(IC.car, 'Ajouter en carte', () => pcAjouteEnCarte(b._pcSrc));
+  if(estU && txt) item(IC.reu, 'Réutiliser ce message', () => { const inp = pcEl('pc-input'); if(!inp) return; inp.value = txt; try{ inp.dispatchEvent(new Event('input', { bubbles: true })); }catch(e){} try{ inp.focus(); }catch(e){} });
+  if(!m.children.length) return;
+  b.classList.add('pc-sel');
+  m.style.visibility = 'hidden'; L.appendChild(m);
+  const lr = L.getBoundingClientRect(), br = b.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
+  const hautMin = 64, basMax = lr.height - 84;   /* en-tête en haut, barre de saisie en bas */
+  const yb = br.top - lr.top, yh = br.bottom - lr.top;
+  let top = yh + 8, ox = estU ? '100%' : '0';
+  if(top + mh > basMax){ if(yb - mh - 8 >= hautMin){ top = yb - mh - 8; } else { top = Math.max(hautMin, Math.min(basMax - mh, (yb + yh) / 2 - mh / 2)); } }
+  let left = estU ? (br.right - lr.left - mw) : (br.left - lr.left);
+  left = Math.max(8, Math.min(lr.width - mw - 8, left));
+  m.style.top = Math.round(top) + 'px'; m.style.left = Math.round(left) + 'px'; m.style.visibility = '';
+  haptique(8);
+}
 function pcProposeCopie(b){
   pcRetirePropositions(b);
   const vieux = b.querySelector('.pc-cp-q'); if(vieux){ clearTimeout(b._pcTq); pcFermeProp(vieux); return; }
@@ -6613,7 +6694,7 @@ function pcMenuAction(a){
   if(a === 'journal'){ pcMenu(''); return pcJournalCopier(); }
   if(a === 'oui'){
     if(!pcFinaliser()){ pcMenu(''); return; } /* écriture impossible : on garde la conversation actuelle (ppEcrire a déjà prévenu) */
-    pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcMenu('');
+    pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcPjLots = null; pcMenu('');
     pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcSuggTout = false; pcRenderSugg(); pcDerniere = pcMat;
     if(!getGeminiKey()) pcEtatSansCle();
     return;
@@ -6824,7 +6905,7 @@ ${cartes.lignes.join('\n') || '(aucune carte)'}`;
 
 /* ---------- appel Gemini ---------- */
 function pcHistorique(){
-  const h = pcConv.filter(m => m.r || typeof m.n === 'string').slice(0, -1).slice(-COACH_HIST).map(m => (typeof m.n === 'string') ? { role: 'user', parts: [{ text: m.n }] } : { role: m.r === 'u' ? 'user' : 'model', parts: [{ text: (m.r === 'u' && m.q && pcRepNote(m.q) ? pcRepNote(m.q) + '\n' : '') + m.t }] });   /* v241 : + notes de l'appli ; v314 : + citation du message auquel l'utilisateur répondait */
+  const h = pcConv.filter(m => m.r || typeof m.n === 'string').slice(0, -1).slice(-COACH_HIST).map(m => (typeof m.n === 'string') ? { role: 'user', parts: [{ text: m.n }] } : { role: m.r === 'u' ? 'user' : 'model', parts: [{ text: (m.r === 'u' && m.q && pcRepNote(m.q) ? pcRepNote(m.q) + '\n' : '') + ((m.r === 'a' && m.j) ? m.j : m.t) }] });   /* v318 : tour de l'IA = son JSON avec les actions quand il est gardé */   /* v241 : + notes de l'appli ; v314 : + citation du message auquel l'utilisateur répondait */
   const out = [];
   for(const x of h){ if(out.length && out[out.length - 1].role === x.role) out[out.length - 1].parts[0].text += '\n' + x.parts[0].text; else out.push(x); }
   while(out.length && out[0].role !== 'user') out.shift();
@@ -7008,9 +7089,10 @@ function pcParse(raw, matiere){
   let o = null; try{ o = JSON.parse(ppJsonAntislashs(net)); }catch(e){}
   if(!o || typeof o !== 'object' || Array.isArray(o) || typeof o.reponse !== 'string') return { texte: ppRepareTexteIA(String(raw).trim()), hors: false, ajoutable: false, actions: [], illisible: true, brut: String(raw), nbBrut: 0 }; /* JSON illisible : texte brut, sans actions */
   const acts = pcValideActions(o.actions, matiere), texteRep = ppRepareTexteIA(o.reponse.trim()) || '…';
+  let jsonRej = ''; try{ if(Array.isArray(o.actions) && o.actions.length){ jsonRej = JSON.stringify({ reponse: o.reponse, hors_cartes: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: '', titre: '', suite: o.suite === true, actions: o.actions.slice(0, 80) }); if(jsonRej.length > 12000) jsonRej = ''; } }catch(e){ jsonRej = ''; }   /* v318 : la réponse AVEC ses actions est rejouée à l'IA dans l'historique (avant, elle ne revoyait que le texte : elle imitait ses messages « Appuie sur Appliquer » sans refaire les actions) */
   /* v281 : l'IA promet un bouton « Appliquer » alors qu'aucune action valide n'est arrivée (aucune action, id inconnu, carte identique) : l'appli le dit au lieu de laisser croire à un bug */
   const sansBouton = !acts.length && /appliquer/i.test(texteRep) && !/\?\s*$/.test(texteRep.trim());
-  return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton, suite: o.suite === true, brut: String(raw), nbBrut: Array.isArray(o.actions) ? o.actions.length : 0 };
+  return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton, suite: o.suite === true, json: jsonRej, brut: String(raw), nbBrut: Array.isArray(o.actions) ? o.actions.length : 0 };
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
 async function ppCoachRepondre(texte, matiere, photo, rappel, citation){   /* v314 : `citation` = { a, t } du message auquel l'utilisateur répond */   /* v298 : `rappel` = note de l'appli jointe au message (nouvel essai) */
@@ -7047,15 +7129,17 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation){   /* v3
 
 /* ---------- envoi ---------- */
 let pcSuiteN = 0;   /* v316 : nombre de lots enchaînés automatiquement (40 au plus) */
+let pcPjLots = null;   /* v317 : le document joint au 1er message est gardé EN MÉMOIRE (jamais stocké) pour être rejoint à chaque « Lot suivant » : sans lui, Prof n'avait plus le contenu au lot 2 et ne pouvait proposer aucune action (donc pas de bouton Appliquer) */
 async function pcEnvoyer(t, label, auto){
   if(!auto) pcSuiteN = 0;
-  t = (t || '').trim(); const photo = pcPhoto;
+  t = (t || '').trim(); const photoSaisie = pcPhoto; let photo = photoSaisie;
+  if(auto && !photo && pcPjLots) photo = pcPjLots;   /* v317 : lot suivant = on rejoint le document de départ */
   if(pcAttente || (!t && !photo)) return;
   if(!t) t = photo ? (pcPjType(photo) === 'photo' ? 'Explique-moi cette photo.' : pcPjType(photo) === 'colle' ? 'Résume ce texte.' : 'Résume ce document.') : '';
   if(!getGeminiKey()){ pcEtatSansCle(); return; }
   const rep = pcRep ? { a: pcRep.a, t: pcRep.t } : null;   /* v314 : message auquel on répond */
   if(rep) pcRepVide();
-  pcRetirePropositions();   /* v313 : un message part : les boutons « Copier » encore visibles disparaissent en douceur */
+  pcMsgMenuFerme(true); pcRetirePropositions();   /* v313 : un message part : les boutons « Copier » encore visibles disparaissent en douceur */
   pcUndoHide();   /* v228 : on écrit dans la nouvelle conversation, plus d'« Annuler » */
   const matiere = pcMat === PC_TOUTES ? null : pcMat;
   { const inp0 = pcEl('pc-input'); if(inp0 && label === undefined && inp0.value.trim() === t){ inp0.value = ''; pcBrouillon = ''; try{ localStorage.removeItem('coach-brouillon'); }catch(e){} } } /* envoi depuis le champ : on le vide ; en cas d'erreur le texte revient */
@@ -7064,13 +7148,13 @@ async function pcEnvoyer(t, label, auto){
     if(pcConv.some(m => m && m.r === 'u') && pcFinaliser()){
       pcConv = []; pcSauve();
       pcEl('pc-feed').querySelectorAll('.pc-b,.pc-sep,.pc-act').forEach(el => el.classList.add('pc-ancien'));
-      pcLot = null; pcUtilises = new Set(); pcMode = ''; pcActsAttente = null;
+      pcLot = null; pcUtilises = new Set(); pcMode = ''; pcActsAttente = null; pcPjLots = null;
       if(pcCarte){ const ck = CARDS.find(k => k.id === pcCarte); if(!ck || (pcMat !== PC_TOUTES && (ck.matiere || 'Sans matière') !== pcMat)) pcCarte = null; }
       pcRenderSugg();
     }
     const s = '— ' + pcNom(pcMat) + ' —'; pcSep(s); pcConv.push({ s }); pcDerniere = pcMat;
   }
-  const affiche = photo ? (pcPjType(photo) === 'photo' ? '📷 Photo envoyée\n' : pcPjType(photo) === 'colle' ? '📄 Texte collé envoyé\n' : '📄 Document envoyé\n') + t : t; /* la pièce jointe elle-même n'est jamais stockée */
+  const affiche = photoSaisie ? (pcPjType(photoSaisie) === 'photo' ? '📷 Photo envoyée\n' : pcPjType(photoSaisie) === 'colle' ? '📄 Texte collé envoyé\n' : '📄 Document envoyé\n') + t : t; /* la pièce jointe elle-même n'est jamais stockée */
   /* v310 : l'ancienne carte d'actions n'est retirée de l'écran qu'APRÈS l'arrivée de la nouvelle réponse (avant, elle disparaissait tout de suite : si la réponse échouait, il ne restait rien) */
   let ancienne = null, noteRempl = null;
   if(pcActsAttente && pcActsAttente.box && pcActsAttente.box.isConnected && !pcActsAttente.box.classList.contains('done')){   /* v282 : nouvelle consigne alors que les actions précédentes ne sont ni appliquées ni ignorées */
@@ -7081,12 +7165,12 @@ async function pcEnvoyer(t, label, auto){
   const modeAvant = pcMode; if(label !== undefined) pcModeDepuis(label);
   const bu = pcAjoute('u', affiche, rep ? { q: rep } : undefined); pcUtilises.add(label || t);
   pcConv.push(rep ? { r: 'u', t: affiche, m: pcMat, q: rep } : { r: 'u', t: affiche, m: pcMat }); pcSauve(); pcIdAssure();
-  pcPhoto = null; pcPhotoMaj();
+  pcPhoto = null; pcPhotoMaj(); if(photoSaisie) pcPjLots = photoSaisie;   /* v317 */
   const ty = document.createElement('div'); ty.className = 'pc-b a pc-typing'; ty.innerHTML = '<i></i><i></i><i></i>';
   setTimeout(() => { if(pcEl('pc-feed') && ty.isConnected === false && pcAttente){ pcEl('pc-feed').appendChild(ty); pcBas(); } }, 350);
   pcAttente = true; pcReflechit(true); /* v206 : étoiles en rotation continue tant que l'IA n'a pas répondu */
   try{
-    let r = await ppCoachRepondre(t, matiere, photo, '', rep), essaisFaits = 0;
+    let r = await ppCoachRepondre(t, matiere, photo, (auto && photo && !photoSaisie) ? "[Info de l'application : le document de départ de l'utilisateur est de nouveau joint à ce message. Sers-t'en pour préparer le lot demandé, avec ses cartes.]" : '', rep), essaisFaits = 0;
     for(let essai = 0; essai < 2 && r.sansBouton; essai++){ essaisFaits++;   /* v298 : Prof annonce « Appliquer » mais aucune action valide : nouveaux essais automatiques (v310 : jusqu'à 2), sans rien afficher */
       try{
         const r2 = await ppCoachRepondre(t, matiere, photo, "[Info de l'application : ta réponse précédente annonçait un bouton « Appliquer » mais « actions » était vide ou invalide. Réponds de nouveau à la même demande avec la liste COMPLÈTE des actions (UNE action par carte, ids pris uniquement dans les lignes de cartes).]", rep);
@@ -7101,7 +7185,9 @@ async function pcEnvoyer(t, label, auto){
     ty.remove();
     const msgA = { r: 'a', t: r.texte, h: r.hors || undefined, a: (r.ajoutable && !r.actions.length && pcMode !== 'quiz') || undefined, m: pcMat };
     if(r.image){ msgA.i = r.image; msgA.ij = Date.now(); }   /* v277 : le mot-clé de l'image est gardé avec le message (l'image, trop lourde, est cherchée de nouveau à la réouverture) */
+    if(r.json) msgA.j = r.json;   /* v318 */
     pcConv.push(msgA);
+    { let nj = 0; for(let i = pcConv.length - 1; i >= 0; i--){ const x = pcConv[i]; if(x && x.j && ++nj > 3) delete x.j; } }   /* v318 : au plus 3 réponses gardent leur JSON (stockage et jetons) */
     { const prem1 = pcConv.find(x => x && x.r === 'u'); if(prem1 && !prem1.ti && r.titre) prem1.ti = r.titre; }   /* v277 : titre de la conversation */
     pcSauve();
     try{ pcInstantane(true); }catch(e){}   /* v219 : copie locale + index après chaque réponse (aucun envoi réseau) */
@@ -7109,6 +7195,7 @@ async function pcEnvoyer(t, label, auto){
     if(r.image) pcImageChat(bulleA, r.image);   /* v230 : le bouton seulement pour une notion nouvelle (pas pendant une série, pas quand des cartes sont déjà proposées) */
     if(r.info){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = r.info; pcEl('pc-feed').appendChild(s); }
     if(r.sansBouton){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = matiere ? "Aucune modification n'a pu être préparée. Redemande en précisant les cartes (ou « modifie-les »)." : "Aucune modification n'a pu être préparée. Choisis la matière en haut de l'écran, puis redemande."; pcEl('pc-feed').appendChild(s); }   /* v281 */
+    if(r.sansBouton && !r.actions.length) pcNote("[Info de l'application : ta réponse précédente annonçait « Appliquer » mais AUCUNE action valide n'a été reçue : rien n'est affiché ni proposé à l'utilisateur. S'il redemande ou ajuste, renvoie la liste COMPLÈTE des actions dans « actions » (jamais seulement le texte).]");   /* v318 */
     if(r.nbBrut > r.actions.length && r.actions.length){ const n = r.nbBrut - r.actions.length, s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = n + ' action' + (n > 1 ? 's' : '') + ' écartée' + (n > 1 ? 's' : '') + ' (limite par réponse, id inconnu ou carte déjà en place).'; pcEl('pc-feed').appendChild(s); }   /* v316 */
     if(r.actions.length) pcActionsCarte(r.actions, matiere, r.suite);
     try{ pcJournalVerifie(r, t, matiere, essaisFaits, !r.actions.length || !!(pcActsAttente && pcActsAttente.box && pcActsAttente.box.isConnected)); }catch(e){}   /* v316 : journal de la réponse brute quand quelque chose cloche */
@@ -7118,7 +7205,7 @@ async function pcEnvoyer(t, label, auto){
     /* erreur : on retire la bulle envoyée et on rend le texte (et la photo) à l'utilisateur */
     bu.remove(); if(rep && !pcRep){ pcRep = rep; pcRepMaj(true); } pcConv = pcConv.slice(0, pcConv.length - 1); if(noteRempl) pcConv = pcConv.filter(x => x !== noteRempl); pcSauve();   /* v310 : l'ancienne carte reste à l'écran, sa note est retirée */ pcUtilises.delete(label || t); pcMode = modeAvant;
     const inp = pcEl('pc-input'); if(inp && !inp.value) inp.value = PC_DEFAUTS.includes(t) && photo ? '' : t;
-    if(photo && !pcPhoto){ pcPhoto = photo; pcPhotoMaj(); }
+    if(photoSaisie && !pcPhoto){ pcPhoto = photoSaisie; pcPhotoMaj(); }
     if(err && err.sansCle) pcEtatSansCle(); else pcAjoute('a', (err && err.pcMsg) || "Impossible de joindre l'assistant. Réessaie dans un moment.", { err: true });
   }finally{
     pcReflechit(false); pcAttente = false; /* toujours remis à false, même en cas d'erreur Gemini */
@@ -7986,7 +8073,7 @@ function pcNouvelle(){
     if(!pcInstantane()) return;   /* écriture impossible : on garde la conversation actuelle (ppEcrire a déjà prévenu) */
     const avait = pcConv.some(m => m && m.r === 'u'), id = pcConvId;
     pcConvId = ''; try{ localStorage.removeItem('coach-conv-id'); }catch(e){}
-    pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = '';
+    pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcPjLots = null;
     pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcSuggTout = false; pcRenderSugg(); pcDerniere = pcMat;
     if(!getGeminiKey()) pcEtatSansCle();
     pcSoft(); pcSideMaj();
@@ -8062,7 +8149,7 @@ function ppCoachOuvrir(ctx){
   pcCarte = (ctx && ctx.carteId && CARDS.some(c => c.id === ctx.carteId)) ? ctx.carteId : null;
   const dern = [...pcConv].reverse().find(m => m.r && m.m);
   pcDerniere = dern ? dern.m : pcMat;
-  pcUtilises = new Set(); pcMode = ''; pcPhoto = null; pcAttente = false; pcLot = null;
+  pcUtilises = new Set(); pcMode = ''; pcPhoto = null; pcAttente = false; pcLot = null; pcPjLots = null;
   pcEl('pc-feed').innerHTML = ''; pcEl('pc-input').value = pcBrouillonLire(); pcPhotoMaj();
   pcRendreConv();
   if(pcCarte){ const c = CARDS.find(k => k.id === pcCarte); pcSep('Carte : ' + pcNet(c.question || '🖼 Image').slice(0, 60)); }
@@ -11862,7 +11949,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v316';
+const PP_APP_VERSION = 'v319';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
