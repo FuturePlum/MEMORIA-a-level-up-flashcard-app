@@ -6545,6 +6545,29 @@ function pcInfo(){
 
 /* ---------- menu ⋯ : nouvelle conversation, langue ---------- */
 let pcMenuT = 0;
+/* v316 : journal de Prof. Quand une réponse cloche (bouton promis sans action, JSON illisible, actions écartées, carte d'actions absente),
+   on garde la réponse brute (6 entrées au plus, sur l'appareil seulement) ; « Copier le journal » dans le menu ⋯ de Prof. */
+function pcJournalLire(){ try{ const j = JSON.parse(localStorage.getItem('coach-journal') || '[]'); return Array.isArray(j) ? j : []; }catch(e){ return []; } }
+function pcJournalVerifie(r, t, matiere, essais, boxOk){
+  const promet = /appliquer/i.test(r.texte || '');
+  const pb = [];
+  if(r.illisible) pb.push('json-illisible');
+  if(r.sansBouton) pb.push('bouton-promis-sans-action');
+  else if(promet && !r.actions.length) pb.push('appliquer-cite-sans-action');
+  if(r.nbBrut > r.actions.length) pb.push('actions-ecartees ' + (r.nbBrut - r.actions.length) + '/' + r.nbBrut);
+  if(r.actions.length && !boxOk) pb.push('carte-absente-de-l-ecran');
+  if(!pb.length) return;
+  const e = { quand: new Date().toISOString(), pb: pb.join(', '), demande: String(t || '').slice(0, 400), matiere: matiere || 'Toutes', actionsBrutes: r.nbBrut, actionsValides: r.actions.length, types: [...new Set(r.actions.map(a => a.type))].join(','), nouveauxEssais: essais || 0, suite: r.suite === true, reponseBrute: String(r.brut || '').slice(0, 7000) };
+  const j = pcJournalLire(); j.push(e);
+  try{ localStorage.setItem('coach-journal', JSON.stringify(j.slice(-6))); }catch(err){ try{ localStorage.setItem('coach-journal', JSON.stringify([e])); }catch(e2){} }
+}
+function pcJournalCopier(){
+  const j = pcJournalLire();
+  if(!j.length){ ppToast('Journal vide : aucun souci repéré'); return; }
+  const txt = JSON.stringify(j, null, 1);
+  const secours = () => { try{ const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ppToast('Journal copié'); }catch(e){ ppToast('Copie impossible'); } };
+  try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => ppToast('Journal copié'), secours); else secours(); }catch(e){ secours(); }
+}
 function pcMenu(mode){
   pcMenuMode = mode || '';
   let m = pcEl('pc-menu');
@@ -6560,7 +6583,7 @@ function pcMenu(mode){
   m.classList.remove('out');
   let h = '';
   if(mode === 'liste'){
-    h = `<button type="button" data-a="passees">Conversations passées${pcHistLire().length ? ' (' + pcHistLire().length + ')' : ''}</button><button type="button" data-a="carnet">Ce que Prof retient${pcCarnetLire().length ? ' (' + pcCarnetLire().length + ')' : ''}</button>` + (pcLangue
+    h = `<button type="button" data-a="passees">Conversations passées${pcHistLire().length ? ' (' + pcHistLire().length + ')' : ''}</button><button type="button" data-a="carnet">Ce que Prof retient${pcCarnetLire().length ? ' (' + pcCarnetLire().length + ')' : ''}</button>` + (pcJournalLire().length ? `<button type="button" data-a="journal">Copier le journal (${pcJournalLire().length})</button>` : '') + (pcLangue
       ? `<button type="button" data-a="stop">Arrêter la langue (${escapeHtml(pcLangue)})</button>`
       : `<button type="button" data-a="langue">Pratiquer une langue</button>`);
   } else if(mode === 'confirme'){
@@ -6587,6 +6610,7 @@ function pcMenuAction(a){
   if(a === 'non') return pcMenu('');   /* v260 : Annuler ferme le menu (avant, depuis « Quelle langue ? » il rouvrait la liste : conversations passées, ce que Prof retient, pratiquer une langue) */
   if(a === 'passees'){ pcMenu(''); return pcHistOuvrir(); }
   if(a === 'carnet'){ pcMenu(''); return pcCarnetOuvrir(); }
+  if(a === 'journal'){ pcMenu(''); return pcJournalCopier(); }
   if(a === 'oui'){
     if(!pcFinaliser()){ pcMenu(''); return; } /* écriture impossible : on garde la conversation actuelle (ppEcrire a déjà prévenu) */
     pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcMenu('');
@@ -6736,6 +6760,7 @@ RÈGLES :
 - ACTIONS : ne propose des "actions" QUE si l'utilisateur le demande (ou dans les modes « Vérifie mes cartes », « Cherche les doublons » et fin de série d'« Interroge-moi »). Sinon "actions": []. N'invente JAMAIS d'id : utilise seulement ceux des lignes ci-dessous.
 - RÉPONSE À UN MESSAGE : quand le message de l'utilisateur commence par « [Info de l'application : l'utilisateur répond à … », il répond à CE message précis (la citation est entre « »). Réponds à ce point précis, sans recopier la citation et sans mentionner cette info.\n- SAUTS DE LIGNE : dans les lignes de cartes ci-dessous, « ⏎ » représente un SAUT DE LIGNE de la carte. Pour reformater des cartes (mettre des sauts de ligne, harmoniser la mise en forme sur d'autres cartes, comme une carte donnée en modèle), utilise des actions \"modifier\" avec l'id de chaque carte et, dans \"reponse\" (ou \"question\"), le texte complet où chaque saut de ligne voulu s'écrit « ⏎ » : l'appli le transforme en vrai saut de ligne. N'écris JAMAIS « / » ni « | » à la place d'un saut de ligne. Une demande formulée comme un souhait (« j'aimerais que… », « mets les autres comme… ») EST une demande d'action : propose les actions. Si l'utilisateur donne une nouvelle consigne alors que tes actions précédentes n'ont pas été appliquées, elles sont retirées de l'écran : propose de nouveau TOUTES les actions de la nouvelle consigne. Tu ne peux modifier que les cartes listées plus bas ; s'il y en a trop, traite les 25 premières et dis qu'il en reste ; si les cartes voulues ne sont pas listées, dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran.
 - N'ÉCRIS « Appliquer » (ou « appuie sur le bouton ») QUE si \"actions\" contient au moins une action dans CETTE réponse. Sinon, ne promets aucun bouton : fais l'action maintenant, ou explique ce qui manque.
+- LIMITES PAR RÉPONSE : 3 nouvelles matières (\"matiere\"), 60 cartes \"creer\", 100 ids par \"deplacer\". Si la demande dépasse (ex. 24 matières à créer), ne la mets JAMAIS en entier : propose SEULEMENT le lot 1, commence ta réponse par « Lot 1 sur N » et mets \"suite\":true. L'appli te renverra toute seule « Lot suivant » après « Appliquer » : reprends alors exactement où le lot précédent s'est arrêté (relis les « Info de l'application »), écris « Lot k sur N », garde \"suite\":true tant qu'il reste des lots et \"suite\":false au dernier (et dans toute réponse normale). Ne redemande rien à l'utilisateur entre deux lots.
 - Une action n'est qu'une PROPOSITION tant que l'utilisateur n'a pas appuyé sur Appliquer : ne dis jamais qu'elle est déjà faite (« j'ai créé… », « a bien été créée »), dis plutôt « Je te propose… » ou « Appuie sur Appliquer ». Les messages « [Info de l'application : … ] » de la conversation ne sont pas de l'utilisateur : ils disent ce qu'il a appliqué, décoché, ignoré ou annulé. Fais-en foi (ce qui est annulé n'existe plus, ce qui est ignoré n'a pas été fait), tiens-en compte sans les recopier, et ne reproposes pas la même action sans qu'il le demande.
 - "retenir" (carnet de l'utilisateur) : seulement s'il te le demande (« retiens que… »), ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois (1 seule ligne). Jamais autrement. "texte" : note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule action "retenir" par réponse.
 - "matiere" (créer une matière vide) : tu PEUX créer une matière, ne dis jamais le contraire. Seulement si l'utilisateur le demande. "nom" : court (40 caractères maximum), avec une majuscule ; s'il n'en a pas donné, demande-le (actions: []). Si la matière existe déjà dans MATIÈRES, dis-le et ne la propose pas. Ajoute "date_controle":"AAAA-MM-JJ" s'il donne une date de contrôle. Si des cartes doivent y aller, ajoute des actions "creer" dont "matiere" est exactement ce nom.
@@ -6761,7 +6786,7 @@ IMAGES : par défaut N'AJOUTE AUCUNE image. Seulement si l'utilisateur en demand
 - ${PROMPT_GRAS_BASE} Dans tes réponses : 0 à 2 expressions en gras, jamais dans une réponse de 1 à 2 phrases. Quand rien ne mérite d'être mis en valeur, n'en mets pas.
 - ${PROMPT_FORMULES}
 FORMAT DE SORTIE : un objet JSON strict, rien d'autre, sans balises :
-{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"image":"","titre":"","actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"},{"type":"matiere","nom":"…","date_controle":"AAAA-MM-JJ"},{"type":"controle","matiere":"…","date":"AAAA-MM-JJ"},{"type":"renommer","matiere":"…","nom":"…"},{"type":"fusionner","matiere":"…","dans":"…"},{"type":"archiver","matiere":"…","archive":true},{"type":"supprimer_matiere","matiere":"…"},{"type":"deplacer","ids":["…"],"dans":"…"},{"type":"pause","id":"…","pausee":true},{"type":"ecrite","matiere":"…","ecrite":true},{"type":"inverser","matiere":"…","inversible":true},{"type":"image_carte","id":"…","terme":"…","cote":"question"},{"type":"seance","matiere":"…","difficiles":false,"mode":""},{"type":"decaler","de":"AAAA-MM-JJ","jours":1,"matiere":""},{"type":"replanifier","date":"AAAA-MM-JJ","ids":["…"]},{"type":"etaler","debut":"AAAA-MM-JJ","fin":"AAAA-MM-JJ","matiere":"…"},{"type":"reglage","cle":"apparence","valeur":"clair"},{"type":"restaurer","matiere":"…"}]}
+{"reponse":"texte affiché","hors_cartes":false,"ajoutable":false,"image":"","titre":"","suite":false,"actions":[{"type":"creer","matiere":"…","question":"…","reponse":"…","inversible":false,"ecrite":false},{"type":"modifier","id":"…","question":"…","reponse":"…"},{"type":"supprimer","id":"…"},{"type":"synthese","matiere":"…","precisions":"…"},{"type":"retenir","texte":"…"},{"type":"matiere","nom":"…","date_controle":"AAAA-MM-JJ"},{"type":"controle","matiere":"…","date":"AAAA-MM-JJ"},{"type":"renommer","matiere":"…","nom":"…"},{"type":"fusionner","matiere":"…","dans":"…"},{"type":"archiver","matiere":"…","archive":true},{"type":"supprimer_matiere","matiere":"…"},{"type":"deplacer","ids":["…"],"dans":"…"},{"type":"pause","id":"…","pausee":true},{"type":"ecrite","matiere":"…","ecrite":true},{"type":"inverser","matiere":"…","inversible":true},{"type":"image_carte","id":"…","terme":"…","cote":"question"},{"type":"seance","matiere":"…","difficiles":false,"mode":""},{"type":"decaler","de":"AAAA-MM-JJ","jours":1,"matiere":""},{"type":"replanifier","date":"AAAA-MM-JJ","ids":["…"]},{"type":"etaler","debut":"AAAA-MM-JJ","fin":"AAAA-MM-JJ","matiere":"…"},{"type":"reglage","cle":"apparence","valeur":"clair"},{"type":"restaurer","matiere":"…"}]}
 ${pcTitreRegle()}CARTES QUE TU CRÉES (actions "creer") : applique ces règles.
 ${PROMPT_REGLES_CARTES}
 Ici il n'y a pas forcément de cours sous les yeux : appuie-toi sur la conversation, les cartes existantes ou la pièce jointe. Si tu complètes avec tes propres connaissances, mets "hors_cartes": true et dis-le en une phrase. Ne crée jamais une carte qui existe déjà dans la liste.
@@ -6981,11 +7006,11 @@ function pcTermeImage(v){ return typeof v === 'string' ? v.replace(/[<>\n\r]/g, 
 function pcParse(raw, matiere){
   const net = String(raw).trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```[ \t]*$/, '').trim();
   let o = null; try{ o = JSON.parse(ppJsonAntislashs(net)); }catch(e){}
-  if(!o || typeof o !== 'object' || Array.isArray(o) || typeof o.reponse !== 'string') return { texte: ppRepareTexteIA(String(raw).trim()), hors: false, ajoutable: false, actions: [] }; /* JSON illisible : texte brut, sans actions */
+  if(!o || typeof o !== 'object' || Array.isArray(o) || typeof o.reponse !== 'string') return { texte: ppRepareTexteIA(String(raw).trim()), hors: false, ajoutable: false, actions: [], illisible: true, brut: String(raw), nbBrut: 0 }; /* JSON illisible : texte brut, sans actions */
   const acts = pcValideActions(o.actions, matiere), texteRep = ppRepareTexteIA(o.reponse.trim()) || '…';
   /* v281 : l'IA promet un bouton « Appliquer » alors qu'aucune action valide n'est arrivée (aucune action, id inconnu, carte identique) : l'appli le dit au lieu de laisser croire à un bug */
   const sansBouton = !acts.length && /appliquer/i.test(texteRep) && !/\?\s*$/.test(texteRep.trim());
-  return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton };
+  return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton, suite: o.suite === true, brut: String(raw), nbBrut: Array.isArray(o.actions) ? o.actions.length : 0 };
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
 async function ppCoachRepondre(texte, matiere, photo, rappel, citation){   /* v314 : `citation` = { a, t } du message auquel l'utilisateur répond */   /* v298 : `rappel` = note de l'appli jointe au message (nouvel essai) */
@@ -7021,7 +7046,9 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation){   /* v3
 }
 
 /* ---------- envoi ---------- */
-async function pcEnvoyer(t, label){
+let pcSuiteN = 0;   /* v316 : nombre de lots enchaînés automatiquement (40 au plus) */
+async function pcEnvoyer(t, label, auto){
+  if(!auto) pcSuiteN = 0;
   t = (t || '').trim(); const photo = pcPhoto;
   if(pcAttente || (!t && !photo)) return;
   if(!t) t = photo ? (pcPjType(photo) === 'photo' ? 'Explique-moi cette photo.' : pcPjType(photo) === 'colle' ? 'Résume ce texte.' : 'Résume ce document.') : '';
@@ -7059,8 +7086,8 @@ async function pcEnvoyer(t, label){
   setTimeout(() => { if(pcEl('pc-feed') && ty.isConnected === false && pcAttente){ pcEl('pc-feed').appendChild(ty); pcBas(); } }, 350);
   pcAttente = true; pcReflechit(true); /* v206 : étoiles en rotation continue tant que l'IA n'a pas répondu */
   try{
-    let r = await ppCoachRepondre(t, matiere, photo, '', rep);
-    for(let essai = 0; essai < 2 && r.sansBouton; essai++){   /* v298 : Prof annonce « Appliquer » mais aucune action valide : nouveaux essais automatiques (v310 : jusqu'à 2), sans rien afficher */
+    let r = await ppCoachRepondre(t, matiere, photo, '', rep), essaisFaits = 0;
+    for(let essai = 0; essai < 2 && r.sansBouton; essai++){ essaisFaits++;   /* v298 : Prof annonce « Appliquer » mais aucune action valide : nouveaux essais automatiques (v310 : jusqu'à 2), sans rien afficher */
       try{
         const r2 = await ppCoachRepondre(t, matiere, photo, "[Info de l'application : ta réponse précédente annonçait un bouton « Appliquer » mais « actions » était vide ou invalide. Réponds de nouveau à la même demande avec la liste COMPLÈTE des actions (UNE action par carte, ids pris uniquement dans les lignes de cartes).]", rep);
         if(r2 && r2.actions.length){ r = r2; break; }
@@ -7082,7 +7109,9 @@ async function pcEnvoyer(t, label){
     if(r.image) pcImageChat(bulleA, r.image);   /* v230 : le bouton seulement pour une notion nouvelle (pas pendant une série, pas quand des cartes sont déjà proposées) */
     if(r.info){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = r.info; pcEl('pc-feed').appendChild(s); }
     if(r.sansBouton){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = matiere ? "Aucune modification n'a pu être préparée. Redemande en précisant les cartes (ou « modifie-les »)." : "Aucune modification n'a pu être préparée. Choisis la matière en haut de l'écran, puis redemande."; pcEl('pc-feed').appendChild(s); }   /* v281 */
-    if(r.actions.length) pcActionsCarte(r.actions, matiere);
+    if(r.nbBrut > r.actions.length && r.actions.length){ const n = r.nbBrut - r.actions.length, s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = n + ' action' + (n > 1 ? 's' : '') + ' écartée' + (n > 1 ? 's' : '') + ' (limite par réponse, id inconnu ou carte déjà en place).'; pcEl('pc-feed').appendChild(s); }   /* v316 */
+    if(r.actions.length) pcActionsCarte(r.actions, matiere, r.suite);
+    try{ pcJournalVerifie(r, t, matiere, essaisFaits, !r.actions.length || !!(pcActsAttente && pcActsAttente.box && pcActsAttente.box.isConnected)); }catch(e){}   /* v316 : journal de la réponse brute quand quelque chose cloche */
     pcRenderSugg(); pcBas();
   }catch(err){
     ty.remove();
@@ -7181,8 +7210,8 @@ function pcBoxEtat(box, ton, titre, reste){
   const bouton = box.querySelector(':scope > .pc-un');
   if(bouton) bouton.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: 260, easing: 'ease-out', fill: 'backwards' });   /* v241 : plus de zoom (le bouton semblait s'écraser puis reprendre sa taille) */
 }
-function pcActionsCarte(actions, matiere){
-  const box = document.createElement('div'); box.className = 'pc-act';
+function pcActionsCarte(actions, matiere, suite){
+  const box = document.createElement('div'); box.className = 'pc-act'; box._suite = suite === true;   /* v316 : « suite » = d'autres lots suivent */
   const lib = a => {
     const q = a.type === 'modifier' ? a.apres.question : a.question;
     if(a.type === 'creer') return `<i class="pc-t">Nouvelle carte · ${escapeHtml(a.matiere)}</i><b>${ppRichHtml(a.question)}</b><span>${ppRichHtml(a.reponse)}</span>${a.rechercheImage ? `<span>🖼 Image (${a.rechercheCote === 'reponse' ? 'réponse' : 'question'}) : ${escapeHtml(a.rechercheImage)}</span>` : ''}`;
@@ -7461,6 +7490,9 @@ function pcAppliquer(choix, box, toutes){
     b.onclick = () => pcAnnuler(box);
   }
   if(seanceAct && !synth) pcLancerSeance(seanceAct, seanceAct.mode || 'reviser');   /* v272 */
+  if(box._suite && !echec && !decoche.length && !ignorees && pcSuiteN < 40){   /* v316 : lot appliqué en entier : Prof prépare le suivant tout seul */
+    setTimeout(() => { if(!pcAttente){ pcSuiteN++; pcEnvoyer('Lot suivant', undefined, true); } }, 900);
+  }
   if(rechargeLangue){ try{ pcSauve(); }catch(e){} setTimeout(() => { try{ window.choisirLangue(rechargeLangue); }catch(e){} }, 900); }
   if(synth){
     ppCoachFermer();
@@ -11830,7 +11862,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v314';
+const PP_APP_VERSION = 'v316';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
