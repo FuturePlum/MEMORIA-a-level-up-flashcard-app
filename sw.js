@@ -79,7 +79,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v142';
+const SW_VERSION = 'v143';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
@@ -218,10 +218,18 @@ async function afficherPush(){
   const jour = jourLocalSw();
   const base = { icon: './icon-192x192-any.png', badge: './icon-192x192-any.png' };
   if(etat && etat.test && Date.now() - etat.test < 3 * 60 * 1000){
-    await self.registration.showNotification('Memoria', Object.assign({
-      body: en ? 'Test OK: reminders reach you even when the app is closed.' : 'Test réussi : les rappels arrivent même quand l\'app est fermée.',
-      tag: 'revision-test', renotify: true
-    }, base));
+    let etatApp = 'fermee';
+    try{
+      const fenetres = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      if(fenetres.some((c) => c.visibilityState === 'visible')) etatApp = 'ouverte';
+      else if(fenetres.length) etatApp = 'arriere';
+    }catch(e){}
+    const corpsTest = {
+      fermee: en ? 'Test OK: the app was closed, reminders will reach you too.' : 'Test réussi : l\'app était fermée, les rappels t\'arriveront aussi.',
+      arriere: en ? 'Test received, but the app was still running in the background. Remove it from recent apps and test again.' : 'Test reçu, mais l\'app tournait encore en arrière-plan. Retire-la des applis récentes et refais le test.',
+      ouverte: en ? 'Test received, but the app was still open. Close it and test again.' : 'Test reçu, mais l\'app était encore ouverte. Ferme-la et refais le test.'
+    }[etatApp];
+    await self.registration.showNotification('Memoria', Object.assign({ body: corpsTest, tag: 'revision-test', renotify: true }, base));
     return;
   }
   const rangBrut = await lireCacheEtat('/push-jour');

@@ -242,6 +242,8 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Tester la notification':'Test the notification',
     "Reçue même quand l'app est fermée":'Delivered even when the app is closed',
     "Test envoyé : ferme l'app, il arrive dans quelques secondes":'Test sent: close the app, it arrives in a few seconds',
+    "Test programmé : retire l'app des applis récentes, la notification arrive dans 20 s":'Test scheduled: remove the app from recent apps, the notification arrives in 20 s',
+    "Test programmé : retire l'app des applis récentes, la notification arrive bientôt":'Test scheduled: remove the app from recent apps, the notification arrives soon',
     'Patiente quelques secondes avant un nouveau test':'Wait a few seconds before another test',
     'Abonnement perdu : désactive puis réactive le rappel':'Subscription lost: turn the reminder off and on again',
     "Le serveur de notifications n'est pas encore prêt":"The notification server isn't ready yet",
@@ -11930,10 +11932,10 @@ async function ppCameraOuvrir(inputId){
   try{ await video.play(); }catch(e){}
 }
 
-function ppToast(m, haut){
+function ppToast(m, haut, duree){
   ppEnsureSheets();
   const t = document.getElementById('pp-toast'); t.textContent = m; t.classList.toggle('haut', !!haut); t.classList.add('on');
-  clearTimeout(ppToastT); ppToastT = setTimeout(() => t.classList.remove('on'), 1800);
+  clearTimeout(ppToastT); ppToastT = setTimeout(() => t.classList.remove('on'), duree || 1800);
 }
 /* glisser vers le bas n'importe où sur une fenêtre du bas pour la fermer.
    v126 : le même geste sert à TOUTES les feuilles (#pp-sheet ET le calendrier #pp-psheet) et marche aussi à la souris (Chromebook). */
@@ -15868,7 +15870,7 @@ async function pushDesactiver(){
     localStorage.removeItem('push-sig');
   }catch(e){}
 }
-/* Réglages → « Tester la notification » : le Worker envoie tout de suite une notification de test à cet appareil. */
+/* Réglages → « Tester la notification » : le Worker envoie une notification de test à cet appareil 20 s après la demande (v315 : le temps de fermer l'app). */
 async function ppTesterPush(){
   if(!pushActif()){
     const fait = await pushSynchroniser(true);
@@ -15877,7 +15879,12 @@ async function ppTesterPush(){
   await pushEcrireEtat({ test: Date.now() });
   try{
     const rep = await fetch(pushUrl() + '/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: pushId() }) });
-    if(rep.ok) ppToast("Test envoyé : ferme l'app, il arrive dans quelques secondes");
+    if(rep.ok){
+      let delai = 0; try{ const j = await rep.json(); delai = Number(j && j.delai) || 0; }catch(e){}
+      if(delai === 20) ppToast("Test programmé : retire l'app des applis récentes, la notification arrive dans 20 s", false, 6000);
+      else if(delai > 0) ppToast("Test programmé : retire l'app des applis récentes, la notification arrive bientôt", false, 6000);
+      else ppToast("Test envoyé : ferme l'app, il arrive dans quelques secondes");
+    }
     else if(rep.status === 429) ppToast('Patiente quelques secondes avant un nouveau test');
     else if(rep.status === 410){ try{ localStorage.removeItem('push-sig'); }catch(e){} ppToast('Abonnement perdu : désactive puis réactive le rappel'); }
     else if(rep.status === 503 || rep.status === 404) ppToast("Le serveur de notifications n'est pas encore prêt");
