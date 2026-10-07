@@ -7815,8 +7815,23 @@ function pcNouvelle(){
     if(avait && id) pcUndoShow(() => pcSwap(() => { pcHistReprendre(id); pcSoft(); }));
   });
 }
+let pcReprendreCharge = false;
 function pcReprendreAnim(id){   /* un clic sur une conversation de la colonne */
-  if(pcSwapping) return;
+  if(pcSwapping || pcReprendreCharge) return;
+  const corps = pcCorpsLire(id);
+  if(!corps || !corps.length){   /* correctif v307 : corps absent d'ici (conversation faite sur l'autre appareil) : on le demande au serveur avant de l'ouvrir (avant, le clic ne faisait rien) */
+    if(!pcConvPeutLire()){ ppToast('Cette conversation n\u2019est pas disponible sur cet appareil.'); return; }
+    pcReprendreCharge = true; ppToast('Chargement\u2026');
+    pcConvCharger(id).then(r => {
+      pcReprendreCharge = false;
+      if(r === 'ok'){ const c2 = pcCorpsLire(id); if(c2 && c2.length) return pcReprendreAnim(id); }
+      ppToast(r === 'absent' ? 'Pas encore envoy\u00e9e depuis l\u2019autre appareil : ouvre Memoria l\u00e0-bas avec du r\u00e9seau.'
+        : r === 'quota' ? 'Limite du jour atteinte, r\u00e9essaie demain.'
+        : r === 'err' ? 'Chargement impossible pour l\u2019instant. R\u00e9essaie plus tard.'
+        : 'Cette conversation n\u2019est pas disponible sur cet appareil.');
+    });
+    return;
+  }
   pcUndoHide(); pcMenu(''); pcHistFerme(); pcCarnetFerme();
   pcSwap(() => { pcHistReprendre(id); pcSoft(); });
 }
