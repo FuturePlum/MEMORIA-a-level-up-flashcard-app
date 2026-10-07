@@ -242,8 +242,8 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Tester la notification':'Test the notification',
     "Reçue même quand l'app est fermée":'Delivered even when the app is closed',
     "Test envoyé : ferme l'app, il arrive dans quelques secondes":'Test sent: close the app, it arrives in a few seconds',
-    "Test programmé : retire l'app des applis récentes, la notification arrive dans 20 s":'Test scheduled: remove the app from recent apps, the notification arrives in 20 s',
-    "Test programmé : retire l'app des applis récentes, la notification arrive bientôt":'Test scheduled: remove the app from recent apps, the notification arrives soon',
+    "Test lancé : retire l'app des récentes, notif dans 20 s":'Test started: remove the app from recents, notification in 20 s',
+    "Test lancé : retire l'app des récentes, notif bientôt":'Test started: remove the app from recents, notification soon',
     'Patiente quelques secondes avant un nouveau test':'Wait a few seconds before another test',
     'Abonnement perdu : désactive puis réactive le rappel':'Subscription lost: turn the reminder off and on again',
     "Le serveur de notifications n'est pas encore prêt":"The notification server isn't ready yet",
@@ -2265,6 +2265,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-sheet.on>*:nth-child(4){animation-delay:.15s}
 .pp-sheet.on>*:nth-child(n+5){animation-delay:.2s}
 .pp-toast{transition:opacity .25s,transform .35s var(--pps)}
+.pp-toast{white-space:normal;max-width:calc(100vw - 32px);width:max-content;text-align:center;box-sizing:border-box}
 :where(.pp-add,.pp-sheet) button.pp-dtb{display:flex;align-items:center;justify-content:space-between;text-align:left;cursor:pointer}
 :where(.pp-add,.pp-sheet) button.pp-dtb svg{color:var(--yellow-t)}
 .pp-pdh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -15881,8 +15882,8 @@ async function ppTesterPush(){
     const rep = await fetch(pushUrl() + '/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: pushId() }) });
     if(rep.ok){
       let delai = 0; try{ const j = await rep.json(); delai = Number(j && j.delai) || 0; }catch(e){}
-      if(delai === 20) ppToast("Test programmé : retire l'app des applis récentes, la notification arrive dans 20 s", false, 6000);
-      else if(delai > 0) ppToast("Test programmé : retire l'app des applis récentes, la notification arrive bientôt", false, 6000);
+      if(delai === 20) ppToast("Test lancé : retire l'app des récentes, notif dans 20 s", false, 6000);
+      else if(delai > 0) ppToast("Test lancé : retire l'app des récentes, notif bientôt", false, 6000);
       else ppToast("Test envoyé : ferme l'app, il arrive dans quelques secondes");
     }
     else if(rep.status === 429) ppToast('Patiente quelques secondes avant un nouveau test');
