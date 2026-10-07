@@ -8899,7 +8899,7 @@ function ppCbMatsHtml(){
   else {
     h += `<div class="cb-ml">`;
     h += act.length ? act.map(m => ppCbMatLigne(m, false)).join('') : `<div class="pp-plan-empty">Toutes tes matières sont archivées.</div>`;
-    if(arch.length) h += `<h4 class="cb-ah">Archivées (${arch.length})</h4>` + arch.map(m => ppCbMatLigne(m, true)).join('');
+    /* v323 : pas de matières archivées ici non plus */
     h += `</div>`;
   }
   return `<div class="cb-mats pp-plan pp-still">${h}</div>`;
@@ -11158,7 +11158,7 @@ function renderPlanning(){
   if(matieres.length === 0) html += `<div class="pp-plan-empty">Crée une matière pour pouvoir fixer une date de contrôle.</div><button class="pp-dash" onclick="ppSubjSheet()">${PP_IC.plus.replace(/22/g, '16')}Créer une matière</button>`;
   else {
     html += actives.length ? actives.map(m => ppMatHtml(m, false)).join('') : `<div class="pp-plan-empty">Toutes tes matières sont archivées.</div>`;
-    if(archivees.length) html += `<h3 class="pp-h3s" style="font-size:16px;opacity:.7">Archivées (${archivees.length})</h3>` + archivees.map(m => ppMatHtml(m, true)).join('');
+    /* v323 : les matières archivées n'apparaissent plus dans le planning (elles se gèrent dans Parcourir, filtre « Archivées ») */
     html += `<button class="pp-dash" onclick="ppSubjSheet()">${PP_IC.plus.replace(/22/g, '16')}Ajouter une matière</button>`; /* v118 : ouvre « Nouvelle matière » (avant : fenêtre « Ajouter un contrôle »). Le contrôle se règle en touchant une matière. */
   }
   el.innerHTML = `<div class="pp-view pp-plan${same ? ' pp-still' : ''}">${html}</div>`;
@@ -11188,7 +11188,7 @@ function ppCtrlList(){
   return l.includes(ppCtrlM) ? l : [ppCtrlM, ...l];
 }
 function ppDrawCtrl(){
-  const m = ppCtrlM, has = !!(matieresConfig[m] || {}).dateControle, edition = has && !ppCtrlAjout;
+  const m = ppCtrlM, has = !!(matieresConfig[m] || {}).dateControle, edition = !ppCtrlAjout;   /* v322 : toucher UNE matière ouvre sa fiche (titre = la matière, « Supprimer la matière » toujours là), même sans date de contrôle (avant : une matière sans date, par exemple tout juste créée, ouvrait « Ajouter un contrôle » sans bouton Supprimer ni Désarchiver) */
   const l = ppCtrlList();
   /* Titre = la matière. Les pastilles de choix n'apparaissent que pour AJOUTER un contrôle (plusieurs matières possibles). */
   const archM = !!(matieresConfig[m] || {}).archive;
@@ -11201,7 +11201,7 @@ function ppDrawCtrl(){
   <button class="pp-dt pp-dtb" id="pp-cd" style="margin-bottom:10px" onclick="ppPickDate(ppCtrlD,v=>{ppCtrlD=v;document.querySelector('#pp-cd span').textContent=ppFmtL(v);ppCtrlHint()})"><span>${ppFmtL(ppCtrlD)}</span>${PP_IC.cal}</button>
   <div id="pp-ch">${ppLoadHint(m)}</div>
   <button class="pp-cta" onclick="ppCtrlSave()">Enregistrer</button>
-  ${edition ? `<button class="pp-lnk" style="color:var(--pink)" onclick="ppCtrlDel()">Retirer la date</button><button class="pp-lnk pp-lnk-del" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${escapeJsAttr(m)}')">Supprimer la matière</button>` : `<button class="pp-lnk" onclick="ppSheetClose()">Annuler</button>`}`);
+  ${edition ? `${has ? `<button class="pp-lnk" style="color:var(--pink)" onclick="ppCtrlDel()">Retirer la date</button>` : ''}<button class="pp-lnk pp-lnk-del" style="color:var(--pink)" onclick="ppSheetClose();openDeleteMatiereConfirm('${escapeJsAttr(m)}')">Supprimer la matière</button>${has ? '' : '<button class="pp-lnk" onclick="ppSheetClose()">Annuler</button>'}` : `<button class="pp-lnk" onclick="ppSheetClose()">Annuler</button>`}`);
 }
 /* Le statut dépend de la date ENREGISTRÉE : si on change la date, on le remplace par une invite à enregistrer. */
 function ppCtrlHint(){ const e = document.getElementById('pp-ch'); if(e) e.innerHTML = ppLoadHint(ppCtrlM); }
@@ -12003,7 +12003,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v321';
+const PP_APP_VERSION = 'v323';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
