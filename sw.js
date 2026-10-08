@@ -19,6 +19,20 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v156 : v336 (statistiques : plus de cartes en pause ni de matières archivées dans les chiffres) : index.html change, donc nouvelle version du cache.
+
+   v155 : v335 (filet de secours flash-lite avec réflexion haute pour les cartes, la synthèse et Prof) : index.html change, donc nouvelle version du cache.
+
+   v154 : v334 (création de cartes : modèle gemini-3.5-flash + réflexion « low » avec repli automatique, comme la synthèse) : index.html change, donc nouvelle version du cache.
+
+   v153 : v333 (synthèse : prompt de style nettoyé, style en system_instruction, ordre du message, modèle gemini-3.5-flash + réflexion « low » avec repli ; fiche d'une carte : fermer enregistre, bouton Annuler) : index.html change, donc nouvelle version du cache.
+
+   v152 : v332 (prompt de création de cartes : listes sans oubli, cours de langue, contexte dans la question, rappel final après le cours) : index.html change, donc nouvelle version du cache.
+
+   v151 : v331 (Prof : prompt réécrit, chaque règle dite une seule fois, rangée par thème) : index.html change, donc nouvelle version du cache.
+
+   v150 : v330 (Prof : modèle plus gros et réflexion « medium » avec repli automatique, prompt avec table de routage des actions) : index.html change, donc nouvelle version du cache.
+
    v142 : v309 (Chromebook : les fenêtres épousent leur contenu, Réglages plus aérés ; import de cartes par code uniquement, plus de JSON collé).
 
    v141 : v308 (correctif synchro : une carte reçue sans image n'efface plus l'image locale, et une image manquante ici revient si l'autre appareil l'a ; miniatures des images dans Parcourir).
@@ -79,7 +93,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v149';
+const SW_VERSION = 'v156';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
