@@ -354,6 +354,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^marge (\d+) j$/,function(n){ return 'margin '+n+' d'; }),
     f(/^dépasse de (\d+) j$/,function(n){ return 'over by '+n+' d'; }),
     f(/^≈ (\d+) rappels? prévus?$/,function(n){ return '≈ '+c(n,'review')+' expected'; }),
+    f(/^\+(\d+) entretien$/,function(n){ return '+'+n+' upkeep'; }),
     f(/^(\d+)\/(\d+) maîtrisées?$/,function(a,b){ return a+'/'+b+' mastered'; }),
     f(/^Contrôle (?:de |d')(.+)$/,function(x){ return 'Test: '+x; }),
     f(/^(\d+) cartes? dans cette matière\. Tu vérifies chaque changement avant de l'appliquer\.$/,function(n){ return c(n,'card')+' in this subject. You check each change before applying it.'; }),
@@ -395,7 +396,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Clé API invalide ou requête refusée. Vérifie ta clé dans Réglages.':'Invalid API key or request refused. Check your key in Settings.','Clé API refusée ou sans accès à ce modèle. Vérifie ta clé dans Réglages.':'API key refused or without access to this model. Check your key in Settings.',
     'Ex. Fais un tableau pour comparer les régimes, garde les dates en gras.':'E.g. Make a table to compare the regimes, keep the dates in bold.','Colle un texte de cours, ou écris ex. « plus court », « plus de dates »…':'Paste course text, or write e.g. “shorter”, “more dates”…',
     'Écris ex. « raccourcis », « ajoute un tableau », ou colle un texte en plus…':'Write e.g. “shorten”, “add a table”, or paste extra text…','Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur…':'E.g. shorten the answers, remove duplicates, add 5 cards about…',
-    'Estimation prudente : on compte environ 30 % de cartes à revoir en plus':'Cautious estimate: we count about 30% more cards to review','Certaines cartes neuves sont placées juste avant ton contrôle, faute de place avant.':'Some new cards are placed right before your test, for lack of room earlier.',
+    'Cartes déjà maîtrisées, revues de temps en temps pour ne pas les oublier':'Already-mastered cards, reviewed from time to time so you do not forget them','Estimation prudente : on compte environ 30 % de cartes à revoir en plus':'Cautious estimate: we count about 30% more cards to review','Certaines cartes neuves sont placées juste avant ton contrôle, faute de place avant.':'Some new cards are placed right before your test, for lack of room earlier.',
     'Elle se place à l\'endroit du curseur. Pour la retirer, efface sa ligne « ![](img:N) ».':'It is placed at the cursor. To remove it, delete its “![](img:N)” line.',
     'Impossible de créer le fichier Word. Utilise « Copier » puis colle dans Word.':'Unable to create the Word file. Use “Copy” then paste into Word.','Le cours envoyé est trop volumineux. Retire un fichier ou raccourcis le texte.':'The submitted course is too large. Remove a file or shorten the text.',
     "Plus de place pour les images sur cet appareil. Retire-en une ancienne d'abord.":'No more room for images on this device. Remove an old one first.',"Erreur inattendue dans l'app. Réessaie, et si ça recommence, ferme puis rouvre l'app.":'Unexpected error in the app. Try again, and if it happens again, close and reopen the app.',
@@ -418,6 +419,8 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^Ça passe de justesse \((\d+) j de marge\)\.$/,function(n){ return 'Just makes it ('+c(n,'day')+' of margin).'; }),
     f(/^Ça ne rentre pas : il reste (\d+) j, il en faudrait (\d+)\.$/,function(a,b){ return "It doesn't fit: "+c(a,'day')+' left, '+b+' needed.'; }),
     f(/^Maîtrise complète (.+?)\. (.+)$/,function(d,x){ return 'Full mastery '+d.replace(/^le /,'on ')+'. '+tr(x); }),
+    f(/^80 % maîtrisé (.+?)\. (.+)$/,function(d,x){ return '80% mastered '+d.replace(/^le /,'on ')+'. '+tr(x); }),
+    f(/^Pour être prêt : environ (\d+) cartes par jour(, plus que ce que ton planning peut absorber)?$/,function(n,x){ return 'To be ready: about '+n+' cards per day'+(x?', more than your schedule can absorb':''); }),
     f(/^(Envoi|Récupération) impossible \((.+)\)$/,function(v,x){ return (v==='Envoi'?"Couldn't send (":"Couldn't retrieve (")+tr(x)+')'; })
   );
   Object.assign(D,{ /* réponse à écrire (étape 1) */
@@ -2228,6 +2231,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-ctt .pp-dot{width:14px;height:14px;border-radius:50%;flex:none}
 .pp-cts{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin:0 2px 8px}
 .pp-stt{display:flex;gap:9px;align-items:flex-start;margin:0 0 14px;padding:10px 13px;border-radius:14px;background:rgba(var(--ov),.04);border:1.5px solid var(--line);color:color-mix(in srgb,var(--c,var(--muted)) var(--tm),var(--ink));font-size:13.5px;font-weight:700;line-height:1.35}
+.pp-need{margin-top:8px;font-size:12px;font-weight:600;line-height:1.35;color:var(--muted)}
 .pp-stt::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted));flex:none;margin-top:5px}
 .pp-lnk{display:block;margin:6px auto 4px;padding:10px 14px;color:var(--muted);font-weight:800;font-size:14px}
 /* v314 : « Supprimer la matière » (feuille d'une matière, PC et mobile) : cadre rouge léger, pour le distinguer des liens simples */
@@ -3828,6 +3832,22 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 @keyframes fi-pulse{0%{box-shadow:0 0 0 0 rgba(255,217,61,.55)}70%,100%{box-shadow:0 0 0 12px rgba(255,217,61,0)}}
 @keyframes fi-pulse2{0%{box-shadow:0 0 0 0 rgba(255,107,61,.6)}70%,100%{box-shadow:0 0 0 14px rgba(255,107,61,0)}}
 @media(prefers-reduced-motion:reduce){#fci .fi-ringo{animation:none}}
+/* ============================================================
+   v344 — TOUCHE DE FLUIDITÉ. Aucune animation n'est remplacée ni refaite : on adoucit seulement la COURBE d'arrivée des écrans, feuilles et listes
+   (départ vif, fin très douce, comme un ressort amorti sans rebond) et on retire de petites frictions tactiles. Respecte les règles de l'app :
+   pas de scale à l'appui (voir ÉTAPE C), pas de vibration sur les simples appuis (v108), et prefers-reduced-motion coupe tout comme avant.
+   ============================================================ */
+:root:root:root{ --ease-flow:cubic-bezier(.22,1,.36,1); }
+/* un tap est pris tout de suite (pas d'attente de double-tap, pas de zoom accidentel) ; :where = priorité zéro, ne bat jamais un touch-action déjà posé (cartes, glissés) */
+:where(button,a,[role="button"],label,summary,select,input,textarea){ touch-action:manipulation; }
+/* arrivée des écrans (onglets), de la séance, des feuilles, des cartes de matière, des blocs de rendu : même forme, courbe plus douce */
+.pp-view>*,.pp-sheet.on>*,body.pp-ses-on #pp-ses,.pp-brw .pp-mat,.pp-plan .pp-mat,.pp-brw .pp-li,.pp-plan .pp-li,.pp-rend{ animation-timing-function:var(--ease-flow); }   /* les éléments à rebond (pppop : lignes de Parcourir, blocs de bilan) gardent leur ressort */
+.pp-page{ animation-timing-function:var(--ease-flow); }
+/* champs de saisie : le contour et la lueur se mettent en place en douceur au lieu de sauter (priorité zéro : un champ qui a déjà sa transition la garde) */
+:where(input,textarea,select){ transition:border-color .22s var(--ease-flow),box-shadow .22s var(--ease-flow),background-color .22s var(--ease-flow); }
+/* défilement : l'élan reste sur la liste qu'on touche (pas de rebond qui entraîne la page derrière) */
+.pp-sb,.pp-list,.pp-sheet{ overscroll-behavior:contain; }
+@media (prefers-reduced-motion:reduce){ .pp-view>*,.pp-sheet.on>*,.pp-page{ animation-timing-function:linear; } }
 </style>
 </head>
 <body>
@@ -3985,6 +4005,33 @@ function cartesPourStats(){
   const archivees = new Set(getMatieres().filter(m => matieresConfig[m] && matieresConfig[m].archive));
   return cartesNonPausees().filter(c => !archivees.has(c.matiere || 'Sans matière'));
 }
+/* v337 : cartes qui prennent des PLACES dans les plafonds de planning (par jour, par matière et au total) : ni cartes en pause, ni cartes d'une
+   matière archivée (avant, une grosse matière archivée occupait des places de jours et bloquait une matière urgente). Même règle que les statistiques. */
+function cartesPourPlafonds(){ return cartesPourStats(); }
+/* v344 : MATIÈRES FANTÔMES. Une matière supprimée (ou dont toutes les cartes ont été supprimées, ici ou sur l'autre appareil) pouvait rester dans la liste
+   comme matière vide « archivée », avec le bouton « Archivées (n) » de Parcourir, parce que sa configuration (archivage, date de contrôle) survivait aux cartes.
+   Fantôme = matière SANS AUCUNE carte, qui n'est pas une matière vide volontaire (créée à la main) et dont la configuration vient d'une trace locale (archivage,
+   date de contrôle, ou suppression notée). On efface alors sa configuration locale (jamais une carte). Retourne le nombre de matières nettoyées. */
+function matieresFantomes(){
+  const avecCartes = new Set(CARDS.map(c => c.matiere || 'Sans matière'));
+  const vides = new Set(loadEmptyMatieres());
+  const sup = loadMatieresSupprimees(), arch = loadLocalArchiveOverlay();
+  const dates = ppLireJSON('cartes-datecontrole-overlay', {}, ppEstObjet);
+  return Object.keys(matieresConfig || {}).filter(m => !avecCartes.has(m) && !vides.has(m) && ((m in sup) || (m in arch) || (m in dates)));
+}
+function purgerMatieresFantomes(){
+  const liste = matieresFantomes();
+  if(!liste.length) return 0;
+  const arch = loadLocalArchiveOverlay(), dates = ppLireJSON('cartes-datecontrole-overlay', {}, ppEstObjet);
+  for(const m of liste){
+    delete matieresConfig[m]; delete arch[m]; delete dates[m];
+    if(matiereFilter === m) matiereFilter = 'toutes';
+  }
+  ppEcrire('cartes-archive-overlay', JSON.stringify(arch));
+  ppEcrire('cartes-datecontrole-overlay', JSON.stringify(dates));
+  try{ clearIntervalsCache(); }catch(e){}
+  return liste.length;
+}
 function applyLocalOverlay(){
   const overlay = ppLireJSON('cartes-overlay', {}, ppEstObjet);
   const deleted = ppLireJSON('cartes-deleted', [], Array.isArray);
@@ -3994,6 +4041,7 @@ function applyLocalOverlay(){
   applyLocalDateControleOverlay();
   applyLocalEmptyMatieres();
   applyLocalArchiveOverlay();
+  purgerMatieresFantomes();   /* v344 : plus de matière vide « archivée » qui traîne après la suppression de ses cartes */
   const planningLocal = loadLocalPlanning();
   if(planningLocal) planning = planningLocal;
 }
@@ -7704,17 +7752,19 @@ function pcAppliquer(choix, box, toutes){
         matNotes.push(n + ' carte' + (n > 1 ? 's' : '') + ' restaurée' + (n > 1 ? 's' : ''));
       }
     } else if(a.type === 'decaler' || a.type === 'replanifier' || a.type === 'etaler'){   /* v272 : planning */
-      const plan = pcPlanDates(a), iso = maintenant(), anciens = [], patches = {};
+      /* v338 : PAS de derniereModification ici. Elle sert à la synchro à départager deux appareils : la mettre à « maintenant » pour un simple décalage
+         de date permettait d'écraser une révision faite sur l'autre appareil (la carte reprenait son ancien palier). Même règle que lisserRetards. */
+      const plan = pcPlanDates(a), anciens = [], patches = {};
       for(const p of plan){
         const c = CARDS.find(k => k.id === p.id); if(!c || c.pausee === true) continue;
-        anciens.push({ id: c.id, d: c.prochaineRevision || null }); c.prochaineRevision = p.date; c.derniereModification = iso;
-        patches[c.id] = { prochaineRevision: p.date, derniereModification: iso };
+        anciens.push({ id: c.id, d: c.prochaineRevision || null }); c.prochaineRevision = p.date;
+        patches[c.id] = { prochaineRevision: p.date };
       }
       if(!anciens.length){ ignorees++; continue; }
       saveLocalOverlayLot(patches);
       lot.defaire.push(() => {
-        const i2 = new Date().toISOString(), pt = {};
-        for(const o of anciens){ const c = CARDS.find(k => k.id === o.id); if(!c) continue; c.prochaineRevision = o.d; c.derniereModification = i2; pt[o.id] = { prochaineRevision: o.d, derniereModification: i2 }; }
+        const pt = {};
+        for(const o of anciens){ const c = CARDS.find(k => k.id === o.id); if(!c) continue; c.prochaineRevision = o.d; pt[o.id] = { prochaineRevision: o.d }; }
         saveLocalOverlayLot(pt);
       });
       matNotes.push(pcPlanNote(a, plan));
@@ -10967,6 +11017,7 @@ function confirmDeleteCard(id){
   CARDS = CARDS.filter(c => c.id !== id);
   saveLocalDelete(id);
   saveTombstone(id);
+  purgerMatieresFantomes();   /* v344 : la dernière carte d'une matière archivée ne laisse plus une matière vide « archivée » */
   closeDeleteConfirm();
   if(matiereFilter !== 'toutes' && !getMatieres().includes(matiereFilter)) matiereFilter = 'toutes';
   if(activeTab === 'study') buildQueue();
@@ -10998,6 +11049,9 @@ function reprogrammerCartesMatiere(matiere){
   // à onDateControleChange pour prévenir l'utilisateur.
   let auMoinsUnRepli = false;
   const patchesRepro = {};
+  // v343 : index de charge construit UNE fois pour toute la série (les paliers ne changent pas ici, donc les plafonds effectifs non plus).
+  const IX = construireIndexCharge(cartesPourPlafonds());
+  IX.L = plafondsEffectifs(matiere, dateControle);
   for(const c of cartes){
     // Carte jamais révisée : `intervals[palier]` représente le temps DEPUIS
     // la dernière révision, ce qui n'existe pas encore ici — la décaler
@@ -11017,8 +11071,8 @@ function reprogrammerCartesMatiere(matiere){
       const cible = c.prochaineRevision || today;
       // Carte neuve : elle évite la zone tampon (les cartes déjà révisées,
       // plus bas, ne passent PAS ce paramètre).
-      const prochaineRevision = plafonnerDateRevision(matiere, cible, dateControle, c.id, true);
-      c.prochaineRevision = prochaineRevision;
+      const prochaineRevision = plafonnerDateRevision(matiere, cible, dateControle, c.id, true, IX);
+      c.prochaineRevision = prochaineRevision; indexChargeDeplacer(IX, c.id, prochaineRevision);
       if(estEnRepliZoneTampon(prochaineRevision, dateControle)) auMoinsUnRepli = true;
       // Un simple décalage de date ne touche PAS derniereModification (comme lisserRetards) : sinon la synchro
       // prendrait l'état local, éventuellement périmé, pour plus récent et écraserait une révision faite ailleurs.
@@ -11048,8 +11102,8 @@ function reprogrammerCartesMatiere(matiere){
     // faire retomber beaucoup sur le même jour (ex. beaucoup de cartes au
     // même palier) — sans ce plafond, cette rafale contournait totalement
     // celui de l'import.
-    const prochaineRevision = plafonnerDateRevision(matiere, cible, dateControle, c.id);
-    c.prochaineRevision = prochaineRevision;
+    const prochaineRevision = plafonnerDateRevision(matiere, cible, dateControle, c.id, undefined, IX);
+    c.prochaineRevision = prochaineRevision; indexChargeDeplacer(IX, c.id, prochaineRevision);
     patchesRepro[c.id] = { palier: c.palier, prochaineRevision, derniereRevision: c.derniereRevision };
   }
   saveLocalOverlayLot(patchesRepro);   // une seule écriture pour toute la matière
@@ -11091,7 +11145,7 @@ function rattraperRetardsControle(){
   // Comptages construits UNE fois (cartes non maîtrisées par jour, par matière et au total) et tenus à jour à chaque
   // déplacement : avant, chaque test d'un jour relisait toute la liste des cartes (coût quadratique, app figée au-delà de 2 000 cartes).
   const parJour = {}, parMatJour = {};
-  for(const c of cartesNonPausees()){
+  for(const c of cartesPourPlafonds()){   /* v337 : les matières archivées ne prennent plus de places */
     if((c.palier || 0) >= MASTERED_PALIER || !c.prochaineRevision) continue;
     const m = c.matiere || 'Sans matière';
     parJour[c.prochaineRevision] = (parJour[c.prochaineRevision] || 0) + 1;
@@ -11105,6 +11159,7 @@ function rattraperRetardsControle(){
     const cartes = cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === matiere && (c.palier || 0) < MASTERED_PALIER);
     if(!parMatJour[matiere]) parMatJour[matiere] = {};
     const nbMat = parMatJour[matiere];
+    const L = plafondsEffectifs(matiere, D);   /* v340 : plafonds effectifs, calculés une fois par matière */
     for(const c of cartes){
       if(!c.prochaineRevision) continue;
       const p = c.palier || 0;
@@ -11115,7 +11170,7 @@ function rattraperRetardsControle(){
       if(limite < plancher) continue;                     // impossible à rattraper : le statut prévient
       let cible = limite;
       for(let j = addDays(limite, -1) >= plancher ? addDays(limite, -1) : limite; j >= plancher; j = addDays(j, -1)){
-        if((nbMat[j] || 0) < NOUVELLES_CARTES_MAX_PAR_JOUR && (parJour[j] || 0) < CHARGE_GLOBALE_MAX_PAR_JOUR){ cible = j; break; }
+        if((nbMat[j] || 0) < L.mat && (parJour[j] || 0) < L.glob){ cible = j; break; }
       }
       // tenue à jour des comptages : la carte quitte son ancien jour pour le nouveau
       parJour[c.prochaineRevision]--; nbMat[c.prochaineRevision]--;
@@ -11235,11 +11290,12 @@ function ppWkHtml(date, DD){
     if(mg.niveau === 'trop_tard') txt = 'trop tard';
     else if(mg.marge < 0) txt = 'dépasse de ' + (-mg.marge) + ' j';
     else txt = 'marge ' + mg.marge + ' j';
-    const titre = `${mg.matiere} : tout maîtrisé le ${formatDateFr(mg.dateMaitrise)} au mieux — contrôle le ${formatDateFr(mg.dateControle)}`;
+    const titre = `${mg.matiere} : 80 % maîtrisé le ${formatDateFr(mg.dateMaitrise)} — contrôle le ${formatDateFr(mg.dateControle)}`;
     m = `<div class="pp-m ${(mg.niveau === 'large' || mg.niveau === 'juste') ? '' : 'pp-bad'}" title="${escapeHtml(titre)}">${escapeHtml(txt)}</div>`;
   }
   const jd = (D.jours || []).find(j => j.date === date), prevus = jd ? jd.proj : 0;
-  return `${nom}${rv ? `<span>${PP_IC.loop}${rv}</span>` : ''}${prevus ? `<span style="opacity:.75" title="Estimation prudente : on compte environ 30 % de cartes à revoir en plus">≈ ${prevus} rappel${prevus > 1 ? 's' : ''} prévu${prevus > 1 ? 's' : ''}</span>` : ''}${nw ? `<span style="color:var(--amber)">${PP_IC.spark}<i style="font-style:normal;color:var(--muted)">${nw}</i></span>` : ''}${ctrl ? `<span style="color:var(--yellow)">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : ''}${m}`;
+  const entretien = getEntretienDuJour(date);   /* v344 (10a) */
+  return `${nom}${rv ? `<span>${PP_IC.loop}${rv}</span>` : ''}${prevus ? `<span style="opacity:.75" title="Estimation prudente : on compte environ 30 % de cartes à revoir en plus">≈ ${prevus} rappel${prevus > 1 ? 's' : ''} prévu${prevus > 1 ? 's' : ''}</span>` : ''}${entretien ? `<span style="opacity:.75" title="Cartes déjà maîtrisées, revues de temps en temps pour ne pas les oublier">+${entretien} entretien</span>` : ''}${nw ? `<span style="color:var(--amber)">${PP_IC.spark}<i style="font-style:normal;color:var(--muted)">${nw}</i></span>` : ''}${ctrl ? `<span style="color:var(--yellow)">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : ''}${m}`;
 }
 function ppPlanPick(date){
   if(!ppPlanData) return;
@@ -11281,9 +11337,18 @@ function ppMatHtml(m, arch){
   const a = st.maitrisees, n = st.nouvelles, b = st.enCours;
   const date = (matieresConfig[m] || {}).dateControle;
   const risque = getStatForMatiere(m) && estMatiereCritique(m, getStatForMatiere(m));
+  /* v342 (D4) : « Pour être prêt : environ X cartes par jour », seulement pour une matière active avec un contrôle futur et des cartes à apprendre. */
+  let besoinTxt = '';
+  if(!arch && date && date >= todayStr()){
+    const X = besoinParJourMatiere(m);
+    if(X > 0){
+      const cap = plafondPrevisionJour(m);
+      besoinTxt = `<div class="pp-need">Pour être prêt : environ ${X} cartes par jour${X > cap ? ', plus que ce que ton planning peut absorber' : ''}</div>`;
+    }
+  }
   return `<div class="pp-mat${arch ? ' pp-arch' : ''}" role="button" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span>${escapeHtml(m)}${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">+ contrôle</span>`}</div>
   <div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div>
-  <div class="pp-leg"><span><b>${a}</b> maîtrisée${a > 1 ? 's' : ''}</span><span><b>${b}</b> en cours</span><span><b>${n}</b> nouvelle${n > 1 ? 's' : ''}</span></div></div>`;
+  <div class="pp-leg"><span><b>${a}</b> maîtrisée${a > 1 ? 's' : ''}</span><span><b>${b}</b> en cours</span><span><b>${n}</b> nouvelle${n > 1 ? 's' : ''}</span></div>${besoinTxt}</div>`;
 }
 
 function renderPlanning(){
@@ -11368,15 +11433,17 @@ function ppLoadHint(m){
   const sc = ld.statutControle;
   let t = `Maîtrise complète ${dl}.`, col = 'var(--muted)';
   if(sc){
-    const marge = ppEcart(ld.dateMaitrise, sc.dateControle);
+    /* v342 : avec un contrôle, la prévision vise 80 % de cartes maîtrisées (date80) : le texte, la marge et le statut parlent de la même date. */
+    const dl80 = ld.joursRestants80 <= 0 ? "aujourd'hui" : ld.joursRestants80 === 1 ? 'demain' : 'dans ' + ld.joursRestants80 + ' j';
+    const marge = ppEcart(ld.date80, sc.dateControle);
     const map = {
       large:['var(--green)', `Large : ${marge} j de marge avant le contrôle.`],
       juste:['var(--amber)', marge > 0 ? `Ça passe de justesse (${marge} j de marge).` : 'Ça passe, le jour même du contrôle.'],
-      depasse:['var(--pink)', `Ça ne rentre pas : il reste ${sc.joursAvantControle} j, il en faudrait ${ld.joursRestants}.`],
+      depasse:['var(--pink)', `Ça ne rentre pas : il reste ${sc.joursAvantControle} j, il en faudrait ${ld.joursRestants80}.`],
       passe:['var(--pink)', 'La date de contrôle est déjà passée.'],
       trop_tard:['var(--pink)', 'Trop tard pour espacer les révisions : il faut bachoter.'] };
     const [c, tx] = map[sc.niveau];
-    col = c; t = sc.niveau === 'large' || sc.niveau === 'juste' || sc.niveau === 'depasse' ? `Maîtrise complète ${dl}. ${tx}` : tx;
+    col = c; t = sc.niveau === 'large' || sc.niveau === 'juste' || sc.niveau === 'depasse' ? `80 % maîtrisé ${dl80}. ${tx}` : tx;
   }
   return `<p class="pp-stt" style="--c:${col}">${escapeHtml(t)}</p>`;
 }
@@ -11521,6 +11588,19 @@ function getDatesControleActives(){
   }
   return map;
 }
+/* v344 (10a) : cartes DÉJÀ MAÎTRISÉES dont la revue d'entretien tombe ce jour-là. getCartesDuJour les exclut (le compteur « À venir » compte ce qu'il reste à apprendre),
+   alors que la file de révision les contient : « À venir » les affiche maintenant à part (« +N entretien ») pour que les deux chiffres s'expliquent. */
+function getEntretienDuJour(date){
+  const today = todayStr();
+  const actives = new Set(getMatieresActives());
+  return cartesNonPausees().filter(c => {
+    if(!actives.has(c.matiere || 'Sans matière')) return false;
+    if((c.palier || 0) < MASTERED_PALIER) return false;
+    let jour = c.prochaineRevision || today;
+    if(jour < today) jour = today;
+    return jour === date;
+  }).length;
+}
 function getCartesDuJour(date){
   const today = todayStr();
   const actives = new Set(getMatieresActives());
@@ -11533,10 +11613,10 @@ function getCartesDuJour(date){
   });
 }
 /* Marge avant le contrôle, pour la barre du bloc « À venir ». Réutilise
-   getMasteryLoad (projection OPTIMISTE : zéro erreur). Parmi les matières
+   getMasteryLoad (v341 : prévision réaliste, 80 % des cartes maîtrisées, 1 révision sur 5 ratée). Parmi les matières
    actives avec un contrôle futur, des cartes et pas déjà toutes maîtrisées,
    on garde la plus serrée (marge la plus petite ; à égalité, le pire statut).
-   marge = date de contrôle − dateMaitrise (en jours ; négative = dépasse).
+   marge = date de contrôle − date80 (en jours ; négative = dépasse). Le champ garde le nom dateMaitrise mais contient date80.
    Retourne null s'il n'y a aucune matière concernée. */
 function getMargeControle(){
   const today = todayStr();
@@ -11551,9 +11631,9 @@ function getMargeControle(){
     const cand = {
       matiere: m,
       niveau: load.statutControle.niveau,
-      dateMaitrise: load.dateMaitrise,
+      dateMaitrise: load.date80,
       dateControle: cfg.dateControle,
-      marge: ecart(load.dateMaitrise, cfg.dateControle)
+      marge: ecart(load.date80, cfg.dateControle)
     };
     if(!pire
        || cand.marge < pire.marge
@@ -11605,7 +11685,13 @@ function getMasteryLoad(matiere){
      est calculée à part), c'est donc une estimation optimiste : les autres
      matières prennent aussi du temps le même jour. */
   const intervals = getIntervalsForMatiere(matiere);
-  const plafondJour = CHARGE_GLOBALE_MAX_PAR_JOUR;
+  /* v341 : avec un contrôle futur, la prévision est réaliste : plafond = part de la capacité commune (plafondPrevisionJour), 1 révision sur 5 échoue,
+     et le statut vise 80 % de cartes maîtrisées (jour80). Sans contrôle futur : comme avant (30 par jour, aucun échec, maîtrise complète). */
+  const cfgPrev = matieresConfig[matiere];
+  const avecControle = !!(cfgPrev && cfgPrev.dateControle && cfgPrev.dateControle >= today);
+  const plafondJour = plafondPrevisionJour(matiere);
+  let kErr = 0, jour80 = null;
+  const cible80 = Math.ceil(SEUIL_PREVISION_MAITRISE * cartes.length);
   const attente = nonMaitrisees.map(c => ({
     palier: c.palier || 0,
     jour: c.prochaineRevision && c.prochaineRevision > today ? c.prochaineRevision : today
@@ -11621,10 +11707,12 @@ function getMasteryLoad(matiere){
     dues.sort((a, b) => a.jour < b.jour ? -1 : a.jour > b.jour ? 1 : 0);
     const faites = dues.slice(0, plafondJour);
     for(const a of faites){
+      if(avecControle && (++kErr % ECHEC_PREVISION_UN_SUR) === 0){ totalRevisionsRestantes++; a.jour = addDays(jourCourant, 1); continue; }   /* révision ratée : revient demain, sans progresser */
       a.palier = Math.min(a.palier + 1, intervals.length - 1);
       totalRevisionsRestantes++;
       if(a.palier >= MASTERED_PALIER){
         restantes--;
+        if(!jour80 && (maitriseesCount + (attente.length - restantes)) >= cible80) jour80 = jourCourant;
         if(jourCourant > dernierJour) dernierJour = jourCourant;
       } else {
         a.jour = addDays(jourCourant, intervals[a.palier]);
@@ -11637,6 +11725,8 @@ function getMasteryLoad(matiere){
   const semaines = Math.max(1, Math.ceil((joursRestants + 1) / 7));
   const rythmeParSemaine = Math.round((totalRevisionsRestantes / semaines) * 10) / 10;
 
+  const date80 = (avecControle && jour80) ? jour80 : dernierJour;   /* sans contrôle : date de maîtrise complète, inchangée */
+  const joursRestants80 = Math.max(0, Math.round((new Date(date80 + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000));
   let statutControle = null;
   const cfg = matieresConfig[matiere];
   if(cfg && cfg.dateControle){
@@ -11649,8 +11739,8 @@ function getMasteryLoad(matiere){
       // l'espacement n'a plus le temps de jouer son rôle. Un statut dédié
       // évite de faire croire à un planning qui fonctionne normalement.
       statutControle = 'trop_tard';
-    } else if(dernierJour <= cfg.dateControle){
-      const margeJours = Math.round((new Date(cfg.dateControle + "T00:00:00") - new Date(dernierJour + "T00:00:00")) / 86400000);
+    } else if(date80 <= cfg.dateControle){   /* v341 : le statut suit le jour où 80 % des cartes sont maîtrisées */
+      const margeJours = Math.round((new Date(cfg.dateControle + "T00:00:00") - new Date(date80 + "T00:00:00")) / 86400000);
       statutControle = margeJours >= 3 ? 'large' : 'juste';
     } else {
       statutControle = 'depasse';
@@ -11666,7 +11756,8 @@ function getMasteryLoad(matiere){
   return {
     matiere, total: cartes.length, maitrisees: maitriseesCount, nonMaitrisees: nonMaitrisees.length,
     repartition, totalRevisionsRestantes, joursRestants, dateMaitrise: dernierJour,
-    rythmeParSemaine, statutControle, compresse, toutMaitrise: false
+    rythmeParSemaine, statutControle, compresse, toutMaitrise: false,
+    date80, joursRestants80, besoinParJour: avecControle ? besoinParJourMatiere(matiere) : 0   /* v341 */
   };
 }
 
@@ -12159,7 +12250,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v336';
+const PP_APP_VERSION = 'v344';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -15119,6 +15210,16 @@ const NOUVELLES_CARTES_MAX_PAR_JOUR = 20;
    du calendrier et créer un jour à 40+ cartes dues alors que chaque matière,
    isolément, respectait son propre plafond. */
 const CHARGE_GLOBALE_MAX_PAR_JOUR = 30;
+/* v340 : QUAND UNE MATIÈRE A UN CONTRÔLE FUTUR, les plafonds ci-dessus servent de PLANCHER et montent jusqu'à ces maxima, selon le besoin réel
+   (cartes restantes / jours avant le contrôle). Les plafonds sont des plafonds de DATES : avec les cartes ratées qui reviennent et les rappels,
+   la charge réellement faite est d'environ 35 % de plus (≈ 43 par jour pour 100 cartes à J+14, jamais plus de ≈ 58 pour une matière). */
+const NOUVELLES_CARTES_MAX_AVEC_CONTROLE = 32;
+const CHARGE_GLOBALE_MAX_AVEC_CONTROLE = 48;
+const MARGE_BESOIN_QUOTIDIEN = 1.2;
+/* v341 : PRÉVISION RÉALISTE (getMasteryLoad, quand un contrôle futur existe) : 1 révision sur ECHEC_PREVISION_UN_SUR échoue (déterministe : la carte revient le
+   lendemain sans progresser), et le statut du contrôle vise SEUIL_PREVISION_MAITRISE (80 %) de cartes maîtrisées au jour du contrôle, pas 100 %. */
+const ECHEC_PREVISION_UN_SUR = 5;
+const SEUIL_PREVISION_MAITRISE = 0.8;
 /* Hypothèse de la projection « rappels prévus » (semaine) : part des révisions réussies / difficiles / ratées.
    Volontairement prudente : mieux vaut des chiffres un peu hauts qui BAISSENT que des chiffres bas qui montent. */
 const PROJECTION_PROBA = { vert: 0.70, orange: 0.20, rouge: 0.10 };
@@ -15129,7 +15230,7 @@ const PROJECTION_PROBA = { vert: 0.70, orange: 0.20, rouge: 0.10 };
    pour ne jamais dépasser CHARGE_GLOBALE_MAX_PAR_JOUR au total un jour donné. */
 function chargeDejaPresente(jour, compteurGlobalParJour){
   if(compteurGlobalParJour[jour] != null) return compteurGlobalParJour[jour];
-  const n = cartesNonPausees().filter(c => (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
+  const n = cartesPourPlafonds().filter(c => (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
   compteurGlobalParJour[jour] = n;
   return n;
 }
@@ -15147,9 +15248,80 @@ function chargeDejaPresente(jour, compteurGlobalParJour){
 function chargeMatiereDejaPresente(matiere, jour, compteurJourParMatiere){
   if(!compteurJourParMatiere[matiere]) compteurJourParMatiere[matiere] = {};
   if(compteurJourParMatiere[matiere][jour] != null) return compteurJourParMatiere[matiere][jour];
-  const n = cartesNonPausees().filter(c => c.matiere === matiere && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
+  const n = cartesPourPlafonds().filter(c => c.matiere === matiere && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
   compteurJourParMatiere[matiere][jour] = n;
   return n;
+}
+
+/* v340 — PLAFONDS EFFECTIFS (une seule source de vérité pour les plafonds de places par jour).
+   Sans aucun contrôle futur : 20 par matière / 30 au total, EXACTEMENT comme avant.
+   Avec un contrôle futur : besoin quotidien = (paliers restants des cartes non maîtrisées) / (jours avant le contrôle − marge visée) ;
+   plafond de la matière = besoin × 1,2 borné entre 20 et 32 ; plafond global = Σ des besoins des matières actives avec contrôle × 1,2 borné entre 30 et 48.
+   Les matières archivées et les cartes en pause ne comptent pas (cartesPourPlafonds). */
+function matieresAvecControle(){
+  const today = todayStr();
+  return getMatieresActives().filter(m => { const cfg = matieresConfig[m]; return cfg && cfg.dateControle && cfg.dateControle >= today; });
+}
+/* nbEnAttente : nombre de cartes NEUVES de matierePending pas encore dans CARDS (import en cours) : sans elles le besoin serait sous-estimé
+   pendant tout l'import. Retourne { par: {matière: besoin par jour}, liste: [matières avec contrôle], total }. */
+function besoinsQuotidiens(matierePending, nbEnAttente){
+  const today = todayStr();
+  const liste = matieresAvecControle();
+  const par = {};
+  if(!liste.length) return { par, liste, total: 0 };
+  const restant = {}, set = new Set(liste);
+  for(const c of cartesPourPlafonds()){
+    const m = c.matiere || 'Sans matière';
+    if(set.has(m) && (c.palier || 0) < MASTERED_PALIER) restant[m] = (restant[m] || 0) + (MASTERED_PALIER - (c.palier || 0));
+  }
+  if(matierePending && set.has(matierePending)) restant[matierePending] = (restant[matierePending] || 0) + (nbEnAttente || 0) * MASTERED_PALIER;
+  let total = 0;
+  for(const m of liste){
+    const jours = Math.round((new Date(matieresConfig[m].dateControle + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000);
+    par[m] = (restant[m] || 0) / Math.max(1, jours - MARGE_CONTROLE_VISEE_JOURS);
+    total += par[m];
+  }
+  return { par, liste, total };
+}
+/* Besoin par jour d'UNE matière (0 sans contrôle futur). */
+function besoinQuotidien(m, nbEnAttente){
+  const b = besoinsQuotidiens(m, nbEnAttente);
+  return b.par[m] || 0;
+}
+function plafondGlobalDepuis(b){
+  return Math.max(CHARGE_GLOBALE_MAX_PAR_JOUR, Math.min(CHARGE_GLOBALE_MAX_AVEC_CONTROLE, Math.ceil(b.total * MARGE_BESOIN_QUOTIDIEN)));
+}
+function plafondGlobalEffectif(matierePending, nbEnAttente){
+  return plafondGlobalDepuis(besoinsQuotidiens(matierePending, nbEnAttente));
+}
+function plafondMatiereDepuisBesoin(besoin){
+  return Math.max(NOUVELLES_CARTES_MAX_PAR_JOUR, Math.min(NOUVELLES_CARTES_MAX_AVEC_CONTROLE, Math.ceil((besoin || 0) * MARGE_BESOIN_QUOTIDIEN)));
+}
+/* → { mat, glob } : plafond de la matière ce jour-là et plafond global. */
+function plafondsEffectifs(matiere, dateControle, nbEnAttente){
+  const b = besoinsQuotidiens(matiere, nbEnAttente);
+  const glob = plafondGlobalDepuis(b);
+  let mat = NOUVELLES_CARTES_MAX_PAR_JOUR;
+  if(dateControle && dateControle >= todayStr()) mat = plafondMatiereDepuisBesoin(b.par[matiere]);
+  return { mat, glob };
+}
+/* v341 : nombre de cartes par jour que la PRÉVISION d'une matière avec contrôle peut supposer : sa part de la capacité commune.
+   Si la somme des plafonds des matières avec contrôle dépasse le plafond global, chaque matière n'a que sa part proportionnelle.
+   Sans contrôle futur : 30 comme avant (la prévision d'une matière sans contrôle ne change pas). */
+function plafondPrevisionJour(matiere){
+  const cfg = matieresConfig[matiere];
+  if(!(cfg && cfg.dateControle && cfg.dateControle >= todayStr())) return CHARGE_GLOBALE_MAX_PAR_JOUR;
+  const b = besoinsQuotidiens();
+  const glob = plafondGlobalDepuis(b);
+  const mon = plafondMatiereDepuisBesoin(b.par[matiere]);
+  let somme = 0;
+  for(const m of b.liste) somme += plafondMatiereDepuisBesoin(b.par[m]);
+  if(somme > glob) return Math.max(1, Math.floor(mon * glob / somme));
+  return mon;
+}
+/* v341 : « cartes par jour pour être prêt » d'une matière avec contrôle futur = besoin quotidien × marge, arrondi au-dessus (0 sinon). */
+function besoinParJourMatiere(matiere){
+  return Math.ceil(besoinQuotidien(matiere) * MARGE_BESOIN_QUOTIDIEN);
 }
 
 /* ÉTAPE E — Dernier jour où une carte NEUVE peut encore être introduite.
@@ -15198,12 +15370,13 @@ function finFenetreCartesNeuves(matiere, dateControle){
      carte qu'en repli si aucun autre jour n'a de place ;
    - renvoie { jour, repli } : repli vaut true si la carte a dû être placée
      dans la zone tampon (sert à prévenir l'utilisateur, étape 4). */
-function meilleurJourPourCarteNeuve(matiere, today, dateControle, compteurJourParMatiere, compteurGlobalParJour, plafondProportionnel){
-  const plafondMatiereJour = plafondProportionnel ? Math.min(NOUVELLES_CARTES_MAX_PAR_JOUR, plafondProportionnel) : NOUVELLES_CARTES_MAX_PAR_JOUR;
+function meilleurJourPourCarteNeuve(matiere, today, dateControle, compteurJourParMatiere, compteurGlobalParJour, plafondProportionnel, nbEnAttente){
+  const L = plafondsEffectifs(matiere, dateControle, nbEnAttente);   /* v340 : plafonds effectifs (20/30 sans contrôle, jusqu'à 32/48 avec) ; nbEnAttente = cartes du lot pas encore dans CARDS */
+  const plafondMatiereJour = plafondProportionnel ? Math.min(L.mat, plafondProportionnel) : L.mat;
   const aDePlace = (jour) => {
     const dejaMatiere = chargeMatiereDejaPresente(matiere, jour, compteurJourParMatiere);
     const dejaGlobal = chargeDejaPresente(jour, compteurGlobalParJour) + (compteurGlobalParJour['_ajout_' + jour] || 0);
-    return dejaMatiere < plafondMatiereJour && dejaGlobal < CHARGE_GLOBALE_MAX_PAR_JOUR;
+    return dejaMatiere < plafondMatiereJour && dejaGlobal < L.glob;
   };
 
   // Sans date de contrôle : comportement inchangé, aucune zone tampon.
@@ -15259,12 +15432,48 @@ function meilleurJourPourCarteNeuve(matiere, today, dateControle, compteurJourPa
 /* Vrai si une carte neuve placée à `jour` est dans la zone tampon [D-ZONE, D]
    (donc en repli). Faux sans contrôle futur, ou si le jour est après le contrôle.
    Sert aux chemins B et C (plafonnerDateRevision ne renvoie qu'une date). */
+/* v343 — INDEX DE CHARGE : comptages des cartes non maîtrisées par jour, au total et par matière, construits en UN passage sur les cartes qui prennent des
+   places (cartesPourPlafonds) puis tenus à jour à chaque déplacement. Avant, chaque jour essayé relisait toute la liste des cartes : le coût montait au carré
+   (changer une date de contrôle figeait l'app au-delà de 2 000 cartes). Les résultats sont EXACTEMENT les mêmes. `ids` retrouve en O(1) la carte qu'on déplace
+   (elle ne doit pas se compter elle-même). `L` : plafonds effectifs de la matière, que l'appelant peut fixer quand ils ne changent pas pendant une série de déplacements. */
+function construireIndexCharge(cartesP){
+  const today = todayStr();
+  const glob = {}, mat = {}, ids = new Map();
+  for(const c of cartesP){
+    if((c.palier || 0) >= MASTERED_PALIER) continue;
+    const j = c.prochaineRevision || today;
+    glob[j] = (glob[j] || 0) + 1;
+    const m = c.matiere;
+    if(!mat[m]) mat[m] = {};
+    mat[m][j] = (mat[m][j] || 0) + 1;
+    ids.set(c.id, { j, m });
+  }
+  return { glob, mat, ids, L: null };
+}
+/* La carte d'identifiant id passe au jour nouveauJour (sans effet si elle ne compte pas dans les plafonds : maîtrisée, en pause ou matière archivée). */
+function indexChargeDeplacer(IX, id, nouveauJour){
+  const e = IX.ids.get(id);
+  if(!e || e.j === nouveauJour) return;
+  IX.glob[e.j]--; IX.mat[e.m][e.j]--;
+  e.j = nouveauJour;
+  IX.glob[nouveauJour] = (IX.glob[nouveauJour] || 0) + 1;
+  if(!IX.mat[e.m]) IX.mat[e.m] = {};
+  IX.mat[e.m][nouveauJour] = (IX.mat[e.m][nouveauJour] || 0) + 1;
+}
+
 function estEnRepliZoneTampon(jour, dateControle){
   if(!dateControle || !jour) return false;
   return jour >= addDays(dateControle, -ZONE_REVISION_AVANT_CONTROLE_JOURS) && jour <= dateControle;
 }
 
-function plafonnerDateRevision(matiere, jourCandidat, dateControle, excludeId, interdireZoneTampon){
+function plafonnerDateRevision(matiere, jourCandidat, dateControle, excludeId, interdireZoneTampon, indexCharge){
+  // v343 : comptages par jour (index de charge) : construits ici UNE fois par appel, ou passés par l'appelant (indexCharge, facultatif) qui les tient à jour
+  // quand il enchaîne beaucoup de déplacements. L'index ne contient que les cartes qui prennent des places (v337 : ni pause ni matière archivée).
+  const IX = indexCharge || construireIndexCharge(cartesPourPlafonds());
+  const L = IX.L || plafondsEffectifs(matiere, dateControle);   /* v340 : plafonds effectifs de la matière et globaux (calculés une fois par appel) */
+  const ex = excludeId != null ? IX.ids.get(excludeId) : null;   // la carte qu'on place ne se compte pas elle-même
+  const nMat = (j) => ((IX.mat[matiere] && IX.mat[matiere][j]) || 0) - ((ex && ex.m === matiere && ex.j === j) ? 1 : 0);
+  const nGlob = (j) => (IX.glob[j] || 0) - ((ex && ex.j === j) ? 1 : 0);
   // interdireZoneTampon (optionnel, défaut false = comportement v13 inchangé) :
   // à passer à true UNIQUEMENT pour une carte NEUVE (jamais révisée). Même
   // logique en deux temps que meilleurJourPourCarteNeuve : on cherche d'abord
@@ -15277,9 +15486,9 @@ function plafonnerDateRevision(matiere, jourCandidat, dateControle, excludeId, i
     // carte neuve posée dessus doit donc essayer d'en sortir.
     if(jourCandidat > dateControle) return jourCandidat;
     const aDePlace = (j) => {
-      const dejaMatiere = cartesNonPausees().filter(c => c.matiere === matiere && c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === j).length;
-      const dejaGlobal = cartesNonPausees().filter(c => c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === j).length;
-      return dejaMatiere < NOUVELLES_CARTES_MAX_PAR_JOUR && dejaGlobal < CHARGE_GLOBALE_MAX_PAR_JOUR;
+      const dejaMatiere = nMat(j);
+      const dejaGlobal = nGlob(j);
+      return dejaMatiere < L.mat && dejaGlobal < L.glob;
     };
     const finZone = finFenetreCartesNeuves(matiere, dateControle); // étape E (même règle que l'import)
     const today = todayStr();
@@ -15301,10 +15510,10 @@ function plafonnerDateRevision(matiere, jourCandidat, dateControle, excludeId, i
   let jour = jourCandidat;
   // Garde-fou : jamais plus d'un an de recherche (évite tout gel de l'app).
   for(let essai = 0; essai < 366; essai++){
-    const dejaMatiere = cartesNonPausees().filter(c => c.matiere === matiere && c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
-    const dejaGlobal = cartesNonPausees().filter(c => c.id !== excludeId && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || todayStr()) === jour).length;
-    const okMatiere = dejaMatiere < NOUVELLES_CARTES_MAX_PAR_JOUR;
-    const okGlobal = dejaGlobal < CHARGE_GLOBALE_MAX_PAR_JOUR;
+    const dejaMatiere = nMat(jour);
+    const dejaGlobal = nGlob(jour);
+    const okMatiere = dejaMatiere < L.mat;
+    const okGlobal = dejaGlobal < L.glob;
     if(dateControle && jour >= dateControle) return jour;
     if(okMatiere && okGlobal) return jour;
     jour = addDays(jour, 1);
@@ -15312,6 +15521,21 @@ function plafonnerDateRevision(matiere, jourCandidat, dateControle, excludeId, i
   return jourCandidat;
 }
 
+/* v344 (10c) : l'ordre des cartes d'un lot décidait qui était introduit en premier : la première matière du lot prenait les premiers jours et les suivantes
+   héritaient du reste. On passe maintenant les cartes à tour de rôle d'une matière à l'autre (l'ordre à l'intérieur d'une matière ne change pas). Un lot d'une
+   seule matière est renvoyé tel quel. */
+function entrelacerParMatiere(items, renommages){
+  const groupes = new Map();
+  for(const it of items){
+    const m = (renommages && renommages[it.matiere]) || it.matiere;
+    if(!groupes.has(m)) groupes.set(m, []);
+    groupes.get(m).push(it);
+  }
+  if(groupes.size <= 1) return items;
+  const files = [...groupes.values()], sortie = [];
+  for(let i = 0; sortie.length < items.length; i++) for(const f of files) if(i < f.length) sortie.push(f[i]);
+  return sortie;
+}
 function finaliserImport(items, renommages){
   const existingIds = new Set(CARDS.map(c => c.id));
   // Carte déjà présente (même id, même matière/question/réponse) : on l'ignore,
@@ -15324,6 +15548,7 @@ function finaliserImport(items, renommages){
     if(meme){ dejaPresentes++; return false; }
     return true;
   });
+  items = entrelacerParMatiere(items, renommages);   // v344 (10c)
   const imported = loadImportedCards();
   const today = todayStr();
   let ajoutees = 0;
@@ -15401,7 +15626,7 @@ function finaliserImport(items, renommages){
         const nbTotalMatiere = (nbCartesNeuvesParMatiere[matiere] || 0) + dejaDansFenetreParMatiere[matiere];
         plafondProportionnel = Math.max(1, Math.ceil(nbTotalMatiere / joursRestants));
       }
-      const { jour, repli } = meilleurJourPourCarteNeuve(matiere, today, dateControle, compteurJourParMatiere, compteurGlobalParJour, plafondProportionnel);
+      const { jour, repli } = meilleurJourPourCarteNeuve(matiere, today, dateControle, compteurJourParMatiere, compteurGlobalParJour, plafondProportionnel, nbCartesNeuvesParMatiere[matiere] || 0);
       if(repli) auMoinsUnRepli = true;
       // meilleurJourPourCarteNeuve ne crée pas toujours ce compteur (contrôle à J+0 :
       // aucune boucle ne tourne). On le crée ici avant de l'incrémenter.
@@ -15472,7 +15697,7 @@ function finaliserImport(items, renommages){
    Quand tu sautes des jours, les cartes en retard s'empilent sur AUJOURD'HUI. Ici,
    si plus de CHARGE_GLOBALE_MAX_PAR_JOUR cartes (30) sont dues aujourd'hui, on en garde
    30 et on décale les autres sur les jours suivants, sans jamais dépasser :
-   - LISSAGE_RETARDS_MAX_JOURS jours de décalage (3) ;
+   - LISSAGE_RETARDS_MAX_JOURS jours de décalage (7) ;
    - pour une matière avec contrôle : le dernier jour où la carte peut encore être
      maîtrisée à temps (D − temps minimum restant pour monter ses paliers, avec les
      intervalles resserrés), et au plus tard la veille du contrôle. C'est ce qui
@@ -15482,7 +15707,7 @@ function finaliserImport(items, renommages){
    la carte reste due aujourd'hui (jamais perdue, jamais repoussée sans limite).
    Idempotent : relancé, il ne fait rien tant qu'il y a ≤ 30 cartes dues aujourd'hui. */
 const LISSAGE_RETARDS_ACTIF = true;
-const LISSAGE_RETARDS_MAX_JOURS = 3;
+const LISSAGE_RETARDS_MAX_JOURS = 7;   /* v339 : 7 jours (était 3) : après une absence, les retards sont étalés plus largement (pic de ≈ 136 → ≈ 48 cartes) */
 
 function annoncerEtalement(n, delaiMs){
   if(!(n > 0)) return;
@@ -15493,9 +15718,10 @@ function annoncerEtalement(n, delaiMs){
 function lisserRetards(){
   if(!LISSAGE_RETARDS_ACTIF) return 0;
   const today = todayStr();
+  const PG = plafondGlobalEffectif();   /* v340 : plafond global effectif (sinon l'étalement défait les plafonds élevés) */
   const actives = new Set(getMatieresActives());
   const dues = cartesNonPausees().filter(c => actives.has(c.matiere || 'Sans matière') && (c.palier || 0) < MASTERED_PALIER && (c.prochaineRevision || today) <= today);
-  if(dues.length <= CHARGE_GLOBALE_MAX_PAR_JOUR) return 0;
+  if(dues.length <= PG) return 0;
 
   const ecart = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000);
   const info = new Map();
@@ -15525,11 +15751,11 @@ function lisserRetards(){
     const ra = a.prochaineRevision || today, rb = b.prochaineRevision || today;
     return ra < rb ? -1 : ra > rb ? 1 : 0;
   });
-  const reste = ordre.slice(CHARGE_GLOBALE_MAX_PAR_JOUR);
+  const reste = ordre.slice(PG);
   const idsReste = new Set(reste.map(c => c.id));
   // Charge déjà prévue chaque jour futur (hors cartes qu'on est en train de bouger).
   const charge = {};
-  for(const c of cartesNonPausees()){
+  for(const c of cartesPourPlafonds()){   /* v344 : les matières archivées ne prennent pas de places (comme dans les autres plafonds) */
     if((c.palier || 0) >= MASTERED_PALIER || idsReste.has(c.id)) continue;
     const j = c.prochaineRevision || today;
     if(j > today) charge[j] = (charge[j] || 0) + 1;
@@ -15539,7 +15765,7 @@ function lisserRetards(){
     const { limite } = info.get(c.id);
     let jour = addDays(today, 1), cible = null;
     while(jour <= limite){
-      if((charge[jour] || 0) < CHARGE_GLOBALE_MAX_PAR_JOUR){ cible = jour; break; }
+      if((charge[jour] || 0) < PG){ cible = jour; break; }
       jour = addDays(jour, 1);
     }
     if(!cible) continue; // pas de place dans la fenêtre : reste due aujourd'hui
@@ -15696,6 +15922,12 @@ function fusionnerMatieresVidesDepuisSync(data, tsOf){
     const dates = loadMatieresVidesDates();
     if(loadEmptyMatieres().includes(nom) && tsOf(dates[nom]) < sup && !CARDS.some(c => (c.matiere || 'Sans matière') === nom)){
       deleteMatiereCompletement(nom);   // matière vide supprimée sur l'autre appareil
+      changees++;
+    } else if(matieresConfig[nom] && !CARDS.some(c => (c.matiere || 'Sans matière') === nom)
+              && sup > tsOf(loadArchiveMaj()[nom]) && sup > tsOf(loadDatesControleMaj()[nom])){
+      /* v344 : matière supprimée sur l'autre appareil, ses cartes sont déjà parties ici et on n'a pas touché à ses réglages depuis : sa configuration
+         (archivage, date) ne doit pas survivre en matière vide « archivée ». */
+      deleteMatiereCompletement(nom);
       changees++;
     }
     const sl = loadMatieresSupprimees();
@@ -15856,9 +16088,10 @@ function fusionnerDepuisSync(data){
   if(reglagesRecus) fusionnerCleGeminiDepuisSync(reglagesRecus, tsOf);
   const videsChangees = reglagesRecus ? fusionnerMatieresVidesDepuisSync(reglagesRecus, tsOf) : 0;
   const archivesChangees = reglagesRecus ? fusionnerArchivesDepuisSync(reglagesRecus, tsOf) : 0;   // v326
+  const fantomes = purgerMatieresFantomes();   // v344
   if(reglagesRecus){ try{ pcFusionnerDepuisSync(reglagesRecus); }catch(e){} try{ pcJournalFusionner(reglagesRecus.reponses); }catch(e){} }   // v217 : index des conversations de Prof + carnet ; v224 : journal des réponses (bilan)
 
-  if(ajoutees > 0 || misesAJour > 0 || supprimees > 0 || datesChangees > 0 || videsChangees > 0 || archivesChangees > 0){
+  if(ajoutees > 0 || misesAJour > 0 || supprimees > 0 || datesChangees > 0 || videsChangees > 0 || archivesChangees > 0 || fantomes > 0){
     if(matiereFilter !== 'toutes' && !getMatieres().includes(matiereFilter)) matiereFilter = 'toutes';
     // Une date de contrôle reçue : chaque appareil recale SES cartes (sans toucher à derniereModification, donc sans
     // jamais écraser une révision de l'autre appareil).
@@ -15868,7 +16101,7 @@ function fusionnerDepuisSync(data){
     }
     recalcPlanning();
     saveLocalPlanning();
-    if(archivesChangees > 0){   // v326 : comme après un archivage fait ici (toggleArchiveMatiere), sans toucher à une séance en cours
+    if(archivesChangees > 0 || fantomes > 0){   // v326 : comme après un archivage fait ici (toggleArchiveMatiere), sans toucher à une séance en cours
       try{ renderPlanning(); }catch(e){}
       try{ renderBrowse(); }catch(e){}
       if(activeTab === 'study' && !studySessionActive && !quizActive){ try{ buildQueue(); }catch(e){} }
