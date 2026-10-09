@@ -3684,21 +3684,90 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-dev .fi-hit{transform:scale(1.1) rotate(-3deg)}
 #fci .fi-dev em{font:800 22px var(--f);font-style:normal;color:var(--green)}
 #fci .fi-trk{flex:1;height:4px;margin:0 12px;border-radius:4px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px);position:relative}
-#fci .fi-trk b{position:absolute;top:-12px;left:0;width:26px;height:26px;opacity:0;display:block}
+#fci .fi-trk b{position:absolute;top:-12px;left:0;width:26px;height:26px;opacity:0;display:block;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0}
 #fci .fi-trk b svg{display:block;width:100%;height:100%;fill:var(--orange);stroke:var(--ink);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
 #fci .fi-trk b svg path+path{fill:none}
 #fci .fi-trk b.fi-go{animation:fi-fly 1s cubic-bezier(.5,0,.3,1)}
 #fci .fi-trk b.fi-go.fi-r{animation-direction:reverse}
 @keyframes fi-fly{0%{left:0;opacity:1;transform:rotate(-12deg)}90%{opacity:1}100%{left:calc(100% - 26px);opacity:0;transform:rotate(12deg)}}
-#fci .fi-chb{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border-radius:12px;border:1.5px solid var(--yellow);background:rgba(var(--ov),.05);font-size:13.5px;font-weight:700;text-align:left;color:inherit}
-#fci .fi-chb i{font-style:normal;flex:none;font-size:14px;line-height:1}
-#fci .fi-chb b{flex:1;font-weight:700}
-#fci .fi-chv{flex:none;transition:transform .35s var(--sp)}
+/* v359 : note « Chromebook scolaire ? » — carte repliable (icône, titre, pastille-chevron). Elle s'ouvre en ressort, le contenu apparaît ligne par ligne. */
+#fci .fi-chw{border-radius:16px;border:1.5px solid var(--line);background:rgba(var(--ov),.04);transition:border-color .3s,background .3s,box-shadow .45s var(--sp)}
+#fci .fi-chw.fi-open{border-color:var(--yellow);background:rgba(255,217,61,.07);box-shadow:3px 3px 0 var(--yellow-d)}
+#fci .fi-chb{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;font-size:14px;font-weight:800;text-align:left;color:inherit;border-radius:16px;transition:transform .25s var(--sp)}
+#fci .fi-chb:active{transform:scale(.985)}
+#fci .fi-chi{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--yellow);color:#1a1405;box-shadow:0 2px 0 var(--yellow-d);transform:rotate(-4deg);transition:transform .5s var(--sp)}
+#fci .fi-chw.fi-open .fi-chi{transform:rotate(0) scale(1.06)}
+#fci .fi-chb b{flex:1;font-weight:800}
+#fci .fi-chc{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted);transition:background .3s,color .3s,border-color .3s}
+#fci .fi-chw.fi-open .fi-chc{background:var(--yellow);border-color:var(--yellow);color:#1a1405}
+#fci .fi-chv{display:block;transition:transform .5s var(--sp)}
 #fci .fi-chb[aria-expanded=true] .fi-chv{transform:rotate(180deg)}
-#fci .fi-chd{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--sp)}
+#fci .fi-chd{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s var(--sp)}
 #fci .fi-chd.fi-show{grid-template-rows:1fr}
 #fci .fi-chd>div{min-height:0;overflow:hidden}
-#fci .fi-chd p{margin:8px 2px 0;font-size:13px;line-height:1.4;color:var(--muted)}
+#fci .fi-chx{display:flex;flex-direction:column;gap:8px;padding:2px 14px 14px}
+#fci .fi-chx p{margin:0;font-size:13.5px;line-height:1.42;color:var(--muted)}
+#fci .fi-chx>*{opacity:0;transform:translateY(-6px);transition:opacity .25s,transform .4s var(--sp)}
+#fci .fi-chd.fi-show .fi-chx>*{opacity:1;transform:none}
+#fci .fi-chd.fi-show .fi-chx>:nth-child(1){transition-delay:.1s}
+#fci .fi-chd.fi-show .fi-chx>:nth-child(2){transition-delay:.18s}
+#fci .fi-chd.fi-show .fi-chx>:nth-child(3){transition-delay:.26s}
+#fci .fi-cor{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--yellow)}
+#fci .fi-cor s{flex:1;height:0;border-top:1.5px dashed var(--line)}
+#fci .fi-c2{display:flex;gap:8px;align-items:flex-start;color:var(--ink)!important}
+#fci .fi-c2 svg{flex:none;margin-top:2px;color:var(--yellow)}
+#fci .fi-chw.fi-open .fi-c2 svg{animation:fi-spinc 1.2s .35s var(--sp) both}
+@keyframes fi-spinc{from{transform:rotate(-200deg) scale(.4);opacity:0}}
+/* v359 : lien discret du premier écran (texte dans un léger cadre, pas un vrai bouton) */
+#fci .fi-have{align-self:flex-start;display:inline-flex;align-items:center;gap:9px;max-width:100%;padding:9px 12px 9px 11px;border-radius:14px;border:1.5px solid var(--line);background:rgba(var(--ov),.04);color:var(--muted);font:700 14px/1.2 var(--f);text-align:left;transition:transform .3s var(--sp),border-color .25s,color .25s,background .25s}
+#fci .fi-have svg:first-child{flex:none;color:var(--yellow)}
+#fci .fi-have .fi-hv{flex:none;opacity:.7;transition:transform .35s var(--sp)}
+#fci .fi-have:hover{color:var(--ink);border-color:var(--yellow)}
+#fci .fi-have:hover .fi-hv{transform:translateX(3px)}
+#fci .fi-have:active{transform:scale(.96);background:rgba(255,217,61,.08)}
+/* v359 : feuille « retrouver ma progression » */
+#fci .fi-ov{position:absolute;inset:0;z-index:6;display:flex;align-items:flex-end;justify-content:center;visibility:hidden;pointer-events:none;padding:0 0 var(--kb,0px);transition:visibility 0s .4s,padding .25s}
+#fci .fi-ov.fi-open{visibility:visible;pointer-events:auto;transition:visibility 0s,padding .25s}
+#fci .fi-ovb{position:absolute;inset:0;background:rgba(6,6,10,.62);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);opacity:0;transition:opacity .35s}
+#fci .fi-ov.fi-open .fi-ovb{opacity:1}
+#fci .fi-ovs{position:relative;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;padding:22px 22px max(22px,env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:var(--panel);border:2px solid var(--ink);border-bottom:0;box-shadow:0 -7px 0 var(--orange);transform:translateY(112%);transition:transform .4s cubic-bezier(.5,0,.8,.4)}
+#fci .fi-ov.fi-open .fi-ovs{transform:none;transition:transform .6s var(--sp)}
+#fci .fi-ovs h2{font-size:clamp(28px,5.4vh,36px);line-height:1.04;letter-spacing:-.035em;font-weight:800;text-shadow:3px 3px 0 var(--orange);margin:0;padding-right:44px}
+#fci .fi-ovp{margin:0;color:var(--muted);font-size:15.5px}
+#fci .fi-ovx{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:12px;border:1.5px solid var(--line);display:grid;place-items:center;color:var(--muted);--d:3px}
+#fci .fi-ovf{display:flex;gap:8px;align-items:stretch;transition:transform .2s}
+#fci .fi-ovf .fi-key{outline:none;transition:border-color .2s,box-shadow .25s}
+#fci .fi-ovf.fi-bad .fi-key{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,77,122,.18)}
+#fci .fi-ovf.fi-shake{animation:fi-shk .45s cubic-bezier(.36,.07,.19,.97)}
+@keyframes fi-shk{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+#fci .fi-ove{display:grid;grid-template-rows:0fr;opacity:0;margin:-8px 0 -6px;transition:grid-template-rows .4s var(--sp),opacity .25s}
+#fci .fi-ove.fi-show{grid-template-rows:1fr;opacity:1;margin:0}
+#fci .fi-ove>div{min-height:0;overflow:hidden}
+#fci .fi-ove p{margin:0;padding:2px 2px 0;font-size:13.5px;font-weight:700;line-height:1.4;color:var(--pink)}
+#fci .fi-ovg{position:relative;overflow:hidden}
+#fci .fi-ovg .fi-ovl{display:block;transition:transform .35s var(--sp),opacity .2s}
+#fci .fi-ovg .fi-spin,#fci .fi-ovg .fi-okc{position:absolute;opacity:0;transform:scale(.3)}
+#fci .fi-ovg .fi-spin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(26,13,8,.25);border-top-color:#1a0d08;transition:opacity .2s,transform .3s var(--sp)}
+#fci .fi-ov.fi-busy .fi-ovg .fi-ovl{opacity:0;transform:translateY(-14px)}
+#fci .fi-ov.fi-busy .fi-ovg .fi-spin{opacity:1;transform:none;animation:fi-rot .75s linear infinite}
+@keyframes fi-rot{to{transform:rotate(360deg)}}
+#fci .fi-ov.fi-busy .fi-ovg{background:var(--orange)!important;color:#1a0d08!important}
+#fci .fi-ov.fi-done .fi-ovg{background:var(--green)!important;color:#06231a!important;--sc:#168a66;animation:fi-pop .5s var(--sp)}
+#fci .fi-ov.fi-done .fi-ovg .fi-ovl{animation:fi-up .5s .1s var(--sp) both;margin-left:30px}
+#fci .fi-ov.fi-done .fi-ovg .fi-okc{opacity:1;transform:none;left:calc(50% - 6.5em);transition:opacity .2s .05s,transform .5s .05s var(--sp)}
+@keyframes fi-pop{0%{transform:scale(.94)}60%{transform:scale(1.04)}100%{transform:none}}
+#fci .fi-ov.fi-open .fi-o1{animation:fi-up .5s .12s var(--sp) both}
+#fci .fi-ov.fi-open .fi-o2{animation:fi-up .5s .17s var(--sp) both}
+#fci .fi-ov.fi-open .fi-o3{animation:fi-up .5s .22s var(--sp) both}
+#fci .fi-ov.fi-open .fi-o4{animation:fi-up .5s .27s var(--sp) both}
+#fci .fi-ov.fi-open .fi-o5{animation:fi-up .5s .32s var(--sp) both}
+#fci .fi-ov.fi-open .fi-o6{animation:fi-up .5s .37s var(--sp) both}
+@media (min-width:900px) and (min-height:480px){
+  #fci .fi-ov{align-items:center;padding-bottom:0}
+  #fci .fi-ovs{max-width:460px;border-radius:26px;border-bottom:2px solid var(--ink);box-shadow:8px 8px 0 var(--orange);transform:translateY(40px) scale(.92);opacity:0;transition:transform .3s,opacity .25s}
+  #fci .fi-ov.fi-open .fi-ovs{transform:none;opacity:1;transition:transform .55s var(--sp),opacity .25s}
+}
+@media (prefers-reduced-motion:reduce){#fci .fi-ovs,#fci .fi-chd,#fci .fi-chx>*{transition-duration:.01s!important}#fci .fi-ov .fi-o1,#fci .fi-ov .fi-o2,#fci .fi-ov .fi-o3,#fci .fi-ov .fi-o4,#fci .fi-ov .fi-o5,#fci .fi-ov .fi-o6{animation:none!important}}
 #fci .fi-where{display:flex;gap:10px;align-items:center;font-weight:700;font-size:15px}
 #fci .fi-where i{font-style:normal;color:var(--yellow);font-size:20px}
 /* 4 · IA */
@@ -12523,7 +12592,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v358';
+const PP_APP_VERSION = 'v359';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -17923,6 +17992,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v359', t:["Retrouver ta progression dès le départ", "Get your progress back from the start"], p:[
+    ["Sur le premier écran, « Déjà configuré sur un autre appareil ? » te laisse entrer ton code de synchro : il est vérifié avant d’être accepté, puis tu arrives directement sur l’accueil.", "On the first screen, “Already set up on another device?” lets you enter your sync code: it’s checked before being accepted, then you land straight on the home screen."],
+    ["La note « Chromebook scolaire ? » ne s’affiche plus que sur Chromebook, et explique aussi la synchro pour la clé IA.", "The “School Chromebook?” note now only shows on a Chromebook, and also explains how sync brings over the AI key."],
+    ["Introduction : le document de la synchro perd sa pastille jaune, et l’animation du planning enchaîne plus vite.", "Introduction: the sync document loses its yellow circle, and the planning animation loops faster."]] },
   { v:'v358', t:["Installer l’app, c’est expliqué", "Installing the app is explained"], p:[
     ["Sur iPhone et sur Android, l’introduction montre pas à pas comment mettre Memoria sur l’écran d’accueil.", "On iPhone and Android, the introduction shows step by step how to put Memoria on your Home Screen."],
     ["Rien ne s’affiche si l’app est déjà installée. Un bouton « Pas maintenant » permet de passer.", "Nothing shows if the app is already installed. A “Not now” button lets you skip."]] },
@@ -19148,7 +19221,9 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
 (function(){
   var SEEN='fc-intro-vue', N=7, INST='', dip=null, onBip=null;   /* v358 : INST = '' | 'ios' | 'and' | 'gen' (écran « Installer l'app », en plus : N passe à 8) */
   var S={
-   fr:{chb:'Chromebook scolaire ?',chbs:'Déjà mis ta clé sur ton téléphone ? Elle est synchronisée, rien à refaire ici. Sinon : ouvre « Google AI Studio API Keys » sur ton téléphone, copie la clé et envoie-la-toi.',lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
+   fr:{chb:'Chromebook scolaire ?',chb1:'Ouvre « Google AI Studio API Keys » sur ton téléphone, copie la clé et envoie-la-toi.',chb2:'Ou fais la manip sur ton téléphone avec la synchro activée : la clé arrive toute seule ici.',chbo:'ou',
+    have:'Déjà configuré sur un autre appareil ?',ovS:'Synchro',ovH:'Retrouve ta progression.',ovP:'Entre le code de synchro de ton autre appareil.',ovPh:'Ton code de synchro',ovGo:'Retrouver mes cartes',ovBusy:'Recherche…',ovBad:'Code invalide : 10 caractères minimum, lettres sans accent, chiffres, - et _.',ovE404:'Aucun appareil n’utilise ce code. Vérifie chaque caractère : une seule faute suffit.',ovNet:'Pas de connexion. Réessaie.',ovSrv:'Serveur indisponible. Réessaie dans un instant.',ovFull:'Stockage plein : code non enregistré.',ovN:function(n){ return n+(n===1?' carte retrouvée':' cartes retrouvées'); },
+    lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
     wel:'Bienvenue',h0:'Retiens tout, sans y penser.',s0:"Quelques cartes par jour. L'app s'occupe du reste.",
     mas:'Maîtrise',h1:'Chaque carte monte en niveau.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
     f1:'Demain',f2:'Dans 3 jours',f3:'Dans 7 jours',qs:["Capitale de l'Australie ?",'7 × 8 ?',"Capitale du Canada ?","Symbole de l'or ?"],backIn:'Revient dans ',d:' j',noNeed:"Plus besoin d\u2019y penser",mastered:'Maîtrisée',
@@ -19166,7 +19241,9 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       st:{ios:[['Touche Partager','Le carré avec la flèche vers le haut. Tu ne le vois pas ? Touche d’abord ⋯'],['Touche « Sur l’écran d’accueil »','Fais défiler la liste vers le bas si besoin.'],['Touche « Ajouter »','Memoria apparaît avec tes autres apps.']],
           and:[['Touche les trois petits points','En haut à droite de Chrome.'],['Touche « Installer l’application »','Ou « Ajouter à l’écran d’accueil ».'],['Touche « Installer »','Memoria apparaît avec tes autres apps.']],
           gen:[['Ouvre le menu du navigateur','Les petits points ou les trois traits.'],['Touche « Installer l’application »','Ou « Ajouter à l’écran d’accueil ».'],['Confirme','Memoria apparaît avec tes autres apps.']]}}},
-   en:{chb:'School Chromebook?',chbs:'Already added your key on your phone? It syncs — nothing to redo here. Otherwise: open “Google AI Studio API Keys” on your phone, copy the key and send it to yourself.',lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
+   en:{chb:'School Chromebook?',chb1:'Open “Google AI Studio API Keys” on your phone, copy the key and send it to yourself.',chb2:'Or do it on your phone with sync turned on: the key shows up here by itself.',chbo:'or',
+    have:'Already set up on another device?',ovS:'Sync',ovH:'Get your progress back.',ovP:'Enter the sync code from your other device.',ovPh:'Your sync code',ovGo:'Get my cards back',ovBusy:'Looking…',ovBad:'Invalid code: 10 characters minimum, letters without accents, digits, - and _.',ovE404:'No device uses this code. Check every character: a single typo is enough.',ovNet:'No connection. Try again.',ovSrv:'Server unavailable. Try again in a moment.',ovFull:'Storage full: code not saved.',ovN:function(n){ return n+(n===1?' card found':' cards found'); },
+    lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
     wel:'Welcome',h0:'Remember everything, effortlessly.',s0:'A few cards a day. The app handles the rest.',
     mas:'Mastery',h1:'Every card levels up.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
     f1:'Tomorrow',f2:'In 3 days',f3:'In 7 days',qs:['Capital of Australia?','7 × 8?','Capital of Canada?','Symbol for gold?'],backIn:'Back in ',d:' d',noNeed:'No need to think about it',mastered:'Mastered',
@@ -19235,6 +19312,11 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     }catch(e){}
     return '';
   }
+  /* v359 : Chromebook = navigateur ChromeOS (même détection « CrOS » que le reste de l'app). Sur téléphone, la note « Chromebook scolaire ? » n'apparaît pas. */
+  function crOS(){
+    try{ if(/CrOS/.test(navigator.userAgent||'')) return true; var d=navigator.userAgentData; if(d && /Chrome ?OS/i.test(d.platform||'')) return true; }catch(e){}
+    return false;
+  }
   function icoSvg(k){
     var P={
       share:'<path d="M12 3v12M8 7l4-4 4 4"/><path d="M7 11H6a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1h-1"/>',
@@ -19266,7 +19348,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     +'<div class="fi-ln" data-i="ln" data-l="'+lc+'" role="group" aria-label="Langue / Language"><span class="fi-ln-t" aria-hidden="true"></span><button type="button" class="fi-ln-b" data-l="fr" lang="fr" aria-label="Français" aria-pressed="'+(lc==='fr')+'">FR</button><button type="button" class="fi-ln-b" data-l="en" lang="en" aria-label="English" aria-pressed="'+(lc==='en')+'">EN</button></div>'
     +'<div class="fi-top"><button class="fi-bk fi-hide" data-i="bk" aria-label="'+T.back+'">'+bk+'</button><div class="fi-pills" data-i="pl"></div><button class="fi-sk" data-i="sk">'+T.skip+'</button></div>'
     +'<div class="fi-body">'
-    +'<section class="fi-sl"><div class="fi-fan fi-rv"><i></i><i></i><i>'+chk+'</i></div><span class="fi-stk fi-rv">'+T.wel+'</span><h1 class="fi-rv">'+T.h0+'</h1><p class="fi-sub fi-rv">'+T.s0+'</p></section>'
+    +'<section class="fi-sl"><div class="fi-fan fi-rv"><i></i><i></i><i>'+chk+'</i></div><span class="fi-stk fi-rv">'+T.wel+'</span><h1 class="fi-rv">'+T.h0+'</h1><p class="fi-sub fi-rv">'+T.s0+'</p>'+(rejoue?'':'<button type="button" class="fi-have fi-rv" data-i="have"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4.5L20 15"/><path d="M20 20v-5h-5"/></svg><span>'+T.have+'</span><svg class="fi-hv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>')+'</section>'
     +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.mas+'</span><h1 class="fi-rv">'+T.h1+'</h1><div class="fi-box fi-rv fi-mb" data-i="mb"><div class="fi-sc"><div class="fi-cd" data-i="cd"></div></div>'
       +'<div class="fi-ans" data-i="an" aria-hidden="true"><div class="fi-bt fi-a1">'+ic('x')+T.miss+'</div><div class="fi-bt fi-a2">'+ic('wave')+T.hard+'</div><div class="fi-bt fi-a3">'+ic('ok')+T.easy+'</div></div>'
       +'<div class="fi-fds" data-i="fds">'+[T.f1,T.f2,T.f3].map(function(t,k){ return '<div class="fi-fo fi-f'+(k+1)+'" data-i="fo'+k+'"><i class="fi-ft"></i><b class="fi-n">0</b><span>'+t+'</span></div>'; }).join('')+'</div></div><p class="fi-sub fi-rv">'+T.s1+'</p></section>'
@@ -19286,13 +19368,26 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       +'<figure class="fi-shot"><span class="fi-cap">'+T.c2+'</span><img alt="" src="'+IMG2+'"><i class="fi-ringo fi-c" style="--l:93.9%;--t:69.3%"></i></figure>'
       +'</div></div></div>'
       +'<div class="fi-stp" data-i="s3"><span class="fi-n">3</span><input class="fi-key" data-i="ky" placeholder="'+T.ph+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="fi-ghost fi-bt" data-i="pst" style="width:auto;height:50px">'+T.paste+'</button></div>'
-      +'<button class="fi-chb" data-i="cbh" aria-expanded="false"><i>⚠</i><b>'+T.chb+'</b><svg class="fi-chv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></svg></button>'
-      +'<div class="fi-chd" data-i="cbb"><div><p>'+T.chbs+'</p></div></div></div></section>'
+      +(crOS()?'<div class="fi-chw"><button type="button" class="fi-chb" data-i="cbh" aria-expanded="false"><i class="fi-chi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 20h20"/></svg></i><b>'+T.chb+'</b><span class="fi-chc"><svg class="fi-chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></span></button>'
+      +'<div class="fi-chd" data-i="cbb"><div><div class="fi-chx"><p class="fi-c1">'+T.chb1+'</p><span class="fi-cor"><s></s>'+T.chbo+'<s></s></span><p class="fi-c2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4.5L20 15"/><path d="M20 20v-5h-5"/></svg><span>'+T.chb2+'</span></p></div></div></div></div>':'')+'</div></section>'
     +(INST?htmlInst():'')
     +'<section class="fi-sl"><div class="fi-cf" data-i="cf"></div><span class="fi-stk fi-rv">'+T.rdy+'</span><h1 class="fi-rv">'+T.h5+'</h1><p class="fi-sub fi-rv">'+T.s5+'</p></section>'
     +'</div>'
     +'<div class="fi-foot" data-i="ft"><button class="fi-cta fi-bt" data-i="nx"></button><button class="fi-ghost fi-bt" data-i="hm" style="display:none">'+T.home+'</button></div>'
-    +'</main>';
+    +'</main>'+ovHtml();
+  }
+  /* v359 : feuille « Déjà configuré sur un autre appareil ? » (hors de la suite d'écrans : n'a aucun effet sur go(), les pastilles ni les index) */
+  function ovHtml(){
+    if(rejoue) return '';
+    return '<div class="fi-ov" data-i="ov" aria-hidden="true"><div class="fi-ovb" data-i="ovb"></div>'
+    +'<div class="fi-ovs" data-i="ovs" role="dialog" aria-modal="true" aria-labelledby="fi-ovh">'
+    +'<button type="button" class="fi-ovx fi-bt" data-i="ovx" aria-label="'+T.back+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+    +'<span class="fi-stk fi-o1">'+T.ovS+'</span><h2 id="fi-ovh" class="fi-o2">'+T.ovH+'</h2><p class="fi-ovp fi-o3">'+T.ovP+'</p>'
+    +'<div class="fi-ovf fi-o4" data-i="ovf"><input class="fi-key" data-i="ovk" placeholder="'+T.ovPh+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" data-lpignore="true" data-1p-ignore maxlength="100"><button type="button" class="fi-ghost fi-bt" data-i="ovpst" style="width:auto;height:50px">'+T.paste+'</button></div>'
+    +'<div class="fi-ove" data-i="ove" role="alert"><div><p></p></div></div>'
+    +'<div class="fi-where fi-o5"><i>\u2699</i>'+T.where+'</div>'
+    +'<button type="button" class="fi-cta fi-bt fi-ovg fi-o6" data-i="ovg" disabled><span class="fi-ovl">'+T.ovGo+'</span><i class="fi-spin" aria-hidden="true"></i><svg class="fi-okc" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>'
+    +'</div></div>';
   }
 
   function ui(){
@@ -19345,6 +19440,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     pstop(); mstop(); plstop(); sstop();
     markSeen();
     if(onBip){ window.removeEventListener('beforeinstallprompt',onBip); onBip=null; }   // v358
+    ovVv(false);
     document.removeEventListener('keydown',onKey,true);
     root.style.transition='opacity .25s'; root.style.opacity='0'; root.style.pointerEvents='none';
     setTimeout(function(){ if(root.parentNode) root.parentNode.removeChild(root); },280);
@@ -19498,8 +19594,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   function plstep(){
     var n=[5,10,14][plk%3]; plk++;
     wk(n,false); pill(n); vib(6);
-    plt.push(setTimeout(plfin,400));
-    plt.push(setTimeout(plstep,1800));   /* v299 : 2,3 s → 1,8 s */
+    plt.push(setTimeout(plfin,380));
+    plt.push(setTimeout(plstep,1150));   /* v299 : 2,3 s → 1,8 s ; v359 : → 1,15 s (la boucle tourne sans fin tant qu'on reste sur l'écran) */
   }
   function pljoue(){ plstop(); plk=0; wkReset(); plt.push(setTimeout(plstep,80)); }
   /* synchro */
@@ -19631,6 +19727,110 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   }
 
 
+  /* v359 — « Déjà configuré sur un autre appareil ? » : saisie du code de synchro, VÉRIFIÉE sur le serveur avant d'être acceptée
+     (GET /sync : 200 = ce code a bien des données, 404 = code inconnu → on n'enregistre rien et on le dit). Une seule lecture KV.
+     Succès : code enregistré, données fusionnées (même fonction que la synchro normale), l'introduction se ferme sur l'accueil. */
+  var ovOpen=false, ovBusy=false, ovT=0;
+  function ovVv(on){
+    try{
+      var vv=window.visualViewport; if(!vv) return;
+      if(on){ vv.addEventListener('resize',ovKb); vv.addEventListener('scroll',ovKb); }
+      else { vv.removeEventListener('resize',ovKb); vv.removeEventListener('scroll',ovKb); }
+    }catch(e){}
+  }
+  function ovKb(){   /* la feuille remonte au-dessus du clavier */
+    try{ var vv=window.visualViewport, ov=q('[data-i=ov]'); if(!vv||!ov) return; ov.style.setProperty('--kb',Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop))+'px'); }catch(e){}
+  }
+  function ovErr(msg){
+    var e=q('[data-i=ove]'), f=q('[data-i=ovf]'); if(!e) return;
+    e.querySelector('p').textContent=msg||''; e.classList.toggle('fi-show',!!msg);
+    if(msg){ f.classList.remove('fi-shake'); void f.offsetWidth; f.classList.add('fi-shake'); f.classList.add('fi-bad'); vib([12,40,12]); }
+    else f.classList.remove('fi-bad');
+  }
+  function ovMaj(){
+    var k=q('[data-i=ovk]'), g=q('[data-i=ovg]'); if(!k||!g) return;
+    g.disabled = ovBusy || k.value.trim().length<10;
+  }
+  function ovOuvrir(){
+    var ov=q('[data-i=ov]'); if(!ov||ovOpen||closing) return;
+    ovOpen=true; ovBusy=false; ovErr(''); vib(8);
+    ov.setAttribute('aria-hidden','false'); ov.classList.remove('fi-done','fi-busy'); ov.classList.add('fi-open');
+    var st=q('[data-i=st]'); if(st) st.setAttribute('inert','');
+    ovVv(true); ovKb(); ovMaj();
+    clearTimeout(ovT); ovT=setTimeout(function(){ var k=q('[data-i=ovk]'); if(k && ovOpen && !closing) k.focus(); },420);
+  }
+  function ovClose(){
+    var ov=q('[data-i=ov]'); if(!ov||!ovOpen||ovBusy) return;
+    ovOpen=false; clearTimeout(ovT);
+    var k=q('[data-i=ovk]'); if(k) k.blur();
+    ov.classList.remove('fi-open'); ov.setAttribute('aria-hidden','true'); ovVv(false);
+    var st=q('[data-i=st]'); if(st) st.removeAttribute('inert');
+    ov.style.setProperty('--kb','0px');
+  }
+  function ovFail(msg,t0){
+    setTimeout(function(){
+      ovBusy=false; var ov=q('[data-i=ov]'); if(!ov||closing) return;
+      ov.classList.remove('fi-busy'); ovMaj(); ovErr(msg);
+      var k=q('[data-i=ovk]'); if(k && ovOpen) k.focus();
+    },Math.max(0,450-(Date.now()-t0)));
+  }
+  function ovGo(data,txt,t0){
+    var cartes=Array.isArray(data)?data:(data&&Array.isArray(data.cartes)?data.cartes:null);
+    if(!cartes){ ovFail(T.ovSrv,t0); return; }
+    var code=q('[data-i=ovk]').value.trim(), ok=false;
+    try{ ok=!!syncSetCodePerso(code); }catch(e){}
+    if(!ok){ ovFail(T.ovFull,t0); return; }
+    var reload=false;
+    try{
+      fusionnerDepuisSync(data);
+      try{ syncMarquerSiIdentique(txt); }catch(e){}
+      syncEtat.derniereSynchro=new Date().toISOString(); syncEtat.derniereErreur=null; syncEtat.codeRefuse=false;
+      try{ localStorage.setItem('sync-derniere-synchro',syncEtat.derniereSynchro); }catch(e){}
+      try{ appliquerArchivageControlesPasses(0); lisserRetards(); }catch(e){}
+      try{ renderSettings(); }catch(e){} try{ render(); }catch(e){} try{ renderStreak(); }catch(e){}
+    }catch(e){ reload=true; }
+    setTimeout(function(){
+      if(closing) return;
+      var ov=q('[data-i=ov]'), g=q('[data-i=ovg]'); if(!ov) return;
+      ov.classList.remove('fi-busy'); ov.classList.add('fi-done');
+      g.querySelector('.fi-ovl').textContent=T.ovN(cartes.length);
+      g.disabled=false; g.style.pointerEvents='none';
+      mburst(q('[data-i=ovs]'),g,'var(--green)',12); mburst(q('[data-i=ovs]'),g,'var(--yellow)',8); vib([10,30,16]);
+      setTimeout(function(){ if(reload){ markSeen(); location.reload(); } else fermer(false); },1050);
+    },Math.max(0,450-(Date.now()-t0)));
+  }
+  function ovSubmit(){
+    if(ovBusy||closing) return;
+    var k=q('[data-i=ovk]'), code=k.value.trim(); if(code.length<10) return;
+    var bad=null; try{ bad=verifierSoliditeCode(code); }catch(e){}
+    if(bad){ ovErr(T===S.en?T.ovBad:bad); return; }
+    ovErr(''); ovBusy=true; ovMaj(); k.blur();
+    q('[data-i=ov]').classList.add('fi-busy');
+    var t0=Date.now(), ctl=(typeof AbortController==='function')?new AbortController():null, to=setTimeout(function(){ try{ if(ctl) ctl.abort(); }catch(e){} },12000);
+    var url; try{ url=SYNC_WORKER_URL; }catch(e){ url='https://flashcard-sync-kv.cmpsloic.workers.dev'; }
+    fetch(url+'/sync?code='+encodeURIComponent(code),{method:'GET',signal:ctl?ctl.signal:undefined}).then(function(res){
+      clearTimeout(to);
+      if(res.status===404){ ovFail(T.ovE404,t0); return; }
+      if(!res.ok){ ovFail(T.ovSrv,t0); return; }
+      return res.text().then(function(txt){
+        var data; try{ data=JSON.parse(txt); }catch(e){ ovFail(T.ovSrv,t0); return; }
+        ovGo(data,txt,t0);
+      });
+    }).catch(function(){ clearTimeout(to); ovFail(T.ovNet,t0); });
+  }
+  function ovInit(){
+    var hv=q('[data-i=have]'), ov=q('[data-i=ov]'); if(!hv||!ov) return;
+    hv.onclick=ovOuvrir;
+    q('[data-i=ovb]').onclick=ovClose; q('[data-i=ovx]').onclick=ovClose;
+    var k=q('[data-i=ovk]');
+    k.oninput=function(){ if(ov.querySelector('.fi-ove.fi-show')) ovErr(''); ovMaj(); };
+    q('[data-i=ovg]').onclick=ovSubmit;
+    q('[data-i=ovpst]').onclick=function(){
+      var done=function(t){ k.value=(t||'').trim(); k.oninput(); k.focus(); };
+      try{ navigator.clipboard.readText().then(done,function(){ k.focus(); }); }catch(e){ k.focus(); }
+    };
+  }
+
   function ouvrir(etat){
     if(document.getElementById('fci')) return;
     T = S[(typeof langueChoisie==='function' && langueChoisie()==='en')?'en':'fr'];
@@ -19675,7 +19875,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     function aide(o){ s2.classList.toggle('fi-show',o); hp.setAttribute('aria-expanded',o?'true':'false'); hpt.textContent=o?T.hide:T.how; if(o) setTimeout(function(){ if(!closing) s2.scrollIntoView({block:'nearest',behavior:'smooth'}); },380); }
     hp.onclick=function(){ aide(!s2.classList.contains('fi-show')); vib(8); };
     var cbh=q('[data-i=cbh]'), cbb=q('[data-i=cbb]');   /* v358 : note Chromebook repliable */
-    if(cbh&&cbb) cbh.onclick=function(){ var o=!cbb.classList.contains('fi-show'); cbb.classList.toggle('fi-show',o); cbh.setAttribute('aria-expanded',o?'true':'false'); vib(8); };
+    if(cbh&&cbb) cbh.onclick=function(){ var o=!cbb.classList.contains('fi-show'); cbb.classList.toggle('fi-show',o); cbh.setAttribute('aria-expanded',o?'true':'false'); cbh.parentNode.classList.toggle('fi-open',o); vib(8); if(o) setTimeout(function(){ if(!closing) cbb.scrollIntoView({block:'nearest',behavior:'smooth'}); },300); };
     function voir(){ if(document.activeElement===ky && !closing) q('[data-i=s3]').scrollIntoView({block:'end',behavior:'smooth'}); }
     ky.addEventListener('focus',function(){ setTimeout(voir,120); setTimeout(voir,450); });
     window.addEventListener('resize',voir);
@@ -19683,8 +19883,15 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       var done=function(t){ ky.value=(t||'').trim(); ky.oninput(); };
       try{ navigator.clipboard.readText().then(done,function(){ ky.focus(); }); }catch(e){ ky.focus(); }
     };
+    ovInit();
     /* clavier (capturé : les raccourcis de l'app, ex. Espace, ne doivent pas partir derrière l'intro) */
     onKey=function(e){
+      if(ovOpen){   /* v359 : feuille de code ouverte → elle seule reçoit le clavier */
+        if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); ovClose(); }
+        else if(e.key==='Enter' && e.target && e.target.getAttribute && e.target.getAttribute('data-i')==='ovk'){ e.preventDefault(); e.stopPropagation(); ovSubmit(); }
+        else if(!(e.target&&e.target.tagName==='INPUT') && e.key!=='Tab') e.stopPropagation();
+        return;
+      }
       if(e.target&&e.target.tagName==='INPUT'){ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(keyOk) suivant(); } return; }
       if(e.target && e.target.closest && e.target.closest('.fi-ln') && (e.key==='Enter' || e.key===' ')) return;   /* v284 : la capsule de langue garde Entrée / Espace */
       e.stopPropagation();
@@ -19719,7 +19926,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   /* v198 : remet l'introduction là où elle était (écran, étape IA, clé tapée, niveau essayé, durée choisie au planning) */
   function restaurer(e){
     try{
-      if(e.r) rejoue=true;
+      if(e.r){ rejoue=true; var hv0=q('[data-i=have]'); if(hv0) hv0.style.display='none'; }
       if(e.n){ var b=q('[data-i=ch] button[data-n="'+(e.n|0)+'"]'); if(b){ qa('[data-i=ch] button').forEach(function(x){ x.classList.toggle('fi-on',x===b); }); wk(e.n|0); } }
       if(e.a){ ia=1; q('[data-i=ia]').classList.add('fi-b'); }
       if(e.s){ q('[data-i=s1]').classList.replace('fi-op','fi-ok'); q('[data-i=s2]').classList.add('fi-op'); }
