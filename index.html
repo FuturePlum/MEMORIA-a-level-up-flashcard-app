@@ -260,7 +260,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   Object.assign(D,{'Mémoire':'Memory','Garder':'Keep','Supprimer cette ligne ?':'Delete this line?','Ex. Physique':'E.g. Physics','ex. espagnol':'e.g. Spanish','Suggestions précédentes':'Previous suggestions','Suggestions suivantes':'Next suggestions','Supprimer cette ligne':'Delete this line'});   /* v228 */
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
     'Renommer la matière':'Rename subject','Nouveau nom':'New name','Renommer':'Rename','Supprimer tout':'Delete all','Une de tes photos :':'One of your photos:','Une autre image…':'Another image…','Fermer':'Close',
-    'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test',
+    'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test','Ajouter une date':'Add a date',
     'Matières et contrôles':'Subjects and tests','Toutes tes matières sont archivées.':'All your subjects are archived.','Afficher la réponse':'Show answer','Espace':'Space','pour afficher la réponse':'to show the answer',
     'Suppr':'Del','Maj':'Shift','Entrée':'Enter','Aucune carte':'No cards','Ta première carte':'Your first card','Ajouter des cartes':'Add cards',"Rien à réviser aujourd'hui":'Nothing to review today',
     'Compte pour la maîtrise des cartes':'Counts toward card mastery','Les difficiles':'Tough ones','Les difficiles — quelle matière ?':'Tough ones — which subject?','Question suivante':'Next question','Indice':'Hint','Je ne sais pas':"I don't know",'Arrêter et faire le bilan':'Stop and sum up','Plus simple':'Simpler','Un exemple':'An example','Aide-moi à la retenir':'Help me remember it','Teste-moi sur cette carte':'Test me on this card','Mes cartes les plus ratées':'My most-missed cards',"Qu'est-ce qui manque ?":"What's missing?",'Fais une synthèse':'Make a summary','Mettre en pause':'Pause card','Reprendre':'Resume','Reprendre la carte':'Resume card','Elle revient dans tes révisions':'It comes back into your reviews','Elle sort des révisions, sans rien perdre':'It leaves your reviews, nothing is lost','Carte en pause':'Card paused','Carte reprise':'Card resumed','En pause':'Paused','Discuter de cette matière':'Talk about this subject','Questions, explications, entraînement':'Questions, explanations, practice','Discuter de la carte':'Talk about this card','Explication, astuce pour la retenir':'Explanation, a tip to remember it','Il en faut au moins 5 ratées 2 fois':'You need at least 5 cards missed twice',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
@@ -1845,7 +1845,14 @@ input[type="date"]{ color-scheme:inherit; }
 .pp-ctl{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px 12px 12px;border-radius:19px;background:var(--c-ysb);border:1.5px solid color-mix(in srgb,var(--yellow) 45%,transparent);box-shadow:0 4px 0 var(--c-ysh)}
 .pp-ctl>i{width:40px;height:40px;border-radius:13px;background:var(--yellow);color:#1a1405;display:grid;place-items:center;flex:none;box-shadow:0 3px 0 var(--yellow-d);font-style:normal}
 .pp-ctl>s{color:var(--yellow-t);flex:none;text-decoration:none}
-.pp-ctl.pp-ctl-add{display:none}
+.pp-home>.pp-ctl.pp-ctl-add{ display:flex; align-items:center; border:2px dashed color-mix(in srgb,var(--yellow) 75%,transparent);
+  background:linear-gradient(110deg,rgba(var(--yr),.2),rgba(var(--yr),.07) 70%),var(--c-yse); }   /* v347 : visible aussi sur téléphone (même style que sur Chromebook) */
+.pp-ctl-add .pp-ctt b{ font-size:16px; color:var(--cream); }
+.pp-ctl-add>s{ display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:rgba(var(--yr),.18); }
+:root:root:root[data-theme="light"] .pp-home>.pp-ctl.pp-ctl-add{ --sc:var(--yellow-d); border:2px dashed var(--yellow-d); background:linear-gradient(110deg,#ffe680,var(--yellow) 65%,#ffcf24); box-shadow:0 4px 0 var(--yellow-d); }
+:root:root:root[data-theme="light"] .pp-ctl-add .pp-ctt b{ color:#1a1405; font-size:17px; }
+:root:root:root[data-theme="light"] .pp-ctl-add>i{ background:#1a1405; color:var(--yellow); box-shadow:0 3px 0 rgba(26,20,5,.35); }
+:root:root:root[data-theme="light"] .pp-ctl-add>s{ background:#1a1405; color:var(--yellow); }
 .pp-ctm{flex:1;min-width:0}
 .pp-ctt{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .pp-ctt b{font-size:15px;font-weight:800;letter-spacing:-.01em}
@@ -1926,7 +1933,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 :where(#pp-ses) :where(h1,h2,h3){letter-spacing:-.03em;font-weight:800}
 .pp-top{display:flex;align-items:center;gap:10px;margin-bottom:18px}
 .pp-stage{flex:1;min-height:0;display:flex;perspective:1000px;padding-right:9px;padding-bottom:9px}
-.pp-card{flex:1;display:flex;flex-direction:column;background:var(--panel);border:2px solid var(--cream);border-radius:24px;box-shadow:9px 9px 0 var(--orange);overflow:hidden;min-height:0;transform-origin:50% 100%;touch-action:none;position:relative;cursor:grab;transition:border-color .2s,transform .52s var(--ease-soft),box-shadow .52s var(--ease-soft)}
+.pp-card{flex:1;display:flex;flex-direction:column;background:var(--panel);border:2px solid var(--cream);border-radius:24px;box-shadow:9px 9px 0 var(--orange);overflow:hidden;min-height:0;transform-origin:50% 100%;touch-action:none;position:relative;cursor:grab;transition:border-color .2s,transform .55s var(--ease-spring),box-shadow .55s var(--ease-spring)}
 .pp-card.pp-in{animation:ppcardIn .45s var(--pps) both}
 .pp-card.pp-out-ok{animation:ppoutR .32s ease-in forwards}
 .pp-card.pp-out-ko{animation:ppoutL .32s ease-in forwards}
@@ -2351,7 +2358,8 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-mtop{display:flex;align-items:center;gap:9px;font-size:19px;font-weight:800;margin-bottom:12px;letter-spacing:-.02em}
 .pp-mtop .pp-risk{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--pink);border:1.5px solid var(--c-pborder);background:var(--c-pbg);border-radius:7px;padding:2px 6px}
 .pp-mtop .pp-fl2{margin-left:auto;color:var(--yellow-t);font-size:12.5px;display:flex;gap:5px;align-items:center}
-.pp-mtop .pp-fl2.pp-add{color:var(--muted);border:1.5px dashed var(--line);padding:3px 9px;border-radius:9px}
+.pp-mtop .pp-fl2.pp-add{ color:var(--pink); border:1.8px dashed color-mix(in srgb,var(--pink) 80%,transparent); background:color-mix(in srgb,var(--pink) 13%,transparent); padding:6px 11px 6px 9px; border-radius:12px; font-weight:800; white-space:nowrap; flex:none; gap:6px; }   /* v348 : « pas de date de contrôle » bien visible : bouton rouge en pointillés */
+.pp-mtop .pp-fl2.pp-add svg{ width:14px; height:14px; stroke:currentColor; flex:none; }
 .pp-seg{display:flex;gap:6px;height:16px;margin-bottom:11px}
 .pp-seg i{height:100%;border-radius:6px;background:var(--c-s1);transform-origin:left;animation:ppgrow .7s .2s ease-out both}
 .pp-seg .pp-a{background:var(--green)}
@@ -2526,7 +2534,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
    Ne PAS rajouter de règle :active avec scale() ailleurs : ajouter le sélecteur
    aux deux listes ci-dessous (transition + appui), et --d/--sc si l'élément a une ombre.
    ============================================================ */
-:root:root:root{ --ease-press:cubic-bezier(.34,1.56,.64,1); --t-in:.07s; --t-out:.36s; --ease-soft:cubic-bezier(.22,1,.36,1); --ease-sink:cubic-bezier(.3,.6,.4,1); }   /* v245 : --ease-soft = arrivée douce sans rebond ; --ease-sink = descente */
+:root:root:root{ --ease-spring:cubic-bezier(.3,1.35,.5,1); --ease-press:cubic-bezier(.34,1.56,.64,1); --t-in:.07s; --t-out:.36s; --ease-soft:cubic-bezier(.22,1,.36,1); --ease-sink:cubic-bezier(.3,.6,.4,1); }   /* v245 : --ease-soft = arrivée douce sans rebond ; --ease-sink = descente */
+/* v346 : ressort de la carte (remontée après l'enfoncement) : dépasse d'environ 1 px puis se pose, vivant mais doux */
+@supports (transition-timing-function:linear(0,1)){ :root:root:root{ --ease-spring:linear(0, 0.038, 0.134, 0.266, 0.415, 0.564, 0.705, 0.827, 0.929, 1.008, 1.065, 1.102, 1.121, 1.126, 1.121, 1.109, 1.092, 1.073, 1.054, 1.037, 1.021, 1.008, 0.999, 0.992, 0.987, 0.985, 0.984, 0.985, 0.986, 0.988, 0.991, 0.993, 0.995, 0.997, 0.999, 1, 1); } }
 @media (prefers-reduced-motion:reduce){ :root:root:root{ --t-in:.01ms; --t-out:.01ms; } }
 /* profondeur et couleur d'ombre des éléments « relief » (les autres : 2px, sans ombre) */
 .pp-cta,.pp-show{ --d:4px; --sc:var(--orange-d); }
@@ -2760,7 +2770,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   /* v87 : le panneau réponse se pose comme un bouton qui remonte (sans fondu depuis 0, sans rebond) ; son texte apparaît en fondu */
   /* v103 : la réponse a le MÊME rythme que la question : enfoncée puis relâchée avec le même rebond (--ease-press) en .44 s ; la carte question remonte aussi en .44 s (au lieu de .36 s).
      Au retour à la question, le panneau s'enfonce vite puis disparaît dans son emplacement. */
-  #pp-ses .pp-card{ transition:border-color .2s, transform .52s var(--ease-soft), box-shadow .52s var(--ease-soft); }   /* v245 : remontée douce (avant .44 s avec un rebond marqué) */
+  #pp-ses .pp-card{ transition:border-color .2s, transform .55s var(--ease-spring), box-shadow .55s var(--ease-spring); }   /* v245 : remontée douce (avant .44 s avec un rebond marqué) */
   #pp-ses .pp-card.pp-sink{ transition-duration:.2s,.13s,.13s; transition-timing-function:ease,var(--ease-sink),var(--ease-sink); }
   @keyframes ppraIn{ from{ transform:translate(9px,9px); box-shadow:0 0 0 0 var(--yellow-d); } to{ transform:none; box-shadow:9px 9px 0 var(--yellow-d); } }
   @keyframes ppraOut{ 0%{ transform:none; opacity:1; box-shadow:9px 9px 0 var(--yellow-d); } 30%{ transform:translate(9px,9px); opacity:1; box-shadow:0 0 0 0 var(--yellow-d); } 100%{ transform:translate(9px,9px); opacity:0; box-shadow:0 0 0 0 var(--yellow-d); } }
@@ -2864,7 +2874,8 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .cb-mr .cb-mn{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cb-mr .pp-mtop .pp-risk{ font-size:9.5px; padding:1px 5px; flex:none; }
   .cb-mr .pp-mtop .pp-fl2{ font-size:12px; flex:none; white-space:nowrap; }
-  .cb-mr .pp-mtop .pp-fl2.pp-add{ padding:1px 8px; }
+  .cb-mr .pp-mtop .pp-fl2.pp-add{ padding:3px 9px 3px 7px; gap:5px; border-radius:10px; }
+  .cb-mr .pp-mtop .pp-fl2.pp-add svg{ width:12px; height:12px; }
   .cb-mr .pp-mtop .pp-fl2 svg{ width:13px; height:13px; }
   .cb-mb{ display:flex; align-items:center; gap:10px; }
   .cb-mb .pp-seg{ flex:1; height:7px; margin:0; gap:4px; }
@@ -3080,7 +3091,7 @@ body.kb #pp-ses.ecr .pp-foot{padding:8px 12px 10px}
 }
 @media (min-width:900px) and (min-height:480px){
   #pp-ses.ecr .pp-rslot,#pp-ses.ecr .pp-ra{border-radius:24px}
-  #pp-ses .pp-rslot.pp-ecrslot{padding:0;border:2px solid var(--cream);background:var(--panel);box-shadow:9px 9px 0 var(--yellow-d);overflow:hidden;cursor:default;transition:transform .52s var(--ease-soft),box-shadow .52s var(--ease-soft)}
+  #pp-ses .pp-rslot.pp-ecrslot{padding:0;border:2px solid var(--cream);background:var(--panel);box-shadow:9px 9px 0 var(--yellow-d);overflow:hidden;cursor:default;transition:transform .55s var(--ease-spring),box-shadow .55s var(--ease-spring)}
   #pp-ses .pp-rslot.pp-ecrslot.pp-sink{transform:translate(9px,9px);box-shadow:0 0 0 0 var(--yellow-d);transition-duration:.13s,.13s;transition-timing-function:var(--ease-sink),var(--ease-sink)}
   #pp-ses .pp-ecrslot .pp-rb{flex:1;min-height:0;max-height:none;padding:14px 22px 18px}
   #pp-ses .pp-ecrslot .pp-ecrbox{flex:1;min-height:0}
@@ -9014,10 +9025,10 @@ function ppCtlHtml(){
   const badge = sm.joursAvant <= 0 ? "aujourd'hui" : (sm.joursAvant === 1 ? 'demain' : `dans ${sm.joursAvant} jours`);
   return `<button class="pp-ctl" onclick="ppCtlGo('${escapeJsAttr(sm.matiere)}')"><i>${PP_IC.flag}</i><div class="pp-ctm"><div class="pp-ctt"><b>Contrôle ${de}${escapeHtml(sm.matiere)}</b><em>${badge}</em></div><div class="pp-ctb"><u style="width:${hp}%"></u></div><span><b>${hd}</b> sur ${ht} maîtrisées · ${rest} à aller</span></div><s>${PP_IC.chev}</s></button>`;
 }
-/* v119 : grand écran, aucun contrôle à venir => bouton « Ajouter une date de contrôle » à la place du bandeau (même emplacement).
-   Ouvre la même fenêtre que « + Contrôle » (ppCtrlSheet('') : choisit la 1re matière sans date). Rien sur téléphone (CSS). */
+/* v119 : aucun contrôle à venir => bouton « Ajouter une date de contrôle » à la place du bandeau (même emplacement).
+   Ouvre la même fenêtre que « + Contrôle » (ppCtrlSheet('') : choisit la 1re matière sans date). v347 : aussi sur téléphone. */
 function ppCtlAddHtml(){
-  if(!ppWide() || getPlanningSummary() || !getMatieresActives().length) return '';
+  if(getPlanningSummary() || !getMatieresActives().length) return '';
   return `<button class="pp-ctl pp-ctl-add" onclick="ppCtrlSheet('')"><i>${PP_IC.flag}</i><div class="pp-ctm"><div class="pp-ctt"><b>Ajouter une date de contrôle</b></div></div><s>${PP_IC.plus.replace(/22/g, '18')}</s></button>`;
 }
 /* ---- Chromebook (v84, v93) : colonne de droite de l'accueil (semaine à venir + matières et contrôles) ---- */
@@ -9072,7 +9083,7 @@ function ppCbMatLigne(m, arch){
   const date = (matieresConfig[m] || {}).dateControle;
   const risque = getStatForMatiere(m) && estMatiereCritique(m, getStatForMatiere(m));
   const titre = `${a} maîtrisée${a > 1 ? 's' : ''} · ${b} en cours · ${n} nouvelle${n > 1 ? 's' : ''}`;
-  return `<div class="pp-mat cb-mr${arch ? ' pp-arch' : ''}" role="button" title="${escapeHtml(titre)}" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span><span class="cb-mn">${escapeHtml(m)}</span>${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">+ contrôle</span>`}</div>
+  return `<div class="pp-mat cb-mr${arch ? ' pp-arch' : ''}" role="button" title="${escapeHtml(titre)}" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span><span class="cb-mn">${escapeHtml(m)}</span>${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">${PP_IC.plus}<span>Ajouter une date</span></span>`}</div>
   <div class="cb-mb"><div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div><span class="cb-mc"><b>${a}</b>/${tot}</span></div></div>`;
 }
 function ppCbMatsHtml(){
@@ -9223,6 +9234,23 @@ function ppSesDraw(o){
   const mas = cartesPourStats().filter(x => (x.palier || 0) >= MASTERED_PALIER).length;   /* v336 */
   const bump = ppMood.pm !== undefined && ppMood.pm !== mas; ppMood.pm = mas;
   const anim = ppMood.anim; ppMood.anim = '';
+  /* v345 : téléphone, au retournement — on retient la question (position, taille, style) pour la faire glisser
+     vers sa nouvelle place au lieu de la faire sauter (voir plus bas). Écran large et cartes « à écrire » : inchangés. */
+  let ppGl = null;
+  if(anim === 'flip' && !ppWide() && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+    try{
+      const oq = document.querySelector('#pp-ses .pp-qt'), ocd = document.querySelector('#pp-ses .pp-card'), orr = document.getElementById('pp-ses');
+      if(oq && ocd && orr && !orr.classList.contains('ecr')){
+        const r = oq.getBoundingClientRect(), cr = ocd.getBoundingClientRect(), cs = getComputedStyle(oq);
+        const g = oq.cloneNode(true);
+        g.removeAttribute('id'); g.setAttribute('aria-hidden', 'true'); g.className = 'pp-qt pp-ghostq';
+        g.style.cssText = 'position:absolute;margin:0;pointer-events:none;transition:none;transform-origin:0 0;z-index:3;'
+          + 'left:' + (r.left - cr.left - ocd.clientLeft) + 'px;top:' + (r.top - cr.top - ocd.clientTop) + 'px;width:' + r.width + 'px;'
+          + 'font-size:' + cs.fontSize + ';line-height:' + cs.lineHeight + ';letter-spacing:' + cs.letterSpacing + ';font-weight:' + cs.fontWeight + ';color:' + cs.color + ';';
+        ppGl = { g, x:r.left - cr.left, y:r.top - cr.top, fs:parseFloat(cs.fontSize) || 0 };
+      }
+    }catch(e){ ppGl = null; }
+  }
   const start = ppMood.pc || ppMoodColor(o.counts);
   /* Grand écran, au retournement : on retient l'état EXACT de l'ancienne carte et le point des animations
      en boucle (flottement, pastille), pour que le redessin les reprenne au même endroit : ni saut, ni clignotement. */
@@ -9257,7 +9285,7 @@ function ppSesDraw(o){
   const root = document.getElementById('pp-ses');
   if(anim === 'flip'){
     // grand écran : le texte de la question ne change pas au retournement (la réponse est dans le panneau de droite) → aucun fondu
-    const b = root.querySelector('.pp-body'); if(b && !ppKeep) b.style.animation = 'ppflipIn .4s cubic-bezier(.22,1,.36,1) both';
+    const b = root.querySelector('.pp-body'); if(b && !ppKeep && !ppGl) b.style.animation = 'ppflipIn .4s cubic-bezier(.22,1,.36,1) both';
     // la nouvelle carte naît enfoncée (même position que l'ancienne) puis remonte : le retour de « l'enfoncement »
     const cd = root.querySelector('.pp-card');
     if(cd && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
@@ -9272,6 +9300,31 @@ function ppSesDraw(o){
       }
     }
     if(ppKeep) Object.keys(ppKeep.loops).forEach(sel => { const el = root.querySelector(sel); if(el) el.style.animationDelay = '-' + ppKeep.loops[sel] + 'ms'; });
+    /* v345 : retournement sur téléphone — la question glisse (et change de taille) vers sa nouvelle place pendant que la carte remonte ;
+       la réponse apparaît juste après, en décalé (trait, puis texte, puis image). Même enfoncement, même remontée qu'avant. */
+    if(ppGl && cd && cd.animate){
+      try{
+        const nq = cd.querySelector('.pp-qt'), cr2 = cd.getBoundingClientRect();
+        if(nq){
+          const nr = nq.getBoundingClientRect(), nfs = parseFloat(getComputedStyle(nq).fontSize) || ppGl.fs;
+          const dx = ppGl.x - (nr.left - cr2.left), dy = ppGl.y - (nr.top - cr2.top);
+          const soft = 'cubic-bezier(.22,1,.36,1)', T = 460;
+          cd.appendChild(ppGl.g);
+          const ga = ppGl.g.animate([{ transform:'none' }, { transform:'translate(' + (-dx) + 'px,' + (-dy) + 'px) scale(' + Math.min(1, nfs / (ppGl.fs || nfs)) + ')' }], { duration:T, easing:soft, fill:'forwards' });
+          ppGl.g.animate([{ opacity:1 }, { opacity:1, offset:.12 }, { opacity:0 }], { duration:T * .55, easing:'linear', fill:'forwards' });
+          nq.animate([{ opacity:0, transform:'translateY(' + (dy * .5) + 'px)' }, { opacity:1, transform:'none' }], { duration:T * .7, delay:T * .34, easing:soft, fill:'backwards' });
+          const rm = () => { try{ ppGl.g.remove(); }catch(e){} };
+          ga.onfinish = rm; ga.oncancel = rm; setTimeout(rm, T + 250);
+        }
+        const soft2 = 'cubic-bezier(.22,1,.36,1)';
+        const rise = (el, delay, dur) => { if(el) el.animate([{ opacity:0, transform:'translateY(10px)' }, { opacity:1, transform:'none' }], { duration:dur, delay, easing:soft2, fill:'backwards' }); };
+        const rule = cd.querySelector('.pp-body .pp-rule');
+        if(rule){ rule.style.transformOrigin = '0 50%'; rule.animate([{ opacity:0, transform:'scaleX(.2)' }, { opacity:1, transform:'none' }], { duration:320, delay:150, easing:soft2, fill:'backwards' }); }  /* le trait s'étire depuis la gauche */
+        rise(cd.querySelector('.pp-body .pp-at'), 200, 420);
+        rise(cd.querySelector('.pp-body .pp-aimg'), 250, 420);
+        const sk = cd.querySelector('.pp-sk-p'); if(sk) sk.animate([{ opacity:0 }, { opacity:1 }], { duration:260, delay:60, easing:'ease-out', fill:'backwards' });
+      }catch(e){ /* l'animation est un plus : en cas de souci, on garde l'écran tel quel */ }
+    }
   }
   const fill = root.querySelector('.pp-bar1 i'), drop = root.querySelector('.pp-bar1 u');
   const nc = ppMoodColor(o.counts), lr = ppMood.last; ppMood.last = null; ppMood.pc = nc;
@@ -11346,7 +11399,7 @@ function ppMatHtml(m, arch){
       besoinTxt = `<div class="pp-need">Pour être prêt : environ ${X} cartes par jour${X > cap ? ', plus que ce que ton planning peut absorber' : ''}</div>`;
     }
   }
-  return `<div class="pp-mat${arch ? ' pp-arch' : ''}" role="button" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span>${escapeHtml(m)}${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">+ contrôle</span>`}</div>
+  return `<div class="pp-mat${arch ? ' pp-arch' : ''}" role="button" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span>${escapeHtml(m)}${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">${PP_IC.plus}<span>Ajouter une date</span></span>`}</div>
   <div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div>
   <div class="pp-leg"><span><b>${a}</b> maîtrisée${a > 1 ? 's' : ''}</span><span><b>${b}</b> en cours</span><span><b>${n}</b> nouvelle${n > 1 ? 's' : ''}</span></div>${besoinTxt}</div>`;
 }
@@ -12250,7 +12303,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v344';
+const PP_APP_VERSION = 'v348';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
