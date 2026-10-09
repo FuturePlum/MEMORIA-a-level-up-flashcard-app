@@ -12491,7 +12491,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v354';
+const PP_APP_VERSION = 'v355';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -17884,6 +17884,8 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v355', t:["Réglages dans un nouvel ordre", "Settings in a new order"], p:[
+    ["Dans l’ordre : langue, apparence, synchronisation, rappels, clé Gemini, aide, puis sauvegarde.", "In order: language, appearance, sync, reminders, Gemini key, help, then backup."]] },
   { v:'v354', t:["Réglages remis dans l’ordre", "Settings put in order"], p:[
     ["La synchro passe tout en haut, puis les rappels, la clé Gemini et la sauvegarde.", "Sync now comes first, then reminders, the Gemini key and backup."],
     ["La langue et l’apparence, qu’on change rarement, descendent.", "Language and appearance, which you rarely change, move down."],
@@ -17938,24 +17940,25 @@ function ppSetHtml(){
   <div class="pp-keyrow pp-kr3"><button class="pp-sec" onclick="annulerEditionGeminiKey()">Annuler</button><button class="pp-sec" onclick="oublierGeminiKey()">Retirer la clé</button><button class="pp-sec" onclick="ppAiStudioOuvrir()" aria-label="Ouvrir Google AI Studio">AI Studio ${PP_IC_EXT}</button></div>`
       : `<div class="pp-set"><button class="pp-li" onclick="window.open('https://aistudio.google.com/apikey','_blank','noopener')"><i class="pp-ico">${PP_IC.key}</i><span>Clé API Gemini (gratuite)<small>1. Touche ici · 2. « Créer une clé API » · 3. Colle-la ci-dessous.</small></span></button><button class="pp-li" onclick="ppCleGuide()"><i class="pp-ico">${PP_IC_AIDE}</i><span>Comment faire ?<small>Pas à pas, avec captures</small></span></button></div>
   <div class="pp-keyrow"><input type="text" id="gemini-key-input" class="pp-fld pp-masque" placeholder="AIza..." oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="pp-sec" onclick="sauverGeminiKey()">Valider</button></div>`);
-  /* v354 : du plus important au moins important (colonne 1 puis colonne 2 sur téléphone) : synchro, rappels, IA, sauvegarde, puis les réglages qu'on change rarement, puis l'aide. */
+  /* v355 : ordre voulu (colonne 1 puis colonne 2 sur téléphone) : 1 langue, 2 thème (apparence), 3 synchronisation, 4 notifications (rappels), 5 clé API, 6 aide, 7 sauvegarde. */
   const maj = `<button class="pp-li" onclick="ppMajOuvrir()"><i class="pp-ico">${PP_IC.spark}</i><span>Mises à jour<small>${ppEsc(PP_NOUVEAUTES[0].v + ' · ' + ppMajT(PP_NOUVEAUTES[0].t))}</small></span>${ppMajNouveau() ? '<span class="pp-time" style="flex:none">Nouveau</span>' : ''}</button>`;
   return `<div class="pp-grab"></div><h2 class="pp-setroot">Réglages</h2><div class="pp-setcols"><div>
+  <h4>Langue</h4>${ppLangueHtml()}
+  <h4>Apparence</h4>${ppApparenceHtml()}
   <h4>Synchronisation</h4>${ppSyncHtml()}
   ${ppAppleHtml()}
   <h4>Rappels</h4>${rappels}
-  <h4>Génération IA</h4>${ia}</div><div>
+</div><div>
+  <h4>Génération IA</h4>${ia}
+  <h4>Aide</h4><div class="pp-set">${maj}<button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button>${PP_JOURNAL_VISIBLE ? `<button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button>` : ''}</div>
   <h4>Sauvegarde</h4><div class="pp-set">
   <button class="pp-li" onclick="ppExportSheet('json')"><i class="pp-ico">${PP_IC.dl}</i><span>Exporter la progression<small>Fichier JSON</small></span></button>
   <button class="pp-li" onclick="document.getElementById('import-file-input').click()"><i class="pp-ico">${PP_IC.ul}</i><span>Importer une progression</span></button>
   <button class="pp-li" onclick="ppExportSheet('html')"><i class="pp-ico">${PP_IC.code}</i><span>Exporter l'app à jour<small>Fichier HTML complet</small></span></button></div>
   <input type="file" id="import-file-input" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="handleImportFile(event)">
   ${settingsImportMsg ? `<p class="pp-warn ${settingsImportMsg.type === 'ok' ? 'ok' : ''}" style="margin-top:10px">${ppEsc(settingsImportMsg.text)}</p>` : ''}
-  <h4>Apparence</h4>${ppApparenceHtml()}
-  <h4>Langue</h4>${ppLangueHtml()}
   ${ppWebHtml()}
-  ${ppMobilesHtml()}
-  <h4>Aide</h4><div class="pp-set">${maj}<button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button>${PP_JOURNAL_VISIBLE ? `<button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button>` : ''}</div></div></div>`;
+  ${ppMobilesHtml()}</div></div>`;
 }
 /* v113 : Réglages — rappel que l'app existe aussi en site web, avec son adresse. L'adresse est lue sur la page
    elle-même (window.location.origin) : toujours la bonne, même si le domaine change. Rien n'est affiché si la page
