@@ -63,7 +63,7 @@ Un code, un copier-coller, et ton pote a toutes tes cartes. Aussi simple que ça
 ### 🔔 Un rappel qui sait insister (gentiment)
 Tu choisis l'heure. Si des cartes t'attendent, tu reçois la notification ; si tu l'ignores, un second rappel arrive 2 h plus tard. De temps en temps, l'app glisse aussi quelques cartes déjà maîtrisées pour qu'elles ne s'oublient pas.
 
-> ℹ️ Les rappels ne sont pas proposés sur iPhone, iPad et Safari (Mac) : ces appareils n'autorisent pas l'envoi de notifications en arrière-plan à ce type d'app. Sur ces appareils, le bloc « Rappels » est simplement absent des Réglages.
+> ℹ️ Sur iPhone et iPad, les rappels demandent iOS 16.4 ou plus et l'app **ajoutée à l'écran d'accueil** : dans Safari, Réglages affiche « Rappels indisponibles ». Pas confirmé dans l'UE : si l'envoi échoue, l'app garde un rappel local (uniquement app ouverte).
 
 ---
 

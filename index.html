@@ -239,7 +239,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     "Safari peut effacer les données d'un site peu visité. Active la synchronisation ou exporte ta progression de temps en temps.":'Safari may erase the data of a rarely visited site. Turn on sync or export your progress from time to time.',
     "Sur iPhone et Mac, le rappel s'affiche seulement quand Memoria est ouverte (pas d'envoi en arrière-plan).":'On iPhone and Mac, the reminder only shows while Memoria is open (no background delivery).',
     'Rappels indisponibles':'Reminders unavailable',
-    'Tester la notification':'Test the notification',
+    'Tester la notification':'Test the notification','Tester':'Test','Réessayer':'Retry','Mettre en forme tes cartes':'Format your cards','Gras, listes, maths, chimie : comment les écrire':'Bold, lists, maths, chemistry: how to write them',
     "Reçue même quand l'app est fermée":'Delivered even when the app is closed',
     "Test envoyé : ferme l'app, il arrive dans quelques secondes":'Test sent: close the app, it arrives in a few seconds',
     "Test lancé : retire l'app des récentes, notif dans 20 s":'Test started: remove the app from recents, notification in 20 s',
@@ -2485,6 +2485,21 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-sheet .pp-kr3 .pp-sec{padding:0 10px;flex:1 1 auto;font-size:13.5px;white-space:nowrap}   /* 3 boutons sur une ligne, même sur écran étroit */
 @media(prefers-reduced-motion:reduce){.pp-gk i{animation:none}}
 .pp-sheet .pp-set + .pp-keyrow .pp-fld,.pp-sheet .pp-keyrow + .pp-keyrow .pp-fld{height:46px}
+/* v356 : bouton « Tester » compact dans la carte du rappel ; bouton de synchro DANS le champ du code, avec animation de validation. */
+.pp-mini{border:0;font:inherit;font-size:13px;font-weight:800;cursor:pointer;flex:none;margin-right:2px;transition:transform .15s,opacity .2s}
+.pp-mini:active{transform:scale(.94)}
+.pp-mini:disabled{opacity:.6}
+.pp-synwrap{position:relative;margin:8px 0}
+.pp-sheet .pp-synwrap #sync-code-input{margin:0;padding-right:116px;height:48px;transition:border-color .25s,box-shadow .35s}
+.pp-sheet .pp-synwrap .sync-btn{position:absolute;right:6px;top:6px;bottom:6px;width:auto;min-width:44px;min-height:0;margin:0;padding:0 16px;border:0;border-radius:99px;font:inherit;font-size:14px;font-weight:800;background:var(--yellow);color:#1a1405;cursor:pointer;gap:6px;transition:background-color .3s,color .3s,transform .3s var(--spring),min-width .3s}
+.pp-sheet .pp-synwrap .sync-btn:active{transform:scale(.95)}
+.pp-sheet .pp-synwrap .sync-btn.is-loading{opacity:.85}
+.pp-sheet .pp-synwrap .sync-btn.is-ok{background:var(--green);color:#fff;animation:synPop .55s var(--spring)}
+.pp-sheet .pp-synwrap .sync-btn.is-err{background:var(--pink);color:#fff}
+.pp-sheet .pp-synwrap:has(.is-ok) #sync-code-input{border-color:var(--green);box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 25%,transparent)}
+.pp-sheet .pp-synwrap:has(.is-err) #sync-code-input{border-color:var(--pink)}
+@keyframes synPop{0%{transform:scale(.8)}55%{transform:scale(1.14)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.pp-sheet .pp-synwrap .sync-btn.is-ok{animation:none}}
 /* v354 : Réglages → Aide → « Mises à jour » : la dernière version en carte ouverte, les autres repliées (accordéon doux). */
 .pp-mjh{border-radius:20px;padding:16px 16px 14px;background:linear-gradient(160deg,var(--panel),var(--c-s1));border:1.5px solid color-mix(in srgb,var(--yellow) 55%,var(--line));margin:0 0 18px;animation:ppup .4s var(--ease-soft,ease-out) backwards}
 .pp-mjtop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
@@ -12491,7 +12506,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v355';
+const PP_APP_VERSION = 'v357';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13151,21 +13166,21 @@ let iaFichiersOriginal = []; // copie des fichiers joints, gardée avec le cours
 const PROMPT_GRAS_BASE = `Gras : très rare, seulement pour un mot-clé à retenir absolument (terme, date, conclusion). Jamais une phrase entière, jamais des mots courants, jamais sur chaque puce ni sur des titres.`;
 const PROMPT_FORMULES = `Formules : écris en texte simple tout ce qui se lit clairement sans LaTeX (a + b = c, x², H₂O, 5 %, 3 × 4, ≤, →, °C). N'utilise $…$ que pour ce que le texte simple ne peut pas montrer (fraction, racine, somme, intégrale, exposant ou indice composé, symbole grec dans une formule, équation chimique). Jamais pour un nombre seul, une date, une unité, un mot, ni en histoire, géographie, langues ou droit. Le signe $ ne sert qu'aux formules (écris « 5 euros »). Dans le doute, texte simple.`;
 const PROMPT_REGLES_CARTES = `Règles pour chaque carte :
-- Une carte = une seule notion précise (jamais une question qui couvre plusieurs concepts).
+- Une carte = une seule notion précise (jamais une question qui couvre plusieurs concepts). MAIS ne découpe pas à l'excès : si deux ou trois informations vont toujours ensemble et se retiennent d'un seul bloc (une définition et son unique précision, une date et son lieu), garde-les sur UNE carte. Cette règle ne vaut jamais pour le vocabulaire des cours de langue ni pour les éléments d'une liste importante (voir plus bas) ; et la réponse doit toujours désigner une seule chose claire. Ne fais pas une carte à part pour un détail secondaire, une redite, un exemple ou une nuance : ajoute-le à la carte de la notion principale seulement s'il est utile, sinon laisse-le de côté. Avant d'ajouter une carte, demande-toi : « est-ce une notion que l'élève doit vraiment retenir seule ? » Sinon, ne la crée pas.
 - La question est courte (une ligne, sans détour), claire, et se comprend toute seule : jamais « selon le texte », « dans ce cours », « d'après le document », ni renvoi à un schéma ou à une autre carte. Si un mot ou un nom seul est ambigu, précise le contexte dans la question.
-- STYLE DES CARTES : style télégraphique, comme une fiche de révision. La réponse est unique et se lit en un coup d'œil : par défaut un mot-clé, un nombre, une date ou un petit groupe de mots (2 à 6 mots en général), SANS phrase complète, sans « c'est », sans sujet ni verbe qui répète la question, sans introduction. Exemple : « Capitale de la Belgique ? » → « Bruxelles » (jamais « La capitale de la Belgique est Bruxelles. »). Passe à un fragment de phrase ou à 1 courte phrase seulement quand un mot-clé ne suffit pas à répondre (par ex. une carte « Pourquoi… ? » ou une définition qui ne se résume pas à un terme), et jamais plus de 2 phrases courtes. Juge toi-même carte par carte : mots-clés d'abord, un peu plus long seulement si c'est nécessaire pour que la réponse reste juste et complète. Pas de question à réponse oui/non, pas de réponse vague ou à plusieurs versions possibles.
-- Une liste (« les 5 causes de… », « les étapes de… ») ne tient pas sur une seule carte : fais une carte par élément, avec une question qui vise un seul élément précis (jamais « cite une des causes »). N'oublie aucun élément d'une liste ou d'un tableau du cours (tous les pays, toutes les dates, tous les mots de vocabulaire).
+- STYLE DES CARTES : style télégraphique, comme une fiche de révision. La réponse est unique et se lit en un coup d'œil : par défaut un mot-clé, un nombre, une date ou un petit groupe de mots (2 à 6 mots en général), SANS phrase complète, sans « c'est », sans sujet ni verbe qui répète la question, sans introduction, sans mots de remplissage ni précision inutile (pas de « il s'agit de », « on appelle ça », « permet de… » quand un mot suffit). Exemple : « Capitale de la Belgique ? » → « Bruxelles » (jamais « La capitale de la Belgique est Bruxelles. »). Passe à un fragment de phrase ou à 1 courte phrase seulement quand un mot-clé ne suffit pas à répondre (par ex. une carte « Pourquoi… ? » ou une définition qui ne se résume pas à un terme), et jamais plus de 2 phrases courtes. Si tu hésites entre une réponse longue et une réponse courte qui reste juste, choisis la courte. La question aussi reste brève : pas de longue mise en contexte ni de formulation lourde. Juge toi-même carte par carte : mots-clés d'abord, un peu plus long seulement si c'est nécessaire pour que la réponse reste juste et complète. Pas de question à réponse oui/non, pas de réponse vague ou à plusieurs versions possibles.
+- Une liste de notions importantes (« les 5 causes de… », « les étapes de… », tous les pays, toutes les dates, tout le vocabulaire d'un tableau) : une carte par élément, avec une question qui vise un seul élément précis (jamais « cite une des causes »), sans en oublier. En revanche, une liste de simples détails ou d'énumérations secondaires (exemples, précisions, variantes) ne mérite pas une carte par ligne : ne retiens que les éléments essentiels, ou regroupe-les sur une seule carte quand la liste est courte (3 éléments ou moins) et se retient d'un bloc.
 - Cours de langue (vocabulaire, expressions) : une carte par mot ou expression, dans le sens où le cours les présente ; la réponse est la traduction seule (pas de phrase d'exemple, sauf si le cours en donne une à retenir).
 - Reste fidèle au cours : n'invente rien, n'ajoute aucune information absente du cours. Écris dans la langue du cours.
 - Chaque carte doit rester sensée si on la lit à l'envers (on voit la réponse et on retrouve la question) : la réponse désigne clairement une seule chose.
 - Si le cours est une fiche de synthèse condensée (style télégraphique, symboles comme → ⇒ = ≠ ↑ ↓, mots-clés en gras), interprète les symboles et écris des questions claires et des réponses courtes en mots-clés (pas de phrases complètes), jamais avec les symboles : « → » = définition ou lien, « ⇒ » = conséquence, « = » = égale ou signifie, « ≠ » = différent de ou opposé à, « ↑ » = augmente, « ↓ » = diminue. Une ligne de fiche donne une ou plusieurs cartes ; chaque carte reste compréhensible sans la fiche. Tu peux mettre en mots ce que la fiche exprime en symboles (le strict nécessaire).
 - Photos de cours manuscrit : ignore ratures, marges, gribouillis et passages illisibles (ne devine pas un mot illisible). Dans tout document : ignore numéros de page, en-têtes, pieds de page et sommaire.
-- Couvre les notions importantes du cours (définitions, dates, causes et conséquences, formules, exemples clés) sans cartes triviales ni doublons. Pas de nombre imposé : autant de cartes que nécessaire.
+- Couvre les notions importantes du cours (définitions, dates, causes et conséquences, formules, exemples clés) sans cartes triviales ni doublons. Pas de nombre imposé, mais vise l'essentiel : mieux vaut moins de cartes bien choisies que beaucoup de petites cartes qui se ressemblent ou qui découpent une même idée.
 - Mélange les types de cartes : surtout du rappel (définition, date, formule), mais aussi, quand le cours explique un lien (cause, conséquence, but, différence entre deux notions), quelques cartes de compréhension (« Pourquoi… ? », « Quelle conséquence… ? », « Quelle différence entre X et Y ? ») à réponse courte et unique, tirée du cours. Ces cartes peuvent faire exception à la lecture à l'envers. N'en crée pas si le cours n'explique pas le lien.
 - ${PROMPT_FORMULES} Quand une formule est vraiment nécessaire, écris-la entre $ et $ en LaTeX simple (\\frac{a}{b}, \\sqrt{x}, \\sum, \\int, x_1, x^2, \\alpha, \\Delta, \\ce{H2O} pour une équation chimique), par exemple « $\\frac{a}{b}$ ». Dans le JSON, double chaque antislash : \\\\frac.
 - ${PROMPT_GRAS_BASE} Aucun gras sur la plupart des cartes ; au maximum un seul mot-clé par carte.
 - Si des consignes plus précises suivent (ajuster, modifier, ajouter des cartes), elles passent avant ces règles.`;
-const GEMINI_RAPPEL_FIN = `Rappel avant de répondre : tableau JSON seul ; une carte par notion précise ; réponses courtes en mots-clés ; rien d'inventé ; aucun élément oublié dans les listes et tableaux du cours.`;
+const GEMINI_RAPPEL_FIN = `Rappel avant de répondre : tableau JSON seul ; une carte par notion importante (sans découper à l'excès ni multiplier les petites cartes) ; questions et réponses brèves, en mots-clés, sans phrases inutiles ; rien d'inventé ; aucun élément important oublié dans les listes et tableaux du cours (les simples détails secondaires peuvent être omis ou regroupés).`;
 const GEMINI_SYSTEM_PROMPT = `Génère des flashcards question/réponse à partir du cours fourni (texte, photos ou documents), pour qu'un élève révise en se testant.
 
 ${PROMPT_REGLES_CARTES}
@@ -16804,6 +16819,12 @@ async function pushDesactiver(){
   }catch(e){}
 }
 /* Réglages → « Tester la notification » : le Worker envoie une notification de test à cet appareil 20 s après la demande (v315 : le temps de fermer l'app). */
+async function ppTesterBtn(b){
+  if(b.disabled) return;
+  const txt = b.textContent; b.disabled = true; b.textContent = 'Envoi…';
+  try{ await ppTesterPush(); }catch(e){}
+  if(b.isConnected){ b.textContent = txt; b.disabled = false; }
+}
 async function ppTesterPush(){
   if(!pushActif()){
     const fait = await pushSynchroniser(true);
@@ -17202,10 +17223,10 @@ let syncCodeErreur = null; // message quand le code saisi est refusé (trop faib
 
 function syncBtnContenu(etat){
   const svg = (inner, cls) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
-  if(etat === 'loading') return `<svg class="sync-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.55"/></svg><span class="sync-label">Synchronisation…</span>`;
-  if(etat === 'ok') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="sync-check" d="M5 12.5l4.5 4.5L19 7"/></svg><span class="sync-label">Synchronisé</span>`;
-  if(etat === 'err') return svg('<path d="M12 8v5M12 16.5v.01"/>') + `<span class="sync-label">Échec, réessayer</span>`;
-  return `<span class="sync-label">Enregistrer ce code</span>`;
+  if(etat === 'loading') return `<svg class="sync-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.55"/></svg>`;
+  if(etat === 'ok') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="sync-check" d="M5 12.5l4.5 4.5L19 7"/></svg>`;
+  if(etat === 'err') return svg('<path d="M12 8v5M12 16.5v.01"/>') + `<span class="sync-label">Réessayer</span>`;
+  return `<span class="sync-label">Valider</span>`;
 }
 
 function syncErreurCodeHtml(){
@@ -17227,9 +17248,10 @@ function syncStatutInner(){
 function majSyncUi(){
   const b = document.getElementById('sync-btn');
   if(b){
-    b.className = 'pp-sec sync-btn' + (syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : '');
+    b.className = 'pp-synbtn sync-btn' + (syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : '');
     b.disabled = syncBtnEtat === 'loading';
     b.innerHTML = syncBtnContenu(syncBtnEtat);
+    b.setAttribute('aria-label', { loading:'Synchronisation en cours', ok:'Code enregistré et synchronisé', err:'Échec, réessayer' }[syncBtnEtat] || 'Valider le code');
   }
   const st = document.getElementById('sync-statut');
   if(st) st.innerHTML = syncStatutInner();
@@ -17712,7 +17734,7 @@ function ppRvMaj(src){
 })();
 function ppFormatAide(){
   const ex = ['**gras**', '/italique/', '- une puce\n- une autre', 'x^2 et cm^3', '√16 ou √(x+1)', '#a/b#', '#(a+b)/(c+d)#', '#x_1 + y_1#', '#sum_(i=1)^n i#', '#delta x <= alpha#', '#\\ce{H2O}#', '##E = mc^2##'];
-  ppSheet(`<div class="pp-grab"></div><h2>Écrire des formules</h2><p class="pp-hint">Dans une question ou une réponse. L'IA les écrit aussi toute seule.</p>${ex.map(s => `<div class="pp-fx"><code>${escapeHtml(s)}</code><span data-notr>${ppRichHtml(s)}</span></div>`).join('')}<p class="pp-hint">Un vrai dollar : <code>\\$</code></p><div class="pp-duo"><button class="pp-cta" style="margin:0;grid-column:1/-1" onclick="ppSettings(true)">Retour</button></div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Mettre en forme tes cartes</h2><p class="pp-hint">Dans une question ou une réponse. L'IA les écrit aussi toute seule.</p>${ex.map(s => `<div class="pp-fx"><code>${escapeHtml(s)}</code><span data-notr>${ppRichHtml(s)}</span></div>`).join('')}<p class="pp-hint">Un vrai dollar : <code>\\$</code></p><div class="pp-duo"><button class="pp-cta" style="margin:0;grid-column:1/-1" onclick="ppSettings(true)">Retour</button></div>`);
 }
 
 /* ---- pages plein écran (Statistiques, Synthèse) : posées dans #modal-root ---- */
@@ -17884,6 +17906,13 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v357', t:["Des cartes plus sobres", "Leaner cards"], p:[
+    ["L’IA écrit des questions et des réponses plus courtes, sans phrases inutiles.", "The AI writes shorter questions and answers, with no filler."],
+    ["Elle découpe moins : les infos qui vont ensemble restent sur une seule carte.", "It splits less: information that belongs together stays on a single card."]] },
+  { v:'v356', t:["Réglages plus compacts", "More compact settings"], p:[
+    ["« Tester » est maintenant un petit bouton dans la carte du rappel.", "“Test” is now a small button in the reminder card."],
+    ["Le code de synchro se valide depuis le champ, avec une petite animation quand c’est bon.", "The sync code is validated from the field itself, with a little animation when it works."],
+    ["« Écrire des formules » devient « Mettre en forme tes cartes » et passe en premier dans l’aide.", "“Writing formulas” becomes “Format your cards” and comes first in Help."]] },
   { v:'v355', t:["Réglages dans un nouvel ordre", "Settings in a new order"], p:[
     ["Dans l’ordre : langue, apparence, synchronisation, rappels, clé Gemini, aide, puis sauvegarde.", "In order: language, appearance, sync, reminders, Gemini key, help, then backup."]] },
   { v:'v354', t:["Réglages remis dans l’ordre", "Settings put in order"], p:[
@@ -17928,9 +17957,9 @@ function ppSetHtml(){
     : bloque
     ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Notifications bloquées<small>Autorise-les dans les réglages du téléphone.</small></span></div></div>`
     : `<div class="pp-set">
-  <div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Rappel de révision</span><button class="pp-tg${actif ? ' on' : ''}" aria-label="Rappel" onclick="toggleRappelQuotidien()"></button></div>
+  <div class="pp-li"><i class="pp-ico">${PP_IC.bell}</i><span>Rappel de révision</span>${actif ? `<button class="pp-time pp-mini" onclick="ppTesterBtn(this)" title="Recevoir une notification de test, même app fermée">Tester</button>` : ''}<button class="pp-tg${actif ? ' on' : ''}" aria-label="Rappel" onclick="toggleRappelQuotidien()"></button></div>
   <button class="pp-li" onclick="ppTimeSheet()"><i class="pp-ico">${PP_IC.cal}</i><span>Heure du rappel</span><span class="pp-time" style="flex:none">${ppEsc(rappelHeurePreferee())}</span></button>
-  <div class="pp-li"><i class="pp-ico">${PP_IC.loop}</i><span>Relancer si ignoré<small>Après 2 h</small></span><button class="pp-tg${ppRelanceActive() ? ' on' : ''}" aria-label="Relance" onclick="ppToggleRelance(this)"></button></div>${actif ? `<button class="pp-li" onclick="ppTesterPush()"><i class="pp-ico">${PP_IC.bell}</i><span>Tester la notification<small>Reçue même quand l'app est fermée</small></span></button>` : ''}</div>${rappelPermissionMsg ? `<p class="pp-warn">${ppEsc(rappelPermissionMsg)}</p>` : ''}`;
+  <div class="pp-li"><i class="pp-ico">${PP_IC.loop}</i><span>Relancer si ignoré<small>Après 2 h</small></span><button class="pp-tg${ppRelanceActive() ? ' on' : ''}" aria-label="Relance" onclick="ppToggleRelance(this)"></button></div></div>${rappelPermissionMsg ? `<p class="pp-warn">${ppEsc(rappelPermissionMsg)}</p>` : ''}`;
   const key = getGeminiKey();
   const ia = (key && !geminiKeyEdit)
     ? `<div class="pp-set"><div class="pp-li"><i class="pp-ico">${PP_IC.key}</i><span>Clé Gemini connectée<small>${ppEsc(key.slice(0, 6) + '••••••' + key.slice(-4))}</small></span><button class="pp-time" style="flex:none" onclick="editerGeminiKey()">Changer</button></div></div>`
@@ -17950,15 +17979,15 @@ function ppSetHtml(){
   <h4>Rappels</h4>${rappels}
 </div><div>
   <h4>Génération IA</h4>${ia}
-  <h4>Aide</h4><div class="pp-set">${maj}<button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Écrire des formules<small>Gras, listes, maths, chimie</small></span></button><button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button>${PP_JOURNAL_VISIBLE ? `<button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button>` : ''}</div>
+  ${ppWebHtml()}
+  ${ppMobilesHtml()}
+  <h4>Aide</h4><div class="pp-set"><button class="pp-li" onclick="ppFormatAide()"><i class="pp-ico">${PP_IC.edit}</i><span>Mettre en forme tes cartes<small>Gras, listes, maths, chimie : comment les écrire</small></span></button>${maj}<button class="pp-li" onclick="ppSheetClose();setTimeout(fcIntroOuvrir,260)"><i class="pp-ico">${PP_IC.loop}</i><span>Revoir l'introduction</span></button><button class="pp-li" onclick="ppAideMail('bug')"><i class="pp-ico">${PP_IC.bug}</i><span>Signaler un bug<small>Ouvre ton mail, déjà prérempli</small></span></button><button class="pp-li" onclick="ppAideMail('contact')"><i class="pp-ico">${PP_IC.mail}</i><span>Me contacter</span></button>${PP_JOURNAL_VISIBLE ? `<button class="pp-li" onclick="ppJournalOuvrir()"><i class="pp-ico">${PP_IC.code}</i><span>Journal de diagnostic<small>Pour comprendre les retours à l'accueil</small></span></button>` : ''}</div>
   <h4>Sauvegarde</h4><div class="pp-set">
   <button class="pp-li" onclick="ppExportSheet('json')"><i class="pp-ico">${PP_IC.dl}</i><span>Exporter la progression<small>Fichier JSON</small></span></button>
   <button class="pp-li" onclick="document.getElementById('import-file-input').click()"><i class="pp-ico">${PP_IC.ul}</i><span>Importer une progression</span></button>
   <button class="pp-li" onclick="ppExportSheet('html')"><i class="pp-ico">${PP_IC.code}</i><span>Exporter l'app à jour<small>Fichier HTML complet</small></span></button></div>
   <input type="file" id="import-file-input" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="handleImportFile(event)">
-  ${settingsImportMsg ? `<p class="pp-warn ${settingsImportMsg.type === 'ok' ? 'ok' : ''}" style="margin-top:10px">${ppEsc(settingsImportMsg.text)}</p>` : ''}
-  ${ppWebHtml()}
-  ${ppMobilesHtml()}</div></div>`;
+  ${settingsImportMsg ? `<p class="pp-warn ${settingsImportMsg.type === 'ok' ? 'ok' : ''}" style="margin-top:10px">${ppEsc(settingsImportMsg.text)}</p>` : ''}</div></div>`;
 }
 /* v113 : Réglages — rappel que l'app existe aussi en site web, avec son adresse. L'adresse est lue sur la page
    elle-même (window.location.origin) : toujours la bonne, même si le domaine change. Rien n'est affiché si la page
@@ -18037,8 +18066,7 @@ function ppSyncHtml(){
   const codeAffiche = verifierSoliditeCode(code) ? '' : code;
   return `<div class="pp-set"><div class="pp-li"><i class="pp-ico${syncBtnEtat === 'loading' ? ' pp-spin' : ''}">${PP_IC.cloud}</i><span>Synchro entre appareils<small class="sync-statut" id="sync-statut">${syncStatutInner()}</small></span></div></div>
   <div id="sync-code-erreur" style="margin-top:6px">${syncErreurCodeHtml()}</div>
-  <input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" oninput="ppSetBrouillon[this.id]=this.value" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
-  <button class="pp-sec sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button>
+  <div class="pp-synwrap"><input type="text" id="sync-code-input" class="pp-fld" placeholder="Ton code perso" value="${attrEchappe(codeAffiche)}" oninput="ppSetBrouillon[this.id]=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();validerCodePerso()}" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done"><button class="pp-synbtn sync-btn${syncBtnEtat !== 'idle' ? ' is-' + syncBtnEtat : ''}" id="sync-btn" aria-label="Valider le code" onclick="validerCodePerso()" ${syncBtnEtat === 'loading' ? 'disabled' : ''}>${syncBtnContenu(syncBtnEtat)}</button></div>
   <p class="pp-hint pp-synh">${SYNC_CODE_LONGUEUR_MIN} caractères minimum, avec majuscule, minuscule et chiffre.</p>`;
 }
 /* v249 : lien direct vers Google AI Studio + guide pas à pas (mêmes captures que l'intro) */
