@@ -215,7 +215,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   window.choisirLangue=function(c){ try{ localStorage.setItem(K,c); }catch(e){} location.reload(); };
   if(lire()!=='en') return;
   document.documentElement.setAttribute('lang','en');
-  var D=window.FC_EN={'Réviser et Tout réviser comptent pour ta maîtrise ; S’entraîner ne compte que pour les cartes difficiles.':'Study and Study all count toward your mastery; Practice only counts toward tough cards.','Tout réviser':'Study all','S’entraîner':'Practice','S’entraîner · difficiles':'Practice · hard ones','Attention : la matière ET toutes ses cartes seront supprimées (récupérables 30 jours).':'Warning: the subject AND all its cards will be deleted (recoverable for 30 days).','Chargement…':'Loading…','Limite du jour atteinte, réessaie demain.':'Daily limit reached, try again tomorrow.','Chargement impossible pour l’instant. Réessaie plus tard.':'Couldn’t load right now. Try again later.','Cette conversation n’a pas encore été envoyée depuis l’autre appareil. Ouvre Memoria là-bas avec du réseau.':'This conversation hasn’t been sent from the other device yet. Open Memoria there with a connection.','Retenir · carnet':'Remember · notebook','Ce que Prof retient':'What Prof remembers','ex. préfère des exemples concrets':'e.g. prefers concrete examples','Des notes courtes que Prof lit avant chaque réponse, pour s’adapter à ta façon de réviser.':'Short notes Prof reads before every answer, to fit the way you study.','Supprimer cette ligne':'Delete this line','Carnet plein : supprime une ligne pour en ajouter':'Notebook full: delete a line to add one','Cette ligne existe déjà':'This line already exists','En cours':'In progress','Commencer une nouvelle conversation ? L’actuelle sera rangée dans « Conversations passées ».':'Start a new conversation? The current one will be saved in “Past conversations”.','Nouvelle':'New','Conversations passées':'Past conversations','Aucune conversation rangée pour l’instant.':'No saved conversation yet.','Cette conversation n’est pas disponible sur cet appareil.':'This conversation is not available on this device.','Supprimer cette conversation ?':'Delete this conversation?',
+  var D=window.FC_EN={'De quelle matière parles-tu ?':'Which subject are you talking about?','Réviser et Tout réviser comptent pour ta maîtrise ; S’entraîner ne compte que pour les cartes difficiles.':'Study and Study all count toward your mastery; Practice only counts toward tough cards.','Tout réviser':'Study all','S’entraîner':'Practice','S’entraîner · difficiles':'Practice · hard ones','Attention : la matière ET toutes ses cartes seront supprimées (récupérables 30 jours).':'Warning: the subject AND all its cards will be deleted (recoverable for 30 days).','Chargement…':'Loading…','Limite du jour atteinte, réessaie demain.':'Daily limit reached, try again tomorrow.','Chargement impossible pour l’instant. Réessaie plus tard.':'Couldn’t load right now. Try again later.','Cette conversation n’a pas encore été envoyée depuis l’autre appareil. Ouvre Memoria là-bas avec du réseau.':'This conversation hasn’t been sent from the other device yet. Open Memoria there with a connection.','Retenir · carnet':'Remember · notebook','Ce que Prof retient':'What Prof remembers','ex. préfère des exemples concrets':'e.g. prefers concrete examples','Des notes courtes que Prof lit avant chaque réponse, pour s’adapter à ta façon de réviser.':'Short notes Prof reads before every answer, to fit the way you study.','Supprimer cette ligne':'Delete this line','Carnet plein : supprime une ligne pour en ajouter':'Notebook full: delete a line to add one','Cette ligne existe déjà':'This line already exists','En cours':'In progress','Commencer une nouvelle conversation ? L’actuelle sera rangée dans « Conversations passées ».':'Start a new conversation? The current one will be saved in “Past conversations”.','Nouvelle':'New','Conversations passées':'Past conversations','Aucune conversation rangée pour l’instant.':'No saved conversation yet.','Cette conversation n’est pas disponible sur cet appareil.':'This conversation is not available on this device.','Supprimer cette conversation ?':'Delete this conversation?',
     'Tes cartes sont envoyées à Google (Gemini) pour répondre.':'Your cards are sent to Google (Gemini) to answer.','Compris':'Got it','Nouvelle conversation':'New conversation','Tout voir':'See all','Gérer':'Manage','Aucune note pour l’instant.':'No notes yet.','Pratiquer une langue':'Practice a language','Effacer cette conversation ?':'Clear this conversation?','Effacer':'Clear','Quelle langue ?':'Which language?','Actions proposées':'Suggested actions','Réessayer':'Try again','Copier le diagnostic':'Copy diagnostics','Appliquer':'Apply','Ignorer':'Dismiss','+ Ajouter en carte':'+ Add as card','Il me faut ta clé Gemini':'I need your Gemini key','Ouvrir les Réglages':'Open Settings','Avant de commencer':'Before you start','Photo prête':'Photo ready',"Je t'explique":'I explain it to you','Explique autrement':'Explain differently','Pourquoi je rate celle-là ?':'Why do I keep missing this one?',
     'Pose ta question…':'Ask a question…','Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t\'interroger.':'Hi! I know your cards. Ask me a question or ask me to quiz you.','Interroge-moi':'Quiz me','Résume la matière':'Summarize the subject','Vérifie mes cartes':'Check my cards','Question d\'examen':'Exam question','Mon bilan de la semaine':'My weekly review','Plan avant le contrôle':'Plan before the test','Toutes':'All','Photo':'Photo','Envoyer':'Send','Photo : pas encore branchée':'Photo: not connected yet','Je ne suis pas encore relié à l\'IA : l\'écran est prêt, les réponses arrivent à l\'étape suivante.':'I\'m not connected to the AI yet: the screen is ready, answers come in the next step.',
     'Réviser':'Study','Prendre la photo':'Take photo','Caméra indisponible : choisis un fichier.':'Camera unavailable: pick a file.','Planning':'Planning','Ajouter':'Add','Parcourir':'Browse',
@@ -3186,6 +3186,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #pc-layer.ready .pc-chip{animation:none}   /* v235 : après l'ouverture, plus d'animation CSS sur les pastilles (grand écran : elle rejouait à chaque changement) ; pcRenderSugg anime lui-même */
 #pc-sugg::-webkit-scrollbar{display:none}
 .pc-chip{flex:none;padding:8px 14px;border-radius:99px;background:var(--panel);border:1.5px solid var(--line);color:var(--cream);font-weight:700;font-size:13px;transition:transform .35s var(--ease-press)}
+.pc-demande{display:flex;flex-direction:column;gap:8px}.pc-demande .pc-sg{display:flex;flex-wrap:wrap;gap:8px}   /* v352 : question de matière */
 .pc-chip:active,.pc-chip.js-press{transform:scale(.93);transition-duration:.07s}
 .pc-input{--sq:40px;--ln:21px;--pad:8px;position:relative;display:flex;gap:8px;align-items:flex-end;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));border-top:1.5px solid var(--line);background:var(--bg)}
 #pc-layer.kb .pc-input{padding-bottom:10px}
@@ -6704,9 +6705,9 @@ function pcJournalVerifie(r, t, matiere, essais, boxOk){
   try{ localStorage.setItem('coach-journal', JSON.stringify(j.slice(-6))); }catch(err){ try{ localStorage.setItem('coach-journal', JSON.stringify([e])); }catch(e2){} }
 }
 function pcJournalCopier(){
-  const j = pcJournalLire();
-  if(!j.length){ ppToast('Journal vide : aucun souci repéré'); return; }
-  const txt = JSON.stringify(j, null, 1);
+  const j = pcJournalLire(), me = pcMesuresLire();
+  if(!j.length && !me.length){ ppToast('Journal vide : aucun souci repéré'); return; }
+  const txt = JSON.stringify(me.length ? { problemes: j, mesures_envois: me } : j, null, 1);   /* v351 : + tailles des 8 derniers envois à Gemini */
   const secours = () => { try{ const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); ppToast('Journal copié'); }catch(e){ ppToast('Copie impossible'); } };
   try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => ppToast('Journal copié'), secours); else secours(); }catch(e){ secours(); }
 }
@@ -6841,11 +6842,12 @@ function pcScore(c, mots){
   for(const w of mots){ if(q.includes(w)) s += 2; if(r.includes(w)) s += 1; }
   return s;
 }
-function pcChoisirCartes(texte, matiere){
+function pcChoisirCartes(texte, matiere){   /* v351 : `matiere` = nom, liste de noms (matières routées) ou null (« Toutes ») */
   pcRecentMap = pcRecentCharge();
+  const lstM = Array.isArray(matiere) ? matiere : (matiere ? [matiere] : null);
   let liste;
   if(/doublon/i.test(String(texte || ''))) liste = CARDS.slice();   /* v236 : recherche de doublons = toutes les cartes de toutes les matières (plafonné plus bas) */
-  else if(matiere) liste = CARDS.filter(c => (c.matiere || 'Sans matière') === matiere);
+  else if(lstM && lstM.length) liste = CARDS.filter(c => lstM.includes(c.matiere || 'Sans matière'));
   else { /* « Toutes » : recherche locale par mots-clés (pas d'IA), puis les plus ratées pour compléter */
     const mots = pcMots(texte);
     liste = CARDS.map(c => ({ c, s: pcScore(c, mots) })).sort((a, b) => (b.s - a.s) || ((b.c.difficultes || 0) - (a.c.difficultes || 0))).slice(0, COACH_TOPN).map(x => x.c);
@@ -6853,7 +6855,9 @@ function pcChoisirCartes(texte, matiere){
   const total = liste.length;
   let l = liste.map(c => ({ c, t: pcLigne(c) }));
   if(l.reduce((a, x) => a + x.t.length + 1, 0) > COACH_CONTEXTE_MAX){
-    l.sort((a, b) => (b.c.difficultes || 0) - (a.c.difficultes || 0));
+    /* v352 : coupe PAR PRIORITÉ (avant : les plus ratées d'abord, donc une matière entière pouvait disparaître) : 1) matière citée dans le message, 2) matières non archivées, 3) cartes proches de la question, 4) les plus ratées */
+    const tn = pcNorm(texte), cit = new Set(getMatieres().filter(m => m.length >= 3 && tn.includes(pcNorm(m)))), mw = pcMots(texte), nm = x => x.c.matiere || 'Sans matière', arch = x => (matieresConfig[nm(x)] && matieresConfig[nm(x)].archive) ? 1 : 0;
+    l.sort((a, b) => ((cit.has(nm(b)) ? 1 : 0) - (cit.has(nm(a)) ? 1 : 0)) || (arch(a) - arch(b)) || (pcScore(b.c, mw) - pcScore(a.c, mw)) || ((b.c.difficultes || 0) - (a.c.difficultes || 0)));
     let acc = 0; l = l.filter(x => { if(acc + x.t.length + 1 > COACH_CONTEXTE_MAX) return false; acc += x.t.length + 1; return true; });
   }
   /* v229 : aléatoire. Sans ça, l'IA reçoit toujours les cartes dans le même ordre et démarre toujours par la même (le même pays en géographie) :
@@ -6889,9 +6893,10 @@ function ppCoachPlan(m){
 
 /* ---------- consigne système ---------- */
 function pcSysteme(matiere, cartes){
+  const lstM = Array.isArray(matiere) ? matiere : (matiere ? [matiere] : null), uneM = (lstM && lstM.length === 1) ? lstM[0] : null;   /* v351 : une ou plusieurs matières concernées */
   const mats = getMatieres().map(m => { const L = CARDS.filter(c => (c.matiere || 'Sans matière') === m); const cf = matieresConfig[m] || {}; return `${m} (${L.length} cartes, ${L.filter(c => (c.palier || 0) >= MASTERED_PALIER).length} maîtrisées${cf.archive ? ', archivée' : ''}${cf.dateControle ? ', contrôle le ' + cf.dateControle : ''})`; }).join(', ') || 'aucune';
   const carte = pcCarte ? CARDS.find(c => c.id === pcCarte) : null;
-  const bilan = ppCoachBilan(), plan = matiere ? ppCoachPlan(matiere) : getPlanningSummary();
+  const bilan = ppCoachBilan(), plan = uneM ? ppCoachPlan(uneM) : getPlanningSummary();
   return `Tu es « ${PP_COACH_NOM} », l'assistant de révision de l'application Memoria. Tu aides l'utilisateur à apprendre, réviser, comprendre un cours ou un exercice, s'organiser et travailler une langue, et tu peux PROPOSER des changements dans l'appli (cartes, matières, planning, réglages) qu'il valide avec un bouton « Appliquer ».
 
 CE QUE TU VOIS
@@ -6921,7 +6926,7 @@ Principes :
 - Le texte DÉCRIT les actions, il ne les remplace JAMAIS. Si l'utilisateur ajuste ce que tu viens de proposer, ou donne une nouvelle consigne alors que tes actions précédentes n'ont pas été appliquées (elles sont alors retirées de l'écran), renvoie la liste COMPLÈTE des actions de la nouvelle consigne, pas seulement une phrase.
 - Une action n'est qu'une PROPOSITION tant qu'il n'a pas appuyé sur « Appliquer » : ne dis jamais qu'elle est faite (« j'ai créé… »), dis « Je te propose… ». N'écris « Appliquer » (ou « appuie sur le bouton ») QUE si "actions" contient au moins une action dans CETTE réponse ; sinon fais l'action maintenant, ou explique ce qui manque. Ne reproposes pas une action annulée ou ignorée sans qu'il le demande.
 - Tu PEUX faire TOUTES les actions de la liste : ne dis jamais le contraire. Avant de répondre « je ne peux pas », relis la liste : si une action (ou une combinaison) convient, propose-la ; ne refuse que si aucune ne convient, et dis alors précisément ce qui manque. S'il te reprend (« si tu peux »), ne réponds pas « tu as raison » sans actions : fais l'action maintenant.
-- N'invente JAMAIS d'id ni de nom de matière : les ids sont ceux des lignes de cartes (vérifie chaque id avant de l'écrire), les noms de matières sont EXACTEMENT ceux de MATIÈRES (ou d'une matière créée dans la même réponse, avec "matiere" placé avant). Tu ne touches qu'aux cartes listées ; si les cartes voulues n'y sont pas, dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran. Matière non précisée : prends la matière active, sinon demande.
+- N'invente JAMAIS d'id ni de nom de matière : les ids sont ceux des lignes de cartes (vérifie chaque id avant de l'écrire), les noms de matières sont EXACTEMENT ceux de MATIÈRES (ou d'une matière créée dans la même réponse, avec "matiere" placé avant). Tu ne touches qu'aux cartes listées ; si les cartes voulues n'y sont pas, ${PC_ROUTEUR_ACTIF ? 'dis-le en une phrase SANS les inventer, et mets dans "matieres_proposees" les noms EXACTS (4 au plus) des matières qui pourraient les contenir : l\'appli affiche des boutons et te renvoie la demande avec les cartes de la matière choisie.' : "dis-le et demande à l'utilisateur de choisir la matière en haut de l'écran."} Matière non précisée : prends la matière active, sinon demande.
 - Dates : AAAA-MM-JJ, calculées depuis DATE DU JOUR (« le 15 » = le prochain 15), jamais dans le passé ; si c'est ambigu, demande.
 Liste (chaque action seulement sur demande) :
 CARTES
@@ -6986,7 +6991,7 @@ VÉRIFICATION AVANT D'ENVOYER : JSON valide, rien d'autre que l'objet ; « actio
 APPLICATION : ${pcAppliTexte()}
 MATIÈRES : ${mats}${pcCarnetPourPrompt()}
 CORBEILLE : ${pcCorbeillePrompt()}
-MATIÈRE ACTIVE : ${matiere ? matiere : 'Toutes (extraits triés par rapport à la question)'}
+MATIÈRE ACTIVE : ${lstM && lstM.length ? (lstM.length > 1 ? lstM.join(' + ') + ' (plusieurs matières concernées : les cartes ci-dessous viennent de toutes ces matières)' : lstM[0]) : 'Toutes (extraits triés par rapport à la question)'}
 DATE DU JOUR : ${todayStr()}${carte ? `\nCARTE EN DISCUSSION : ${pcLigne(carte)}` : ''}
 DONNÉES BILAN : ${bilan ? JSON.stringify(bilan) : 'aucune'}
 DONNÉES PLAN : ${plan ? JSON.stringify(plan) : 'aucune (pas de date de contrôle)'}${cartes.tirage ? `\nTIRAGE AU SORT (carte de départ d'une nouvelle série) : ${cartes.tirage}` : ''}
@@ -7013,7 +7018,7 @@ const pcDateFr = d => String(d).split('-').reverse().join('/');
 function pcValideActions(arr, matiere){
   if(!Array.isArray(arr)) return [];
   const mats = getMatieres(), res = [];
-  const defMat = (matiere && mats.includes(matiere)) ? matiere : (mats[0] || 'Sans matière');
+  const defMat = (matiere && mats.includes(matiere)) ? matiere : (mats.length <= 1 ? (mats[0] || 'Sans matière') : '');   /* v351 : sans matière valide ET plusieurs matières, plus de rangement silencieux dans la 1re matière par ordre alphabétique : la carte est écartée */
   const datesNouv = {};   /* v236 : date de contrôle donnée à la création d'une matière */
   const mm = v => { const b = typeof v === 'string' ? nomMatiereCanonique(v.trim(), mats) : ''; return mats.includes(b) ? b : ''; };
   const nouvelles = [];   /* v234 : matières à créer (action "matiere"), 3 au plus, placées AVANT les cartes qui les utilisent */
@@ -7031,7 +7036,7 @@ function pcValideActions(arr, matiere){
     if(a.type === 'creer'){
       const q = txt(a.question), r = txt(a.reponse); if(!q || !r) continue;
       const brut = typeof a.matiere === 'string' ? nomMatiereCanonique(a.matiere.trim(), mats.concat(nouvelles)) : '';
-      const m = (mats.includes(brut) || nouvelles.includes(brut)) ? brut : defMat;
+      const m = (mats.includes(brut) || nouvelles.includes(brut)) ? brut : defMat; if(!m) continue;
       res.push({ type: 'creer', matiere: m, question: q, reponse: r, inversible: a.inversible === true, ecrite: a.ecrite === true && ppEcritePossible({ reponse: r }), rechercheImage: pcTermeImage(a.rechercheImage), rechercheCote: a.rechercheCote === 'reponse' ? 'reponse' : 'question' });
     } else if(a.type === 'modifier'){
       const c = CARDS.find(k => k.id === a.id); if(!c) continue;
@@ -7203,6 +7208,7 @@ function pcParse(raw, matiere){
   const net = String(raw).trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```[ \t]*$/, '').trim();
   let o = null; try{ o = JSON.parse(ppJsonAntislashs(net)); }catch(e){}
   if(!o || typeof o !== 'object' || Array.isArray(o) || typeof o.reponse !== 'string') return { texte: ppRepareTexteIA(String(raw).trim()), hors: false, ajoutable: false, actions: [], illisible: true, brut: String(raw), nbBrut: 0 }; /* JSON illisible : texte brut, sans actions */
+  const matsOk = getMatieres(), propo = Array.isArray(o.matieres_proposees) ? [...new Set(o.matieres_proposees.map(x => typeof x === 'string' ? nomMatiereCanonique(x.trim(), matsOk) : '').filter(x => matsOk.includes(x)))].slice(0, 4) : [];   /* v352 */
   const acts = pcValideActions(o.actions, matiere), texteRep = ppRepareTexteIA(o.reponse.trim()) || '…';
   let jsonRej = ''; try{ if(Array.isArray(o.actions) && o.actions.length){
     /* v320 : le JSON rejoué à l'IA n'est plus jeté quand il est long (avant : au-delà de 12 000 caractères il disparaissait, donc l'IA ne revoyait que « Appuie sur Appliquer » et l'imitait sans actions : typique d'un lot de 20 à 25 cartes). On garde les premières actions COMPLÈTES qui tiennent dans la limite. */
@@ -7214,7 +7220,7 @@ function pcParse(raw, matiere){
   } }catch(e){ jsonRej = ''; }   /* v318 : la réponse AVEC ses actions est rejouée à l'IA dans l'historique (avant, elle ne revoyait que le texte : elle imitait ses messages « Appuie sur Appliquer » sans refaire les actions) */
   /* v281 : l'IA promet un bouton « Appliquer » alors qu'aucune action valide n'est arrivée (aucune action, id inconnu, carte identique) : l'appli le dit au lieu de laisser croire à un bug */
   const sansBouton = !acts.length && ((/appliquer/i.test(texteRep) && !/\?\s*$/.test(texteRep.trim())) || o.suite === true || /^\s*lot\s+\d+\s+sur\s+\d+/i.test(texteRep));   /* v320 : un lot annoncé (« Lot k sur N » ou suite:true) sans aucune action est aussi un échec */
-  return { texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton, suite: o.suite === true, json: jsonRej, brut: String(raw), nbBrut: Array.isArray(o.actions) ? o.actions.length : 0 };
+  return { propo, texte: texteRep, hors: o.hors_cartes === true, ajoutable: o.ajoutable === true, image: pcTermeImage(o.image), titre: pcTitreNet(o.titre), actions: acts, sansBouton, suite: o.suite === true, json: jsonRej, brut: String(raw), nbBrut: Array.isArray(o.actions) ? o.actions.length : 0 };
 }
 /* v320 : FORMAT DE SORTIE IMPOSÉ à Gemini (schéma JSON) : « actions » est toujours présent, chaque action a ses champs obligatoires.
    Si l'API refuse la configuration (erreur 400), on rejoue l'appel avec l'ancienne configuration (JSON libre) et on s'en souvient jusqu'au rechargement : rien ne peut se casser.
@@ -7238,9 +7244,9 @@ function pcSchema(actionsFirst, forcer){
   if(forcer) actions.minItems = '1';
   return {
     type: 'OBJECT',
-    properties: { reponse: S, hors_cartes: B, ajoutable: B, image: S, titre: S, suite: B, actions },
+    properties: { reponse: S, hors_cartes: B, ajoutable: B, image: S, titre: S, suite: B, actions, matieres_proposees: { type: 'ARRAY', items: S } },   /* v352 : facultatif, noms de matières à proposer en boutons (cartes manquantes) */
     required: ['reponse', 'actions'],
-    propertyOrdering: actionsFirst ? ['actions', 'suite', 'reponse', 'hors_cartes', 'ajoutable', 'image', 'titre'] : ['reponse', 'hors_cartes', 'ajoutable', 'image', 'titre', 'suite', 'actions']
+    propertyOrdering: actionsFirst ? ['actions', 'suite', 'reponse', 'hors_cartes', 'ajoutable', 'image', 'titre', 'matieres_proposees'] : ['reponse', 'hors_cartes', 'ajoutable', 'image', 'titre', 'suite', 'actions', 'matieres_proposees']
   };
 }
 /* v330 : MODÈLE ET NIVEAU DE RÉFLEXION DE PROF. Prof (beaucoup de règles + choix d'une action parmi ~25) comprend mieux avec un modèle plus gros et en réfléchissant avant de répondre.
@@ -7287,6 +7293,7 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){  
   if(!/^[\x21-\x7e]+$/.test(key)) throw { pcMsg: 'La clé Gemini contient des caractères non valides : copie-la de nouveau depuis Google.' };
   const cit = pcRepValide(citation);
   const cartes = pcChoisirCartes(cit ? texte + ' ' + cit.t : texte, matiere);
+  const lstM = Array.isArray(matiere) ? matiere : (matiere ? [matiere] : null), uneM = (lstM && lstM.length === 1) ? lstM[0] : null;   /* v351 */
   const parts = [{ text: cit ? pcRepNote(cit) + '\n' + texte : texte }];
   if(photo){ parts.push(...ppPartsFichiers([photo], 0).parts); }
   const hist = pcHistorique();
@@ -7295,7 +7302,9 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){  
   const contents = hist.concat([{ role: 'user', parts }]);
   let response;
   try{
-    response = await pcAppelGemini(key, pcSysteme(matiere, cartes), contents, opts);   /* v320 */
+    const sysTxt = pcSysteme(matiere, cartes);
+    pcMesureNote(sysTxt, cartes, lstM);   /* v351 : tailles réelles de ce qui part à Gemini */
+    response = await pcAppelGemini(key, sysTxt, contents, opts);   /* v320 */
   }catch(err){ throw { pcMsg: messageErreurReseau(err, true) }; }
   if(!response.ok) throw { pcMsg: messageErreurGemini(response.status, true) };
   let data; try{ data = await response.json(); }catch(e){ throw { pcMsg: 'Réponse du serveur illisible, réessaie.' }; }
@@ -7305,28 +7314,134 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){  
     const motif = (data && data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason) || '';
     throw { pcMsg: (motif && motif !== 'STOP') ? "L'IA a bloqué ou refusé cette demande (contenu filtré). Reformule un peu et réessaie." : "L'IA n'a rien renvoyé, réessaie." };
   }
-  const r = pcParse(pr.map(p => p.text || '').join(''), matiere);
+  const r = pcParse(pr.map(p => p.text || '').join(''), uneM);   /* v351 : matière par défaut des « creer » = seulement s'il n'y en a qu'une */
   r.info = cartes.envoyees < cartes.total ? `${cartes.envoyees} cartes sur ${cartes.total} envoyées` : '';
   return r;
 }
 
+
+/* ===== v351 : ROUTEUR DE MATIÈRE (étapes 1 à 3 du brief « Prof trouve tout seul la bonne matière »). ACTIVÉ en v352 (PC_ROUTEUR_ACTIF = true ; mettre false = comportement d'avant la v351, pastille = sélecteur).
+   - Mesures : `coach-mesure` garde la taille des 8 derniers envois (consigne, cartes, nombre) ; elles sortent avec « Copier le diagnostic ». Local, jamais synchronisé.
+   - Routage : décidé UNE fois par envoi dans pcEnvoyer (pcRoutageDecide) et jamais écrit dans pcMat / pcDerniere (sinon la règle v214 « changer de matière = nouvelle conversation » couperait la conversation).
+   - pcRouteur() est séparé de pcAppelGemini : état propre, délai court, aucun nouvel essai ; échec, délai ou 429 = repli local (pcRouteLocal), jamais de blocage. */
+const PC_ROUTEUR_ACTIF = true, PC_ROUTEUR_MODELE = PC_MODELE_SECOURS, PC_ROUTEUR_DELAI_MS = 6000, PC_ROUTEUR_PAUSE_MS = 300000;
+let pcRouteurPause = 0, pcFichesCache = null, pcDernieresMats = [];
+let pcForce = null, pcAff = null, pcAffAuto = null;   /* v352 : pcForce = matière imposée par un appui sur une pastille, pour LE message suivant seulement ; pcAff = ce qui est surligné (ce que Prof a compris) */
+function pcMesuresLire(){ try{ const j = JSON.parse(localStorage.getItem('coach-mesure') || '[]'); return Array.isArray(j) ? j : []; }catch(e){ return []; } }
+function pcMesureNote(sysTxt, cartes, lstM){
+  try{
+    const e = { quand: new Date().toISOString(), matieres: lstM && lstM.length ? lstM.join(' + ') : 'Toutes', caracteres_consigne: String(sysTxt).length, caracteres_cartes: cartes.lignes.join('\n').length, cartes_envoyees: cartes.envoyees, cartes_total: cartes.total };
+    const j = pcMesuresLire(); j.push(e); localStorage.setItem('coach-mesure', JSON.stringify(j.slice(-8)));
+  }catch(err){}
+}
+/* mini-fiche par matière (nom, nombre de cartes, ~8 mots caractéristiques), mise en cache et recalculée quand les cartes changent */
+function pcFichesMatieres(){
+  const sig = CARDS.length + '|' + CARDS.reduce((a, c) => a + ((c.question || '').length & 15), 0) + '|' + getMatieres().join(',');
+  if(pcFichesCache && pcFichesCache.sig === sig) return pcFichesCache.fiches;
+  const fiches = getMatieres().map(m => {
+    const L = CARDS.filter(c => (c.matiere || 'Sans matière') === m), freq = {};
+    L.forEach(c => pcMots(c.question).forEach(w => { freq[w] = (freq[w] || 0) + 1; }));
+    const mots = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 8).map(x => x[0]);
+    return { nom: m, cartes: L.length, archivee: !!(matieresConfig[m] && matieresConfig[m].archive), mots };
+  });
+  pcFichesCache = { sig, fiches }; return fiches;
+}
+/* repli local (sans IA) : dernières matières + matières dont les cartes ressemblent le plus à la question (ancien pcScore) */
+function pcRouteLocal(texte){
+  const mots = pcMots(texte), mats = getMatieres(), score = {};
+  if(mots.length) CARDS.forEach(c => { const m = c.matiere || 'Sans matière'; score[m] = (score[m] || 0) + pcScore(c, mots); });
+  const proches = Object.entries(score).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
+  const l = [...new Set([...(pcDernieresMats.slice(0, 1)), ...proches])].filter(m => mats.includes(m));
+  return l.length ? l : null;
+}
+function pcRouteurSchema(){
+  return { type: 'OBJECT', properties: { matieres: { type: 'ARRAY', items: { type: 'STRING' } }, certitude: { type: 'STRING', format: 'enum', enum: ['haute', 'moyenne', 'basse'] },
+    intention: { type: 'STRING', format: 'enum', enum: ['lecture', 'creation', 'modification', 'suppression', 'planning', 'autre'] }, suite_du_sujet: { type: 'BOOLEAN' }, toutes: { type: 'BOOLEAN' } },
+    required: ['matieres', 'certitude', 'intention'], propertyOrdering: ['matieres', 'certitude', 'intention', 'suite_du_sujet', 'toutes'] };
+}
+async function pcRouteur(texte, opts){
+  if(Date.now() < pcRouteurPause) return null;
+  const key = getGeminiKey(); if(!key) return null;
+  const o = opts || {}, mats = getMatieres();
+  const echanges = pcConv.filter(m => m && m.r && typeof m.t === 'string').slice(-6, -1).map(m => (m.r === 'u' ? 'Utilisateur : ' : 'Prof : ') + m.t.replace(/\s+/g, ' ').slice(0, 200)).join('\n');
+  let carte = ''; if(pcCarte){ const ck = CARDS.find(k => k.id === pcCarte); if(ck) carte = 'CARTE OUVERTE : matière « ' + (ck.matiere || 'Sans matière') + ' », question : ' + pcNet(ck.question || '').slice(0, 120); }
+  const sys = "Tu es un routeur : tu décides de quelle(s) matière(s) parle le DERNIER message de l'utilisateur d'une appli de flashcards. Le message actuel passe avant tout ; l'historique ne sert que si le message y renvoie (« celle-là », « la suivante », « et pour l'autre ? »). Réponds en JSON : « matieres » = noms EXACTS pris dans la liste (jamais d'autre nom), « certitude » = haute / moyenne / basse, « intention » = lecture (explication, quiz, résumé) | creation | modification | suppression | planning | autre, « suite_du_sujet » = true si le message prolonge le sujet précédent, « toutes » = true si la demande vise vraiment toutes les matières. En cas de doute pour une simple lecture, inclus une matière de trop plutôt que d'en rater une.\nMATIÈRES : " + JSON.stringify(pcFichesMatieres()) + '\nDERNIERS SUJETS : ' + (pcDernieresMats.length ? pcDernieresMats.join(', ') : 'aucun') + (carte ? '\n' + carte : '') + (echanges ? '\nDERNIERS ÉCHANGES :\n' + echanges : '') + (o.pj ? '\nUne pièce jointe accompagne le message (' + o.pj + ').' : '');
+  const ctrl = new AbortController(), minuteur = setTimeout(() => ctrl.abort(), PC_ROUTEUR_DELAI_MS);
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + PC_ROUTEUR_MODELE + ':generateContent', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: [{ text: String(texte).slice(0, 1500) }] }], generationConfig: { responseMimeType: 'application/json', responseSchema: pcRouteurSchema() } }) });
+    if(r.status === 429){ pcRouteurPause = Date.now() + PC_ROUTEUR_PAUSE_MS; return null; }   /* quota : pause du routeur seul, le gros appel n'est pas touché */
+    if(!r.ok) return null;
+    const d = await r.json(), tx = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('');
+    const j = JSON.parse(tx);
+    if(!j || !Array.isArray(j.matieres) || !['haute', 'moyenne', 'basse'].includes(j.certitude)) return null;
+    const noms = [...new Set(j.matieres.map(x => nomMatiereCanonique(String(x).trim(), mats)).filter(x => mats.includes(x)))];
+    return { mats: noms, certitude: j.certitude, intention: j.intention || 'autre', suite: j.suite_du_sujet === true, toutes: j.toutes === true };
+  }catch(e){ return null; }
+  finally{ clearTimeout(minuteur); }
+}
+/* >>> Renvoie { mats: [noms] | null (« Toutes »), source } ou { demander: true, choix: [noms] } (question de matière, SANS appel du gros modèle). Routeur désactivé : exactement la matière de la pastille, comme avant. */
+async function pcRoutageDecide(texte, matierePastille, opts){
+  const base = { mats: matierePastille ? [matierePastille] : null, source: 'pastille' };
+  if(!PC_ROUTEUR_ACTIF) return base;
+  const fin = res => {
+    if(res.mats && res.mats.length) pcDernieresMats = [...new Set([...res.mats, ...pcDernieresMats])].slice(0, 2);
+    pcAffAuto = (res.mats && res.mats.length) ? res.mats.slice() : [PC_TOUTES];
+    if(res.source !== 'manuel') pcAff = pcAffAuto;   /* la pastille montre ce que Prof a compris */
+    try{ pcMarque(true); pcRenderSugg(); }catch(e){}
+    return res;
+  };
+  if(pcForce){ const f = pcForce; pcForce = null; return fin({ mats: f.mats, source: 'manuel' }); }   /* correction par pastille ou « Discuter de… » : routeur sauté */
+  const mats = getMatieres();
+  if(mats.length < 2 || !getGeminiKey() || /doublon/i.test(String(texte || ''))) return fin(base);
+  const pj = pcPhoto ? pcPjType(pcPhoto) : '';
+  const rt = await pcRouteur(texte, { pj });
+  const derniers = pcDernieresMats.filter(m => mats.includes(m));
+  if(rt && rt.toutes) return fin({ mats: null, source: 'routeur' });
+  if(rt && rt.mats.length){
+    const action = ['creation', 'modification', 'suppression', 'planning'].includes(rt.intention);
+    if(action && (rt.certitude === 'basse' || (rt.certitude === 'moyenne' && rt.intention === 'suppression') || (pj && rt.intention === 'creation' && rt.certitude !== 'haute'))){
+      const cand = [...new Set([...rt.mats, ...derniers, ...(pcRouteLocal(texte) || [])])].slice(0, 4);
+      return { demander: true, choix: cand.length ? cand : mats.slice(0, 4), source: 'question' };
+    }
+    if(!action && rt.certitude !== 'haute') return fin({ mats: [...new Set([...rt.mats, ...derniers, ...(rt.certitude === 'basse' ? (pcRouteLocal(texte) || []) : [])])], source: 'routeur' });
+    return fin({ mats: rt.mats, source: 'routeur' });
+  }
+  return fin({ mats: pcRouteLocal(texte) || base.mats, source: 'local' });   /* échec, délai ou 429 : repli local, jamais de blocage */
+}
+/* v352 : question de matière avec boutons. `prof` = true quand c'est Prof qui la pose (cartes manquantes) : le message d'origine est alors renvoyé avec la matière choisie. */
+function pcQuestionMatiere(choix, t, prof){
+  const d = document.createElement('div'); d.className = 'pc-b a pc-demande';
+  if(!prof){ const q = document.createElement('div'); q.textContent = 'De quelle matière parles-tu ?'; d.appendChild(q); }
+  const sg = document.createElement('div'); sg.className = 'pc-sg';
+  choix.forEach(m => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pc-chip'; b.textContent = pcNom(m); if(m !== PC_TOUTES) b.setAttribute('data-notr', '');
+    b.onclick = ev => { ev.stopPropagation(); if(pcAttente) return; pcForce = { mats: m === PC_TOUTES ? null : [m] }; pcAff = [m]; d.remove(); pcMarque(true); pcEnvoyer(prof ? 'Avec les cartes de « ' + pcNom(m) + ' » : ' + t : t); };
+    sg.appendChild(b);
+  });
+  d.appendChild(sg); pcEl('pc-feed').appendChild(d); pcBas();
+}
+function pcEtatSansClePasse(){ return !getGeminiKey(); }
+
 /* ---------- envoi ---------- */
+let pcRoutageLot = null;   /* v351 : routage du 1er message d'une série, réutilisé par les lots enchaînés et « Réessayer » */
 let pcSuiteN = 0;   /* v316 : nombre de lots enchaînés automatiquement (40 au plus) */
 let pcPjLots = null;   /* v317 : le document joint au 1er message est gardé EN MÉMOIRE (jamais stocké) pour être rejoint à chaque « Lot suivant » : sans lui, Prof n'avait plus le contenu au lot 2 et ne pouvait proposer aucune action (donc pas de bouton Appliquer) */
 async function pcEnvoyer(t, label, auto){
-  if(!auto) pcSuiteN = 0;
+  if(!auto){ pcSuiteN = 0; pcRoutageLot = null; }
   t = (t || '').trim(); const photoSaisie = pcPhoto; let photo = photoSaisie;
   if(auto && !photo && pcPjLots) photo = pcPjLots;   /* v317 : lot suivant = on rejoint le document de départ */
   if(pcAttente || (!t && !photo)) return;
   if(!t) t = photo ? (pcPjType(photo) === 'photo' ? 'Explique-moi cette photo.' : pcPjType(photo) === 'colle' ? 'Résume ce texte.' : 'Résume ce document.') : '';
   if(!getGeminiKey()){ pcEtatSansCle(); return; }
+  document.querySelectorAll('.pc-demande').forEach(e => e.remove());   /* v352 : une question de matière encore affichée disparaît quand un message part */
   const rep = pcRep ? { a: pcRep.a, t: pcRep.t } : null;   /* v314 : message auquel on répond */
   if(rep) pcRepVide();
   pcMsgMenuFerme(true); pcRetirePropositions();   /* v313 : un message part : les boutons « Copier » encore visibles disparaissent en douceur */
   pcUndoHide();   /* v228 : on écrit dans la nouvelle conversation, plus d'« Annuler » */
   const matiere = pcMat === PC_TOUTES ? null : pcMat;
   { const inp0 = pcEl('pc-input'); if(inp0 && label === undefined && inp0.value.trim() === t){ inp0.value = ''; pcBrouillon = ''; try{ localStorage.removeItem('coach-brouillon'); }catch(e){} } } /* envoi depuis le champ : on le vide ; en cas d'erreur le texte revient */
-  if(pcMat !== pcDerniere){
+  if(!PC_ROUTEUR_ACTIF && pcMat !== pcDerniere){   /* v352 : avec le routeur, la matière ne coupe plus la conversation */
     /* v214 : changer de matière = nouvelle conversation. L'ancienne est rangée, ses bulles restent à l'écran (atténuées), Gemini ne reçoit que la suite. */
     if(pcConv.some(m => m && m.r === 'u') && pcFinaliser()){
       pcConv = []; pcSauve();
@@ -7354,11 +7469,15 @@ async function pcEnvoyer(t, label, auto){
   pcAttente = true; pcReflechit(true); /* v206 : étoiles en rotation continue tant que l'IA n'a pas répondu */
   try{
     const noteLot = auto ? "[Info de l'application : l'utilisateur a appliqué le lot précédent. Prépare MAINTENANT le lot suivant." + ((photo && !photoSaisie) ? " Le document de départ de l'utilisateur est de nouveau joint à ce message : sers-t'en pour trouver les éléments du lot." : '') + " Renvoie, comme pour le lot précédent, les actions COMPLÈTES dans « actions » (l'action « matiere » du groupe, puis UNE action « creer » par carte, avec de vraies questions et réponses), jamais seulement une phrase.]" : '';   /* v320 */
-    let r = await ppCoachRepondre(t, matiere, photo, noteLot, rep, { actionsFirst: !!auto }), essaisFaits = 0;
+    const routage = (auto && pcRoutageLot) ? pcRoutageLot : await pcRoutageDecide(t, matiere, { auto: !!auto, rep });   /* v351 : décidé UNE fois par envoi (pas par nouvel essai) */
+    if(routage.demander) throw { pcDemande: routage.choix };   /* v352 : action ambiguë ou lourde : on demande la matière, le gros modèle n'est PAS appelé */
+    if(!auto) pcRoutageLot = routage;
+    const matCartes = routage.mats;
+    let r = await ppCoachRepondre(t, matCartes, photo, noteLot, rep, { actionsFirst: !!auto }), essaisFaits = 0;
     for(let essai = 0; essai < 2 && r.sansBouton; essai++){ essaisFaits++;   /* v298 : Prof annonce « Appliquer » mais aucune action valide : nouveaux essais automatiques (v310 : jusqu'à 2), sans rien afficher */
       try{
         const avant = String(r.texte || '').replace(/\\s+/g, ' ').slice(0, 300);   /* v320 : l'IA revoit ce qu'elle avait écrit, et la sortie est cette fois contrainte (actions d'abord, au moins une) */
-        const r2 = await ppCoachRepondre(t, matiere, photo, "[Info de l'application : ta réponse précédente (« " + avant + " ») annonçait un bouton « Appliquer » mais « actions » était vide ou invalide : rien n'a pu être affiché. Réponds de nouveau à la même demande avec la liste COMPLÈTE des actions : l'action « matiere » si une matière doit être créée, puis UNE action « creer » par carte (vraie question et vraie réponse, jamais « … »), ou les « modifier » avec des ids pris uniquement dans les lignes de cartes.]" + (noteLot ? ' ' + noteLot : ''), rep, { forcer: true });
+        const r2 = await ppCoachRepondre(t, matCartes, photo, "[Info de l'application : ta réponse précédente (« " + avant + " ») annonçait un bouton « Appliquer » mais « actions » était vide ou invalide : rien n'a pu être affiché. Réponds de nouveau à la même demande avec la liste COMPLÈTE des actions : l'action « matiere » si une matière doit être créée, puis UNE action « creer » par carte (vraie question et vraie réponse, jamais « … »), ou les « modifier » avec des ids pris uniquement dans les lignes de cartes.]" + (noteLot ? ' ' + noteLot : ''), rep, { forcer: true });
         if(r2 && r2.actions.length){ r = r2; break; }
       }catch(e){ break; }
     }
@@ -7387,8 +7506,9 @@ async function pcEnvoyer(t, label, auto){
       s.appendChild(bR); s.appendChild(bD); pcEl('pc-feed').appendChild(s); }   /* v281 */
     if(r.sansBouton && !r.actions.length) pcNote("[Info de l'application : ta réponse précédente annonçait « Appliquer » mais AUCUNE action valide n'a été reçue : rien n'est affiché ni proposé à l'utilisateur. S'il redemande ou ajuste, renvoie la liste COMPLÈTE des actions dans « actions » (jamais seulement le texte).]");   /* v318 */
     if(r.nbBrut > r.actions.length && r.actions.length){ const n = r.nbBrut - r.actions.length, s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = n + ' action' + (n > 1 ? 's' : '') + ' écartée' + (n > 1 ? 's' : '') + ' (limite par réponse, id inconnu ou carte déjà en place).'; pcEl('pc-feed').appendChild(s); }   /* v316 */
-    if(r.actions.length) pcActionsCarte(r.actions, matiere, r.suite);
-    try{ pcJournalVerifie(r, t, matiere, essaisFaits, !r.actions.length || !!(pcActsAttente && pcActsAttente.box && pcActsAttente.box.isConnected)); }catch(e){}   /* v316 : journal de la réponse brute quand quelque chose cloche */
+    if(r.propo && r.propo.length && !r.actions.length && PC_ROUTEUR_ACTIF) pcQuestionMatiere(r.propo, t, true);   /* v352 : cartes manquantes : boutons de matière */
+    if(r.actions.length) pcActionsCarte(r.actions, (matCartes && matCartes.length === 1) ? matCartes[0] : '', r.suite);
+    try{ pcJournalVerifie(r, t, matCartes ? matCartes.join(' + ') : null, essaisFaits, !r.actions.length || !!(pcActsAttente && pcActsAttente.box && pcActsAttente.box.isConnected)); }catch(e){}   /* v316 : journal de la réponse brute quand quelque chose cloche */
     pcRenderSugg(); pcBas();
   }catch(err){
     ty.remove();
@@ -7396,7 +7516,7 @@ async function pcEnvoyer(t, label, auto){
     bu.remove(); if(rep && !pcRep){ pcRep = rep; pcRepMaj(true); } pcConv = pcConv.slice(0, pcConv.length - 1); if(noteRempl) pcConv = pcConv.filter(x => x !== noteRempl); pcSauve();   /* v310 : l'ancienne carte reste à l'écran, sa note est retirée */ pcUtilises.delete(label || t); pcMode = modeAvant;
     const inp = pcEl('pc-input'); if(inp && !inp.value) inp.value = PC_DEFAUTS.includes(t) && photo ? '' : t;
     if(photoSaisie && !pcPhoto){ pcPhoto = photoSaisie; pcPhotoMaj(); }
-    if(err && err.sansCle) pcEtatSansCle(); else pcAjoute('a', (err && err.pcMsg) || "Impossible de joindre l'assistant. Réessaie dans un moment.", { err: true });
+    if(err && err.pcDemande) pcQuestionMatiere(err.pcDemande, t, false); else if(err && err.sansCle) pcEtatSansCle(); else pcAjoute('a', (err && err.pcMsg) || "Impossible de joindre l'assistant. Réessaie dans un moment.", { err: true });
   }finally{
     pcReflechit(false); pcAttente = false; /* toujours remis à false, même en cas d'erreur Gemini */
   }
@@ -8050,7 +8170,7 @@ function pcMarque(pop){ /* met à jour les classes sans recréer les boutons : l
   ['pc-pills', 'pc-smats'].forEach(id => {
     const box = pcEl(id); if(!box) return;
     box.querySelectorAll('.pc-pill').forEach((b, i) => {
-      const on = pcListe[i] === pcMat; b.classList.toggle('on', on); b.classList.remove('pop');
+      const on = ((PC_ROUTEUR_ACTIF && pcAff) ? pcAff : [pcMat]).includes(pcListe[i]); b.classList.toggle('on', on); b.classList.remove('pop');
       if(pop && on){ void b.offsetWidth; b.classList.add('pop'); if(box.scrollWidth > box.clientWidth) box.scrollTo({ left: b.offsetLeft - (box.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); }
     });
   });
@@ -8101,6 +8221,12 @@ function pcSideMaj(){
     pcLangue ? 'Arrêter la langue (' + pcLangue + ')' : 'Pratiquer une langue', '', () => pcMenuAction(pcLangue ? 'stop' : 'langue')));
 }
 function pcChoisir(i){
+  if(PC_ROUTEUR_ACTIF){   /* v352 : la pastille n'est plus un sélecteur : elle montre ce que Prof a compris ; un appui CORRIGE pour le message suivant seulement, sans changer pcMat ni couper la conversation (règle v214) */
+    const n = pcListe[i];
+    if(pcForce && pcAff && pcAff.length === 1 && pcAff[0] === n){ pcForce = null; pcAff = pcAffAuto; }   /* un 2e appui annule la correction */
+    else{ pcForce = { mats: n === PC_TOUTES ? null : [n] }; pcAff = [n]; }
+    pcSuggTout = false; pcMarque(true); pcRenderSugg(); return;
+  }
   if(pcListe[i] === pcMat) return;
   pcMat = pcListe[i]; pcSuggTout = false; pcMarque(true); pcRenderSugg(); /* le séparateur n'est ajouté qu'à l'envoi du message suivant (jamais d'empilement) */
   if(pcMat !== PC_TOUTES) ppEcrire('coach-matiere', JSON.stringify(pcMat));
@@ -8110,11 +8236,13 @@ function pcChoisir(i){
 let pcMode = '';   /* '' ou 'quiz' (série de questions en cours : pastilles Question suivante / Indice…) */
 const PC_SUGG_QUIZ = ['Question suivante', 'Indice', 'Je ne sais pas', 'Arrêter et faire le bilan'];
 const PC_LANCE_QUIZ = ['Interroge-moi', "Question d'examen", 'Teste-moi sur cette carte'];
+function pcMatChips(){ if(!PC_ROUTEUR_ACTIF || !pcAff) return pcMat; return pcAff.length === 1 ? pcAff[0] : PC_TOUTES; }   /* v352 : les suggestions suivent la matière comprise (une seule), sinon version « Toutes » */
 function pcSuggestions(){
-  const mat = pcMat !== PC_TOUTES;
-  const cartesM = mat ? CARDS.filter(c => (c.matiere || 'Sans matière') === pcMat) : CARDS;
+  const mC = pcMatChips();
+  const mat = mC !== PC_TOUTES;
+  const cartesM = mat ? CARDS.filter(c => (c.matiere || 'Sans matière') === mC) : CARDS;
   const nb = cartesM.length, ratees = cartesM.some(c => (c.difficultes || 0) > 0);
-  const plan = mat ? ppCoachPlan(pcMat) : null, bilan = ppCoachBilan();
+  const plan = mat ? ppCoachPlan(mC) : null, bilan = ppCoachBilan();
   const dern = pcConv[pcConv.length - 1];
   const suite = !!(dern && dern.r === 'a') && pcMode === '' && !pcCarte;
   const tete = [];
@@ -8390,6 +8518,7 @@ function ppCoachOuvrir(ctx){
   if(ctx && ctx.carteId && !ctx.matiere){ const ck = CARDS.find(c => c.id === ctx.carteId); const mk = ck && (ck.matiere || 'Sans matière'); if(mk && mats.includes(mk)){ pcMat = mk; ppEcrire('coach-matiere', JSON.stringify(pcMat)); } }
   pcCharge(); pcMenu('');
   pcCarte = (ctx && ctx.carteId && CARDS.some(c => c.id === ctx.carteId)) ? ctx.carteId : null;
+  pcForce = null; pcAff = null; pcAffAuto = null; if(PC_ROUTEUR_ACTIF && ctx && (ctx.matiere || ctx.carteId)){ pcForce = { mats: [pcMat] }; pcAff = [pcMat]; }   /* v352 : « Discuter de la carte / de cette matière » : matière imposée au 1er message, routeur sauté */
   const dern = [...pcConv].reverse().find(m => m.r && m.m);
   pcDerniere = dern ? dern.m : pcMat;
   pcUtilises = new Set(); pcMode = ''; pcPhoto = null; pcAttente = false; pcLot = null; pcPjLots = null;
@@ -10454,6 +10583,7 @@ function startQuiz(cards){
    choisie ne doit pas laisser l'accueil filtré une fois qu'on en sort. */
 function exitQuiz(){
   quizActive = false;
+  planifierSyncDiffere();   /* v350 : envoie les « Pas su » / « Difficile » de l'entraînement (avec relecture, car plus de quiz actif) */
   matiereFilter = 'toutes';
   switchTab('study');
 }
@@ -10571,7 +10701,8 @@ function quizAnswer(niveau, opts){
     c.difficultes = (c.difficultes || 0) + 1;
     c.derniereModification = new Date().toISOString();
     saveLocalOverlay(c.id, { difficultes: c.difficultes, derniereModification: c.derniereModification });
-    planifierSyncDiffere();
+    /* v350 : pas de synchro programmée ici. Pendant un entraînement, l'envoi se ferait sans relecture préalable (quizActive) et pourrait
+       écraser une révision plus récente faite sur l'autre appareil : l'envoi est programmé à la sortie (exitQuiz) ; fermeture / arrière-plan envoient déjà en urgence. */
   }
   // Mode "S'entraîner" : contrairement à answer() (révision normale), on ne
   // touche PAS à la vraie progression de la carte (seul le compteur de ratés ci-dessus bouge) — ni palier, ni
@@ -12311,7 +12442,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v349';
+const PP_APP_VERSION = 'v352';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
