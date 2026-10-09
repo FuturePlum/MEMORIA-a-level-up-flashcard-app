@@ -420,9 +420,9 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^Ça ne rentre pas : il reste (\d+) j, il en faudrait (\d+)\.$/,function(a,b){ return "It doesn't fit: "+c(a,'day')+' left, '+b+' needed.'; }),
     f(/^Maîtrise complète (.+?)\. (.+)$/,function(d,x){ return 'Full mastery '+d.replace(/^le /,'on ')+'. '+tr(x); }),
     f(/^80 % maîtrisé (.+?)\. (.+)$/,function(d,x){ return '80% mastered '+d.replace(/^le /,'on ')+'. '+tr(x); }),
-    f(/^Pour être prêt : environ (\d+) cartes par jour(, plus que ce que ton planning peut absorber)?$/,function(n,x){ return 'To be ready: about '+n+' cards per day'+(x?', more than your schedule can absorb':''); }),
     f(/^(Envoi|Récupération) impossible \((.+)\)$/,function(v,x){ return (v==='Envoi'?"Couldn't send (":"Couldn't retrieve (")+tr(x)+')'; })
   );
+  Object.assign(D,{ 'Beaucoup de cartes pour le temps qu\'il reste : commence par celles que tu connais le moins.':'A lot of cards for the time left: start with the ones you know least.' });   /* v353 : ligne « chaud » */
   Object.assign(D,{ /* réponse à écrire (étape 1) */
     'Réponse à écrire':'Written answer','Tu tapes ta réponse avant de la voir':'You type your answer before seeing it','Réponse longue : peu pratique à écrire':'Long answer: impractical to type',
     'Tout en réponse écrite':'All as written answers','À écrire':'Write','Tout à écrire':'Write all','Réponse en image : impossible à écrire':'Image answer: cannot be written',
@@ -2352,6 +2352,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-wk span{color:var(--muted);display:flex;align-items:center;gap:5px}
 .pp-wk .pp-m{margin-left:auto;border:1.5px solid var(--c-aborder);background:var(--c-abg);color:var(--amber);padding:6px 11px;border-radius:9px;font-size:13px}
 .pp-wk .pp-m.pp-bad{border-color:var(--c-pborder);background:var(--c-pbg);color:var(--pink)}
+.pp-wk .pp-m{display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:1;min-width:0;max-width:100%}
+.pp-wk .pp-m .pp-mn{font-weight:inherit;max-width:10ch;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8}
+.pp-wk .pp-m .pp-mt{font-style:normal;font-weight:inherit;flex-shrink:0;white-space:nowrap}
 .pp-h3s{font-size:22px;margin:24px 0 12px}
 .pp-mat{padding:15px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:12px;cursor:pointer;transition:transform .3s var(--pps)}
 .pp-mat.pp-arch{opacity:.6}
@@ -11483,7 +11486,9 @@ function ppWkHtml(date, DD){
     else if(mg.marge < 0) txt = 'dépasse de ' + (-mg.marge) + ' j';
     else txt = 'marge ' + mg.marge + ' j';
     const titre = `${mg.matiere} : 80 % maîtrisé le ${formatDateFr(mg.dateMaitrise)} — contrôle le ${formatDateFr(mg.dateControle)}`;
-    m = `<div class="pp-m ${(mg.niveau === 'large' || mg.niveau === 'juste') ? '' : 'pp-bad'}" title="${escapeHtml(titre)}">${escapeHtml(txt)}</div>`;
+    /* v353 : avec >= 2 matières à contrôle futur, le nom de la matière précède « marge N j » (tronqué avec « … », nom complet dans l'infobulle). */
+    const nomMat = matieresAvecControle().length >= 2 ? `<b class="pp-mn">${escapeHtml(mg.matiere)}</b>` : '';
+    m = `<div class="pp-m ${(mg.niveau === 'large' || mg.niveau === 'juste') ? '' : 'pp-bad'}" title="${escapeHtml(titre)}">${nomMat}<i class="pp-mt">${escapeHtml(txt)}</i></div>`;
   }
   const jd = (D.jours || []).find(j => j.date === date), prevus = jd ? jd.proj : 0;
   const entretien = getEntretienDuJour(date);   /* v344 (10a) */
@@ -11524,20 +11529,44 @@ function ppWeekHtml(){
   <div class="pp-week"><div class="pp-daysw"><div class="pp-days" style="grid-template-columns:repeat(${N},${N > 9 ? 'minmax(34px,1fr)' : '1fr'})">${cells}</div></div>${bar}<div class="pp-wk" id="pp-wk">${ppWkHtml(sel)}</div></div>`;
 }
 
+/* v353 : ligne « chaud » d'une matière (remplace « Pour être prêt : environ X cartes par jour », v342).
+   Un seul modèle (getMasteryLoad, appelé UNE fois) + un garde-fou cartes ÷ jours. Aucun nombre, aucune date, aucune mention d'un après-contrôle dans le texte.
+   Règle : matière avec contrôle futur, cartes à apprendre ; n = cartes non maîtrisées ; ja = jours avant le contrôle.
+   0. n < 10 → rien. 0bis. contrôle aujourd'hui (ja = 0) → rien. 1. large / juste / passe → rien (la pastille de marge suffit).
+   2. depasse → afficher si retard (date80 − contrôle) >= max(3, ceil(0,15 × ja)). 3. trop_tard (ja = 1 ou 2) → afficher si n ÷ ja > 20.
+   4. Hystérésis (anti-clignotement) : une fois ouverte (localStorage « pp-chaud|matière|date »), la ligne ne se ferme que si retard <= 1 (depasse) ou n ÷ ja <= 15 (trop_tard) ;
+      les planchers 0 et 0bis la ferment toujours. Une autre date de contrôle = une autre clé. Pas de synchro entre appareils. */
+function ligneChaude(m){
+  const cfg = matieresConfig[m], today = todayStr();
+  if(!(cfg && cfg.dateControle && cfg.dateControle >= today)) return '';
+  const L = getMasteryLoad(m);
+  if(!L || L.toutMaitrise || !L.statutControle) return '';
+  const s = L.statutControle, ja = s.joursAvantControle, n = L.nonMaitrisees;
+  const cle = 'pp-chaud|' + m + '|' + s.dateControle;
+  let ouverte = false;
+  try { ouverte = localStorage.getItem(cle) === '1'; } catch(e){}
+  let montre = false;
+  if(n >= 10 && ja >= 1){
+    if(s.niveau === 'depasse'){
+      const retard = Math.round((new Date(L.date80 + 'T00:00:00') - new Date(s.dateControle + 'T00:00:00')) / 86400000);
+      montre = ouverte ? retard > 1 : retard >= Math.max(3, Math.ceil(0.15 * ja));
+    } else if(s.niveau === 'trop_tard' && ja <= 2){
+      montre = ouverte ? (n / ja) > 15 : (n / ja) > 20;
+    }
+  }
+  if(montre !== ouverte){
+    try { if(montre) localStorage.setItem(cle, '1'); else localStorage.removeItem(cle); } catch(e){}
+  }
+  return montre ? '<div class="pp-need">Beaucoup de cartes pour le temps qu\'il reste : commence par celles que tu connais le moins.</div>' : '';
+}
+
 function ppMatHtml(m, arch){
   const st = getStatForMatiere(m) || { maitrisees:0, enCours:0, nouvelles:0 };
   const a = st.maitrisees, n = st.nouvelles, b = st.enCours;
   const date = (matieresConfig[m] || {}).dateControle;
   const risque = getStatForMatiere(m) && estMatiereCritique(m, getStatForMatiere(m));
-  /* v342 (D4) : « Pour être prêt : environ X cartes par jour », seulement pour une matière active avec un contrôle futur et des cartes à apprendre. */
-  let besoinTxt = '';
-  if(!arch && date && date >= todayStr()){
-    const X = besoinParJourMatiere(m);
-    if(X > 0){
-      const cap = plafondPrevisionJour(m);
-      besoinTxt = `<div class="pp-need">Pour être prêt : environ ${X} cartes par jour${X > cap ? ', plus que ce que ton planning peut absorber' : ''}</div>`;
-    }
-  }
+  /* v353 : une seule ligne calme, seulement quand c'est vraiment chaud (voir ligneChaude). */
+  const besoinTxt = arch ? '' : ligneChaude(m);
   return `<div class="pp-mat${arch ? ' pp-arch' : ''}" role="button" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span>${escapeHtml(m)}${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">${PP_IC.plus}<span>Ajouter une date</span></span>`}</div>
   <div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div>
   <div class="pp-leg"><span><b>${a}</b> maîtrisée${a > 1 ? 's' : ''}</span><span><b>${b}</b> en cours</span><span><b>${n}</b> nouvelle${n > 1 ? 's' : ''}</span></div>${besoinTxt}</div>`;
@@ -12442,7 +12471,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v352';
+const PP_APP_VERSION = 'v353';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -15507,7 +15536,7 @@ function plafondPrevisionJour(matiere){
   const glob = plafondGlobalDepuis(b);
   const mon = plafondMatiereDepuisBesoin(b.par[matiere]);
   let somme = 0;
-  for(const m of b.liste) somme += plafondMatiereDepuisBesoin(b.par[m]);
+  for(const m of b.liste) if((b.par[m] || 0) > 0) somme += plafondMatiereDepuisBesoin(b.par[m]);   /* v353 : une matière sans carte à apprendre (mais avec une date) ne réduit plus la part des autres */
   if(somme > glob) return Math.max(1, Math.floor(mon * glob / somme));
   return mon;
 }
