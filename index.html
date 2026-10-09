@@ -3690,9 +3690,15 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-trk b.fi-go{animation:fi-fly 1s cubic-bezier(.5,0,.3,1)}
 #fci .fi-trk b.fi-go.fi-r{animation-direction:reverse}
 @keyframes fi-fly{0%{left:0;opacity:1;transform:rotate(-12deg)}90%{opacity:1}100%{left:calc(100% - 26px);opacity:0;transform:rotate(12deg)}}
-#fci .fi-note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;border:1.5px solid var(--yellow);background:rgba(var(--ov),.05);font-size:13.5px;line-height:1.35}
-#fci .fi-note i{font-style:normal;flex:none;font-size:16px;line-height:1.2}
-#fci .fi-note b{display:block;font-weight:800;margin-bottom:2px}
+#fci .fi-chb{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border-radius:12px;border:1.5px solid var(--yellow);background:rgba(var(--ov),.05);font-size:13.5px;font-weight:700;text-align:left;color:inherit}
+#fci .fi-chb i{font-style:normal;flex:none;font-size:14px;line-height:1}
+#fci .fi-chb b{flex:1;font-weight:700}
+#fci .fi-chv{flex:none;transition:transform .35s var(--sp)}
+#fci .fi-chb[aria-expanded=true] .fi-chv{transform:rotate(180deg)}
+#fci .fi-chd{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--sp)}
+#fci .fi-chd.fi-show{grid-template-rows:1fr}
+#fci .fi-chd>div{min-height:0;overflow:hidden}
+#fci .fi-chd p{margin:8px 2px 0;font-size:13px;line-height:1.4;color:var(--muted)}
 #fci .fi-where{display:flex;gap:10px;align-items:center;font-weight:700;font-size:15px}
 #fci .fi-where i{font-style:normal;color:var(--yellow);font-size:20px}
 /* 4 · IA */
@@ -19142,7 +19148,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
 (function(){
   var SEEN='fc-intro-vue', N=7, INST='', dip=null, onBip=null;   /* v358 : INST = '' | 'ios' | 'and' | 'gen' (écran « Installer l'app », en plus : N passe à 8) */
   var S={
-   fr:{chb:'Chromebook scolaire ?',chbs:'Cette page est sûrement bloquée. Ouvre-la sur ton téléphone (Google AI Studio API Keys), copie la clé et envoie-la-toi, ou utilise directement Memoria sur ton téléphone.',lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
+   fr:{chb:'Chromebook scolaire ?',chbs:'Déjà mis ta clé sur ton téléphone ? Elle est synchronisée, rien à refaire ici. Sinon : ouvre « Google AI Studio API Keys » sur ton téléphone, copie la clé et envoie-la-toi.',lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
     wel:'Bienvenue',h0:'Retiens tout, sans y penser.',s0:"Quelques cartes par jour. L'app s'occupe du reste.",
     mas:'Maîtrise',h1:'Chaque carte monte en niveau.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
     f1:'Demain',f2:'Dans 3 jours',f3:'Dans 7 jours',qs:["Capitale de l'Australie ?",'7 × 8 ?',"Capitale du Canada ?","Symbole de l'or ?"],backIn:'Revient dans ',d:' j',noNeed:"Plus besoin d\u2019y penser",mastered:'Maîtrisée',
@@ -19160,7 +19166,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       st:{ios:[['Touche Partager','Le carré avec la flèche vers le haut. Tu ne le vois pas ? Touche d’abord ⋯'],['Touche « Sur l’écran d’accueil »','Fais défiler la liste vers le bas si besoin.'],['Touche « Ajouter »','Memoria apparaît avec tes autres apps.']],
           and:[['Touche les trois petits points','En haut à droite de Chrome.'],['Touche « Installer l’application »','Ou « Ajouter à l’écran d’accueil ».'],['Touche « Installer »','Memoria apparaît avec tes autres apps.']],
           gen:[['Ouvre le menu du navigateur','Les petits points ou les trois traits.'],['Touche « Installer l’application »','Ou « Ajouter à l’écran d’accueil ».'],['Confirme','Memoria apparaît avec tes autres apps.']]}}},
-   en:{chb:'School Chromebook?',chbs:'This page may be blocked there. Open it on your phone, copy the key and send it to yourself, or just use Memoria on your phone.',lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
+   en:{chb:'School Chromebook?',chbs:'Already added your key on your phone? It syncs — nothing to redo here. Otherwise: open “Google AI Studio API Keys” on your phone, copy the key and send it to yourself.',lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
     wel:'Welcome',h0:'Remember everything, effortlessly.',s0:'A few cards a day. The app handles the rest.',
     mas:'Mastery',h1:'Every card levels up.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
     f1:'Tomorrow',f2:'In 3 days',f3:'In 7 days',qs:['Capital of Australia?','7 × 8?','Capital of Canada?','Symbol for gold?'],backIn:'Back in ',d:' d',noNeed:'No need to think about it',mastered:'Mastered',
@@ -19280,7 +19286,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       +'<figure class="fi-shot"><span class="fi-cap">'+T.c2+'</span><img alt="" src="'+IMG2+'"><i class="fi-ringo fi-c" style="--l:93.9%;--t:69.3%"></i></figure>'
       +'</div></div></div>'
       +'<div class="fi-stp" data-i="s3"><span class="fi-n">3</span><input class="fi-key" data-i="ky" placeholder="'+T.ph+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="fi-ghost fi-bt" data-i="pst" style="width:auto;height:50px">'+T.paste+'</button></div>'
-      +'<div class="fi-note"><i>⚠</i><span><b>'+T.chb+'</b>'+T.chbs+'</span></div></div></section>'
+      +'<button class="fi-chb" data-i="cbh" aria-expanded="false"><i>⚠</i><b>'+T.chb+'</b><svg class="fi-chv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></svg></button>'
+      +'<div class="fi-chd" data-i="cbb"><div><p>'+T.chbs+'</p></div></div></div></section>'
     +(INST?htmlInst():'')
     +'<section class="fi-sl"><div class="fi-cf" data-i="cf"></div><span class="fi-stk fi-rv">'+T.rdy+'</span><h1 class="fi-rv">'+T.h5+'</h1><p class="fi-sub fi-rv">'+T.s5+'</p></section>'
     +'</div>'
@@ -19667,6 +19674,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var s2=q('[data-i=s2]'), hp=q('[data-i=hp]'), hpt=q('[data-i=hpt]');
     function aide(o){ s2.classList.toggle('fi-show',o); hp.setAttribute('aria-expanded',o?'true':'false'); hpt.textContent=o?T.hide:T.how; if(o) setTimeout(function(){ if(!closing) s2.scrollIntoView({block:'nearest',behavior:'smooth'}); },380); }
     hp.onclick=function(){ aide(!s2.classList.contains('fi-show')); vib(8); };
+    var cbh=q('[data-i=cbh]'), cbb=q('[data-i=cbb]');   /* v358 : note Chromebook repliable */
+    if(cbh&&cbb) cbh.onclick=function(){ var o=!cbb.classList.contains('fi-show'); cbb.classList.toggle('fi-show',o); cbh.setAttribute('aria-expanded',o?'true':'false'); vib(8); };
     function voir(){ if(document.activeElement===ky && !closing) q('[data-i=s3]').scrollIntoView({block:'end',behavior:'smooth'}); }
     ky.addEventListener('focus',function(){ setTimeout(voir,120); setTimeout(voir,450); });
     window.addEventListener('resize',voir);
