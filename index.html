@@ -4230,7 +4230,44 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 :root:root:root[data-theme="light"] .pp-hero .pp-big{color:var(--orange);text-shadow:6px 6px 0 var(--cream)}
 /* v375 : l'accueil (.pp-home .pp-hero .pp-big, règle v146 plus haut) gardait une ombre orange : même spécificité ici, placée après, pour que l'ombre indigo (--cream en clair) passe vraiment */
 :root:root:root[data-theme="light"] .pp-home .pp-hero .pp-big{color:var(--orange);text-shadow:6px 6px 0 var(--cream)}
-</style></head>
+</style>
+<style id="v392-style">
+/* v392 : pages Synthèse (lecture, menu « Ajuster », liste « Synthèses ») : fond propre, cadre orange léger, boutons à leur taille */
+:where(.pp-page) button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}   /* ces pages n'avaient pas de remise à zéro : « Ajuster » et « ⋯ » gardaient la bordure grise du navigateur */
+#synth-overlay.pp-page,#sb-overlay.pp-page{--syn-bg:color-mix(in srgb,var(--panel) 58%,var(--bg));--syn-ln:color-mix(in srgb,var(--orange) 46%,transparent);--syn-glow:color-mix(in srgb,var(--orange) 12%,transparent);isolation:isolate}
+@media (max-width:899px),(max-height:479px){
+  #synth-overlay.pp-page,#sb-overlay.pp-page{background:var(--bg);padding:calc(var(--pp-st) + 22px) 20px calc(12px + var(--pp-sb) / 2)}
+  #synth-overlay.pp-page::before,#sb-overlay.pp-page::before{content:"";position:absolute;z-index:-1;left:6px;right:6px;top:calc(var(--pp-st) + 6px);bottom:calc(6px + var(--pp-sb) / 2);border-radius:28px;border:1.5px solid var(--syn-ln);background:radial-gradient(120% 42% at 50% 0%,var(--syn-glow),transparent 72%),var(--syn-bg);box-shadow:inset 0 0 36px color-mix(in srgb,var(--orange) 6%,transparent);pointer-events:none}
+  #synth-overlay .pp-sb,#sb-overlay .pp-sb{padding-bottom:20px}
+}
+@media (min-width:900px) and (min-height:480px){   /* Chromebook / grand écran : même fond et même cadre dans la fenêtre centrée */
+  #synth-overlay.pp-page,#sb-overlay.pp-page{background:radial-gradient(110% 36% at 50% 0%,var(--syn-glow),transparent 72%),var(--syn-bg);border:2px solid color-mix(in srgb,var(--orange) 55%,var(--bg));box-shadow:8px 8px 0 color-mix(in srgb,var(--orange) 62%,var(--bg)),0 0 0 100vmax rgba(5,5,10,.72)}
+  .pp-lect{max-width:640px;width:100%;margin-left:auto;margin-right:auto}
+  .pp-lect .pp-rend{font-size:17.5px}
+  .sb-lib{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;align-content:start}
+  .sb-lib .sb-empty{grid-column:1/-1}
+}
+/* boutons : à leur taille, plus d'un bord à l'autre de l'écran */
+.pp-lect .pp-lectb{width:fit-content;min-width:190px;height:52px;padding:0 30px;margin:34px auto 10px}
+.sb-card{width:fit-content;max-width:100%;gap:11px;padding:8px 14px 8px 8px;margin:0 0 14px;border-radius:20px;transition:transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press)}
+.sb-card:active,.sb-card.js-press{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.25);transition-duration:var(--t-in)}
+.sb-card .sb-ico{width:38px;height:38px;border-radius:12px}
+.sb-card .sb-ico svg{width:20px;height:20px}
+.sb-card .sb-tx span{display:none}
+.sb-card .sb-tx b{font-size:16px}
+.sb-card .sb-n{min-width:26px;height:26px;padding:0 8px;border-radius:13px;font-size:13px}
+.sb-save{width:fit-content;min-width:min(100%,230px);padding:0 28px;margin:16px auto 6px}
+/* liste des synthèses : plus de bord coloré courbé, bouton « ⋯ » soigné et animé */
+.sb-it{border-left:1.5px solid var(--line);padding:10px 8px 10px 12px;gap:12px}
+.sb-it::before{content:"";align-self:stretch;width:5px;border-radius:3px;background:var(--c);flex:none}
+.sb-more{width:40px;height:40px;border-radius:13px;background:var(--bg);border:1.5px solid var(--line);box-shadow:0 3px 0 var(--c-edge);color:var(--cream);transition:transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press),background .2s}
+.sb-more:active,.sb-more.js-press{transform:translateY(3px);box-shadow:0 0 0 var(--c-edge);background:var(--c-s1);transition-duration:var(--t-in)}
+.sb-more svg circle{transform-box:fill-box;transform-origin:center;transition:transform .4s var(--pps)}
+.sb-more:active svg circle,.sb-more.js-press svg circle{transform:scale(1.55)}
+.sb-more:active svg circle:nth-child(2),.sb-more.js-press svg circle:nth-child(2){transition-delay:.04s}
+.sb-more:active svg circle:nth-child(3),.sb-more.js-press svg circle:nth-child(3){transition-delay:.08s}
+</style>
+</head>
 <body>
 <div id="boot-splash" aria-hidden="true">
   <div id="boot-splash-icon">
@@ -9815,7 +9852,7 @@ function ppCountUp(){
    Plus de vibration sur les simples appuis de boutons, ni au retournement de la carte, ni sur Générer / Ajouter. */
 function haptique(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 (function(){
-  const sel = '.pp-head button,.pp-nav button,.pp-home button,#pp-ses button,.pp-row,.pp-prog7,.pp-ctl,.pp-mat,.pp-li,.pp-sec,.pp-snd,.pp-chip,.pp-ibt,.pp-pill,.pp-coach,.pc-pill,.pc-chip,.pc-sq,.pc-send,.pc-new,.pc-more-b,.pc-sb,.pp-invc,.pp-dash,.pp-bk2,.pp-back,.pp-alt button,.pp-pd,.pp-d,.pp-pdn,.pp-ib,.pp-mini,.pp-cta,.pp-undo,.home-cta,.home-matiere-due-item,.planning-strip,.filter-pill,.modal-actions button,#pc-menu button,.pch-it,.pc-mb button,.pc-undo,.pc-row,.pc-cf button';
+  const sel = '.pp-head button,.pp-nav button,.pp-home button,#pp-ses button,.pp-row,.pp-prog7,.pp-ctl,.pp-mat,.pp-li,.pp-sec,.pp-snd,.pp-chip,.pp-ibt,.pp-pill,.pp-coach,.pc-pill,.pc-chip,.pc-sq,.pc-send,.pc-new,.pc-more-b,.pc-sb,.pp-invc,.pp-dash,.pp-bk2,.pp-back,.pp-alt button,.pp-pd,.pp-d,.pp-pdn,.pp-ib,.pp-mini,.pp-cta,.pp-undo,.home-cta,.home-matiere-due-item,.planning-strip,.filter-pill,.modal-actions button,#pc-menu button,.pch-it,.pc-mb button,.pc-undo,.pc-row,.pc-cf button,.sb-more,.sb-card,.sb-save,.sb-it';
   document.addEventListener('pointerdown', e => {
     const b = e.target.closest ? e.target.closest(sel) : null;
     if(!b || b.disabled) return;
@@ -13109,7 +13146,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v391';
+const PP_APP_VERSION = 'v392';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18831,7 +18868,7 @@ function ppPageShow(html, id, still){
      fondu + petite glissade douce ; l'ancienne page reste dessous puis est retirée. La nouvelle est posée EN PREMIER dans le DOM (les getElementById / querySelector trouvent donc la nouvelle). */
   const sous = (id === 'synth-overlay' && !still && !ppWide() && !matchMedia('(prefers-reduced-motion:reduce)').matches) ? root.querySelector(':scope > .pp-page:not(.pp-pgout)') : null;
   if(sous){
-    sous.removeAttribute('id'); sous.style.pointerEvents = 'none';
+    sous.style.animation = 'none'; sous.removeAttribute('id'); sous.style.pointerEvents = 'none';   /* v392 : sans « animation:none », retirer l'id faisait rejouer l'arrivée (ppup, opacité 0) à l'ancienne page : elle clignotait et on voyait l'accueil derrière */
     root.insertAdjacentHTML('afterbegin', `<div class="pp-page pp-pgsoft" id="${id}">${html}</div>`);
     setTimeout(() => { if(sous.isConnected) sous.remove(); }, 580);
     ppPageSwipe(root.querySelector('#' + id), tryFermerSynthese);
@@ -19003,6 +19040,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v392', t:["Pages Synthèse plus soignées", "Neater Summary pages"], p:[
+    ["La synthèse, son menu « Ajuster » et la liste « Synthèses » ont leur propre fond, avec un fin cadre orange et des coins arrondis : on les distingue bien du reste de l'application, sur téléphone comme sur Chromebook.", "The summary, its “Adjust” menu and the “Summaries” list have their own background, with a thin orange frame and rounded corners: they stand out from the rest of the app, on phone and on Chromebook."],
+    ["Le passage de la lecture au menu « Ajuster » glisse de nouveau en douceur (la page clignotait avant). Le bouton « ⋯ » de la liste est refait et animé, et la barre colorée courbe a disparu.", "Going from reading to the “Adjust” menu glides smoothly again (the page used to flicker). The “⋯” button in the list is redone and animated, and the curved colour bar is gone."],
+    ["Les boutons « Ajuster », « Synthèses » (dans Parcourir) et « Enregistrer » ont leur taille normale au lieu de s'étirer d'un bord à l'autre.", "The “Adjust”, “Summaries” (in Browse) and “Save” buttons now keep their natural size instead of stretching edge to edge."]] },
   { v:'v391', t:["Envoyer ↔ stop tout en douceur", "Send ↔ stop, smoothly"], p:[
     ["Quand l'IA répond, la flèche d'envoi se transforme en carré « stop » (et revient ensuite) avec une petite animation, au lieu de changer d'un coup.", "When the AI answers, the send arrow now turns into the “stop” square (and back again) with a small animation, instead of switching all at once."],
     ["Dans la présentation de Prof, « Planning » passe avant « Matières ».", "In the Prof introduction, “Planning” now comes before “Subjects”."]] },
