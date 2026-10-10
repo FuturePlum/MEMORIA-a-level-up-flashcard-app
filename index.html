@@ -3779,6 +3779,11 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-stp .fi-n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-weight:800;font-size:14px;transition:.35s var(--sp)}
 #fci .fi-stp.fi-ok .fi-n{background:var(--green);color:#06281e;transform:scale(1.12)}
 #fci .fi-stp small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+#fci .fi-stp small b{color:var(--ink);font-weight:800}
+#fci .fi-stp small.fi-cp{margin-top:4px;font-size:17px;line-height:1.3;color:var(--ink);font-weight:500}
+#fci .fi-stp small.fi-cp i{display:block;margin-top:3px;font-style:normal;font-size:13px;font-weight:500;color:var(--muted)}
+/* v359 : écran IA, 1er état — les deux boutons vont dans la barre du bas (« Pas maintenant » au-dessus, bouton principal tout en bas) */
+#fci .fi-foot.fi-rev{flex-direction:column-reverse}
 #fci .fi-stp.fi-op{border-color:var(--yellow)}
 /* v358 : écran « Installer l'app » */
 #fci .fi-inst{gap:12px}
@@ -19226,7 +19231,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     have:'Déjà configuré sur un autre appareil ?',ovS:'Synchro',ovH:'Retrouve ta progression.',ovP:'Entre le code de synchro de ton autre appareil.',ovPh:'Ton code de synchro',ovGo:'Retrouver mes cartes',ovBusy:'Recherche…',ovBad:'Code invalide : 10 caractères minimum, lettres sans accent, chiffres, - et _.',ovE404:'Aucun appareil n’utilise ce code. Vérifie chaque caractère : une seule faute suffit.',ovNet:'Pas de connexion. Réessaie.',ovSrv:'Serveur indisponible. Réessaie dans un instant.',ovFull:'Stockage plein : code non enregistré.',ovN:function(n){ return n+(n===1?' carte retrouvée':' cartes retrouvées'); },
     lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
     wel:'Bienvenue',h0:'Retiens tout, sans y penser.',s0:"Quelques cartes par jour. L'app s'occupe du reste.",
-    mas:'Maîtrise',h1:'Chaque carte monte en niveau.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
+    mas:'Maîtrise',h1:'Chaque carte gagne en maîtrise.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
     f1:'Demain',f2:'Dans 3 jours',f3:'Dans 7 jours',qs:["Capitale de l'Australie ?",'7 × 8 ?',"Capitale du Canada ?","Symbole de l'or ?"],backIn:'Revient dans ',d:' j',noNeed:"Plus besoin d\u2019y penser",mastered:'Maîtrisée',
     pla:'Planning',h2:'Un contrôle ? Donne la date.',d5:'Dans 5 j',d10:'Dans 10 j',d14:'Dans 2 sem',lgR:'Révisions',lgB:'Juste avant le contrôle',
     syn:'Synchro',h3:'Même progression partout.',s3:'Téléphone, Chromebook : entre le même code et tout suit.',where:'Réglages › Synchronisation',
@@ -19234,8 +19239,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     ch:['Matières','Planning','Difficultés'],
     sc:[[["Crée Géographie avec les capitales, une image par carte","Voilà, je m'en suis occupé. Jette un œil !",1],["Fusionne « Géo » dedans et passe Rome en Histoire","Hop, tout est rangé.",1]],[["Étale mes révisions d'ici vendredi","Plus de gros pic avant vendredi.",1],["Pause mercredi","Repos mérité, mercredi est libre.",1]],[["Où est-ce que je bloque ?","Ottawa, Brasilia, Canberra. Je t'interroge ?",0],["Oui","Capitale de l'Australie ?",0],["Sydney ?","Non, Canberra. Suivante : capitale du Brésil ?",0]]],
     ia:'IA · gratuit',h4:"Tes cartes générées par l'IA, à partir de ton cours",s4:"Donne ton cours à l'IA, elle crée tes cartes et fait marcher ton IA perso (Prof).",yes:"Brancher l'IA à l'app (2 minutes)",later:'Pas maintenant',
-    steps:'3 étapes',st1:'Ouvre Google AI Studio',st1s:'Avec ton compte Google',open:'Ouvrir Google AI Studio',
-    st2:'Touche «\u00a0Créer\u00a0une\u00a0clé\u00a0API\u00a0»',st2s:'Copie-la, puis reviens ici.',how:'Comment faire ?',hide:'Masquer l\u2019aide',c1:'Touche ce bouton',c2:'Puis copie ta clé',ph:'Colle ta clé ici',paste:'Coller',
+    steps:'3 étapes',st1:'Ouvre Google AI Studio',st1s:'<b>Connecte-toi</b> avec Google',open:'Ouvrir Google AI Studio',
+    st2:'Touche «\u00a0Créer\u00a0une\u00a0clé\u00a0API\u00a0»',st2s:'<b>Copie</b> la première ligne «\u00a0<b>Clé\u00a0API</b>\u00a0»<i>Puis reviens ici.</i>',how:'Comment faire ?',hide:'Masquer l\u2019aide',c1:'Touche ce bouton',c2:'Puis copie ta clé',ph:'Colle la clé API ici',paste:'Coller',
     rdy:'Prêt',h5:'À toi de jouer.',s5:'Ajoute tes premières cartes.',
     ins:{stk:"Installer l’app",h:'Garde Memoria sous la main.',now:'Pas maintenant',go:'Installer maintenant',
       sub:{ios:'Comme une vraie app, en plein écran. Et tes cartes restent bien à l’abri.',and:'Comme une vraie app, en plein écran, et plus rapide à ouvrir.',gen:'Comme une vraie app, en plein écran, et plus rapide à ouvrir.'},
@@ -19246,7 +19251,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     have:'Already set up on another device?',ovS:'Sync',ovH:'Get your progress back.',ovP:'Enter the sync code from your other device.',ovPh:'Your sync code',ovGo:'Get my cards back',ovBusy:'Looking…',ovBad:'Invalid code: 10 characters minimum, letters without accents, digits, - and _.',ovE404:'No device uses this code. Check every character: a single typo is enough.',ovNet:'No connection. Try again.',ovSrv:'Server unavailable. Try again in a moment.',ovFull:'Storage full: code not saved.',ovN:function(n){ return n+(n===1?' card found':' cards found'); },
     lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
     wel:'Welcome',h0:'Remember everything, effortlessly.',s0:'A few cards a day. The app handles the rest.',
-    mas:'Mastery',h1:'Every card levels up.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
+    mas:'Mastery',h1:'Every card builds mastery.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
     f1:'Tomorrow',f2:'In 3 days',f3:'In 7 days',qs:['Capital of Australia?','7 × 8?','Capital of Canada?','Symbol for gold?'],backIn:'Back in ',d:' d',noNeed:'No need to think about it',mastered:'Mastered',
     pla:'Planning',h2:'A test coming up? Set the date.',d5:'In 5 d',d10:'In 10 d',d14:'In 2 wk',lgR:'Reviews',lgB:'Right before the test',
     syn:'Sync',h3:'Same progress everywhere.',s3:'Phone, Chromebook: enter the same code and everything follows.',where:'Settings › Sync',
@@ -19254,8 +19259,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     ch:['Subjects','Planning','Struggles'],
     sc:[[['Create Geography with the capitals, one image per card','Done, I took care of it. Take a look!',1],['Merge \u201cGeo\u201d into it and move Rome to History','Hop, everything\u2019s sorted.',1]],[['Spread my reviews until Friday','No more big spike before Friday.',1],['Rest day Wednesday','Well-earned rest, Wednesday\u2019s free.',1]],[['Where do I struggle?','Ottawa, Brasilia, Canberra. Quiz you on them?',0],['Yes','Capital of Australia?',0],['Sydney?','No, Canberra. Next: capital of Brazil?',0]]],
     ia:'AI · free',h4:'Your cards, generated by AI from your course',s4:'Give your course to the AI: it creates your cards and powers your personal AI (Prof).',yes:'Connect the AI to the app (2 minutes)',later:'Not now',
-    steps:'3 steps',st1:'Open Google AI Studio',st1s:'With your Google account',open:'Open Google AI Studio',
-    st2:'Tap \u201cCreate\u00a0API\u00a0key\u201d',st2s:'Copy it, then come back here.',how:'How to?',hide:'Hide help',c1:'Tap this button',c2:'Then copy your key',ph:'Paste your key here',paste:'Paste',
+    steps:'3 steps',st1:'Open Google AI Studio',st1s:'<b>Sign in</b> with Google',open:'Open Google AI Studio',
+    st2:'Tap \u201cCreate\u00a0API\u00a0key\u201d',st2s:'<b>Copy</b> the first line under “<b>API\u00a0key</b>”<i>Then come back here.</i>',how:'How to?',hide:'Hide help',c1:'Tap this button',c2:'Then copy your key',ph:'Paste the API key here',paste:'Paste',
     rdy:'Ready',h5:'Your turn.',s5:'Add your first cards.',
     ins:{stk:'Install the app',h:'Keep Memoria at hand.',now:'Not now',go:'Install now',
       sub:{ios:'Like a real app, full screen. And your cards stay safe.',and:'Like a real app, full screen, and faster to open.',gen:'Like a real app, full screen, and faster to open.'},
@@ -19359,10 +19364,10 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       +'<p class="fi-sub fi-rv">'+T.s3+'</p><div class="fi-where fi-rv"><i>\u2699</i>'+T.where+'</div></section>'
     +'<section class="fi-sl" data-i="pr"><span class="fi-stk fi-rv">'+T.pr+'</span><h1 class="fi-rv">'+T.h6+'</h1><div class="fi-box fi-prof fi-rv"><div class="fi-chips fi-pc" data-i="pch">'+T.ch.map(function(c,k){ return '<button class="fi-bt'+(k?'':' fi-on')+'" data-k="'+k+'">'+c+'</button>'; }).join('')+'</div><div class="fi-chat" data-i="chat" aria-live="polite"></div></div><p class="fi-sub fi-rv">'+T.s6+'</p></section>'
     +'<section class="fi-sl" data-i="ia"><div class="fi-v fi-a"><span class="fi-stk fi-rv">'+T.ia+'</span><h1 class="fi-rv">'+T.h4+'</h1><p class="fi-sub fi-rv">'+T.s4+'</p>'
-      +'<div class="fi-pick fi-rv"><button class="fi-cta fi-bt" data-i="yes">'+T.yes+'</button><button class="fi-ghost fi-bt" data-i="no">'+T.later+'</button></div></div>'
+      +'</div>'
       +'<div class="fi-v fi-b"><span class="fi-stk">'+T.steps+'</span>'
       +'<div class="fi-stp fi-op" data-i="s1"><span class="fi-n">1</span><span>'+T.st1+'<small>'+T.st1s+'</small></span><button class="fi-go fi-bt" data-i="go1">'+ext+T.open+'</button></div>'
-      +'<div class="fi-stp" data-i="s2"><span class="fi-n">2</span><span>'+T.st2+'<small>'+T.st2s+'</small></span>'
+      +'<div class="fi-stp" data-i="s2"><span class="fi-n">2</span><span>'+T.st2+'<small class="fi-cp">'+T.st2s+'</small></span>'
       +'<button class="fi-ghost fi-bt" data-i="hp" aria-expanded="false" style="height:40px;font-size:14px;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.6a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg><b data-i="hpt" style="font-weight:800">'+T.how+'</b></button>'
       +'<div class="fi-help"><div>'
       +'<figure class="fi-shot"><span class="fi-cap">'+T.c1+'</span><img alt="" src="'+IMG1+'"><i class="fi-ringo" style="--l:4.7%;--t:16.0%;--w:87.5%;--h:68.0%"></i></figure>'
@@ -19397,11 +19402,13 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     q('[data-i=bk]').classList.toggle('fi-hide', i===0);
     q('[data-i=ln]').classList.toggle('fi-hide', i!==0);   /* v284 : le choix de langue prend la place de la flèche « retour » sur le premier écran */
     q('[data-i=sk]').classList.toggle('fi-hide', i===N-1);
-    q('[data-i=ft]').classList.toggle('fi-hide', i===5 && !ia);
+    var ia0=(i===5 && !ia);   /* v359 : 1er état de l'écran IA = boutons dans la barre du bas */
+    q('[data-i=ft]').classList.remove('fi-hide'); q('[data-i=ft]').classList.toggle('fi-rev',ia0);
     var lbl=[T.lets,T.next,T.next,T.next,T.next,T.cont], nonMnt=(INST && i===6);   /* v358 : sur l'écran « Installer l'app », le bouton du bas devient discret (« Pas maintenant ») */
-    nx.textContent = (i===5 && ia) ? (keyOk?T.cont:T.contNo) : nonMnt ? T.ins.now : (i===N-1 ? T.fin : lbl[i]);
+    nx.textContent = ia0 ? T.yes : (i===5 && ia) ? (keyOk?T.cont:T.contNo) : nonMnt ? T.ins.now : (i===N-1 ? T.fin : lbl[i]);
     nx.className = nonMnt ? 'fi-ghost fi-bt' : 'fi-cta fi-bt'; nx.style.height = nonMnt ? '56px' : '';
-    var hm=q('[data-i=hm]'); hm.style.display='none';   /* v295 : un seul bouton à la fin */
+    var hm=q('[data-i=hm]'); hm.style.display=ia0?'':'none';   /* v295 : un seul bouton à la fin ; v359 : « Pas maintenant » sur l'écran IA */
+    if(ia0) hm.textContent=T.later;
     nx.disabled=false;
   }
   /* v284 : choix de la langue. La pastille glisse, le contenu s'efface, puis choisirLangue() enregistre le choix et recharge (le traducteur de l'app se met en place au chargement).
@@ -19454,6 +19461,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   }
   function suivant(){
     if(i===N-1){ fermer(false); return; }   /* v295 : toujours vers l'accueil */
+    if(i===5 && !ia){ ia=1; q('[data-i=ia]').classList.add('fi-b'); ui(); vib(8); return; }   /* v359 : « Brancher l'IA à l'app » ouvre les 3 étapes */
     if(i===5 && ia) sauverCle();
     if(i===0) cparti();   // v200
     go(i+1);
@@ -19852,14 +19860,12 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     nx.onclick=suivant;
     qa('.fi-ln-b').forEach(function(b){ b.onclick=function(){ langueIntro(b.getAttribute('data-l')); }; });   /* v284 */
     if(relang){ root.classList.add('fi-relang'); relang=false; }
-    q('[data-i=hm]').onclick=function(){ fermer(false); };
+    q('[data-i=hm]').onclick=function(){ if(i===5 && !ia) go(6); else fermer(false); };
     q('[data-i=bk]').onclick=precedent;
     q('[data-i=sk]').onclick=function(){ go(N-1); };
     q('[data-i=pc]').onclick=function(){ plstop(); plstep(); vib(8); };   /* v296 : un toucher sur la pastille passe à la date suivante */
     qa('[data-i=pch] button').forEach(function(b){ b.onclick=function(){ pjoue(+b.getAttribute('data-k'),true); }; });   /* v285 ; v295 : après un toucher, l'enchaînement automatique continue */
     q('[data-i=dp]').onclick=function(){ sstop(); sync(1); stt.push(setTimeout(function(){ if(!closing && i===3) sync(0); },950+900+1100)); }; q('[data-i=dl]').onclick=function(){ sstop(); sync(0); };
-    q('[data-i=yes]').onclick=function(){ ia=1; q('[data-i=ia]').classList.add('fi-b'); ui(); };
-    q('[data-i=no]').onclick=function(){ go(6); };
     q('[data-i=go1]').onclick=function(){ try{ window.open('https://aistudio.google.com/apikey','_blank','noopener'); }catch(e){} q('[data-i=s1]').classList.replace('fi-op','fi-ok'); q('[data-i=s2]').classList.add('fi-op'); };
     if(INST==='and'){   /* v358 : installation directe proposée par Chrome (si disponible) */
       onBip=function(e){ try{ e.preventDefault(); }catch(x){} dip=e; majInst(); };
