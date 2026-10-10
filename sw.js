@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v201 : v397 (menu ⋯ de Prof : bouton « Copier le journal » retiré) : index.html change, donc nouvelle version du cache.
+
    v200 : v396 (bouton Retour du téléphone : garde de sortie « Appuie encore sur Retour pour quitter », Retour écran par écran partout ; message de marge du planning en police sans empattements) : index.html change, donc nouvelle version du cache.
 
    v199 : v395 (statistiques : paliers à 0 sans couleur, légende lisible, cartes en pause et archivées comptées ; synthèses sans saut au changement d'écran) : index.html change, donc nouvelle version du cache.
@@ -161,7 +163,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v200';
+const SW_VERSION = 'v201';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

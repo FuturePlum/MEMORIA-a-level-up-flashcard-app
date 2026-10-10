@@ -7147,7 +7147,7 @@ function pcInfo(){
 /* ---------- menu ⋯ : nouvelle conversation, langue ---------- */
 let pcMenuT = 0;
 /* v316 : journal de Prof. Quand une réponse cloche (bouton promis sans action, JSON illisible, actions écartées, carte d'actions absente),
-   on garde la réponse brute (6 entrées au plus, sur l'appareil seulement) ; « Copier le journal » dans le menu ⋯ de Prof. */
+   on garde la réponse brute (6 entrées au plus, sur l'appareil seulement). v397 : le bouton « Copier le journal » du menu ⋯ de Prof est retiré ; le journal continue d'être écrit et sort toujours avec « Copier le diagnostic » (pcJournalCopier). */
 function pcJournalLire(){ try{ const j = JSON.parse(localStorage.getItem('coach-journal') || '[]'); return Array.isArray(j) ? j : []; }catch(e){ return []; } }
 function pcJournalVerifie(r, t, matiere, essais, boxOk){
   const promet = /appliquer/i.test(r.texte || '');
@@ -7184,7 +7184,7 @@ function pcMenu(mode){
   m.classList.remove('out');
   let h = '';
   if(mode === 'liste'){
-    h = `<button type="button" data-a="passees">Conversations passées${pcHistLire().length ? ' (' + pcHistLire().length + ')' : ''}</button><button type="button" data-a="carnet">Ce que Prof retient${pcCarnetLire().length ? ' (' + pcCarnetLire().length + ')' : ''}</button>` + (pcJournalLire().length ? `<button type="button" data-a="journal">Copier le journal (${pcJournalLire().length})</button>` : '') + (pcLangue
+    h = `<button type="button" data-a="passees">Conversations passées${pcHistLire().length ? ' (' + pcHistLire().length + ')' : ''}</button><button type="button" data-a="carnet">Ce que Prof retient${pcCarnetLire().length ? ' (' + pcCarnetLire().length + ')' : ''}</button>` + (pcLangue
       ? `<button type="button" data-a="stop">Arrêter la langue (${escapeHtml(pcLangue)})</button>`
       : `<button type="button" data-a="langue">Pratiquer une langue</button>`);
   } else if(mode === 'confirme'){
@@ -7211,7 +7211,6 @@ function pcMenuAction(a){
   if(a === 'non') return pcMenu('');   /* v260 : Annuler ferme le menu (avant, depuis « Quelle langue ? » il rouvrait la liste : conversations passées, ce que Prof retient, pratiquer une langue) */
   if(a === 'passees'){ pcMenu(''); return pcHistOuvrir(); }
   if(a === 'carnet'){ pcMenu(''); return pcCarnetOuvrir(); }
-  if(a === 'journal'){ pcMenu(''); return pcJournalCopier(); }
   if(a === 'oui'){
     if(!pcFinaliser()){ pcMenu(''); return; } /* écriture impossible : on garde la conversation actuelle (ppEcrire a déjà prévenu) */
     pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcPjLots = null; pcMenu('');
@@ -13170,7 +13169,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v396';
+const PP_APP_VERSION = 'v397';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -19109,6 +19108,8 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v397', t:["Menu de Prof allégé", "Lighter Prof menu"], p:[
+    ["Le bouton « Copier le journal » disparaît du menu ⋯ de Prof.", "The “Copy the log” button is gone from Prof's ⋯ menu."]] },
   { v:'v396', t:["Bouton Retour du téléphone", "Phone Back button"], p:[
     ["Le bouton Retour (ou le geste) ne ferme plus l'app par erreur quand tu l'appuies deux fois vite : l'app ne se ferme que si tu fais Retour deux fois sur l'accueil, sans rien par-dessus. Le premier appui affiche « Appuie encore sur Retour pour quitter ».", "The Back button (or gesture) no longer closes the app by mistake when you press it twice quickly: the app only closes if you press Back twice on the home screen with nothing on top. The first press shows “Press Back again to exit”."],
     ["Retour fonctionne maintenant écran par écran partout : dans les synthèses (précisions → menu « Ajuster » → lecture → liste « Synthèses »), la caméra, « Image par IA » et les petits menus de Prof.", "Back now works one screen at a time everywhere: in summaries (details → “Adjust” menu → reading → “Summaries” list), the camera, “AI image” and Prof's small menus."],
