@@ -19,6 +19,10 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v175 : v369 (état vide « Ta première carte » : même style que sur Chromebook, adapté au mobile) : index.html change, donc nouvelle version du cache.
+
+   v174 : v368 (Importer par code : la matière vient avec les cartes, plus besoin d'en avoir une avant ; Ajouter : « Contrôle » devient « Date de contrôle ») : index.html change, donc nouvelle version du cache.
+
    v173 : v367 (Parcourir : les filtres En pause / Archivées s'éteignent 1 min après avoir quitté l'onglet ; Ajouter : bouton « À la main » mis en avant) : index.html change, donc nouvelle version du cache.
 
    v172 : v366 (Prof : correction à deux matières ; pastille touchée avant la 1re question = indice, la parole d'abord ; la pastille ne reste plus allumée après usage) : index.html change, donc nouvelle version du cache.
@@ -111,7 +115,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v173';
+const SW_VERSION = 'v175';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

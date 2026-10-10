@@ -278,7 +278,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Écrire une carte':'Write a card','Ajouter la carte':'Add card','pour avancer, puis pour ajouter':'to move on, then to add','Vérifie tes cartes':'Check your cards','pour':'for',
     ". Relis, modifie ou complète avant d'ajouter.":'. Review, edit or complete before adding.','Matière :':'Subject:','+ Ajouter une carte manuellement':'+ Add a card manually','Dis-moi ce que tu veux':'Tell me what you want',
     "Un texte, un fichier ou une demande : l'IA comprend.":'A text, a file or a request: the AI understands.','Ajouter ces cartes':'Add these cards','Nouvelle matière':'New subject','Nom':'Name','Créer':'Create',
-    'Importer des cartes':'Import cards',"· cartes d'un pote":"· a friend's cards",'Entre un code':'Enter a code','Importer':'Import','Changements proposés':'Proposed changes',"Décoche ce que tu ne veux pas appliquer.":"Uncheck what you don't want to apply.",
+    'Importer des cartes':'Import cards',"· cartes d'un pote":"· a friend's cards","Les cartes d'un pote arrivent avec leur matière":"Your friend's cards come with their subject",'Entre un code':'Enter a code','Importer':'Import','Changements proposés':'Proposed changes',"Décoche ce que tu ne veux pas appliquer.":"Uncheck what you don't want to apply.",
     "L'IA n'a proposé aucun changement.":'The AI proposed no changes.','Matière déjà existante ?':'Subject already exists?','», déjà dans ta liste.':'”, already in your list.',
     'Synchronisation…':'Syncing…','Synchronisé':'Synced','Échec, réessayer':'Failed, retry','Enregistrer ce code':'Save this code','Ta progression':'Your progress','Statistiques':'Statistics','temps':'time','réussite':'success','cette semaine':'this week','objectif du jour':'daily goal',"aujourd'hui":'today','Objectif du jour':'Daily goal','Objectif atteint':'Goal reached','Cartes par jour':'Cards per day','Facultatif':'Optional','Aucun':'None','Diminuer':'Decrease','Augmenter':'Increase','Écrire des formules':'Writing formulas','Gras, listes, maths, chimie':'Bold, lists, maths, chemistry',"Dans une question ou une réponse. L'IA les écrit aussi toute seule.":'In a question or an answer. The AI writes them too.','Un vrai dollar : ':'A real dollar sign: ',
     'révisions au total':'reviews in total','record de série':'streak record','30 derniers jours':'Last 30 days','Plus la case est claire, plus tu as révisé ce jour-là.':'The lighter the square, the more you reviewed that day.',
@@ -1565,20 +1565,22 @@ body{
 
 /* ---- v132 : variables de thème (sombre = valeurs d'origine) + palette claire « crème » ---- */
 :root:root:root{ --yellow-t:#ffd93d; --orange-t:#ff6b3d; --yellow-b:#ffd93d; --lg-d:#9c9588; --lg-b:#f5f0e6; --cs:dark; --tm:100%; --c-s1:#252533; --c-s2:#2b2b3b; --c-sheet:#141420; --c-edge:#08080d; --c-disbg:#26262f; --c-disink:#6d6a80; --c-dissh:#14141b; --c-ph:#6b6880; --c-dash:#4a4a60; --c-yicon:#3d3320; --c-ysa:#2a2613; --c-ysb:#27230f; --c-ysc:#2f2a14; --c-ysd:#2a2410; --c-yse:#1d1a0b; --c-ysh:#14120a; --c-aborder:#6b5416; --c-abg:#3a2f18; --c-pborder:#7a2a40; --c-pbg:#3a1a24; --c-pbg2:#3a1a27; --c-dayb:#7a3a2b; --c-osoft:#2a1a17; --c-gsoft:#173a35; --c-bsoft:#17293a; --c-bq:#211f2e; --c-press:#20202f; --c-press2:#1f1f2d; --c-rowgrad:#201c2c; --c-pgrad1:#271b1f; --c-pgrad2:#261b20; --c-ta:#12121b; --c-h1:#5a3a1c; --c-h2:#a8601f; --c-scroll:#3a3a4e; --c-toastsh:#a39a85; --c-mixd:#111; --ov:255,255,255; --yr:255,217,61; --cr:245,240,230; --bgr:12,12,18; }
+/* v370 : couleurs de matières (couleurMatiere() renvoie var(--matN)) ; sombre = palette d'origine */
+:root{ --mat0:#6bc1ff; --mat1:#b39bff; --mat2:#ffd93d; --mat3:#2ed8a3; --mat4:#ff4d7a; --mat5:#ffb020; --mat6:#ff6b3d; --mat7:#7fe3e0; }
 :root:root:root[data-theme="light"]{
   /* v157 : « Pop jour » — papier blanc légèrement lavande, encre indigo, accents vifs (orange, jaune, violet, bleu, menthe, rose). */
-  --ink:#1d1b3a; --paper:#f1f0fb; --card:#ffffff; --line:#dcd9f0; --muted:#66638a;
+  --ink:#1d1b3a; --paper:#eeecfa; --card:#ffffff; --line:#cfcaec; --muted:#5f5c86;
   --accent:#ff6b3d; --accent-deep:#c2410c; --accent-ink:#1a0d08;
-  --good:#0f9d6e; --good-soft:#d3f5e6; --bad:#e8387a; --bad-soft:#ffe1ec;
+  --good:#087a52; --good-soft:#d3f5e6; --bad:#c71f5e; --bad-soft:#ffe1ec;
   --bulle:#ffffff; --bulle-ink:#1d1b3a;
-  --green:#0f9d6e; --orange:#ff6b3d; --yellow:#ffd93d; --yellow-d:#b88a00; --orange-d:#c2410c; --amber:#e08a00;
-  --panel:#ffffff; --bg:#f1f0fb; --cream:#1d1b3a; --pink:#e8387a; --blue:#2f7cf0; --purple:#7a5af8;
-  --yellow-t:#b45309; --orange-t:#d4451a; --yellow-b:#f0b400;
+  --green:#087a52; --orange:#ff6b3d; --yellow:#ffd93d; --yellow-d:#d99a00; --orange-d:#c2410c; --amber:#ffa91f;
+  --panel:#ffffff; --bg:#eeecfa; --cream:#1d1b3a; --pink:#c71f5e; --blue:#2f7cf0; --purple:#7a5af8;
+  --yellow-t:#b93c0a; --orange-t:#d4451a; --yellow-b:#f0b400;
   --lg-d:#1d1b3a; --lg-b:#2f2d5c; --cs:light; color-scheme:light; --tm:50%;
   --c-s1:#ebe9fa;
   --c-s2:#e2dff6;
   --c-sheet:#ffffff;
-  --c-edge:#b9b3e8;
+  --c-edge:#968fd6;
   --c-disbg:#e6e4f3;
   --c-disink:#9794b8;
   --c-dissh:#d3d0ea;
@@ -1615,7 +1617,9 @@ body{
   --ov:70,55,150;
   --yr:240,170,0;
   --cr:29,27,58;
-  --bgr:241,240,251;
+  --bgr:238,236,250;
+  /* v370 : couleurs de matières, version claire (saturées) */
+  --mat0:#2f7cf0; --mat1:#7a5af8; --mat2:#f0b400; --mat3:#12a874; --mat4:#e8387a; --mat5:#f59e0b; --mat6:#ff6b3d; --mat7:#14b8b0;
 }
 :root:root:root[data-theme="light"] #vie-ambiance{ mix-blend-mode:multiply }
 :root:root:root[data-theme="light"] :where(.cc-toast,.pp-toast){ color:#f1f0fb }
@@ -2999,8 +3003,24 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   #tab-study .home-empty-state .home-cta::before{content:"+";font-size:28px;font-weight:700;line-height:1;margin-top:-2px}
 }
 
+/* v369 : état vide « Ta première carte » sur MOBILE : même carte que sur Chromebook (liseré crème, ombre dure orange, cartes inclinées, pastille « Aucune carte », titre à ombre orange, bouton « + »),
+   en plus compact. Condition = exact complément de la version grand écran ci-dessus. */
+@media not all and (min-width:900px) and (min-height:480px){
+  #tab-study .home-empty-state{position:relative;overflow:hidden;margin:18px 7px 10px 0;padding:30px 22px 26px;border-radius:24px;text-align:left;background:radial-gradient(circle at 100% 0%,rgba(255,107,61,.14),transparent 55%),var(--panel);border:2px solid var(--cream);box-shadow:6px 6px 0 var(--orange)}
+  #tab-study .home-empty-state::before,#tab-study .home-empty-state::after{content:"";position:absolute;pointer-events:none;z-index:0;border-radius:11% / 8%;aspect-ratio:2/3;height:auto}
+  #tab-study .home-empty-state::before{right:-9%;top:-13%;width:33%;transform:rotate(8deg);background:linear-gradient(160deg,rgba(255,107,61,.2),rgba(255,107,61,.1))}
+  #tab-study .home-empty-state::after{right:7%;top:-7%;width:29%;transform:rotate(-8deg);border:1px solid rgba(255,107,61,.38);border-radius:12% / 9%}
+  #tab-study .home-empty-state>*{position:relative;z-index:1}
+  #tab-study .home-empty-sticker.pp-sticker{display:inline-block}
+  #tab-study .home-empty-icon{display:none}
+  #tab-study .home-empty-title{font-family:var(--font-sans);font-weight:800;font-size:clamp(30px,9.4vw,38px);line-height:1.04;letter-spacing:-.03em;margin:18px 0 10px;text-shadow:2px 2px 0 var(--orange)}
+  #tab-study .home-empty-sub{font-size:15.5px;line-height:1.5;max-width:none;margin:0 0 4px}
+  #tab-study .home-empty-state .home-cta{width:100%;height:54px;margin:22px 0 0}
+  #tab-study .home-empty-state .home-cta::before{content:"+";font-size:26px;font-weight:700;line-height:1;margin-top:-2px}
+}
+
 /* ---- v140 : mode clair — identité propre (papier + traits d'encre + ombres dures), plus une simple inversion du sombre ---- */
-:root:root:root[data-theme="light"]{ --line:#d6d2ee; }
+:root:root:root[data-theme="light"]{ --line:#cfcaec; }
 :root:root:root[data-theme="light"] body{
   background:
     linear-gradient(var(--bg), rgba(var(--bgr),0) 130px),
@@ -4015,6 +4035,94 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 /* défilement : l'élan reste sur la liste qu'on touche (pas de rebond qui entraîne la page derrière) */
 .pp-sb,.pp-list,.pp-sheet{ overscroll-behavior:contain; }
 @media (prefers-reduced-motion:reduce){ .pp-view>*,.pp-sheet.on>*,.pp-page{ animation-timing-function:linear; } }
+/* ===== v370 : mode clair refondu (habillage seulement, sombre inchangé ; tout est scopé [data-theme="light"]) ===== */
+/* A. Orange, grands boutons : dégradé + texte blanc */
+:root:root:root[data-theme="light"] .pp-cta:not(.pp-ghost):not(.pp-quiet):not(.busy),
+:root:root:root[data-theme="light"] .pp-show,
+:root:root:root[data-theme="light"] .pp-snd,
+:root:root:root[data-theme="light"] .cc-save,
+:root:root:root[data-theme="light"] .modal-save,
+:root:root:root[data-theme="light"] .home-cta,
+:root:root:root[data-theme="light"] .show-answer-btn,
+:root:root:root[data-theme="light"] .import-btn,
+:root:root:root[data-theme="light"] .pp-coach,
+:root:root:root[data-theme="light"] .pc-b.u,
+:root:root:root[data-theme="light"] .pc-send,
+:root:root:root[data-theme="light"] .pcn-add,
+:root:root:root[data-theme="light"] .pc-bar .pc-new,
+:root:root:root[data-theme="light"] .pc-title i,
+:root:root:root[data-theme="light"] .pc-tools.mini .pc-plusb.open,
+:root:root:root[data-theme="light"] #fci .fi-cta,
+:root:root:root[data-theme="light"] #fci .fi-us .fi-m{
+  background:linear-gradient(180deg,#ff6a35,#f2501c);color:#fff;text-shadow:0 1px 0 rgba(120,30,0,.35);
+}
+/* A2. Bouton « busy » (animation de brillance conservée) */
+:root:root:root[data-theme="light"] .pp-cta.busy{ background:linear-gradient(100deg,#f2501c 30%,#ff9a6e 50%,#f2501c 70%) 0 0/250% 100%;color:#fff; }
+/* A3. Intro : bouton « Retrouver mes cartes » en recherche (règle d'origine en !important) */
+:root:root:root[data-theme="light"] #fci .fi-ov.fi-busy .fi-ovg{ background:#f2501c!important;color:#fff!important; }
+:root:root:root[data-theme="light"] #fci .fi-ovg .fi-spin{ border-color:rgba(255,255,255,.35);border-top-color:#fff; }
+/* B. Orange, petits badges : fond plus profond pour le contraste */
+:root:root:root[data-theme="light"] .pp-numh b,
+:root:root:root[data-theme="light"] .pp-d.pp-today b,
+:root:root:root[data-theme="light"] .pp-rend h2 b,
+:root:root:root[data-theme="light"] .pp-pd.sel,
+:root:root:root[data-theme="light"] #fci .fi-ax span.fi-cj{
+  background:#d93a0b;color:#fff;text-shadow:none;
+}
+/* C. Jaune : texte indigo au lieu du brun-noir */
+:root:root:root[data-theme="light"] .tabbar-item.active,
+:root:root:root[data-theme="light"] .planning-strip-icon,
+:root:root:root[data-theme="light"] .mastery-banner-back,
+:root:root:root[data-theme="light"] .pp-sticker,
+:root:root:root[data-theme="light"] .pp-ctl>i,
+:root:root:root[data-theme="light"] .pp-ctt em,
+:root:root:root[data-theme="light"] .pp-tab.on,
+:root:root:root[data-theme="light"] .pp-mb .pp-bk,
+:root:root:root[data-theme="light"] .pp-mode button.on,
+:root:root:root[data-theme="light"] .pp-warn::before,
+:root:root:root[data-theme="light"] .pp-flag,
+:root:root:root[data-theme="light"] .pp-d.pp-end b,
+:root:root:root[data-theme="light"] .pp-bar em,
+:root:root:root[data-theme="light"] .pp-gk span,
+:root:root:root[data-theme="light"] .pp-sheet .pp-synwrap .sync-btn:not(.is-ok):not(.is-err),
+:root:root:root[data-theme="light"] .pc-pill.on,
+:root:root:root[data-theme="light"] .pc-cp,
+:root:root:root[data-theme="light"] .pc-cps .pc-cpb,
+:root:root:root[data-theme="light"] body.pc-open .pp-tab-prof,
+:root:root:root[data-theme="light"] body.pc-open .pp-tab-prof:hover,
+:root:root:root[data-theme="light"] #fci .fi-ln[data-l=fr] .fi-ln-b[data-l=fr],
+:root:root:root[data-theme="light"] #fci .fi-ln[data-l=en] .fi-ln-b[data-l=en],
+:root:root:root[data-theme="light"] #fci .fi-chw.fi-open .fi-chc,
+:root:root:root[data-theme="light"] #fci .fi-ln-b,
+:root:root:root[data-theme="light"] #fci .fi-stk,
+:root:root:root[data-theme="light"] #fci .fi-chips button.fi-on,
+:root:root:root[data-theme="light"] #fci .fi-chi,
+:root:root:root[data-theme="light"] #fci .fi-chc,
+:root:root:root[data-theme="light"] #fci .fi-go,
+:root:root:root[data-theme="light"] #fci .fi-av,
+:root:root:root[data-theme="light"] #fci .fi-ap,
+:root:root:root[data-theme="light"] #fci .fi-pcap,
+:root:root:root[data-theme="light"] #fci .fi-roll b,
+:root:root:root[data-theme="light"] #fci .fi-cap{ color:var(--ink); }
+/* D. Texte « ambre » (devenu trop clair) -> orange profond */
+:root:root:root[data-theme="light"] .pp-rappel,
+:root:root:root[data-theme="light"] .pp-score.mid,
+:root:root:root[data-theme="light"] .pp-wk .pp-m{ color:var(--yellow-t); }
+/* E. Grille « 30 derniers jours » : cases visibles sur le fond de page plus profond */
+:root:root:root[data-theme="light"] .pp-heat i:not(.h1):not(.h2):not(.h3){ background:#dcd8f2; box-shadow:inset 0 0 0 1px #cfcaec; }
+/* F. Contours */
+:root:root:root[data-theme="light"] .pp-card{ border-color:#5b54b0; }
+
+/* G. Pastilles de matière actives (Prof) : fond teinté + texte indigo, au lieu d'un aplat saturé (texte illisible sur bleu/violet) */
+:root:root:root[data-theme="light"] .pc-pill.on,
+:root:root:root[data-theme="light"] #pc-smats .pc-pill.on{ background:color-mix(in srgb,var(--c) 24%,#fff); border-color:var(--c); color:var(--ink); }
+/* H. Intro : l'icône d'engrenage jaune (1,2:1 sur fond clair) -> orange profond */
+:root:root:root[data-theme="light"] #fci .fi-where i{ color:var(--yellow-t); }
+/* I. Petits ajustements de lisibilité */
+:root:root:root[data-theme="light"] .pp-wk .pp-m .pp-mn{ opacity:1; }
+:root:root:root[data-theme="light"] .pp-pill.pp-pill-new{ color:var(--yellow-t); }
+/* J. Intro : boutons de démo « Pas su / Difficile / Facile » (jetons propres à l'intro, trop clairs en texte) */
+:root:root:root[data-theme="light"] #fci .fi-ans .fi-bt{ color:color-mix(in srgb,var(--c) 68%,#000); }
 </style>
 </head>
 <body>
@@ -8866,17 +8974,18 @@ function getMatieres(){
 
 /* Couleur stable par matière : un hash simple du nom pointe toujours vers la
    même teinte dans une palette pensée pour rester dans l'esprit chaud/papier
+   (v370 : les couleurs sont dans le CSS, --mat0…--mat7, une palette par thème : la bascule Sombre/Clair/Auto change tout de suite, sans redessiner)
    de l'app (pas de bleu/violet vifs qui jureraient avec l'accent terracotta).
    Même matière = même couleur partout (pastille de filtre, tag sur la carte). */
 const MATIERE_PALETTE = [
-  '#6bc1ff', /* bleu */
-  '#b39bff', /* violet */
-  '#ffd93d', /* jaune */
-  '#2ed8a3', /* vert menthe */
-  '#ff4d7a', /* rose */
-  '#ffb020', /* ambre */
-  '#ff6b3d', /* orange (= accent) */
-  '#7fe3e0', /* turquoise */
+  'var(--mat0)', /* bleu */
+  'var(--mat1)', /* violet */
+  'var(--mat2)', /* jaune */
+  'var(--mat3)', /* vert menthe */
+  'var(--mat4)', /* rose */
+  'var(--mat5)', /* ambre */
+  'var(--mat6)', /* orange (= accent) */
+  'var(--mat7)', /* turquoise */
 ];
 function couleurMatiere(nom){
   const s = String(nom || '');
@@ -12418,7 +12527,7 @@ function ppCmpBox(o){
 }
 function ppDateChip(){
   const d = iaBrouillon.date;
-  return `<button class="pp-chip ${d ? 'on' : ''}" onclick="ppPickDateAjout()">${PP_IC.flag}<span>${d ? new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'short' }) : 'Contrôle'}</span></button>`;
+  return `<button class="pp-chip ${d ? 'on' : ''}" onclick="ppPickDateAjout()">${PP_IC.flag}<span>${d ? new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'short' }) : 'Date de contrôle'}</span></button>`;
 }
 function ppPickDateAjout(){
   sauverBrouillonIA();
@@ -12755,7 +12864,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v367';
+const PP_APP_VERSION = 'v370';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -12959,9 +13068,8 @@ function ppMkSubj(){
 
 /* « Importer » */
 function ppImportSheet(){
-  const m = ppMatiereSel();
-  if(!m){ ppToast("Crée d'abord une matière"); return; }
-  ppSheet(`<div class="pp-grab"></div><h2>Importer des cartes</h2><p class="pp-hint">Matière : <b style="color:var(--cream)">${ppEsc(m)}</b> · cartes d'un pote</p>
+  /* v367 : plus besoin d'avoir une matière avant d'importer : le partage arrive avec le nom de sa matière (créée si elle n'existe pas, fusionnée si elle existe déjà) */
+  ppSheet(`<div class="pp-grab"></div><h2>Importer des cartes</h2><p class="pp-hint">Les cartes d'un pote arrivent avec leur matière</p>
   <input id="pp-ij-code" class="pp-codein" type="search" name="pp-import-code" enterkeyhint="go" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9" placeholder="Code" onkeydown="if(event.key==='Enter'){event.preventDefault();ppDoImport();}">
   <div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppDoImport()">Importer</button></div>`);
   ppFocusChamp('pp-ij-code');   /* v280 : le clavier se déploie tout de suite */
@@ -13000,10 +13108,15 @@ async function ppImportParCode(code){
 }
 function ppImporterDonnees(data){
   const m = ppMatiereSel();
+  /* v367 : un partage (format « flashcard-partage ») porte le nom de sa matière : on l'utilise ; la matière choisie dans Ajouter ne sert plus que de repli (partage sans nom, ou ancien fichier) */
+  const partage = !!(data && data.format === 'flashcard-partage');
+  const nomPartage = (partage && typeof data.matiere === 'string') ? data.matiere.trim().slice(0, 60) : '';
+  const matPartage = nomPartage || m;
   const liste = Array.isArray(data) ? data : (data && Array.isArray(data.cartes) ? data.cartes : null);
   if(!liste){ ppToast('Format non reconnu'); return; }
-  const items = liste.filter(c => c && (c.question || ppImgValide(c.imageQuestion)) && (c.reponse || ppImgValide(c.imageReponse))).map(c => ({ id:null, matiere:String((data && data.format === 'flashcard-partage') ? m : (c.matiere || m)), question:String(c.question || '').trim(), reponse:String(c.reponse || '').trim(), palier:0, prochaineRevision:null, derniereRevision:null, inversible:c.inversible === true, ecrite:c.ecrite === true, ...ppImgPatch(c) }));
+  const items = liste.filter(c => c && (c.question || ppImgValide(c.imageQuestion)) && (c.reponse || ppImgValide(c.imageReponse))).map(c => ({ id:null, matiere:String(partage ? matPartage : (c.matiere || m)), question:String(c.question || '').trim(), reponse:String(c.reponse || '').trim(), palier:0, prochaineRevision:null, derniereRevision:null, inversible:c.inversible === true, ecrite:c.ecrite === true, ...ppImgPatch(c) }));
   if(!items.length){ ppToast('Aucune carte valide'); return; }
+  if(items.some(it => !it.matiere)){ ppToast("Crée d'abord une matière"); return; }   /* v367 : ni nom dans le fichier, ni matière dans Ajouter */
   ppImgPerdues = ppImgAjusterBudget(items);
   ppSheetClose();
   resolveImportMatieres(items, 0, {}, (renommages) => {
@@ -18155,6 +18268,14 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v370', t:["Un vrai mode clair", "A proper light mode"], p:[
+    ["Le mode clair a maintenant sa propre allure : couleurs plus vives, contours plus nets, texte blanc sur les boutons orange.", "Light mode now has a look of its own: livelier colors, sharper outlines, white text on the orange buttons."],
+    ["Les couleurs des matières sont plus franches en clair, et changent tout de suite quand tu passes de Sombre à Clair. Le mode sombre ne bouge pas.", "Subject colors are bolder in light mode and change right away when you switch between Dark and Light. Dark mode is unchanged."]] },
+  { v:'v369', t:["Ta première carte, au style de Memoria", "Your first card, in Memoria's style"], p:[
+    ["L'écran qui t'invite à ajouter tes premières cartes reprend maintenant le style de Memoria sur mobile (carte à liseré, ombre orange, bouton « + »).", "The screen that invites you to add your first cards now uses Memoria's style on mobile (outlined card, orange shadow, “+” button)."]] },
+  { v:'v368', t:["Importer sans matière, « Date de contrôle »", "Import without a subject, “Test date”"], p:[
+    ["Tu peux importer les cartes d'un pote même si tu n'as encore aucune matière : elle arrive avec les cartes, avec son nom (créée si elle n'existe pas, fusionnée si elle existe déjà).", "You can import a friend's cards even if you have no subject yet: it comes with the cards, under its own name (created if it doesn't exist, merged if it does)."],
+    ["Dans Ajouter, le bouton « Contrôle » s'appelle maintenant « Date de contrôle ».", "In Add, the “Test” button is now called “Test date”."]] },
   { v:'v367', t:["Parcourir repart de zéro, « À la main » ressort", "Browse starts fresh, “By hand” stands out"], p:[
     ["Les filtres « En pause » et « Archivées » de Parcourir ne restent plus allumés : si tu es parti depuis plus d'une minute, tu retrouves Parcourir normal.", "The “Paused” and “Archived” filters in Browse no longer stay on: if you've been away for more than a minute, you get the normal Browse back."],
     ["Dans Ajouter, le bouton « À la main » est mis en avant avec une touche orange.", "In Add, the “By hand” button now stands out with an orange touch."]] },
