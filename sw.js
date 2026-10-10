@@ -19,6 +19,16 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v173 : v367 (Parcourir : les filtres En pause / Archivées s'éteignent 1 min après avoir quitté l'onglet ; Ajouter : bouton « À la main » mis en avant) : index.html change, donc nouvelle version du cache.
+
+   v172 : v366 (Prof : correction à deux matières ; pastille touchée avant la 1re question = indice, la parole d'abord ; la pastille ne reste plus allumée après usage) : index.html change, donc nouvelle version du cache.
+
+   v171 : v365 (la barre d'une matière va jusqu'au bout quand tout est maîtrisé) : index.html change, donc nouvelle version du cache.
+
+   v170 : v364 (une carte ratée revient toujours demain ; rappels surprise parmi les maîtrisées les plus anciennes) : index.html change, donc nouvelle version du cache.
+
+   v169 : v363 (plafond d'intervalle : après une réussite, une carte ne revient jamais au-delà de 3 × le temps réellement écoulé) : index.html change, donc nouvelle version du cache.
+
    v168 : v362 (une carte n'est jugée qu'une fois par jour ; « Facile » sans effet sur une carte déjà répondue ou pas encore à revoir) : index.html change, donc nouvelle version du cache.
 
    v167 : v361 (repère du contrôle : « marge de N j » au lieu de « en avance de N j ») : index.html change, donc nouvelle version du cache.
@@ -101,7 +111,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v168';
+const SW_VERSION = 'v173';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

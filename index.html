@@ -2212,6 +2212,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-alt{display:flex;justify-content:center;gap:6px;margin-top:14px}
 .pp-alt button{display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:99px;color:var(--muted);font-weight:800;font-size:13.5px;background:var(--panel);border:1.5px solid var(--line)}
 .pp-alt button:active{color:var(--cream)}
+/* v367 : « À la main » mis en avant par rapport à Synthèse / Importer : liseré et teinte orange (même recette que les pastilles allumées), arête orange en bas, icône orange */
+.pp-alt button.pp-alt-main{--d:3px;color:var(--cream);border:1.5px solid var(--orange);background:color-mix(in srgb,var(--orange) 16%,var(--panel));box-shadow:0 3px 0 var(--orange-d)}
+.pp-alt button.pp-alt-main svg{stroke:var(--orange)}
 .pp-bk2{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:800;font-size:14px;height:34px;margin:0 0 4px}
 .pp-veil{inset:0;background:rgba(5,5,10,.7);z-index:20;opacity:0;pointer-events:none;transition:opacity .25s}
 .pp-veil.on{opacity:1;pointer-events:auto}
@@ -5905,6 +5908,7 @@ function switchTab(tab){
   const ppReprise = studySessionActive && tab === 'study' && activeTab !== 'study';
   if(tab === 'add' && activeTab !== 'add') ppAddReset();
   if(tab === 'planning' && activeTab !== 'planning') ppPlanReset();
+  if(activeTab === 'browse' && tab !== 'browse') browseQuitteLe = Date.now();   /* v367 : on note quand on quitte Parcourir (voir ppBrowseReset) */
   if(tab === 'browse' && activeTab !== 'browse') ppBrowseReset();
   ppFresh = (tab !== activeTab) || ppFresh;
   activeTab = tab;
@@ -6909,7 +6913,7 @@ function pcMenuAction(a){
   if(a === 'oui'){
     if(!pcFinaliser()){ pcMenu(''); return; } /* écriture impossible : on garde la conversation actuelle (ppEcrire a déjà prévenu) */
     pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcPjLots = null; pcMenu('');
-    pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcSuggTout = false; pcRenderSugg(); pcDerniere = pcMat;
+    pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcSuggTout = false; pcForce = null; pcAff = null; pcAffAuto = null; pcRenderSugg(); pcMarque(false); pcDerniere = pcMat;
     if(!getGeminiKey()) pcEtatSansCle();
     return;
   }
@@ -7540,10 +7544,13 @@ async function pcRoutageDecide(texte, matierePastille, opts){
     if(res.mats && res.mats.length) pcDernieresMats = [...new Set([...res.mats, ...pcDernieresMats])].slice(0, 2);
     pcAffAuto = (res.mats && res.mats.length) ? res.mats.slice() : [PC_TOUTES];
     if(res.source !== 'manuel') pcAff = pcAffAuto;   /* la pastille montre ce que Prof a compris */
+    else pcAff = [];   /* v366 : la correction a servi pour CE message : plus rien n'est « choisi » (le message suivant est de nouveau compris tout seul) */
     try{ pcMarque(true); pcRenderSugg(); }catch(e){}
     return res;
   };
-  if(pcForce){ const f = pcForce; pcForce = null; return fin({ mats: f.mats, source: 'manuel' }); }   /* correction par pastille ou « Discuter de… » : routeur sauté */
+  /* v366 : une pastille touchée AVANT la 1re question (f.doux) n'est qu'un indice, au cas où rien n'est compris dans le message : c'est la parole qui passe d'abord
+     (on peut toucher une pastille sans faire exprès). Une pastille touchée EN COURS de conversation, ou « Discuter de… », reste une correction qui impose la matière. */
+  if(pcForce){ const f = pcForce; pcForce = null; if(f.doux){ if(f.mats && f.mats.length) base.mats = f.mats.slice(); } else return fin({ mats: f.mats, source: 'manuel' }); }   /* correction par pastille ou « Discuter de… » : routeur sauté */
   const mats = getMatieres();
   if(mats.length < 2 || !getGeminiKey() || /doublon/i.test(String(texte || ''))) return fin(base);
   const pj = pcPhoto ? pcPjType(pcPhoto) : '';
@@ -8374,9 +8381,22 @@ function pcSideMaj(){
 }
 function pcChoisir(i){
   if(PC_ROUTEUR_ACTIF){   /* v352 : la pastille n'est plus un sélecteur : elle montre ce que Prof a compris ; un appui CORRIGE pour le message suivant seulement, sans changer pcMat ni couper la conversation (règle v214) */
-    const n = pcListe[i];
-    if(pcForce && pcAff && pcAff.length === 1 && pcAff[0] === n){ pcForce = null; pcAff = pcAffAuto; }   /* un 2e appui annule la correction */
-    else{ pcForce = { mats: n === PC_TOUTES ? null : [n] }; pcAff = [n]; }
+    /* v366 : on peut corriger avec DEUX matières (2 au plus : une 3e remplace la plus ancienne). Un appui sur une pastille allumée la retire ; s'il n'en reste aucune, la correction s'annule.
+       Avant la 1re question (pas encore de conversation), la pastille n'est qu'un indice (doux) : la parole passe d'abord, voir pcRoutageDecide. */
+    const n = pcListe[i], commence = pcConv.some(m => m && m.r === 'u');
+    const choisies = ((pcForce || commence) && pcAff) ? pcAff.filter(x => x !== PC_TOUTES) : [];
+    const annule = () => { pcForce = null; pcAff = commence ? pcAffAuto : null; };
+    if(n === PC_TOUTES){
+      if(pcForce && pcAff && pcAff[0] === PC_TOUTES) annule();   /* un 2e appui annule la correction */
+      else{ pcForce = { mats: null, doux: !commence }; pcAff = [PC_TOUTES]; }
+    }else if(choisies.includes(n)){
+      const reste = choisies.filter(x => x !== n);
+      if(reste.length){ pcForce = { mats: reste, doux: pcForce ? pcForce.doux : false }; pcAff = reste; }
+      else annule();
+    }else{
+      const suite = [...choisies, n].slice(-2);
+      pcForce = { mats: suite, doux: !commence }; pcAff = suite;
+    }
     pcSuggTout = false; pcMarque(true); pcRenderSugg(); return;
   }
   if(pcListe[i] === pcMat) return;
@@ -8388,7 +8408,7 @@ function pcChoisir(i){
 let pcMode = '';   /* '' ou 'quiz' (série de questions en cours : pastilles Question suivante / Indice…) */
 const PC_SUGG_QUIZ = ['Question suivante', 'Indice', 'Je ne sais pas', 'Arrêter et faire le bilan'];
 const PC_LANCE_QUIZ = ['Interroge-moi', "Question d'examen", 'Teste-moi sur cette carte'];
-function pcMatChips(){ if(!PC_ROUTEUR_ACTIF || !pcAff) return pcMat; return pcAff.length === 1 ? pcAff[0] : PC_TOUTES; }   /* v352 : les suggestions suivent la matière comprise (une seule), sinon version « Toutes » */
+function pcMatChips(){ if(!PC_ROUTEUR_ACTIF || !pcAff) return pcMat; if(!pcAff.length) return pcDernieresMats[0] || pcMat; return pcAff.length === 1 ? pcAff[0] : PC_TOUTES; }   /* v352 : les suggestions suivent la matière comprise (une seule), sinon version « Toutes » */
 function pcSuggestions(){
   const mC = pcMatChips();
   const mat = mC !== PC_TOUTES;
@@ -8597,7 +8617,7 @@ function pcNouvelle(){
     const avait = pcConv.some(m => m && m.r === 'u'), id = pcConvId;
     pcConvId = ''; try{ localStorage.removeItem('coach-conv-id'); }catch(e){}
     pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcPjLots = null;
-    pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcSuggTout = false; pcRenderSugg(); pcDerniere = pcMat;
+    pcEl('pc-feed').innerHTML = ''; pcRendreConv(); pcSuggTout = false; pcForce = null; pcAff = null; pcAffAuto = null; pcRenderSugg(); pcMarque(false); pcDerniere = pcMat;
     if(!getGeminiKey()) pcEtatSansCle();
     pcSoft(); pcSideMaj();
     if(avait && id) pcUndoShow(() => pcSwap(() => { pcHistReprendre(id); pcSoft(); }));
@@ -8988,6 +9008,7 @@ const RAPPELS_SURPRISE_PROBA_JOUR = 0.5; // 1 jour sur 2 environ a un rappel sur
 const RAPPELS_LENDEMAIN_PROBA = 1 / 3;
 const RAPPELS_LENDEMAIN_MAX = 5;
 const RAPPELS_TOTAL_MAX = 10;
+const RAPPELS_SURPRISE_POOL = 3;       // v364 : le tirage se fait parmi les 3 × n maîtrisées les plus anciennes
 const RAPPELS_TIRAGE_KEY = 'rappels-tirage';       // { jour, surprise:[ids], faits:[ids] }
 const RAPPELS_LENDEMAIN_KEY = 'rappels-lendemain'; // { 'AAAA-MM-JJ': [ids] }
 let rappelsSession = new Set(); // ids des cartes de la file en cours qui sont des rappels (pas encore répondus)
@@ -9057,11 +9078,16 @@ function tirerRappelsSurprise(today){
     const controlePasse = !!(cfg && cfg.dateControle && cfg.dateControle < today);
     return (c.palier || 0) >= MASTERED_PALIER && (c.prochaineRevision || today) > today && actives.includes(m) && !controlePasse && c.id != null;
   });
-  for(let i = candidates.length - 1; i > 0; i--){
+  /* v364 : on tire parmi les maîtrisées vues le moins récemment (les plus exposées à l'oubli), pas au hasard dans tout le tas :
+     les RAPPELS_SURPRISE_POOL × n plus anciennes forment le lot, puis tirage au sort dedans (la variété reste).
+     Une carte sans date de dernière révision n'a pas d'âge connu : elle passe après celles dont on sait qu'elles sont anciennes. */
+  candidates.sort((a, b) => String(a.derniereRevision || '9999-12-31').localeCompare(String(b.derniereRevision || '9999-12-31')));
+  const lot = candidates.slice(0, Math.max(n, n * RAPPELS_SURPRISE_POOL));
+  for(let i = lot.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
-    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    [lot[i], lot[j]] = [lot[j], lot[i]];
   }
-  return candidates.slice(0, n).map(c => c.id);
+  return lot.slice(0, n).map(c => c.id);
 }
 /* Cartes de rappel à mélanger aujourd'hui pour le filtre matière courant. */
 function getRappelsPourFiltre(){
@@ -9355,6 +9381,17 @@ function ppCbHtml(dueTotal){
   }
   return `<div class="pp-cb">${week}${ppCbMatsHtml()}</div>`;
 }
+/* v365 : barre « maîtrisées / en cours / nouvelles » d'une matière. Seuls les morceaux qui ont des cartes sont dessinés : avant, un morceau vide (« en cours » ou
+   « nouvelles » à 0) restait dans la barre et, avec l'espace entre les morceaux, laissait un vide à droite même quand toutes les cartes étaient maîtrisées.
+   Matière sans aucune carte : une barre vide pleine largeur. */
+function ppSegHtml(a, b, n){
+  let h = '';
+  if(a > 0) h += `<i class="pp-a" style="flex:${a}"></i>`;
+  if(b > 0) h += `<i class="pp-b" style="flex:${b * 2.6}"></i>`;
+  if(n > 0) h += `<i style="flex:${n * 1.2}"></i>`;
+  if(!h) h = '<i style="flex:1"></i>';
+  return `<div class="pp-seg">${h}</div>`;
+}
 /* Grand écran : matières + dates de contrôle, en liste compacte sous « Cette semaine » (remplace l'onglet Planning).
    Une ligne par matière : pastille + nom (+ « À risque ») + drapeau et date du contrôle, puis barre maîtrisées / en cours / nouvelles
    et « maîtrisées/total ». La ligne garde la classe .pp-mat : elle hérite de « bouton qui s'enfonce » et du survol. */
@@ -9365,7 +9402,7 @@ function ppCbMatLigne(m, arch){
   const risque = getStatForMatiere(m) && estMatiereCritique(m, getStatForMatiere(m));
   const titre = `${a} maîtrisée${a > 1 ? 's' : ''} · ${b} en cours · ${n} nouvelle${n > 1 ? 's' : ''}`;
   return `<div class="pp-mat cb-mr${arch ? ' pp-arch' : ''}" role="button" title="${escapeHtml(titre)}" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span><span class="cb-mn">${escapeHtml(m)}</span>${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">${PP_IC.plus}<span>Ajouter une date</span></span>`}</div>
-  <div class="cb-mb"><div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div><span class="cb-mc"><b>${a}</b>/${tot}</span></div></div>`;
+  <div class="cb-mb">${ppSegHtml(a, b, n)}<span class="cb-mc"><b>${a}</b>/${tot}</span></div></div>`;
 }
 function ppCbMatsHtml(){
   if(!ppWide()) return '';
@@ -10413,6 +10450,32 @@ function jugementDuJour(c, niveau, estRappel, j, today){
   return { sansEffet:false, e1:false, raison:'' };
 }
 
+/* ---------------- v363 — Plafond d'intervalle (la maîtrise reste fidèle au temps réellement tenu) ----------------
+   Le palier compte des réussites, pas du temps. Quand les intervalles sont comprimés (contrôle proche), une carte atteint vite
+   un palier élevé avec peu de jours de mémoire derrière elle ; sans plafond, la première réussite après la fin de la compression
+   (matière désarchivée sans nouvelle date, par exemple) la renverrait à 30 ou 60 jours. Règle : après une réussite, la carte ne revient
+   jamais au-delà de PLAFOND_INTERVALLE_FACTEUR fois le temps réellement écoulé depuis sa dernière révision. En régime normal
+   (1, 3, 7, 14, 30, 60, 90) le plafond ne joue presque jamais. Il n'ajoute AUCUN champ : il lit `derniereRevision` (déjà synchronisée,
+   conservée par l'archive et la pause). Drapeau à false = v362 exactement. */
+const PLAFOND_INTERVALLE_ACTIF = true;
+const PLAFOND_INTERVALLE_FACTEUR = 3;
+
+/* ---------------- v364 — Une carte ratée revient toujours demain ----------------
+   « Difficile » et « Pas su » promettent « demain ». Avant, la date passait quand même par le plafond de charge du jour : si demain était plein
+   (32 cartes par matière avec un contrôle), la carte ratée partait un ou deux jours plus loin, exactement quand elle a le plus besoin d'être revue
+   (mesuré sur le vrai code : 19 % des ratés avec 40 cartes à J+7, 67 à 83 % avec 80 cartes ou plus ; le rappel au contrôle montait de 2 à 5 points
+   en les laissant à demain, sans pic de charge en plus). Maintenant les ratés gardent « demain » ; seules les réussites passent par le plafond.
+   Drapeau à false = v363 exactement. */
+const ECHEC_TOUJOURS_DEMAIN = true;
+
+/* Fonction pure : nombre de jours (après réussite) plafonné par l'écart réel depuis la dernière révision d'avant cette réponse. */
+function plafonnerJoursParEcart(jours, derniereRevisionAvant, today){
+  if(!PLAFOND_INTERVALLE_ACTIF || !derniereRevisionAvant) return jours;
+  const ecart = ecartJours(derniereRevisionAvant, today);
+  if(!(ecart >= 1)) return jours;
+  return Math.max(1, Math.min(jours, Math.round(PLAFOND_INTERVALLE_FACTEUR * ecart)));
+}
+
 /* ---------------- Facilité par carte ----------------
    Chaque carte a un petit coefficient de facilité (champ "facilite", absent =
    1 = normal) qui allonge ou raccourcit son intervalle de révision après une
@@ -10614,7 +10677,7 @@ function answer(niveau, opts){
   // comprimés par un contrôle proche, on ne l'allonge jamais (seulement raccourci).
   let coefFacilite = facilitePour(c);
   if(intervals !== INTERVALS && coefFacilite > 1) coefFacilite = 1;
-  const joursPalier = Math.max(1, Math.round(intervals[palier] * coefFacilite));
+  const joursPalier = plafonnerJoursParEcart(Math.max(1, Math.round(intervals[palier] * coefFacilite)), prevDerniereRevision, jourJuge);   // v363 : jamais plus de 3 × le temps réellement écoulé
   /* "Difficile" et "Pas su" : on veut revoir la carte plus tard dans CETTE
      session (via réinsertion ci-dessous) ET qu'elle redevienne due dès demain
      si elle n'est pas revue aujourd'hui — pas dans 7/14/30 jours comme le
@@ -10627,7 +10690,7 @@ function answer(niveau, opts){
   const cfgMatiereReponse = matieresConfig[c.matiere];
   const dateControleReponse = (cfgMatiereReponse && cfgMatiereReponse.dateControle && cfgMatiereReponse.dateControle >= todayStr()) ? cfgMatiereReponse.dateControle : null;
   const dateInchangee = sansEffet || jug.e1;   // E1 : la date « demain » posée par l'échec reste
-  const prochaineRevision = dateInchangee ? c.prochaineRevision : plafonnerDateRevision(c.matiere, prochaineRevisionBrute, dateControleReponse, c.id);
+  const prochaineRevision = dateInchangee ? c.prochaineRevision : ((ECHEC_TOUJOURS_DEMAIN && niveau !== 'vert') ? prochaineRevisionBrute : plafonnerDateRevision(c.matiere, prochaineRevisionBrute, dateControleReponse, c.id));   // v364 : un raté revient toujours demain
   const derniereRevision = dateInchangee ? c.derniereRevision : todayStr();
   const prevDerniereModification = c.derniereModification || null;
   const derniereModification = sansEffet ? c.derniereModification : new Date().toISOString();
@@ -10953,7 +11016,14 @@ function onBrowseSearchInput(val){
 /* ================= ÉTAPE 5 : Parcourir (copie du prototype v31) ================= */
 let ppBrowseShown = false;      // faux = on arrive sur l'onglet : les animations d'entrée jouent
 let ppBrowseClosed = {};        // matières repliées (mémoire seulement, comme le prototype)
-function ppBrowseReset(){ ppBrowseShown = false; }
+/* v367 : les filtres « En pause » et « Archivées » ne restaient jamais éteints en revenant sur Parcourir. Maintenant : si on a quitté l'onglet depuis
+   au moins 1 minute, on retrouve Parcourir « de base » (filtres éteints) ; en revenant plus vite (un aller-retour rapide), le filtre reste. */
+let browseQuitteLe = 0;
+const BROWSE_FILTRES_OUBLI_MS = 60000;
+function ppBrowseReset(){
+  ppBrowseShown = false;
+  if(browseQuitteLe && Date.now() - browseQuitteLe >= BROWSE_FILTRES_OUBLI_MS){ browsePauseSeul = false; browseArchSeul = false; }
+}
 const PP_DOTS_H = ppSvg('<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>', 20);
 
 function ppBrwLabel(c){
@@ -11782,7 +11852,7 @@ function ppMatHtml(m, arch){
   /* v353 : une seule ligne calme, seulement quand c'est vraiment chaud (voir ligneChaude). */
   const besoinTxt = arch ? '' : ligneChaude(m);
   return `<div class="pp-mat${arch ? ' pp-arch' : ''}" role="button" style="--c:${couleurMatiere(m)}" onclick="ppCtrlSheet('${escapeJsAttr(m)}')"><div class="pp-mtop"><span class="pp-dot"></span>${escapeHtml(m)}${risque ? '<span class="pp-risk">À risque</span>' : ''}${date ? `<span class="pp-fl2">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : `<span class="pp-fl2 pp-add">${PP_IC.plus}<span>Ajouter une date</span></span>`}</div>
-  <div class="pp-seg">${a ? `<i class="pp-a" style="flex:${a}"></i>` : ''}<i class="pp-b" style="flex:${b * 2.6}"></i><i style="flex:${n * 1.2 || .2}"></i></div>
+  ${ppSegHtml(a, b, n)}
   <div class="pp-leg"><span><b>${a}</b> maîtrisée${a > 1 ? 's' : ''}</span><span><b>${b}</b> en cours</span><span><b>${n}</b> nouvelle${n > 1 ? 's' : ''}</span></div>${besoinTxt}</div>`;
 }
 
@@ -12371,7 +12441,7 @@ function ppViewIA(){
   <button class="pp-cta ${busy ? 'busy' : ''}" id="ia-generate-btn" style="margin:16px 0 0" onclick="genererCartesIA()">${busy ? 'Génération en cours…' : PP_IC.spark.replace(/15/g, '20') + 'Générer les cartes'}</button>
   ${ppMsgBlock(true)}
   <p class="pp-note" style="margin:10px 0 0">Les cartes sont créées par l'IA, tu les relis avant de les ajouter.</p>
-  <div class="pp-alt"><button onclick="ouvrirSyntheseDepuisAjout()">${PP_IC.file}Synthèse</button><button onclick="ppSetMode('man')">${PP_IC.plus.replace(/22/g, '16')}À la main</button><button onclick="ppImportSheet()">${PP_IC.ul}Importer</button></div>`;
+  <div class="pp-alt"><button onclick="ouvrirSyntheseDepuisAjout()">${PP_IC.file}Synthèse</button><button class="pp-alt-main" onclick="ppSetMode('man')">${PP_IC.plus.replace(/22/g, '16')}À la main</button><button onclick="ppImportSheet()">${PP_IC.ul}Importer</button></div>`;
 }
 
 function ppViewMan(){
@@ -12685,7 +12755,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v362';
+const PP_APP_VERSION = 'v367';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18085,6 +18155,22 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v367', t:["Parcourir repart de zéro, « À la main » ressort", "Browse starts fresh, “By hand” stands out"], p:[
+    ["Les filtres « En pause » et « Archivées » de Parcourir ne restent plus allumés : si tu es parti depuis plus d'une minute, tu retrouves Parcourir normal.", "The “Paused” and “Archived” filters in Browse no longer stay on: if you've been away for more than a minute, you get the normal Browse back."],
+    ["Dans Ajouter, le bouton « À la main » est mis en avant avec une touche orange.", "In Add, the “By hand” button now stands out with an orange touch."]] },
+  { v:'v366', t:["Prof : deux matières, et la parole d'abord", "Prof: two subjects, and your words first"], p:[
+    ["Tu peux maintenant corriger Prof avec deux matières à la fois : un appui ajoute une pastille, un autre appui la retire.", "You can now correct Prof with two subjects at once: one tap adds a chip, another tap removes it."],
+    ["Si tu touches une pastille avant d'écrire ta première question, c'est ce que tu écris qui compte d'abord (la pastille ne sert que si Prof ne comprend pas la matière).", "If you tap a chip before writing your first question, what you write comes first (the chip is only used if Prof can't tell the subject)."],
+    ["Une fois ta correction utilisée, la pastille ne reste plus allumée : le message suivant est compris tout seul.", "Once your correction has been used, the chip no longer stays lit: the next message is understood on its own."]] },
+  { v:'v365', t:["La barre d'une matière va jusqu'au bout", "A subject's bar now goes all the way"], p:[
+    ["Quand toutes les cartes d'une matière sont maîtrisées, la barre verte remplit maintenant toute la largeur.", "When all the cards of a subject are mastered, the green bar now fills the whole width."]] },
+  { v:'v364', t:["Les cartes ratées reviennent demain", "Missed cards come back tomorrow"], p:[
+    ["Une carte ratée (« Difficile » ou « Pas su ») revient bien le lendemain, même quand ce jour-là est déjà bien chargé.", "A missed card (“Hard” or “Missed”) now really comes back the next day, even when that day is already busy."],
+    ["Les cartes déjà maîtrisées qui reviennent au hasard sont choisies parmi celles que tu n'as pas vues depuis le plus longtemps.", "Mastered cards that come back as surprise reminders are picked among the ones you haven't seen for the longest time."]] },
+  { v:'v363', t:["Une carte ne saute plus trop loin", "A card no longer jumps too far ahead"], p:[
+    ["Après une réussite, une carte ne revient jamais au-delà de 3 fois le temps réellement passé depuis sa dernière révision.", "After a correct answer, a card never comes back later than 3 times the time that has really passed since its last review."],
+    ["Utile quand tu reprends une matière juste après un contrôle : les cartes révisées à la hâte reviennent plus vite, au lieu d'être renvoyées à 30 ou 60 jours.", "Useful when you pick a subject back up right after a test: cards studied in a hurry come back sooner instead of being sent 30 or 60 days away."],
+    ["Rien ne change pour une étude normale, et tes paliers sont conservés (synchro, pause, archive).", "Nothing changes for normal studying, and your steps are kept (sync, pause, archive)."]] },
   { v:'v362', t:["Une carte ne monte qu'une fois par jour", "A card moves up only once a day"], p:[
     ["Une carte ne monte plus que d'un palier par jour : réussir plusieurs fois la même carte dans la journée ne la fait plus avancer à chaque fois.", "A card now moves up one step at most per day: getting the same card right several times in a day no longer moves it forward each time."],
     ["Une carte toute neuve ratée puis réussie le même jour passe quand même au palier 1.", "A brand-new card missed then got right on the same day still moves to step 1."],
