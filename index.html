@@ -353,7 +353,9 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   RULES.push( /* v138 : textes composés (nombres, matière) */
     f(/^marge (\d+) j$/,function(n){ return 'margin '+n+' d'; }),
     f(/^dépasse de (\d+) j$/,function(n){ return 'over by '+n+' d'; }),
-    f(/^≈ (\d+) rappels? prévus?$/,function(n){ return '≈ '+c(n,'review')+' expected'; }),
+    f(/^en retard d(?:'|e )(\d+) j$/,function(n){ return n+' d late'; }),   /* v360 */
+    f(/^en avance d(?:'|e )(\d+) j$/,function(n){ return n+' d early'; }),
+    f(/^≈ (\d+) rappels?(?: prévus?)?$/,function(n){ return '≈ '+c(n,'review'); }),
     f(/^\+(\d+) entretien$/,function(n){ return '+'+n+' upkeep'; }),
     f(/^(\d+)\/(\d+) maîtrisées?$/,function(a,b){ return a+'/'+b+' mastered'; }),
     f(/^Contrôle (?:de |d')(.+)$/,function(x){ return 'Test: '+x; }),
@@ -362,6 +364,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^(\d+) fichiers?$/,function(n){ return c(n,'file'); })
   );
   Object.assign(D,{ /* v300 : copier une bulle de Prof */
+    'pile à temps':'right on time', /* v360 */
     'Copié':'Copied','Copier':'Copy','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand','Ajouter en carte':'Add as card'
   });
   Object.assign(D,{ /* v138 : textes oubliés (captures) */
@@ -2348,11 +2351,12 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-bar u{height:6px;border-radius:9px;background:var(--bc,var(--amber));width:78%;transform-origin:left;animation:ppgrow .9s .3s ease-out both;text-decoration:none}
 .pp-bar em{width:21px;height:21px;border-radius:50%;background:var(--bc,var(--amber));color:#1a1405;display:grid;place-items:center;margin-left:-4px;flex:none}
 .pp-bar s{width:4px;height:4px;border-radius:50%;background:var(--bc,var(--amber));opacity:.7;flex:none;text-decoration:none}
-.pp-wk{display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1.5px solid var(--line);font-size:14px;font-weight:800}
-.pp-wk span{color:var(--muted);display:flex;align-items:center;gap:5px}
+/* v360 : la ligne passe à la ligne par blocs entiers (rien ne se coupe ni ne se chevauche) ; la pastille retombe à droite sur sa propre ligne si la place manque */
+.pp-wk{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-top:12px;border-top:1.5px solid var(--line);font-size:14px;font-weight:800}
+.pp-wk span{color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap;flex:none}
 .pp-wk .pp-m{margin-left:auto;border:1.5px solid var(--c-aborder);background:var(--c-abg);color:var(--amber);padding:6px 11px;border-radius:9px;font-size:13px}
 .pp-wk .pp-m.pp-bad{border-color:var(--c-pborder);background:var(--c-pbg);color:var(--pink)}
-.pp-wk .pp-m{display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:1;min-width:0;max-width:100%}
+.pp-wk .pp-m{display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;min-width:0;max-width:100%}
 .pp-wk .pp-m .pp-mn{font-weight:inherit;max-width:10ch;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8}
 .pp-wk .pp-m .pp-mt{font-style:normal;font-weight:inherit;flex-shrink:0;white-space:nowrap}
 .pp-h3s{font-size:22px;margin:24px 0 12px}
@@ -3814,6 +3818,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-stp.fi-ok{border-color:var(--green)}
 #fci .fi-key{flex:1;min-width:0;height:50px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:0 14px;font:600 15px var(--f)}
 #fci .fi-key:focus{border-color:var(--yellow)}
+#fci .fi-key.pp-ce{line-height:47px;font-family:var(--f)}
 #fci .fi-sl .fi-v{display:none;flex-direction:column;gap:12px}
 #fci .fi-sl.fi-b .fi-v.fi-b,#fci .fi-sl:not(.fi-b) .fi-v.fi-a{display:flex}
 /* 5 · fin */
@@ -9343,7 +9348,7 @@ function ppCbHtml(dueTotal){
       const ks = Object.keys(j.parMatiere).sort((a, b) => j.parMatiere[b] - j.parMatiere[a]);
       const sub = ctrl ? ctrl.join(', ') : (!j.total ? 'Repos' : (ks.length > 1 && auj ? 'Tout' : ks[0]));
       const lab = auj ? (dense ? `Auj.<br>${d.getDate()}` : 'Auj.') : (dense ? `${nomJour}<br>${d.getDate()}` : nomJour); /* v171 : en mode dense, « Auj. » prend aussi 2 lignes (sinon sa barre descendait d'une ligne) */
-      const titre = formatDateFr(j.date) + ' : ' + (j.total ? (j.reel === 0 ? '≈ ' + j.total + ' rappel' + (j.total > 1 ? 's' : '') + ' prévu' + (j.total > 1 ? 's' : '') : j.total + ' carte' + (j.total > 1 ? 's' : '') + (j.proj ? ' dont ≈ ' + j.proj + ' rappel' + (j.proj > 1 ? 's' : '') + ' prévu' + (j.proj > 1 ? 's' : '') : '')) : 'rien') + (ctrl ? ' — contrôle ' + ctrl.join(', ') : '');
+      const titre = formatDateFr(j.date) + ' : ' + (j.total ? (j.reel === 0 ? '≈ ' + j.total + ' rappel' + (j.total > 1 ? 's' : '') : j.total + ' carte' + (j.total > 1 ? 's' : '') + (j.proj ? ' dont ≈ ' + j.proj + ' rappel' + (j.proj > 1 ? 's' : '') : '')) : 'rien') + (ctrl ? ' — contrôle ' + ctrl.join(', ') : '');
       return `<button class="cb-wc${auj ? ' t' : ''}${j.date === D.sel ? ' sel' : ''}${j.total ? '' : ' rest'}${ctrl ? ' ctl' : ''}${j.total && j.reel === 0 ? ' proj' : ''}" data-date="${j.date}" title="${escapeHtml(titre)}" onclick="ppCbPick('${j.date}')"><b>${j.reel === 0 && j.total ? '≈' : ''}${j.total}</b><div class="cb-tr"><i style="--h:${Math.round(j.total / mx * 100)}%"></i></div><small>${lab}</small><em>${ctrl ? PP_IC.flag : ''}${escapeHtml(sub)}</em></button>`;
     }).join('');
     week = `<div class="cb-wl"><div class="cb-h2">Cette semaine</div><div class="cb-wk${dense ? ' dense' : ''}">${cols}</div><div class="pp-wk cb-det" id="cb-det">${ppWkHtml(D.sel, D)}</div></div>`;
@@ -11627,8 +11632,10 @@ function ppWkHtml(date, DD){
   if(mg){
     let txt;
     if(mg.niveau === 'trop_tard') txt = 'trop tard';
-    else if(mg.marge < 0) txt = 'dépasse de ' + (-mg.marge) + ' j';
-    else txt = 'marge ' + mg.marge + ' j';
+    /* v360 : « en retard d'1 j » / « en avance de 2 j » (avant : « dépasse de N j » / « marge N j », peu clair). Marge 0 = « pile à temps ». */
+    else if(mg.marge < 0) txt = 'en retard ' + (mg.marge === -1 ? "d'1" : 'de ' + (-mg.marge)) + ' j';
+    else if(mg.marge === 0) txt = 'pile à temps';
+    else txt = 'en avance ' + (mg.marge === 1 ? "d'1" : 'de ' + mg.marge) + ' j';
     const titre = `${mg.matiere} : 80 % maîtrisé le ${formatDateFr(mg.dateMaitrise)} — contrôle le ${formatDateFr(mg.dateControle)}`;
     /* v353 : avec >= 2 matières à contrôle futur, le nom de la matière précède « marge N j » (tronqué avec « … », nom complet dans l'infobulle). */
     const nomMat = matieresAvecControle().length >= 2 ? `<b class="pp-mn">${escapeHtml(mg.matiere)}</b>` : '';
@@ -11636,7 +11643,7 @@ function ppWkHtml(date, DD){
   }
   const jd = (D.jours || []).find(j => j.date === date), prevus = jd ? jd.proj : 0;
   const entretien = getEntretienDuJour(date);   /* v344 (10a) */
-  return `${nom}${rv ? `<span>${PP_IC.loop}${rv}</span>` : ''}${prevus ? `<span style="opacity:.75" title="Estimation prudente : on compte environ 30 % de cartes à revoir en plus">≈ ${prevus} rappel${prevus > 1 ? 's' : ''} prévu${prevus > 1 ? 's' : ''}</span>` : ''}${entretien ? `<span style="opacity:.75" title="Cartes déjà maîtrisées, revues de temps en temps pour ne pas les oublier">+${entretien} entretien</span>` : ''}${nw ? `<span style="color:var(--amber)">${PP_IC.spark}<i style="font-style:normal;color:var(--muted)">${nw}</i></span>` : ''}${ctrl ? `<span style="color:var(--yellow)">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : ''}${m}`;
+  return `${nom}${rv ? `<span>${PP_IC.loop}${rv}</span>` : ''}${prevus ? `<span style="opacity:.75" title="Estimation prudente : on compte environ 30 % de cartes à revoir en plus">≈ ${prevus} rappel${prevus > 1 ? 's' : ''}</span>` : ''}${entretien ? `<span style="opacity:.75" title="Cartes déjà maîtrisées, revues de temps en temps pour ne pas les oublier">+${entretien} entretien</span>` : ''}${nw ? `<span style="color:var(--amber)">${PP_IC.spark}<i style="font-style:normal;color:var(--muted)">${nw}</i></span>` : ''}${ctrl ? `<span style="color:var(--yellow)">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : ''}${m}`;
 }
 function ppPlanPick(date){
   if(!ppPlanData) return;
@@ -11654,7 +11661,7 @@ function ppWeekHtml(){
     const lb = auj ? 'auj.' : (N > 9 ? `${nomJour}<br>${d.getDate()}` : nomJour);
     const contenu = j.total > 0 ? ((j.reel === 0 ? '≈' : '') + j.total) : (ctrl ? PP_IC.flag : '');
     const cls = ['pp-d', auj ? 'pp-today' : '', (j.total ? '' : (ctrl ? '' : 'pp-n')), ctrl ? 'pp-end' : '', j.date === sel ? 'pp-sel' : ''].filter(Boolean).join(' ');
-    const titre = formatDateFr(j.date) + ' : ' + (j.total ? (j.reel === 0 ? '≈ ' + j.total + ' rappel' + (j.total > 1 ? 's' : '') + ' prévu' + (j.total > 1 ? 's' : '') : j.total + ' carte' + (j.total > 1 ? 's' : '') + (j.proj ? ' dont ≈ ' + j.proj + ' rappel' + (j.proj > 1 ? 's' : '') + ' prévu' + (j.proj > 1 ? 's' : '') : '')) : 'rien') + (ctrl ? ' — contrôle ' + ctrl.join(', ') : '');
+    const titre = formatDateFr(j.date) + ' : ' + (j.total ? (j.reel === 0 ? '≈ ' + j.total + ' rappel' + (j.total > 1 ? 's' : '') : j.total + ' carte' + (j.total > 1 ? 's' : '') + (j.proj ? ' dont ≈ ' + j.proj + ' rappel' + (j.proj > 1 ? 's' : '') : '')) : 'rien') + (ctrl ? ' — contrôle ' + ctrl.join(', ') : '');
     return `<button class="${cls}" data-date="${j.date}" style="--i:${i}" title="${escapeHtml(titre)}" aria-label="${escapeHtml(titre)}" onclick="ppPlanPick('${j.date}')"><b>${contenu}</b><span>${lb}</span></button>`;
   }).join('');
   let bar = '';
@@ -12615,7 +12622,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v359';
+const PP_APP_VERSION = 'v360';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18015,6 +18022,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v360', t:["Un planning plus clair", "A clearer planning"], p:[
+    ["Le repère du contrôle dit simplement « en retard d’1 j » ou « en avance de 2 j » : on compare le jour où tu atteins 80 % de cartes maîtrisées avec le jour du contrôle.", "The test marker now simply says “1 d late” or “2 d early”: it compares the day you reach 80 % of cards mastered with the test day."],
+    ["Sous les 7 jours, la ligne ne se chevauche plus : si la place manque, le repère passe proprement à la ligne.", "Under the 7 days, the row no longer overlaps: if space runs out, the marker drops neatly onto its own line."],
+    ["« ≈ 10 rappels prévus » devient « ≈ 10 rappels ».", "“≈ 10 reviews expected” becomes “≈ 10 reviews”."]] },
   { v:'v359', t:["Retrouver ta progression dès le départ", "Get your progress back from the start"], p:[
     ["Sur le premier écran, « Déjà configuré sur un autre appareil ? » te laisse entrer ton code de synchro : il est vérifié avant d’être accepté, puis tu arrives directement sur l’accueil.", "On the first screen, “Already set up on another device?” lets you enter your sync code: it’s checked before being accepted, then you land straight on the home screen."],
     ["La note « Chromebook scolaire ? » ne s’affiche plus que sur Chromebook, et explique aussi la synchro pour la clé IA.", "The “School Chromebook?” note now only shows on a Chromebook, and also explains how sync brings over the AI key."],
@@ -19391,7 +19402,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       +'<figure class="fi-shot"><span class="fi-cap">'+T.c1+'</span><img alt="" src="'+IMG1+'"><i class="fi-ringo" style="--l:4.7%;--t:16.0%;--w:87.5%;--h:68.0%"></i></figure>'
       +'<figure class="fi-shot"><span class="fi-cap">'+T.c2+'</span><img alt="" src="'+IMG2+'"><i class="fi-ringo fi-c" style="--l:93.9%;--t:69.3%"></i></figure>'
       +'</div></div></div>'
-      +'<div class="fi-stp" data-i="s3"><span class="fi-n">3</span><input class="fi-key" data-i="ky" placeholder="'+T.ph+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"></div>'
+      +'<div class="fi-stp" data-i="s3"><span class="fi-n">3</span>'+ppCEHtml({cls:'fi-key',ph:T.ph,max:200,enter:'done',cap:'none',attrs:'data-i="ky"'})+'</div>'
       +(crOS()?'<div class="fi-chw"><button type="button" class="fi-chb" data-i="cbh" aria-expanded="false"><i class="fi-chi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 20h20"/></svg></i><b>'+T.chb+'</b><span class="fi-chc"><svg class="fi-chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></span></button>'
       +'<div class="fi-chd" data-i="cbb"><div><div class="fi-chx"><p class="fi-c1">'+T.chb1+'</p><span class="fi-cor"><s></s>'+T.chbo+'<s></s></span><p class="fi-c2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4.5L20 15"/><path d="M20 20v-5h-5"/></svg><span>'+T.chb2+'</span></p></div></div></div></div>':'')+'</div></section>'
     +(INST?htmlInst():'')
@@ -19407,7 +19418,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     +'<div class="fi-ovs" data-i="ovs" role="dialog" aria-modal="true" aria-labelledby="fi-ovh">'
     +'<button type="button" class="fi-ovx fi-bt" data-i="ovx" aria-label="'+T.back+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
     +'<span class="fi-stk fi-o1">'+T.ovS+'</span><h2 id="fi-ovh" class="fi-o2">'+T.ovH+'</h2><p class="fi-ovp fi-o3">'+T.ovP+'</p>'
-    +'<div class="fi-ovf fi-o4" data-i="ovf"><input class="fi-key" data-i="ovk" placeholder="'+T.ovPh+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" data-lpignore="true" data-1p-ignore maxlength="100"></div>'
+    +'<div class="fi-ovf fi-o4" data-i="ovf">'+ppCEHtml({cls:'fi-key',ph:T.ovPh,max:100,enter:'go',cap:'none',attrs:'data-i="ovk"'})+'</div>'
     +'<div class="fi-ove" data-i="ove" role="alert"><div><p></p></div></div>'
     +'<div class="fi-where fi-o5"><i>\u2699</i>'+T.where+'</div>'
     +'<button type="button" class="fi-cta fi-bt fi-ovg fi-o6" data-i="ovg" disabled><span class="fi-ovl">'+T.ovGo+'</span><i class="fi-spin" aria-hidden="true"></i><svg class="fi-okc" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>'
@@ -19415,6 +19426,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   }
 
   var nxT=0;
+  function isFld(t){ return !!(t && (t.tagName==='INPUT' || t.isContentEditable)); }
   function ui(){
     var pills=q('[data-i=pl]').children, k;
     for(k=0;k<pills.length;k++) pills[k].className = k===i?'fi-on':k<i?'fi-ok':'';
@@ -19901,6 +19913,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
         try{ d.prompt(); if(d.userChoice) d.userChoice.then(function(c){ if(c && c.outcome==='accepted') setTimeout(function(){ if(!closing) go(N-1); },700); }); }catch(x){}
       };
     }
+    try{ ppCEScan(root); }catch(e){}   /* v359 : champs de saisie de l'intro = ppCE (contenteditable) : pas de barre « mots de passe / cartes / adresses » au-dessus du clavier */
     var ky=q('[data-i=ky]');
     ky.oninput=function(){ keyOk = ky.value.trim().length>=20; q('[data-i=s3]').classList.toggle('fi-ok',keyOk); q('[data-i=s2]').classList.toggle('fi-ok',keyOk); q('[data-i=s2]').classList.toggle('fi-op',!keyOk && q('[data-i=s1]').classList.contains('fi-ok')); if(keyOk) aide(false); ui(); };
     /* v199 : aide visuelle (« Comment faire ? ») + zone de collage toujours visible quand le clavier s'ouvre */
@@ -19918,10 +19931,10 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       if(ovOpen){   /* v359 : feuille de code ouverte → elle seule reçoit le clavier */
         if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); ovClose(); }
         else if(e.key==='Enter' && e.target && e.target.getAttribute && e.target.getAttribute('data-i')==='ovk'){ e.preventDefault(); e.stopPropagation(); ovSubmit(); }
-        else if(!(e.target&&e.target.tagName==='INPUT') && e.key!=='Tab') e.stopPropagation();
+        else if(!isFld(e.target) && e.key!=='Tab') e.stopPropagation();
         return;
       }
-      if(e.target&&e.target.tagName==='INPUT'){ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(keyOk) suivant(); } return; }
+      if(isFld(e.target)){ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(keyOk) suivant(); } return; }
       if(e.target && e.target.closest && e.target.closest('.fi-ln') && (e.key==='Enter' || e.key===' ')) return;   /* v284 : la capsule de langue garde Entrée / Espace */
       e.stopPropagation();
       if(e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); if(!(i===5&&!ia)) nx.click(); }
