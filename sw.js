@@ -19,6 +19,12 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v190 : v385 (routeur de Prof et recherche d'image : 3.1 Flash-Lite, pour décharger le quota de 3.5 Flash-Lite) : index.html change, donc nouvelle version du cache.
+
+   v189 : v384 (modèles des IA : cartes sur 3.6 Flash puis 3.5 Flash-Lite high ; Prof et synthèses sur 3.5 Flash-Lite high puis 3.1 Flash-Lite high) : index.html change, donc nouvelle version du cache.
+
+   v188 : v383 (cartes : les facettes d'un même sujet restent sur une seule carte, une ligne à puce par facette ; Prof : 3.5 Flash puis 3.1 Flash-Lite puis 3.5 Flash-Lite) : index.html change, donc nouvelle version du cache.
+
    v187 : v382 (Prof : flash-lite en réflexion « medium » au lieu de 3.8 / 3.7 / 3.6) : index.html change, donc nouvelle version du cache.
 
    v186 : v381 (échelle de modèles : surcharge et lenteur passent au modèle suivant ; bouton « Génération en cours… » animé) : index.html change, donc nouvelle version du cache.
@@ -139,7 +145,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v187';
+const SW_VERSION = 'v190';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
