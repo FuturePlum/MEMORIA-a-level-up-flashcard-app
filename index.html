@@ -372,7 +372,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   );
   Object.assign(D,{ /* v300 : copier une bulle de Prof */
     'pile à temps':'right on time', /* v360 */
-    'Copié':'Copied','Copier':'Copy','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand','Ajouter en carte':'Add as card'
+    'Copié':'Copied','Copier':'Copy','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand','Ajouter en carte':'Add as card','Ajouter à la mémoire':'Add to memory','Ajout à la mémoire…':'Adding to memory…','Rien de durable à retenir dans ce message':'Nothing lasting to remember in this message','Mémoire pleine : supprime une ligne dans « Ce que Prof retient »':'Memory full: delete a line in “What Prof remembers”','Déjà dans la mémoire':'Already in memory','Il faut une clé IA pour ça':'An AI key is needed for this','Impossible pour l’instant, réessaie plus tard':'Not possible right now, try again later','Limite du jour atteinte, réessaie demain':'Daily limit reached, try again tomorrow'
   });
   Object.assign(D,{ /* v138 : textes oubliés (captures) */
     'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','carte en 7 jours':'card in 7 days','cartes en 7 jours':'cards in 7 days','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','archivée':'archived','Appuie encore sur Retour pour quitter':'Press Back again to exit','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
@@ -6468,6 +6468,27 @@ function pcHistSupprimer(id){
   pcHistEcrire(pcHistLire().filter(e => e.id !== id)); pcCorpsEfface(id); pcSupprimeNote(id);
   pcServeurEfface(id);   /* v220 : la copie du serveur est effacée aussi (file d'attente, réessayée plus tard si hors ligne) */
 }
+/* v398 : on peut supprimer la conversation EN COURS depuis « Conversations passées » (appui long / clic droit) ou la colonne de gauche (✕).
+   Elle est effacée (sans être rangée) et une conversation vierge prend sa place, en arrière-plan : sur téléphone la discussion derrière est déjà vierge
+   quand on revient, sur grand écran la discussion et la liste changent sous les yeux. Pas pendant qu'une réponse est attendue (voir pcHistSupprDemande). */
+function pcConvVierge(){
+  pcConvId = ''; try{ localStorage.removeItem('coach-conv-id'); }catch(e){}
+  pcConv = []; pcSauve(); pcLot = null; pcUtilises = new Set(); pcMode = ''; pcPjLots = null; pcActsAttente = null;
+  const f = pcEl('pc-feed'); if(f) f.innerHTML = '';
+  pcRendreConv(); pcSuggTout = false; pcForce = null; pcAff = null; pcAffAuto = null; pcRenderSugg(); pcMarque(false); pcDerniere = pcMat;
+  if(!getGeminiKey()) pcEtatSansCle();
+}
+function pcHistSupprimerEtRepartir(id){
+  const courante = !!id && id === pcConvId;
+  pcHistSupprimer(id);
+  if(courante) pcConvVierge();
+  pcSideMaj();
+}
+/* true si on peut proposer la suppression de cette conversation ; la conversation en cours est refusée tant que Prof répond. */
+function pcHistSupprDemande(id){
+  if(id === pcConvId && pcAttente){ ppToast('Prof répond : attends sa réponse ou arrête-la.'); return false; }
+  return true;
+}
 /* ===== v215 : carnet « Ce que Prof retient » (étape 3 du plan : local seulement) =====
    Clé coach-carnet : tableau de textes, CARNET_MAX lignes de CARNET_LIGNE_MAX caractères. coach-carnet-maj : date ISO de la dernière modification locale
    (préparée pour la synchro de l'étape 6). Prof lit le carnet à chaque message (pcSysteme, ligne CARNET après MATIÈRES). Rien dans CLES_STOCKAGE_SEED ; dans la synchro depuis la v217 et dans les exports depuis la v223.
@@ -6488,6 +6509,51 @@ function pcCarnetAjoute(t){
   l.push(t); return pcCarnetEcrire(l) ? 'ok' : 'echec';
 }
 function pcCarnetSupprime(i){ const l = pcCarnetLire(); if(i < 0 || i >= l.length) return; l.splice(i, 1); pcCarnetEcrire(l); }
+/* v399 : « Ajouter à la mémoire » dans le menu d'un message (appui long sur mobile, clic sur ordinateur). Le message passe d'abord par 3.1 Flash-Lite, qui en tire UNE ligne
+   claire, concise et précise (100 car. visés, 120 au plus : CARNET_LIGNE_MAX) ; la ligne est ensuite ajoutée au carnet « Ce que Prof retient » (pcCarnetAjoute : plein / doublon gérés).
+   Si l'IA échoue (clé absente, quota, réseau, délai), RIEN n'est ajouté : jamais de texte brut dans le carnet. Un seul appel à la fois. */
+const PC_MEMOIRE_MODELE = 'gemini-3.1-flash-lite', PC_MEMOIRE_DELAI_MS = 12000;
+let pcMemEnCours = false;
+function pcMemoireSchema(){
+  return { type: 'OBJECT', properties: { retenir: { type: 'BOOLEAN' }, ligne: { type: 'STRING' } }, required: ['retenir', 'ligne'], propertyOrdering: ['retenir', 'ligne'] };
+}
+/* >>> { ligne } (ligne vide = rien à retenir) ou { err: 'cle' | 'quota' | 'reseau' } */
+async function pcMemoireReformuler(texte, estU){
+  const key = getGeminiKey(); if(!key) return { err: 'cle' };
+  const sys = "Tu écris UNE ligne pour le carnet de Prof, l'assistant de révision d'une appli de flashcards. Prof relit ce carnet avant chaque réponse pour s'adapter à l'utilisateur. " +
+    "L'utilisateur vient de demander d'ajouter à ce carnet le message ci-dessous (écrit par " + (estU ? "lui" : "Prof") + "). Retiens-en l'essentiel, utile pour mieux l'aider ensuite : sa façon de réviser, ses préférences, ses difficultés, son niveau, ses objectifs, un contexte (contrôle, chapitre) ou une consigne à toujours suivre. " +
+    "Règles : une seule phrase, claire, concise et précise, 100 caractères maximum, à la forme neutre ou à la 2e personne (ex. « Confond X et Y », « Préfère des exemples concrets »), sans guillemets, sans date, sans « l'utilisateur », dans la langue du message. Reformule, ne recopie pas. " +
+    "Mets « retenir » à false et « ligne » à vide seulement s'il n'y a vraiment rien d'utile à retenir ou si le carnet le dit déjà.\nCARNET ACTUEL : " + JSON.stringify(pcCarnetLire());
+  const ctrl = new AbortController(), minuteur = setTimeout(() => ctrl.abort(), PC_MEMOIRE_DELAI_MS);
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + PC_MEMOIRE_MODELE + ':generateContent', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: [{ text: String(texte).slice(0, 1500) }] }], generationConfig: { responseMimeType: 'application/json', responseSchema: pcMemoireSchema() } }) });
+    if(r.status === 429) return { err: 'quota' };
+    if(!r.ok) return { err: 'reseau' };
+    const d = await r.json(), tx = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('');
+    const j = JSON.parse(tx);
+    if(!j || typeof j.retenir !== 'boolean') return { err: 'reseau' };
+    let l = j.retenir ? String(j.ligne || '').replace(/[«»"]/g, '').replace(/\s+/g, ' ').trim() : '';
+    if(l.length > CARNET_LIGNE_MAX){ l = l.slice(0, CARNET_LIGNE_MAX); const k = l.lastIndexOf(' '); if(k > 60) l = l.slice(0, k); }   /* trop long malgré la consigne : coupé au dernier mot entier */
+    return { ligne: l };
+  }catch(e){ return { err: 'reseau' }; }
+  finally{ clearTimeout(minuteur); }
+}
+async function pcAjouteEnMemoire(b){
+  const txt = pcTexteSansPrefixe(b); if(!txt || pcMemEnCours) return;
+  if(pcCarnetLire().length >= CARNET_MAX){ ppToast('Mémoire pleine : supprime une ligne dans « Ce que Prof retient »'); return; }
+  if(!getGeminiKey()){ ppToast('Il faut une clé IA pour ça'); return; }
+  pcMemEnCours = true; ppToast('Ajout à la mémoire…', false, PC_MEMOIRE_DELAI_MS);
+  let r; try{ r = await pcMemoireReformuler(txt, !!(b && b.classList.contains('u'))); }finally{ pcMemEnCours = false; }
+  if(r.err){ ppToast(r.err === 'quota' ? 'Limite du jour atteinte, réessaie demain' : 'Impossible pour l’instant, réessaie plus tard'); return; }
+  if(!r.ligne){ ppToast('Rien de durable à retenir dans ce message'); return; }
+  const res = pcCarnetAjoute(r.ligne);
+  if(res === 'ok') ppToast('Ajouté : ' + r.ligne, false, 3200);
+  else if(res === 'plein') ppToast('Mémoire pleine : supprime une ligne dans « Ce que Prof retient »');
+  else if(res === 'doublon') ppToast('Déjà dans la mémoire');
+  /* 'echec' : ppEcrire a déjà prévenu (stockage plein) */
+  try{ pcSideMaj(); if(pcEl('pcn-corps')) pcCarnetDessine(); }catch(e){}
+}
 /* ===== v218 : envoi et récupération des corps des conversations (étape 7 du plan ; Worker : route /conv, étape 5) =====
    Envoi : pcEnvoyerConv(id) après chaque instantané (fermeture de Prof, arrière-plan, rangement), seulement si le nombre de messages n a changé depuis
    coach-historique-envoyes[id], au plus un envoi par conversation toutes les 5 minutes, jamais à chaque message.
@@ -6800,10 +6866,10 @@ function pcHistListe(){
   c.innerHTML = '';
   if(!idx.length){ const v = document.createElement('p'); v.className = 'pch-vide'; v.textContent = 'Aucune conversation rangée pour l\u2019instant.'; c.appendChild(v); return; }
   idx.forEach(e => {
-    if(e.id === pcHistConfId && e.id !== pcConvId){   /* v229 : confirmation de suppression sur place (appui long) */
+    if(e.id === pcHistConfId){   /* v229 : confirmation de suppression sur place (appui long) */
       const q = document.createElement('div'); q.className = 'pch-it conf';
-      q.innerHTML = '<span class="pc-cq">Supprimer cette conversation ?</span><div class="pc-cf"><button type="button" data-a="non">Garder</button><button type="button" class="dng" data-a="oui">Supprimer</button></div>';
-      q.querySelectorAll('button').forEach(bt => bt.onclick = () => { if(bt.dataset.a === 'oui') pcHistSupprimer(e.id); pcHistConfId = ''; pcHistListe(); });
+      q.innerHTML = '<span class="pc-cq">' + (e.id === pcConvId ? 'Supprimer la conversation en cours ?' : 'Supprimer cette conversation ?') + '</span><div class="pc-cf"><button type="button" data-a="non">Garder</button><button type="button" class="dng" data-a="oui">Supprimer</button></div>';
+      q.querySelectorAll('button').forEach(bt => bt.onclick = () => { if(bt.dataset.a === 'oui') pcHistSupprimerEtRepartir(e.id); pcHistConfId = ''; pcHistListe(); });
       c.appendChild(q); return;
     }
     const b = document.createElement('button'); b.type = 'button'; b.className = 'pch-it';
@@ -6818,12 +6884,11 @@ function pcHistListe(){
     b.addEventListener('pointerdown', ev => {
       if(ev.pointerType === 'mouse' && ev.button !== 0) return;
       lpFait = false; x0 = ev.clientX; y0 = ev.clientY; stop();
-      if(e.id === pcConvId) return;   /* la conversation en cours ne se supprime pas d'ici */
-      lp = setTimeout(() => { lpFait = true; try{ if(navigator.vibrate) navigator.vibrate(12); }catch(er){} pcHistConfId = e.id; pcHistListe(); }, 520);
+      lp = setTimeout(() => { lpFait = true; try{ if(navigator.vibrate) navigator.vibrate(12); }catch(er){} if(!pcHistSupprDemande(e.id)) return; pcHistConfId = e.id; pcHistListe(); }, 520);   /* v398 : la conversation en cours aussi */
     });
     b.addEventListener('pointermove', ev => { if(Math.abs(ev.clientX - x0) > 8 || Math.abs(ev.clientY - y0) > 8) stop(); });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(k => b.addEventListener(k, stop));
-    b.addEventListener('contextmenu', ev => { ev.preventDefault(); if(!lpFait && e.id !== pcConvId){ stop(); pcHistConfId = e.id; pcHistListe(); } });   /* clic droit (ordinateur) et menu natif de l'appui long (téléphone) */
+    b.addEventListener('contextmenu', ev => { ev.preventDefault(); if(!lpFait){ stop(); if(!pcHistSupprDemande(e.id)) return; pcHistConfId = e.id; pcHistListe(); } });   /* clic droit (ordinateur) et menu natif de l'appui long (téléphone) */
     b.onclick = () => { if(lpFait){ lpFait = false; return; } pcHistChoisir(e.id); };
     c.appendChild(b);
   });
@@ -7007,7 +7072,8 @@ function pcMsgMenu(b){
   const IC = {
     rep: ico('<path d="M4 4v7a4 4 0 0 0 4 4h12"/><path d="M15 10l5 5-5 5"/>'),
     cop: ico('<rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/>'),
-    car: ico('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 9v6M9 12h6"/>')
+    car: ico('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 9v6M9 12h6"/>'),
+    mem: ico('<path d="M6 4h12v17l-6-4-6 4z"/>')   /* v399 : marque-page = mémoire de Prof */
   };
   const m = document.createElement('div'); m.id = 'pc-msgmenu'; m.setAttribute('role', 'menu'); m._b = b;
   const estU = b.classList.contains('u'), err = b.classList.contains('err');
@@ -7022,6 +7088,7 @@ function pcMsgMenu(b){
   if(!err && pcRepExtrait(b._pcSrc)) item(IC.rep, 'Répondre', () => pcRepDefinir(b));
   if(txt) item(IC.cop, 'Copier', () => pcCopierBulle(b));
   if(!estU && !err && txt.length >= 20) item(IC.car, 'Ajouter en carte', () => pcAjouteEnCarte(b._pcSrc));
+  if(!err && txt.length >= 3) item(IC.mem, 'Ajouter à la mémoire', () => pcAjouteEnMemoire(b));   /* v399 : le message est reformulé par 3.1 Flash-Lite puis ajouté au carnet de Prof */
   if(!m.children.length) return;
   b.classList.add('pc-sel');
   m.style.visibility = 'hidden'; L.appendChild(m);
@@ -8735,8 +8802,8 @@ function pcSideMaj(){
     idx.forEach((e, i) => {
       if(e.id === pcPendH){   /* confirmation de suppression, sur place */
         const c = document.createElement('div'); c.className = 'pch-it conf';
-        c.innerHTML = '<span class="pc-cq">Supprimer cette conversation ?</span><div class="pc-cf"><button type="button" data-a="non">Garder</button><button type="button" class="dng" data-a="oui">Supprimer</button></div>';
-        c.querySelectorAll('button').forEach(bt => bt.onclick = () => { if(bt.dataset.a === 'oui') pcHistSupprimer(e.id); pcPendH = ''; pcSideMaj(); });
+        c.innerHTML = '<span class="pc-cq">' + (e.id === pcConvId ? 'Supprimer la conversation en cours ?' : 'Supprimer cette conversation ?') + '</span><div class="pc-cf"><button type="button" data-a="non">Garder</button><button type="button" class="dng" data-a="oui">Supprimer</button></div>';
+        c.querySelectorAll('button').forEach(bt => bt.onclick = () => { if(bt.dataset.a === 'oui') pcHistSupprimerEtRepartir(e.id); pcPendH = ''; pcSideMaj(); });
         box.appendChild(c); return;
       }
       const cur = e.id === pcConvId;
@@ -8747,8 +8814,8 @@ function pcSideMaj(){
       const sp = document.createElement('span');
       meta.forEach((x, k) => { if(k) sp.appendChild(document.createTextNode(' · ')); sp.appendChild(document.createTextNode(x)); });
       it.appendChild(t); it.appendChild(sp);
-      if(!cur){ const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.setAttribute('aria-label', 'Supprimer'); x.innerHTML = ppSvg('<path d="M6 6l12 12M18 6L6 18"/>', 14); it.appendChild(x); }
-      it.onclick = ev => { if(ev.target.closest('.x')){ pcPendH = e.id; pcSideMaj(); return; } if(!cur) pcReprendreAnim(e.id); };
+      { const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.setAttribute('aria-label', 'Supprimer'); x.innerHTML = ppSvg('<path d="M6 6l12 12M18 6L6 18"/>', 14); it.appendChild(x); }   /* v398 : aussi sur la conversation en cours */
+      it.onclick = ev => { if(ev.target.closest('.x')){ if(!pcHistSupprDemande(e.id)) return; pcPendH = e.id; pcSideMaj(); return; } if(!cur) pcReprendreAnim(e.id); };
       it.onkeydown = ev => { if(ev.key === 'Enter' && ev.target === it) it.click(); };
       box.appendChild(it);
     });
@@ -13169,7 +13236,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v397';
+const PP_APP_VERSION = 'v399';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -19108,6 +19175,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v399', t:["Ajouter un message à la mémoire de Prof", "Add a message to Prof's memory"], p:[
+    ["Dans le menu d'un message (appui long sur téléphone, clic sur ordinateur), le bouton « Ajouter à la mémoire » note l'essentiel dans « Ce que Prof retient ». L'IA le reformule d'abord en une ligne claire et précise.", "In a message's menu (long press on phone, click on computer), the “Add to memory” button saves the essentials in “What Prof remembers”. The AI first rewrites it as one clear, precise line."]] },
+  { v:'v398', t:["Supprimer la conversation en cours", "Delete the current conversation"], p:[
+    ["Tu peux maintenant supprimer la conversation en cours depuis « Conversations passées » (appui long) ou la colonne de gauche (✕). Une conversation vierge s'ouvre toute seule à la place.", "You can now delete the current conversation from “Past conversations” (long press) or the left column (✕). A blank conversation opens by itself in its place."]] },
   { v:'v397', t:["Menu de Prof allégé", "Lighter Prof menu"], p:[
     ["Le bouton « Copier le journal » disparaît du menu ⋯ de Prof.", "The “Copy the log” button is gone from Prof's ⋯ menu."]] },
   { v:'v396', t:["Bouton Retour du téléphone", "Phone Back button"], p:[
