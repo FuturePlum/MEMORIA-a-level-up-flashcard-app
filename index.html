@@ -354,7 +354,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^marge (\d+) j$/,function(n){ return 'margin '+n+' d'; }),
     f(/^dépasse de (\d+) j$/,function(n){ return 'over by '+n+' d'; }),
     f(/^en retard d(?:'|e )(\d+) j$/,function(n){ return n+' d late'; }),   /* v360 */
-    f(/^en avance d(?:'|e )(\d+) j$/,function(n){ return n+' d early'; }),
+    f(/^marge d(?:'|e )(\d+) j$/,function(n){ return 'margin: '+n+' d'; }),   /* v361 */
     f(/^≈ (\d+) rappels?(?: prévus?)?$/,function(n){ return '≈ '+c(n,'review'); }),
     f(/^\+(\d+) entretien$/,function(n){ return '+'+n+' upkeep'; }),
     f(/^(\d+)\/(\d+) maîtrisées?$/,function(a,b){ return a+'/'+b+' mastered'; }),
@@ -10333,15 +10333,16 @@ function flipCard(){
    carte qui n'a jamais posé souci avance normalement, un facile suffit. */
 const FACILE_REQUIS_APRES_SOUCI = 2;
 
-function nextPalier(c, niveau){
+function nextPalier(c, niveau, opts){
   const p = c.palier || 0;
+  const echecDejaCompte = !!(opts && opts.echecDejaCompte);   // v362 : un échec déjà compté aujourd'hui ne compte pas deux fois
   if(niveau === 'rouge'){
-    c.difficultes = (c.difficultes || 0) + 1;
+    if(!echecDejaCompte) c.difficultes = (c.difficultes || 0) + 1;
     c.facileConsecutif = 0;
     return 0;
   }
   if(niveau === 'orange'){
-    c.difficultes = (c.difficultes || 0) + 1;
+    if(!echecDejaCompte) c.difficultes = (c.difficultes || 0) + 1;
     c.facileConsecutif = 0;
     return Math.min(p, INTERVALS.length - 1);
   }
@@ -10356,6 +10357,60 @@ function nextPalier(c, niveau){
   }
   c.facileConsecutif = 0;
   return Math.min(p + 1, INTERVALS.length - 1);
+}
+
+/* ---------------- v362 — Un jugement par jour (R1), exception E1, garde d'espacement ----------------
+   Avant : réussir plusieurs fois la même carte dans la journée (réinsertion de séance, « Tout réviser »)
+   la faisait monter plusieurs fois. Maintenant, une carte n'est jugée qu'une fois par jour :
+   - un « Facile » sur une carte déjà répondue aujourd'hui n'a aucun effet sur la carte (comme un rappel léger) ;
+   - un échec déjà compté aujourd'hui (Difficile ou Pas su) ne compte pas deux fois ; un « Pas su » après un « Difficile » reste possible ;
+   - E1 : une carte vraiment neuve, ratée puis réussie le même jour, passe quand même au palier 1 (une seule fois, date inchangée) ;
+   - garde d'espacement : un « Facile » sur une carte pas encore due ne la fait monter que si la moitié de l'intervalle prévu est écoulée.
+   « Vraiment neuve » se lit dans le journal des réponses (aucune réponse d'un jour antérieur), seulement s'il n'est pas plein :
+   plein, il a pu perdre des réponses anciennes, donc E1 s'éteint (prudent). Les drapeaux à false redonnent exactement la v361. */
+const R1_ACTIF = true;
+const E1_ACTIF = true;
+const GARDE_ESPACEMENT_ACTIF = true;
+
+function ecartJours(a, b){
+  const [y1, m1, d1] = String(a).split('-').map(Number);
+  const [y2, m2, d2] = String(b).split('-').map(Number);
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000);
+}
+
+/* Ce que le journal sait de cette carte AVANT la réponse en cours (à appeler avant ppJournalAjoute). */
+function journalCarteDuJour(id, today){
+  const r = { aEchec:false, aRouge:false, aVert:false, ancienne:false, plein:false };
+  try{
+    const j = ppLireJSON('cartes-reponses', [], Array.isArray);
+    r.plein = j.length >= COACH_REPONSES_MAX;
+    for(const e of j){
+      if(!e || e.id !== id) continue;
+      if(e.d < today) r.ancienne = true;
+      else if(e.d === today){
+        if(e.r === 2) r.aVert = true;
+        else { r.aEchec = true; if(e.r === 0) r.aRouge = true; }
+      }
+    }
+  }catch(err){}
+  return r;
+}
+
+/* Fonction pure : { sansEffet, e1, raison } pour une réponse. sansEffet = la carte ne change pas (ni palier, ni date, ni facilité). */
+function jugementDuJour(c, niveau, estRappel, j, today){
+  if(estRappel && niveau === 'vert') return { sansEffet:true, e1:false, raison:'rappel' };
+  if(!R1_ACTIF) return { sansEffet:false, e1:false, raison:'' };
+  if(niveau === 'orange') return j.aEchec ? { sansEffet:true, e1:false, raison:'echec-deja-compte' } : { sansEffet:false, e1:false, raison:'' };
+  if(niveau === 'rouge') return j.aRouge ? { sansEffet:true, e1:false, raison:'rouge-deja-compte' } : { sansEffet:false, e1:false, raison:'' };
+  // vert
+  if(E1_ACTIF && !(c.palier || 0) && !j.plein && !j.ancienne && j.aEchec && !j.aVert) return { sansEffet:false, e1:true, raison:'e1' };
+  if(c.derniereRevision === today) return { sansEffet:true, e1:false, raison:'deja-repondue' };
+  if(GARDE_ESPACEMENT_ACTIF && c.derniereRevision && c.derniereRevision < today && c.prochaineRevision && c.prochaineRevision > today){
+    const prevu = ecartJours(c.derniereRevision, c.prochaineRevision);
+    const ecoule = ecartJours(c.derniereRevision, today);
+    if(ecoule < Math.max(1, prevu / 2)) return { sansEffet:true, e1:false, raison:'espacement' };
+  }
+  return { sansEffet:false, e1:false, raison:'' };
 }
 
 /* ---------------- Facilité par carte ----------------
@@ -10547,8 +10602,13 @@ function answer(niveau, opts){
   const estRappel = rappelsSession.has(c.id);
   const rappelLeger = estRappel && niveau === 'vert';
   if(estRappel){ marquerRappelFait(c.id, true); rappelsSession.delete(c.id); }
-  const palier = rappelLeger ? (c.palier || 0) : nextPalier(c, niveau);
-  if(!rappelLeger) majFacilite(c, niveau);
+  // v362 : un jugement par jour. Le journal est lu AVANT d'y ajouter la réponse en cours.
+  const jourJuge = todayStr();
+  const jrCarte = journalCarteDuJour(c.id, jourJuge);
+  const jug = jugementDuJour(c, niveau, estRappel, jrCarte, jourJuge);
+  const sansEffet = jug.sansEffet;   // la carte ne change pas (rappel léger, réponse déjà comptée aujourd'hui, garde d'espacement)
+  const palier = sansEffet ? (c.palier || 0) : jug.e1 ? 1 : nextPalier(c, niveau, { echecDejaCompte: R1_ACTIF && jrCarte.aEchec });
+  if(!sansEffet && !jug.e1) majFacilite(c, niveau);
   const intervals = getIntervalsForMatiere(c.matiere);
   // Facilité : ajuste la durée du palier obtenu. Quand les intervalles sont déjà
   // comprimés par un contrôle proche, on ne l'allonge jamais (seulement raccourci).
@@ -10566,10 +10626,11 @@ function answer(niveau, opts){
   // beaucoup de cartes sur le même jour (demain, ou le palier suivant).
   const cfgMatiereReponse = matieresConfig[c.matiere];
   const dateControleReponse = (cfgMatiereReponse && cfgMatiereReponse.dateControle && cfgMatiereReponse.dateControle >= todayStr()) ? cfgMatiereReponse.dateControle : null;
-  const prochaineRevision = rappelLeger ? c.prochaineRevision : plafonnerDateRevision(c.matiere, prochaineRevisionBrute, dateControleReponse, c.id);
-  const derniereRevision = rappelLeger ? c.derniereRevision : todayStr();
+  const dateInchangee = sansEffet || jug.e1;   // E1 : la date « demain » posée par l'échec reste
+  const prochaineRevision = dateInchangee ? c.prochaineRevision : plafonnerDateRevision(c.matiere, prochaineRevisionBrute, dateControleReponse, c.id);
+  const derniereRevision = dateInchangee ? c.derniereRevision : todayStr();
   const prevDerniereModification = c.derniereModification || null;
-  const derniereModification = rappelLeger ? c.derniereModification : new Date().toISOString();
+  const derniereModification = sansEffet ? c.derniereModification : new Date().toISOString();
   c.palier = palier;
   c.prochaineRevision = prochaineRevision;
   c.derniereRevision = derniereRevision;
@@ -10588,7 +10649,7 @@ function answer(niveau, opts){
   bumpStreak();
   ppStatBump();
   ppJournalAjoute(c.id, niveau);   // journal local du bilan de la semaine (synchronisé depuis la v224 ; exporté et restauré depuis la v223)
-  if(!rappelLeger) saveLocalOverlay(c.id, { palier, prochaineRevision, derniereRevision, derniereModification, difficultes: c.difficultes || 0, facileConsecutif: c.facileConsecutif || 0, facilite: c.facilite });
+  if(!sansEffet) saveLocalOverlay(c.id, { palier, prochaineRevision, derniereRevision, derniereModification, difficultes: c.difficultes || 0, facileConsecutif: c.facileConsecutif || 0, facilite: c.facilite });
 
   // Rappel du lendemain : carte vue pour la 1re fois, réussie du 1er coup, ~1 sur 3
   // au hasard (max 5/jour) => elle reviendra demain en rappel léger.
@@ -10619,7 +10680,7 @@ function answer(niveau, opts){
   // Sens vu pour cette carte (⇄) : gardé pour qu'un "Annuler" la remette dans
   // le MÊME sens (sinon le tirage serait refait et l'écran changerait).
   const sensVu = (sensAffiche.cle === 'etude:' + currentIndex + ':' + c.id) ? sensAffiche.inverse : false;
-  lastAnswer = { cardId: c.id, index: currentIndex, journal: true, dt: dtSeance, sensVu, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute, prevSerie };
+  lastAnswer = { cardId: c.id, index: currentIndex, journal: true, dt: dtSeance, sensVu, sansEffet, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute, prevSerie };
   recalcPlanning();
   saveLocalPlanning();
   planifierSyncDiffere();
@@ -10664,21 +10725,23 @@ function undoLastAnswer(){
   } else ppStatUndo();
   const c = queue[lastAnswer.index];
   if(c && c.id === lastAnswer.cardId){
-    c.palier = lastAnswer.prevPalier;
-    c.prochaineRevision = lastAnswer.prevProchaineRevision;
-    c.derniereRevision = lastAnswer.prevDerniereRevision;
-    c.difficultes = lastAnswer.prevDifficultes;
-    c.facileConsecutif = lastAnswer.prevFacileConsecutif;
-    if(!lastAnswer.estRappel || lastAnswer.niveau !== 'vert') c.facilite = lastAnswer.prevFacilite;
-    // Restaure l'ancien horodatage technique (pas "maintenant") : un undo ne
-    // doit pas se comporter comme une nouvelle modification pour la synchro,
-    // sinon il pourrait à tort l'emporter sur une modif plus ancienne mais
-    // réelle faite sur un autre appareil.
-    c.derniereModification = lastAnswer.prevDerniereModification;
+    if(!lastAnswer.sansEffet){   // v362 : une réponse sans effet n'a rien changé à la carte, il n'y a rien à restaurer
+      c.palier = lastAnswer.prevPalier;
+      c.prochaineRevision = lastAnswer.prevProchaineRevision;
+      c.derniereRevision = lastAnswer.prevDerniereRevision;
+      c.difficultes = lastAnswer.prevDifficultes;
+      c.facileConsecutif = lastAnswer.prevFacileConsecutif;
+      if(!lastAnswer.estRappel || lastAnswer.niveau !== 'vert') c.facilite = lastAnswer.prevFacilite;
+      // Restaure l'ancien horodatage technique (pas "maintenant") : un undo ne
+      // doit pas se comporter comme une nouvelle modification pour la synchro,
+      // sinon il pourrait à tort l'emporter sur une modif plus ancienne mais
+      // réelle faite sur un autre appareil.
+      c.derniereModification = lastAnswer.prevDerniereModification;
+    }
     // Défait aussi le compteur de réinsertions pour cette carte, sinon un
     // undo/refaire répété grillerait le plafond MAX_REINSERTIONS sans raison.
     if(ppEstObjet(c.reinsertionsSession) && lastAnswer.niveau && c.reinsertionsSession[lastAnswer.niveau] > 0) c.reinsertionsSession[lastAnswer.niveau]--;
-    saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision: c.prochaineRevision, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification, difficultes: c.difficultes, facileConsecutif: c.facileConsecutif, facilite: c.facilite });
+    if(!lastAnswer.sansEffet) saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision: c.prochaineRevision, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification, difficultes: c.difficultes, facileConsecutif: c.facileConsecutif, facilite: c.facilite });
     // Ne retire de sessionErrors que si cette réponse est ce qui l'y avait ajoutée
     // (elle n'y figurait pas avant, cf. prevDifficultes) : sinon une carte déjà
     // en erreur plus tôt dans la session resterait à tort marquée "à revoir".
@@ -11635,7 +11698,7 @@ function ppWkHtml(date, DD){
     /* v360 : « en retard d'1 j » / « en avance de 2 j » (avant : « dépasse de N j » / « marge N j », peu clair). Marge 0 = « pile à temps ». */
     else if(mg.marge < 0) txt = 'en retard ' + (mg.marge === -1 ? "d'1" : 'de ' + (-mg.marge)) + ' j';
     else if(mg.marge === 0) txt = 'pile à temps';
-    else txt = 'en avance ' + (mg.marge === 1 ? "d'1" : 'de ' + mg.marge) + ' j';
+    else txt = 'marge ' + (mg.marge === 1 ? "d'1" : 'de ' + mg.marge) + ' j';   /* v361 : « marge » plutôt que « en avance » (ça n'incite pas à lever le pied) */
     const titre = `${mg.matiere} : 80 % maîtrisé le ${formatDateFr(mg.dateMaitrise)} — contrôle le ${formatDateFr(mg.dateControle)}`;
     /* v353 : avec >= 2 matières à contrôle futur, le nom de la matière précède « marge N j » (tronqué avec « … », nom complet dans l'infobulle). */
     const nomMat = matieresAvecControle().length >= 2 ? `<b class="pp-mn">${escapeHtml(mg.matiere)}</b>` : '';
@@ -12622,7 +12685,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v360';
+const PP_APP_VERSION = 'v362';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18022,8 +18085,15 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v362', t:["Une carte ne monte qu'une fois par jour", "A card moves up only once a day"], p:[
+    ["Une carte ne monte plus que d'un palier par jour : réussir plusieurs fois la même carte dans la journée ne la fait plus avancer à chaque fois.", "A card now moves up one step at most per day: getting the same card right several times in a day no longer moves it forward each time."],
+    ["Une carte toute neuve ratée puis réussie le même jour passe quand même au palier 1.", "A brand-new card missed then got right on the same day still moves to step 1."],
+    ["Dans « Tout réviser », un « Facile » sur une carte pas encore à revoir ne la fait monter que si la moitié du temps prévu est passée.", "In “Review all”, an “Easy” on a card that isn't due yet only moves it up once half of its planned time has passed."],
+    ["Le chiffre « maîtrisées » peut donc être un peu plus bas qu'avant : c'est plus juste, les cartes ratées reviennent plus tôt.", "The “mastered” count can therefore be a little lower than before: it is more accurate, and missed cards come back sooner."]] },
+  { v:'v361', t:["« Marge » plutôt que « en avance »", "“Margin” rather than “early”"], p:[
+    ["Le repère du contrôle dit maintenant « marge de 2 j » quand tu as de la marge, et « en retard d’1 j » quand il en manque.", "The test marker now says “margin: 2 d” when you have room to spare, and “1 d late” when you are short."]] },
   { v:'v360', t:["Un planning plus clair", "A clearer planning"], p:[
-    ["Le repère du contrôle dit simplement « en retard d’1 j » ou « en avance de 2 j » : on compare le jour où tu atteins 80 % de cartes maîtrisées avec le jour du contrôle.", "The test marker now simply says “1 d late” or “2 d early”: it compares the day you reach 80 % of cards mastered with the test day."],
+    ["Le repère du contrôle dit simplement « en retard d’1 j » ou « marge de 2 j » : on compare le jour où tu atteins 80 % de cartes maîtrisées avec le jour du contrôle.", "The test marker now simply says “1 d late” or “margin: 2 d”: it compares the day you reach 80 % of cards mastered with the test day."],
     ["Sous les 7 jours, la ligne ne se chevauche plus : si la place manque, le repère passe proprement à la ligne.", "Under the 7 days, the row no longer overlaps: if space runs out, the marker drops neatly onto its own line."],
     ["« ≈ 10 rappels prévus » devient « ≈ 10 rappels ».", "“≈ 10 reviews expected” becomes “≈ 10 reviews”."]] },
   { v:'v359', t:["Retrouver ta progression dès le départ", "Get your progress back from the start"], p:[

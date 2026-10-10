@@ -19,6 +19,10 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v168 : v362 (une carte n'est jugée qu'une fois par jour ; « Facile » sans effet sur une carte déjà répondue ou pas encore à revoir) : index.html change, donc nouvelle version du cache.
+
+   v167 : v361 (repère du contrôle : « marge de N j » au lieu de « en avance de N j ») : index.html change, donc nouvelle version du cache.
+
    v166 : v360 (planning : repère « en retard / en avance de N j », « prévus » retiré, ligne de la semaine qui ne se chevauche plus) : index.html change, donc nouvelle version du cache.
 
    v156 : v336 (statistiques : plus de cartes en pause ni de matières archivées dans les chiffres) : index.html change, donc nouvelle version du cache.
@@ -97,7 +101,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v166';
+const SW_VERSION = 'v168';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
