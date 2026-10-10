@@ -19,6 +19,12 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v185 : v380 (bouton « Générer les cartes » : la bande lumineuse reboucle sans saut ni clignotement) : index.html change, donc nouvelle version du cache.
+
+   v184 : v379 (Ajouter : boutons Synthèse / À la main / Code d'ami assortis ; anneau de Prof visible en mode clair) : index.html change, donc nouvelle version du cache.
+
+   v183 : v378 (bouton « arrêter » pendant les réponses de l'IA : Prof, cartes, synthèses, recherche d'images) : index.html change, donc nouvelle version du cache.
+
    v182 : v377 (réflexion des cartes et des synthèses : low -> medium) : index.html change, donc nouvelle version du cache.
 
    v181 : v376 (modèles des IA : chaîne de modèles par fonction, échelle partagée gmEchelle / gmAppelEchelle) : index.html change, donc nouvelle version du cache.
@@ -129,7 +135,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v182';
+const SW_VERSION = 'v185';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
