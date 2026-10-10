@@ -375,7 +375,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Copié':'Copied','Copier':'Copy','Copie impossible : sélectionne le texte à la main':'Copy failed: select the text by hand','Ajouter en carte':'Add as card'
   });
   Object.assign(D,{ /* v138 : textes oubliés (captures) */
-    'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','carte en 7 jours':'card in 7 days','cartes en 7 jours':'cards in 7 days','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
+    'Ajouter une image':'Add an image','Image question':'Question image','Image réponse':'Answer image','jours de suite':'days in a row','carte en 7 jours':'card in 7 days','cartes en 7 jours':'cards in 7 days','jour de suite':'day in a row','maîtrisée':'mastered','maîtrisées':'mastered','carte déjà maîtrisée':'card already mastered','cartes déjà maîtrisées':'cards already mastered','archivée':'archived','Appuie encore sur Retour pour quitter':'Press Back again to exit','nouvelles':'new','palier 1':'level 1','palier 2':'level 2','palier 3':'level 3','Aujourd\'hui':'Today','Demain':'Tomorrow','trop tard':'too late','Générer les cartes':'Generate the cards','Génération en cours…':'Generating…','Rechercher une carte':'Search for a card','texte collé':'pasted text','aucun contenu':'no content','facultatif':'optional','(facultatif)':'(optional)'
   });
   Object.assign(D,{ /* v138 : Android / iOS sur grand écran */
     'Aussi sur Android et iOS':'Also on Android and iOS',"Télécharger l'app (fichier APK)":'Download the app (APK file)','Ouvrir':'Open',"Ajouter le site à l'écran d'accueil":'Add the site to the home screen',
@@ -2385,7 +2385,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-wk .pp-m.pp-bad{border-color:var(--c-pborder);background:var(--c-pbg);color:var(--pink)}
 .pp-wk .pp-m{display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;min-width:0;max-width:100%}
 .pp-wk .pp-m .pp-mn{font-weight:inherit;max-width:10ch;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8}
-.pp-wk .pp-m .pp-mt{font-style:normal;font-weight:inherit;flex-shrink:0;white-space:nowrap}
+.pp-wk .pp-m .pp-mtx{font-style:normal;font-weight:inherit;font-family:inherit;flex-shrink:0;white-space:nowrap}   /* v396 : même police que le nom de la matière */
 .pp-h3s{font-size:22px;margin:24px 0 12px}
 .pp-mat{padding:15px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:12px;cursor:pointer;transition:transform .3s var(--pps)}
 .pp-mat.pp-arch{opacity:.6}
@@ -4277,6 +4277,20 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-ghost{position:absolute;inset:0;display:flex;flex-direction:column;padding:inherit;pointer-events:none;z-index:5;overflow:hidden}
 .pp-nofx .pp-view>*,.pp-nofx .pp-lect .pp-rend>*,.pp-nofx .pp-view.pp-lect>.pp-lectb{animation:none!important}
 </style>
+<style id="v395-style">
+/* v395 : « Répartition des paliers » lisible (légende en lignes avec pastille de couleur, nombre et %) ; mention « archivée » dans « Par matière » */
+.pp-seg-r{height:18px;margin-bottom:12px}
+.pp-seg-r i{min-width:6px}
+.pp-tiers{display:flex;flex-direction:column;gap:2px}
+.pp-tr{display:flex;align-items:center;gap:10px;padding:6px 2px;font-size:14.5px;color:var(--cream)}
+.pp-tr>i{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none}
+.pp-tr>span{flex:1;min-width:0;font-weight:700;text-transform:capitalize}
+.pp-tr>b{font-weight:800;font-size:15.5px;min-width:28px;text-align:right}
+.pp-tr>em{font-style:normal;color:var(--muted);font-weight:600;font-size:13px;min-width:46px;text-align:right}
+.pp-tr.z{opacity:.55}
+.pp-tr.z>i{background:transparent;box-shadow:inset 0 0 0 2px var(--c)}
+.pp-archtag{font-style:normal;font-size:11px;font-weight:800;color:var(--muted);border:1.5px solid var(--line);border-radius:8px;padding:1px 6px}
+</style>
 </head>
 <body>
 <div id="boot-splash" aria-hidden="true">
@@ -4426,16 +4440,16 @@ function cartesNonPausees(){
   for(const c of CARDS){ if(c.pausee === true) return CARDS.filter(k => k.pausee !== true); }
   return CARDS;
 }
-/* v336 : cartes prises en compte dans les STATISTIQUES et les compteurs « maîtrisée » : ni cartes en pause, ni cartes d'une matière archivée
-   (avant, elles gonflaient « nouvelles / paliers / maîtrisées » alors que la liste « Par matière » les masquait déjà). Les cartes gardent leur palier :
-   si on remet une carte en route ou si on désarchive la matière, elles réapparaissent dans les chiffres. */
-function cartesPourStats(){
+/* v395 : STATISTIQUES = TOUTES les cartes, y compris celles en pause et celles d'une matière archivée (demande de l'utilisateur : une carte mise de côté
+   reste une carte qu'il a apprise). Avant (v336) elles étaient exclues des compteurs « nouvelles / paliers / maîtrisées ». Les cartes gardent leur palier. */
+function cartesPourStats(){ return CARDS; }
+/* v337 : cartes qui prennent des PLACES dans les plafonds de planning (par jour, par matière et au total) : ni cartes en pause, ni cartes d'une
+   matière archivée (avant, une grosse matière archivée occupait des places de jours et bloquait une matière urgente). v395 : cette règle n'est
+   plus celle des statistiques (qui comptent tout) : elle vit ici, seule. */
+function cartesPourPlafonds(){
   const archivees = new Set(getMatieres().filter(m => matieresConfig[m] && matieresConfig[m].archive));
   return cartesNonPausees().filter(c => !archivees.has(c.matiere || 'Sans matière'));
 }
-/* v337 : cartes qui prennent des PLACES dans les plafonds de planning (par jour, par matière et au total) : ni cartes en pause, ni cartes d'une
-   matière archivée (avant, une grosse matière archivée occupait des places de jours et bloquait une matière urgente). Même règle que les statistiques. */
-function cartesPourPlafonds(){ return cartesPourStats(); }
 /* v344 : MATIÈRES FANTÔMES. Une matière supprimée (ou dont toutes les cartes ont été supprimées, ici ou sur l'autre appareil) pouvait rester dans la liste
    comme matière vide « archivée », avec le bouton « Archivées (n) » de Parcourir, parce que sa configuration (archivage, date de contrôle) survivait aux cartes.
    Fantôme = matière SANS AUCUNE carte, qui n'est pas une matière vide volontaire (créée à la main) et dont la configuration vient d'une trace locale (archivage,
@@ -12161,7 +12175,7 @@ function ppWkHtml(date, DD){
     const titre = `${mg.matiere} : 80 % maîtrisé le ${formatDateFr(mg.dateMaitrise)} — contrôle le ${formatDateFr(mg.dateControle)}`;
     /* v353 : avec >= 2 matières à contrôle futur, le nom de la matière précède « marge N j » (tronqué avec « … », nom complet dans l'infobulle). */
     const nomMat = matieresAvecControle().length >= 2 ? `<b class="pp-mn">${escapeHtml(mg.matiere)}</b>` : '';
-    m = `<div class="pp-m ${(mg.niveau === 'large' || mg.niveau === 'juste') ? '' : 'pp-bad'}" title="${escapeHtml(titre)}">${nomMat}<i class="pp-mt">${escapeHtml(txt)}</i></div>`;
+    m = `<div class="pp-m ${(mg.niveau === 'large' || mg.niveau === 'juste') ? '' : 'pp-bad'}" title="${escapeHtml(titre)}">${nomMat}<i class="pp-mtx">${escapeHtml(txt)}</i></div>`;   /* v396 : classe « pp-mtx » (« pp-mt » est aussi la classe des maths, en police à empattements : le texte « en retard d'1 j » sortait en serif) */
   }
   const jd = (D.jours || []).find(j => j.date === date), prevus = jd ? jd.proj : 0;
   const entretien = getEntretienDuJour(date);   /* v344 (10a) */
@@ -13156,7 +13170,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v394';
+const PP_APP_VERSION = 'v396';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18887,6 +18901,10 @@ function ppPageSwap(cur, html, id, dir){
   fantome.className = 'pp-ghost'; fantome.setAttribute('aria-hidden', 'true');
   vieux.forEach(n => { if(n.nodeType === 1){ n.removeAttribute('id'); n.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); } fantome.appendChild(n); });
   const neufs = Array.from(cur.children);
+  /* v395 : la zone « pp-view » du nouvel écran est posée « figée » (pp-still) AVANT de retirer pp-nofx plus bas. Sans ça, retirer pp-nofx (qui coupait les animations
+     d'entrée des enfants avec « animation:none !important ») faisait DÉMARRER ces animations d'un coup 460 ms plus tard : l'écran s'affichait, faisait un petit saut,
+     puis se réaffichait (texte de la lecture ligne par ligne, bouton « Ajuster », liste « Synthèses »). Le glissement du nouvel écran est fait ici, par l'animation Web. */
+  neufs.forEach(el => { if(el.classList && el.classList.contains('pp-view')) el.classList.add('pp-still'); });
   cur.appendChild(fantome);
   vieux.forEach((n, i) => { if(ys[i]) n.scrollTop = ys[i]; });
   cur.classList.add('pp-nofx');
@@ -18995,7 +19013,7 @@ function ppStatsHtml(){
   const today = todayStr();
   const streakData = getStreakData();
   const streak = getStreakAffichee();
-  const cs = cartesPourStats();   /* v336 : sans matières archivées ni cartes en pause */
+  const cs = cartesPourStats();   /* v395 : toutes les cartes (pause et archivées comprises) */
   const mas = cs.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
   const ex = ppStatExtra();
   const record = Math.max(ex.record, streak);
@@ -19006,13 +19024,18 @@ function ppStatsHtml(){
     if(d === streakData.lastDate) n = Math.max(n, 1);
     heat.push(n === 0 ? 0 : n <= 4 ? 1 : n <= 9 ? 2 : 3);
   }
-  const mats = getMatieresActives().map(m => {
+  const mats = getMatieres().map(m => {   /* v395 : matières archivées comprises (petite mention « archivée ») */
     const l = cs.filter(c => (c.matiere || 'Sans matière') === m);
-    return { m, tot: l.length, mas: l.filter(c => (c.palier || 0) >= MASTERED_PALIER).length };
+    return { m, tot: l.length, mas: l.filter(c => (c.palier || 0) >= MASTERED_PALIER).length, arch: !!(matieresConfig[m] && matieresConfig[m].archive) };
   }).filter(x => x.tot > 0);
   const pal = [0, 1, 2, 3, 4].map(l => cs.filter(c => Math.min(c.palier || 0, MASTERED_PALIER) === l).length);
   const cl = ['var(--c-dash)', 'var(--pink)', 'var(--amber)', 'var(--yellow)', 'var(--green)'];
-  const nm = ['Nouvelles', 'Palier 1', 'Palier 2', 'Palier 3', 'Maîtrisées'];
+  const nm = ['nouvelles', 'palier 1', 'palier 2', 'palier 3', 'maîtrisées'];
+  const totPal = pal.reduce((a, v) => a + v, 0);
+  /* v395 : un palier à 0 n'a PLUS de morceau dans la barre (avant : une largeur minimale .15 laissait une fine ligne de sa couleur, ex. « palier 3 : 0 » en jaune) ;
+     la légende liste quand même les 5 paliers (pastille pleine = il y en a, pastille vide + ligne estompée = 0), avec le nombre et le pourcentage. */
+  const barre = totPal ? pal.map((v, i) => v ? `<i style="flex:${v};background:${cl[i]}"></i>` : '').join('') : '<i style="flex:1;background:var(--c-s1)"></i>';
+  const legende = pal.map((v, i) => `<div class="pp-tr${v ? '' : ' z'}" style="--c:${cl[i]}"><i></i><span>${nm[i]}</span><b>${v}</b><em>${totPal ? Math.round(v / totPal * 100) : 0} %</em></div>`).join('');
   return `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="closeStreakModal()">${PP_IC.back}</button><div><small>Ta progression</small><h2>Statistiques</h2></div></div>
   <div class="pp-sb pp-view"><div class="pp-stats">
     <div class="pp-stat"><i style="background:var(--c-yicon);color:var(--yellow-t)">${ppIc16(PP_IC.fire)}</i><div><b>${streak}</b><span>jour${streak > 1 ? 's' : ''} de suite</span></div></div>
@@ -19021,9 +19044,9 @@ function ppStatsHtml(){
     <div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${ppIc16(PP_IC.flag)}</i><div><b>${record}</b><span>record de série</span></div></div>${ppStatsSeancesHtml()}</div>
   <div class="pp-sgA"><p class="pp-sub2" style="margin-top:8px">30 derniers jours</p><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div>
   <p class="pp-hint" style="margin-top:6px">Plus la case est claire, plus tu as révisé ce jour-là.</p></div>
-  <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
-  <div class="pp-sgC"><p class="pp-sub2" style="margin-top:16px">Répartition des paliers</p><div class="pp-seg" style="margin-bottom:9px">${pal.map((v, i) => `<i style="flex:${v || .15};background:${cl[i]}"></i>`).join('')}</div>
-  <div class="pp-leg" style="flex-wrap:wrap;gap:6px 14px;font-size:13px">${pal.map((v, i) => `<span><b>${v}</b> ${nm[i].toLowerCase()}</span>`).join('')}</div></div></div>`;
+  <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}${x.arch ? '<em class="pp-archtag">archivée</em>' : ''}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
+  <div class="pp-sgC"><p class="pp-sub2" style="margin-top:16px">Répartition des paliers</p><div class="pp-seg pp-seg-r" aria-hidden="true">${barre}</div>
+  <div class="pp-tiers">${legende}</div></div></div>`;
 }
 
 /* ================= Réglages (feuille du bas) ================= */
@@ -19086,6 +19109,14 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v396', t:["Bouton Retour du téléphone", "Phone Back button"], p:[
+    ["Le bouton Retour (ou le geste) ne ferme plus l'app par erreur quand tu l'appuies deux fois vite : l'app ne se ferme que si tu fais Retour deux fois sur l'accueil, sans rien par-dessus. Le premier appui affiche « Appuie encore sur Retour pour quitter ».", "The Back button (or gesture) no longer closes the app by mistake when you press it twice quickly: the app only closes if you press Back twice on the home screen with nothing on top. The first press shows “Press Back again to exit”."],
+    ["Retour fonctionne maintenant écran par écran partout : dans les synthèses (précisions → menu « Ajuster » → lecture → liste « Synthèses »), la caméra, « Image par IA » et les petits menus de Prof.", "Back now works one screen at a time everywhere: in summaries (details → “Adjust” menu → reading → “Summaries” list), the camera, “AI image” and Prof's small menus."],
+    ["Le message « en retard d'1 j » (planning) est écrit dans la même police que le nom de la matière.", "The “1 d late” message (planning) now uses the same font as the subject name."]] },
+  { v:'v395', t:["Statistiques plus claires, synthèses sans saut", "Clearer statistics, summaries without a jump"], p:[
+    ["« Répartition des paliers » : un palier à 0 n'apparaît plus dans la barre (avant, une fine ligne de sa couleur restait). Chaque palier a sa pastille de couleur, son nombre et son pourcentage.", "“Level breakdown”: a level at 0 no longer shows in the bar (a thin line of its colour used to remain). Each level has its colour dot, its number and its percentage."],
+    ["Les cartes en pause et celles des matières archivées comptent maintenant dans les statistiques (« Par matière » les montre avec la mention « archivée »).", "Paused cards and cards from archived subjects now count in the statistics (“By subject” shows them with an “archived” tag)."],
+    ["Synthèses : plus de petit saut ni de rechargement quand on touche « Ajuster », quand on revient à la lecture ou à la liste « Synthèses » : l'écran glisse une seule fois.", "Summaries: no more little jump or reload when you tap “Adjust”, or go back to reading or to the “Summaries” list: the screen glides only once."]] },
   { v:'v394', t:["Menu « Modifier la carte » allégé (Chromebook)", "Lighter “Edit card” menu (Chromebook)"], p:[
     ["Sur Chromebook, « Discuter de la carte » et « Mettre en pause » ne sont plus répétés dans le menu « Modifier la carte » : ils sont déjà sur la fiche de la carte.", "On Chromebook, “Discuss the card” and “Pause” are no longer repeated in the “Edit card” menu: they are already on the card."]] },
   { v:'v393', t:["Synthèses : transitions et boutons", "Summaries: transitions and buttons"], p:[
@@ -19678,6 +19709,10 @@ function ppRetourFeuille(feuille){
 /* Prof, sur tous les écrans (v250 ; avant : grand écran seulement). Un sous-écran d'abord, puis Prof lui-même. */
 function ppRetourProfEcran(){
   if(!pcOuvert) return false;
+  /* v396 : le menu d'un message et « Avant de commencer » se ferment seuls (avant, Retour fermait Prof en entier) */
+  if(document.getElementById('pc-msgmenu')){ pcMsgMenuFerme(); return true; }
+  const inf = document.getElementById('pc-info');
+  if(inf){ const bi = inf.querySelector('button'); if(bi) bi.click(); else inf.remove(); return true; }
   const bh = pcEl('pch-back'), bn = pcEl('pcn-back');
   if(bh){ bh.click(); return true; }
   if(bn){ bn.click(); return true; }
@@ -19689,6 +19724,7 @@ function ppRetourProfEcran(){
   return true;
 }
 function ppFermerCouche(cible, onglets){
+  try{ if(typeof ppCam !== 'undefined' && ppCam){ ppCameraFermer(); return true; } }catch(e){}   /* v396 : la caméra plein écran est la couche la plus haute */
   const fci = document.getElementById('fci');
   if(fci){
     const bk = fci.querySelector('[data-i=bk]'), hm = fci.querySelector('[data-i=hm]');
@@ -19698,7 +19734,10 @@ function ppFermerCouche(cible, onglets){
   const zoom = document.getElementById('pp-zoom');
   if(zoom){ const x = zoom.querySelector('.pz-x'); if(x) x.click(); return true; }
   const cal = document.getElementById('pp-psheet');
-  if(cal && cal.classList.contains('on')){ ppPickClose(); return true; }
+  if(cal && cal.classList.contains('on')){
+    if(ppPsheetEnfant(cal)){ cal.querySelector('.pp-sbh .pp-back').click(); return true; }   /* v396 : « Image par IA » → retour au menu Galerie / IA, pas tout fermer */
+    ppPickClose(); return true;
+  }
   const feuille = document.getElementById('pp-sheet');
   if(feuille && feuille.classList.contains('on')){ ppRetourFeuille(feuille); return true; }
   try{ if(ppRetourProfEcran()) return true; }catch(e){}   /* Échap dans Prof marche aussi depuis le champ de saisie */
@@ -19750,10 +19789,22 @@ document.addEventListener('keydown', function(e){
    retirée en silence (history.go, popstate ignoré) ; si un écran s'ouvre sans avoir été prévu, l'entrée est ajoutée juste après. À l'accueil
    nu, ppPos = 0 : le retour suivant quitte normalement l'app (plus d'appui « sans effet » au démarrage). */
 try{ history.scrollRestoration = 'manual'; }catch(e){}   /* v252 : c'est l'appli qui gère le défilement, pas le navigateur au retour */
-let ppPos = 0;          /* position dans NOS entrées d'historique (0 = entrée de départ) */
+/* v396 : GARDE DE SORTIE. Entrée 0 = « garde » (l'entrée de départ de l'app), entrée 1 = accueil nu. Un Retour à l'accueil nu tombe donc d'abord sur la garde :
+   l'app affiche « Appuie encore sur Retour pour quitter » et reste ouverte ; un 2e Retour (dans les 2,5 s) quitte vraiment (on est alors sur la 1re entrée de l'historique).
+   Avant, deux Retour rapides (la 2e entrée « tampon » n'était pas encore recréée) faisaient quitter l'app même avec des écrans ouverts par-dessus.
+   PP_BASE = nombre d'entrées de garde (1 sur téléphone et en app installée ; 0 dans un onglet de navigateur sur grand écran : rien ne change alors).
+   ppPos compte la garde : ppPos = PP_BASE + profondeur logique. */
+const PP_BASE = (function(){ try{ return (!ppWide() || ppEnAppInstallee()) ? 1 : 0; }catch(e){ return 1; } })();
+let ppPos = 0;          /* position dans NOS entrées d'historique (0 = entrée de départ = garde) */
 let ppIgnorePop = 0;    /* popstate provoqués par nous (retour silencieux) : à ignorer */
 let ppSyncT = null;
-try{ history.replaceState({ ppIdx:0 }, ''); }catch(e){}
+let ppSortieT = 0;      /* v396 : moment du dernier Retour à l'accueil nu (garde de sortie) */
+let ppGesteAt = 0;      /* v396 : dernier vrai geste (toucher, clic, touche) : Chrome saute les entrées ajoutées sans geste */
+try{
+  const st0 = history.state;
+  if(PP_BASE > 0 && st0 && typeof st0.ppIdx === 'number' && st0.ppIdx >= PP_BASE){ ppPos = st0.ppIdx; }   /* page rechargée au milieu de nos entrées : on reprend la position (ppSyncHist retire les entrées en trop) */
+  else{ history.replaceState({ ppIdx:0 }, ''); ppPos = 0; }   /* l'entrée « accueil nu » de la garde est ajoutée au 1er geste (ppSyncHist) */
+}catch(e){}
 /* Une feuille « enfant » (confirmation, choix d'heure…) : elle a son propre Retour/Annuler et compte pour un pas de plus. */
 function ppFeuilleEnfant(feuille){
   if(!feuille || feuille.querySelector('.pp-setroot')) return false;
@@ -19769,17 +19820,32 @@ function ppModalVide(){
   if(!r || r.innerHTML.trim() === '') return true;
   return r.children.length === 1 && !!r.querySelector(':scope > .pp-pgout');
 }
+/* v396 : le 2e feuillet (calendrier / menu d'image) a un écran « enfant » quand il montre une flèche Retour qui ne ferme pas tout (« Image par IA » → menu Galerie / IA). */
+function ppPsheetEnfant(cal){
+  const b = cal && cal.querySelector('.pp-sbh .pp-back');
+  return !!(b && ppVisible(b) && !/ppPickClose/.test(b.getAttribute('onclick') || ''));
+}
 /* Nombre de pas de retour disponibles, comptés comme le fait ppFermerCouche (une couche = un pas). */
 function ppProfondeur(){
   let d = 0;
   if(document.getElementById('fci') || document.getElementById('pp-zoom')) d++;
+  if(document.getElementById('pp-cam')) d++;   /* v396 : caméra plein écran */
   const cal = document.getElementById('pp-psheet');
-  if(cal && cal.classList.contains('on')) d++;
+  if(cal && cal.classList.contains('on')){ d++; if(ppPsheetEnfant(cal)) d++; }   /* v396 : « Image par IA » a son propre Retour (vers le menu Galerie / IA) */
   const fe = document.getElementById('pp-sheet');
   if(fe && fe.classList.contains('on')){ d++; if(ppFeuilleEnfant(fe)) d++; }
-  try{ if(pcOuvert){ d++; if(pcEl('pch-back') || pcEl('pcn-back') || pcMenuMode || pcPlusOn) d++; } }catch(e){}
+  try{ if(pcOuvert){ d++; if(pcEl('pch-back') || pcEl('pcn-back') || pcMenuMode || pcPlusOn) d++; if(document.getElementById('pc-msgmenu') || document.getElementById('pc-info')) d++; } }catch(e){}   /* v396 : menu d'un message et « Avant de commencer » = un pas de plus */
   if(!ppModalVide()) d++;
-  try{ const sy = syntheseEtat; if(sy && sy.etape === 'resultat' && !sy.lecture && (sy.markdown || '').trim() && document.getElementById('synth-overlay')) d++; }catch(e){}   /* v390 : menu « Ajuster » → Retour = lecture plein écran */
+  /* v390 : menu « Ajuster » → Retour = lecture plein écran. v396 : « Modifier les précisions » = 2 pas (→ menu « Ajuster » → lecture) ; synthèse ouverte depuis la liste « Synthèses » = 1 pas de plus (la liste, dessous) */
+  try{
+    const sy = syntheseEtat;
+    if(sy && document.getElementById('synth-overlay')){
+      const md = !!(sy.markdown || '').trim();
+      if(sy.depuisBiblio) d++;
+      if(sy.etape === 'resultat' && !sy.lecture && md) d++;
+      else if(sy.etape === 'consignes' && md) d += 2;
+    }
+  }catch(e){}
   const ses = document.getElementById('pp-ses');
   if(ses && getComputedStyle(ses).display !== 'none') d++;
   if(ppNavSousEcranAjout()) d++;
@@ -19794,8 +19860,10 @@ function ppPousse(){
 function ppSyncHist(){
   clearTimeout(ppSyncT); ppSyncT = null;
   if(ppIgnorePop > 0){ ppSyncT = setTimeout(ppSyncHist, 120); return; }
-  const d = ppProfondeur();
-  for(let k = 0; k < 4 && ppPos < d; k++){ if(!ppPousse()) break; }
+  const d = ppProfondeur() + PP_BASE;
+  /* v396 : l'entrée « accueil nu » (juste au-dessus de la garde) n'est ajoutée qu'au 1er vrai geste : Chrome saute les entrées créées sans geste */
+  if(ppPos < PP_BASE && !(Date.now() - ppGesteAt < 4000)) return;
+  for(let k = 0; k < 8 && ppPos < d; k++){ if(!ppPousse()) break; }
   if(ppPos > d){
     const n = ppPos - d;
     ppIgnorePop++; ppPos = d;
@@ -19803,6 +19871,14 @@ function ppSyncHist(){
   }
 }
 function ppSyncTard(ms){ clearTimeout(ppSyncT); ppSyncT = setTimeout(ppSyncHist, ms || 200); }
+/* v396 : de la garde (entrée 0), on remonte sur l'entrée « accueil nu » (entrée 1, déjà existante : avancer dans l'historique ne compte pas comme une entrée ajoutée sans geste). */
+function ppRevenirAccueil(){
+  ppIgnorePop++; ppPos = PP_BASE;
+  try{ history.go(1); }catch(e){ ppIgnorePop--; return; }
+  setTimeout(() => {   /* pas d'entrée devant nous (rare) : on en recrée une */
+    try{ if(ppIgnorePop > 0 && history.state && history.state.ppIdx === 0){ ppIgnorePop--; history.pushState({ ppIdx: PP_BASE }, ''); ppPos = PP_BASE; } }catch(e){}
+  }, 600);
+}
 window.addEventListener('popstate', function(e){
   const np = (e.state && typeof e.state.ppIdx === 'number') ? e.state.ppIdx : 0;
   const prev = ppPos; ppPos = np;
@@ -19813,13 +19889,24 @@ window.addEventListener('popstate', function(e){
     return;
   }
   let agi = false;
-  for(let k = prev - np; k > 0; k--){ if(ppFermerCouche(null, true)) agi = true; else break; }
-  if(!agi && ppPos > 0){   /* rien à défaire : entrées périmées, on les écrase pour que le prochain retour quitte l'app */
-    const n = ppPos; ppIgnorePop++; ppPos = 0;
+  for(let k = prev - Math.max(np, PP_BASE); k > 0; k--){ if(ppFermerCouche(null, true)) agi = true; else break; }   /* la garde n'est pas un « pas » : on ne ferme rien pour elle */
+  if(np < PP_BASE){   /* tombé sur la garde */
+    if(agi){ ppSortieT = 0; ppRevenirAccueil(); ppSyncTard(250); return; }   /* des écrans ont été fermés par ce Retour (ex. 2 Retour rapides) : on ne quitte JAMAIS, on remonte à l'accueil */
+    /* Retour à l'accueil nu (rien par-dessus) : 1er appui = message, on reste sur la garde ; un 2e Retour (avant 2,5 s) quitte l'app tout seul. Si on ne fait rien, on remonte à l'accueil. */
+    ppSortieT = Date.now();
+    try{ ppToast('Appuie encore sur Retour pour quitter', false, 2300); }catch(e2){}
+    setTimeout(() => { if(ppPos < PP_BASE && ppIgnorePop === 0) ppRevenirAccueil(); }, 2500);
+    return;
+  }
+  if(agi) ppSortieT = 0;
+  if(!agi && ppPos > PP_BASE){   /* rien à défaire : entrées périmées, on les écrase pour que le prochain retour nous ramène à l'accueil nu */
+    const n = ppPos - PP_BASE; ppIgnorePop++; ppPos = PP_BASE;
     try{ history.go(-n); }catch(e2){ ppIgnorePop--; }
   }
   ppSyncTard(250);
 });
+/* v396 : chaque vrai geste est noté ; le tout 1er ajoute tout de suite l'entrée « accueil nu » (dans le geste, donc non sautée par Chrome). */
+['pointerup', 'touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, function(){ const premier = !ppGesteAt; ppGesteAt = Date.now(); if(premier) ppSyncHist(); }, true));
 /* Chaque toucher qui a pu changer d'écran (sous-écrans de Prof, écrans de Ajouter…) : on recale l'historique juste après. */
 document.addEventListener('click', function(){ ppSyncTard(120); ppSyncTard(700); }, true);
 /* Ouvertures : l'entrée est ajoutée AVANT l'ouverture (la capture de Chrome montre alors l'écran qu'on quitte).
@@ -19833,7 +19920,12 @@ function ppInstallerHistorique(){
     ppImgMenu: () => !sur('pp-psheet'),   /* v277 : menu Galerie / IA du bouton Image */
     ppSesShow: () => !document.body.classList.contains('pp-ses-on'),
     ppCoachOuvrir: () => { try{ return !pcOuvert; }catch(e){ return false; } },
-    ppPageShow: () => ppModalVide()
+    ppPageShow: () => ppModalVide(),
+    /* v396 : changements d'écran à l'INTÉRIEUR d'une page ou d'une feuille (une entrée de plus, ajoutée avant) */
+    ppImgIAOuvrir: () => sur('pp-psheet'),   /* menu Galerie / IA → « Image par IA » */
+    synLectAjuster: () => { const s = syntheseEtat; return !!(s && !s.enCours && s.lecture); },   /* lecture → menu « Ajuster » */
+    retourConsignesSynthese: () => { const s = syntheseEtat; if(!s || s.etape !== 'resultat') return false; const z = document.getElementById('synth-markdown'); return !!(((z ? z.value : s.markdown) || '').trim()); },   /* menu → « Modifier les précisions » */
+    sbOuvrirCorps: () => !ppModalVide()   /* liste « Synthèses » → une synthèse (la liste reste « dessous », un Retour y revient) */
   };
   Object.keys(AVANT).forEach(nom => {
     const orig = window[nom];
@@ -19857,6 +19949,7 @@ function ppObserverEcrans(){
   const cb = () => { brancher(); ppSyncHist(); };
   const brancher = () => {
     ['pp-sheet', 'pp-psheet'].forEach(id => { const e = document.getElementById(id); if(e && !vus.has(e)){ vus.add(e); mo.observe(e, { attributes:true, attributeFilter:['class'] }); } });
+    const pcL = document.getElementById('pc-layer'); if(pcL && !vus.has(pcL)){ vus.add(pcL); mo.observe(pcL, { childList:true }); }   /* v396 : menu d'un message, « Avant de commencer » */
   };
   mo = new MutationObserver(cb);
   const mr = document.getElementById('modal-root'); if(mr) mo.observe(mr, { childList:true });
@@ -19864,7 +19957,7 @@ function ppObserverEcrans(){
   brancher();
 }
 /* Lecture seule (tests / dépannage) : position dans l'historique et profondeur logique. Doivent rester égales au repos. */
-window.ppEtatHist = () => ({ pos: ppPos, d: ppProfondeur() });
+window.ppEtatHist = () => ({ pos: ppPos - PP_BASE, d: ppProfondeur() });   /* v396 : sans la garde */
 // Changement d'onglet fait avec un bouton : on garde l'onglet quitté pour que Retour y revienne (un Retour qui change d'onglet ne s'empile pas).
 (function(){
   const orig = window.switchTab;
