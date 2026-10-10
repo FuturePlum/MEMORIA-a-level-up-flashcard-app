@@ -476,7 +476,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   Object.assign(D,{ /* v277 : bouton Image (Galerie / IA) */
     'Image de la question':'Question image','Image de la réponse':'Answer image','IA':'AI','Galerie':'Gallery','Une photo de ton appareil':'A photo from your device',"Décris l'image que tu veux":'Describe the image you want',
     'Image par IA':'AI image','Ce que tu veux voir':'What you want to see','Ex. le traité de Rome, une cellule en mitose…':'E.g. the Treaty of Rome, a cell in mitosis…',
-    'Chercher l’image':'Find the image','Recherche…':'Searching…','Régénérer':'Regenerate','Je cherche une image…':'Looking for an image…',"Code d'ami":"Friend's code",'Arrêter':'Stop','Arrêter la réponse':'Stop the response','Arrêter la recherche':'Stop the search','Arrêter la recherche d’images':'Stop the image search','Recherche d’images arrêtée':'Image search stopped','Nouvelle tentative…':'Retrying…',
+    'Chercher l’image':'Find the image','Recherche…':'Searching…','Recherche des images…':'Searching for images…','Ajuster':'Adjust','Régénérer':'Regenerate','Je cherche une image…':'Looking for an image…',"Code d'ami":"Friend's code",'Arrêter':'Stop','Arrêter la réponse':'Stop the response','Arrêter la recherche':'Stop the search','Arrêter la recherche d’images':'Stop the image search','Recherche d’images arrêtée':'Image search stopped','Nouvelle tentative…':'Retrying…',
     'Aucune image trouvée. Essaie avec d’autres mots.':'No image found. Try other words.','Image trouvée sur Wikimedia Commons':'Image from Wikimedia Commons',
     'Écris ce que tu veux voir':'Write what you want to see','Plus d’autres images : on reprend au début':'No more images: starting over' });
   RULES.push(
@@ -2324,6 +2324,10 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 :where(.pp-add,.pp-sheet) ::placeholder{color:var(--c-ph)}
 .pp-cta.busy.stop{pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}   /* v381 : la bande lumineuse (.pp-cta.busy) continue de défiler même quand le bouton sert à arrêter */
 .pp-snd.stop{opacity:1;pointer-events:auto}
+@keyframes ppsndIn{from{opacity:0;transform:scale(.3) rotate(-70deg)}to{opacity:1;transform:none}}
+@keyframes ppsndUp{from{opacity:0;transform:translateY(12px) scale(.5)}to{opacity:1;transform:none}}
+.pp-snd.stop.pp-snd-chg svg{animation:ppsndIn .4s var(--pps) both;animation-delay:var(--sd,0ms)}   /* v391 : le carré « stop » apparaît en douceur */
+.pp-snd.pp-snd-chg:not(.stop) svg{animation:ppsndUp .34s cubic-bezier(.22,1,.36,1) both;animation-delay:var(--sd,0ms)}   /* v391 : la flèche revient en douceur */
 .pp-cta.busy{background:linear-gradient(100deg,var(--orange) 30%,#ff9a6e 50%,var(--orange) 70%) 0 0/250% 100%;animation:ppbusyIn .4s var(--pps),ppshine 1.1s linear infinite;pointer-events:none}
 .pp-sheet .pp-cta{margin:6px 0 0}
 .pp-sheet .pp-duo .pp-cta{margin:0;height:50px}
@@ -2458,11 +2462,11 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
   .pp-page{ background:linear-gradient(var(--bg), rgba(var(--bgr),0) 130px), radial-gradient(circle at 90% 0%,rgba(255,107,61,.16),transparent 45%), radial-gradient(circle,rgba(var(--ov),.07) 1px,transparent 1.2px) 0 0/16px 16px, var(--bg); }
 }
 .pp-page .pp-cmp textarea{display:block;width:100%;resize:none;color:var(--cream);font:inherit;font-size:16px;outline:none}
-.pp-page .pp-still>*{animation:none!important}
+.pp-page .pp-still>*:not(.busy){animation:none!important}   /* v389 : sans :not(.busy), la bande lumineuse du bouton « Générer la synthèse » était figée (le bouton est un enfant direct) */
 @keyframes ppPgOut{to{translate:0 70px;opacity:0}}
 .pp-page.pp-pgout{animation:ppPgOut .28s cubic-bezier(.4,0,1,1) forwards!important}
 .pp-page .pp-sb{overscroll-behavior:contain}
-.pp-sheet.pp-still>*{animation:none!important}
+.pp-sheet.pp-still>*:not(.busy){animation:none!important}
 /* statistiques */
 .pp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .pp-stat{display:flex;align-items:center;gap:10px;padding:13px;border-radius:17px;background:var(--panel);border:1.5px solid var(--line)}
@@ -2587,6 +2591,38 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-rend th{background:var(--c-s1);font-weight:800}
 .pp-rend .ret{margin-top:20px;padding:12px 13px;border-radius:16px;background:var(--c-ysd);border:1.5px solid var(--c-aborder)}
 .pp-rend .ret h2{margin-top:0;color:var(--yellow-t)}
+/* v390 : SYNTHÈSE — lecture plein écran (juste le texte, une flèche retour, « Ajuster » en bas) et arrivées / sorties douces.
+   Les animations n'utilisent que opacity + translate/scale (propriétés individuelles) : elles ne touchent pas au `transform` qui centre la fenêtre sur grand écran. */
+@keyframes ppSynIn{from{opacity:0;translate:0 26px;scale:.985}to{opacity:1;translate:0 0;scale:1}}
+@keyframes ppSynOut{to{opacity:0;translate:0 34px;scale:.99}}
+@keyframes ppSynLigne{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#synth-overlay.pp-page{animation:ppSynIn .55s var(--ease-flow) backwards}
+#synth-overlay.pp-page.pp-pgout{animation:ppSynOut .38s var(--ease-flow) forwards!important}
+.pp-page.pp-pgsoft{z-index:61}   /* la nouvelle page se pose par-dessus l'ancienne, qui reste dessous le temps de l'arrivée */
+.pp-sh-lect{margin-bottom:2px}
+.pp-lect .pp-rend{background:none;border:0;border-radius:0;padding:6px 2px 0;font-size:16.5px;line-height:1.65}
+.pp-lect .pp-rend h1{font-size:30px;line-height:1.12;margin:4px 0 12px}
+.pp-lect .pp-rend h2{font-size:19px;margin:30px 0 10px}
+.pp-lect .pp-rend h3{font-size:16.5px;margin:20px 0 8px}
+.pp-lect .pp-rend p{margin:0 0 11px}
+.pp-lect .pp-rend li{margin:5px 0}
+.pp-lect .pp-rend table{font-size:14px}
+.pp-view.pp-lect>*{animation:none}
+.pp-lect .pp-rend>*{animation:ppSynLigne .65s var(--ease-flow) backwards}
+.pp-lect .pp-rend>*:nth-child(1){animation-delay:.16s}
+.pp-lect .pp-rend>*:nth-child(2){animation-delay:.21s}
+.pp-lect .pp-rend>*:nth-child(3){animation-delay:.26s}
+.pp-lect .pp-rend>*:nth-child(4){animation-delay:.31s}
+.pp-lect .pp-rend>*:nth-child(5){animation-delay:.36s}
+.pp-lect .pp-rend>*:nth-child(6){animation-delay:.41s}
+.pp-lect .pp-rend>*:nth-child(7){animation-delay:.46s}
+.pp-lect .pp-rend>*:nth-child(8){animation-delay:.51s}
+.pp-lect .pp-rend>*:nth-child(9){animation-delay:.56s}
+.pp-lect .pp-rend>*:nth-child(10){animation-delay:.61s}
+.pp-lect .pp-rend>*:nth-child(n+11){animation-delay:.66s}
+.pp-lect .pp-lectb{margin:34px 0 10px}
+.pp-view.pp-lect>.pp-lectb{animation:ppSynLigne .65s var(--ease-flow) .7s backwards}
+@media (prefers-reduced-motion:reduce){#synth-overlay.pp-page,.pp-lect .pp-rend>*,.pp-view.pp-lect>.pp-lectb{animation:none!important}}
 /* ============================================================
    ÉTAPE C — RÈGLE D'ANIMATION : « toujours un bouton qui s'enfonce »
    Un seul mécanisme pour tout ce qui se touche :
@@ -3280,8 +3316,12 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #pc-input:focus{border-color:var(--orange);box-shadow:0 0 0 3px color-mix(in srgb,var(--orange) 18%,transparent)}
 .pc-send{width:44px;height:40px;border:0;padding:0;border-radius:14px;background:var(--orange);color:#1a0d08;display:grid;place-items:center;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 0 var(--orange-d);transition:transform var(--t-out) var(--ease-press),box-shadow var(--t-out) var(--ease-press)}
 .pc-send:active,.pc-send.js-press{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 0 var(--orange-d);transition-duration:var(--t-in)}
-.pc-send.fly svg{animation:pcfly .5s var(--pce)}
-.pc-send.stop svg{animation:none}
+.pc-send .pc-ic{grid-area:1/1;display:grid;place-items:center;transition:opacity .2s ease,transform .4s var(--pce)}
+.pc-send:not(.stop) .pc-ic.up{transition-delay:.06s}
+.pc-send .pc-ic.sq{opacity:0;transform:scale(.3) rotate(-70deg)}
+.pc-send.stop .pc-ic.up{opacity:0;transform:translateY(-12px) scale(.4)}
+.pc-send.stop .pc-ic.sq{opacity:1;transform:none;transition-delay:.06s}
+.pc-send.fly:not(.stop) .pc-ic.up{animation:pcfly .5s var(--pce)}   /* v391 : l'envoi « vole » seulement si rien ne part ; sinon la flèche s'efface et le carré arrive en fondu */
 @keyframes pcfly{40%{transform:translateY(-14px);opacity:0}41%{transform:translateY(14px)}100%{transform:none;opacity:1}}
 /* v231 : barre de saisie de Prof — champ sur plusieurs lignes (2 visibles, puis défilement), photo + fichier qui se replient en un « + » pendant la frappe, menu Galerie / Fichier */
 .pc-tools{position:relative;flex:none;width:calc(var(--sq)*2 + 8px);height:var(--sq);transition:width .55s var(--pce)}
@@ -4077,6 +4117,8 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 :root:root:root[data-theme="light"] #fci .fi-us .fi-m{
   background:linear-gradient(180deg,#ff6a35,#f2501c);color:#fff;text-shadow:0 1px 0 rgba(120,30,0,.35);
 }
+:root:root:root[data-theme="light"] .pp-coach,
+:root:root:root[data-theme="light"] .pc-title i{ color:#1a0d08;text-shadow:none; }   /* v389 : l'étoile de Prof reste noire sur l'orange, même en mode clair */
 /* A2. Bouton « busy » (animation de brillance conservée) */
 :root:root:root[data-theme="light"] .pp-cta.busy{ background:linear-gradient(100deg,#f2501c 30%,#ff9a6e 50%,#f2501c 70%) 0 0/250% 100%;color:#fff; }
 /* A3. Intro : bouton « Retrouver mes cartes » en recherche (règle d'origine en !important) */
@@ -4895,7 +4937,7 @@ function ppImgIADessiner(){
   b.innerHTML = st.etat === 'ok'
     ? `<div class="pp-duo"><button class="pp-sec" type="button" onclick="ppImgIAChercher(true)">Régénérer</button><button class="pp-cta" type="button" onclick="ppImgIAValider()">Valider</button></div>`
     : (st.etat === 'cherche'
-      ? `<button class="pp-cta busy stop" type="button" onclick="gmAnnuler('imgia')">${gmStopLibelle('Arrêter')}</button>`   /* v378 : pendant la recherche, le bouton arrête */
+      ? `<button class="pp-cta busy stop" type="button" onclick="gmAnnuler('imgia')">Recherche…</button>`   /* v378 : pendant la recherche, un appui sur le bouton arrête ; v389 : il affiche seulement « Recherche… » */
       : `<button class="pp-cta" type="button" onclick="ppImgIAChercher(false)">Chercher l’image</button>`);
 }
 /* Transforme la description en mot-clé Wikimedia (2 à 5 mots). Sans clé Gemini ou en cas d'échec : '' (on cherche alors avec le texte tel quel). */
@@ -6200,7 +6242,7 @@ function pcEnsure(){
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
     <div class="pc-suggw pc-stg" style="--i:3"><button class="pp-back pc-arr l" id="pc-al" type="button" aria-label="Suggestions précédentes">${ppSvg('<path d="M15 6l-6 6 6 6"/>', 18)}</button><div id="pc-sugg"></div><button class="pp-back pc-arr r" id="pc-ar" type="button" aria-label="Suggestions suivantes">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</button></div>
-    <div id="pc-reply" style="display:none"></div><div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div></div>`;
+    <div id="pc-reply" style="display:none"></div><div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><span class="pc-ic up">${PC_SVG_ENVOI}</span><span class="pc-ic sq">${GM_SVG_STOP.replace(/width="18" height="18"/, 'width="20" height="20"')}</span></button></div></div></div>`;
   document.body.appendChild(l);
   ppCEScan(l);   /* v228 : le champ de saisie est un champ ppCE (pas de barre d'autofill) */
   const inp = pcEl('pc-input'), sendBtn = pcEl('pc-send');
@@ -8963,8 +9005,7 @@ const PC_SVG_ENVOI = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none
 /* v378 : tant que Prof répond, le bouton d'envoi devient un carré « arrêter » ; un appui annule la réponse (le message revient dans le champ, rien n'est perdu) */
 function pcBoutonStop(on){
   const b = pcEl('pc-send'); if(!b) return;
-  b.classList.toggle('stop', !!on); b.setAttribute('aria-label', on ? 'Arrêter la réponse' : 'Envoyer');
-  b.innerHTML = on ? GM_SVG_STOP.replace(/width="18" height="18"/, 'width="20" height="20"') : PC_SVG_ENVOI;
+  b.classList.remove('fly'); b.classList.toggle('stop', !!on); b.setAttribute('aria-label', on ? 'Arrêter la réponse' : 'Envoyer');   /* v391 : les deux icônes restent dans le bouton, la classe « stop » les échange en fondu (avant : changement d'un coup) */
 }
 /* v378 : attend une promesse mais s'arrête tout de suite si on annule (utilisé pour le routeur, dont l'appel a son propre minuteur) */
 function gmCourse(promesse, signal){
@@ -12713,9 +12754,18 @@ function renderZoneFichiersSupp(cible){
 }
 
 /* composeur unique : zone de texte + fichiers + boutons (prototype : .cmp) */
+/* v391 : ces écrans se redessinent en entier quand l'IA démarre / finit ; on retient l'état du bouton d'envoi pour jouer la transition flèche ↔ carré sur le bouton neuf (et la reprendre là où elle en était si l'écran est redessiné pendant ce temps). */
+const PP_SND_ETAT = {};
+function ppSndMorph(cle, etat){
+  const p = PP_SND_ETAT[cle] || (PP_SND_ETAT[cle] = { etat, t: 0 });
+  if(p.etat !== etat){ p.etat = etat; p.t = Date.now(); }
+  const dt = Date.now() - p.t;
+  return (p.t && dt < 380) ? { cls: ' pp-snd-chg', sty: ` style="--sd:-${dt}ms"` } : { cls: '', sty: '' };
+}
 function ppCmpBox(o){
+  const sndM = ppSndMorph(o.id || o.send || '', (o.busy && o.stop) ? 'stop' : 'up');
   return `<div class="pp-cmp"><textarea ${o.id ? `id="${o.id}"` : ''} class="${o.tall ? 'pp-tall' : ''}" spellcheck="false" autocomplete="off" oninput="${o.inp}" placeholder="${o.ph}">${o.val}</textarea><div id="${o.zone}">${o.zoneHtml}</div>
-  <div class="pp-cmpb"><button class="pp-ibt" aria-label="Appareil photo" onclick="ppCameraOuvrir('${o.cam}')">${PP_IC.cam}</button><button class="pp-ibt" aria-label="Galerie" onclick="document.getElementById('${o.gal}').click()">${PP_IC.photo}</button><button class="pp-ibt" aria-label="Document" onclick="document.getElementById('${o.doc}').click()">${PP_IC.pdf}</button>${o.extra || ''}${o.send ? ((o.busy && o.stop) ? `<button class="pp-snd stop" aria-label="Arrêter la réponse" onclick="${o.stop}">${GM_SVG_STOP}</button>` : `<button class="pp-snd ${o.busy ? 'busy' : ''}" aria-label="Envoyer" onclick="${o.send}">${o.busy ? '…' : PP_IC.up}</button>`) : ''}</div></div>`;
+  <div class="pp-cmpb"><button class="pp-ibt" aria-label="Appareil photo" onclick="ppCameraOuvrir('${o.cam}')">${PP_IC.cam}</button><button class="pp-ibt" aria-label="Galerie" onclick="document.getElementById('${o.gal}').click()">${PP_IC.photo}</button><button class="pp-ibt" aria-label="Document" onclick="document.getElementById('${o.doc}').click()">${PP_IC.pdf}</button>${o.extra || ''}${o.send ? ((o.busy && o.stop) ? `<button class="pp-snd stop${sndM.cls}"${sndM.sty} aria-label="Arrêter la réponse" onclick="${o.stop}">${GM_SVG_STOP}</button>` : `<button class="pp-snd ${o.busy ? 'busy' : ''}${sndM.cls}"${sndM.sty} aria-label="Envoyer" onclick="${o.send}">${o.busy ? '…' : PP_IC.up}</button>`) : ''}</div></div>`;
 }
 function ppDateChip(){
   const d = iaBrouillon.date;
@@ -12739,7 +12789,7 @@ function ppViewIA(){
   return `<h2 class="pp-t">Nouvelle carte</h2>${ppPillsHtml()}
   ${ppCmpBox({ id:'ia-cours-textarea', tall:1, ph:"Colle ton cours ou joins une photo de tes notes…", inp:'sauverBrouillonIA()', val:ppEsc(iaBrouillon.cours), zone:'ia-files-preview', zoneHtml:renderIaFilesPreview(), cam:'ia-camera-input', gal:'ia-gallery-input', doc:'ia-pdf-input', extra:ppDateChip() })}
   ${fileInputs}
-  <button class="pp-cta ${busy ? 'busy' : ''}${busy && (GM_ANNULS['gen'] || GM_ANNULS['img']) ? ' stop' : ''}" id="ia-generate-btn" style="margin:16px 0 0" onclick="genererCartesIA()">${busy ? (GM_ANNULS['gen'] ? gmStopLibelle('Génération en cours…') : GM_ANNULS['img'] ? gmStopLibelle('Arrêter la recherche d’images') : 'Génération en cours…') : PP_IC.spark.replace(/15/g, '20') + 'Générer les cartes'}</button>
+  <button class="pp-cta ${busy ? 'busy' : ''}${busy && (GM_ANNULS['gen'] || GM_ANNULS['img']) ? ' stop' : ''}" id="ia-generate-btn" style="margin:16px 0 0" onclick="genererCartesIA()">${busy ? (!GM_ANNULS['gen'] && GM_ANNULS['img'] ? 'Recherche des images…' : 'Génération en cours…') : PP_IC.spark.replace(/15/g, '20') + 'Générer les cartes'}</button>
   ${ppMsgBlock(true)}
   <p class="pp-note" style="margin:10px 0 0">Les cartes sont créées par l'IA, tu les relis avant de les ajouter.</p>
   <div class="pp-alt"><button class="pp-alt-syn" onclick="ouvrirSyntheseDepuisAjout()">${PP_IC.file}Synthèse</button><button class="pp-alt-main" onclick="ppSetMode('man')">${PP_IC.plus.replace(/22/g, '16')}À la main</button><button onclick="ppImportSheet()">${PP_IC.ul}Code d'ami</button></div>`;
@@ -13059,7 +13109,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v385';
+const PP_APP_VERSION = 'v391';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13798,7 +13848,7 @@ async function genererCartesIA(){
   if(cartes.some(c => c.rechercheImage)){
     iaGenerationEnCours = true;
     const ctlImg = gmAnnulNouveau('img');   /* v378 : on peut arrêter la recherche d'images ; les cartes sont gardées, sans images */
-    const bt = document.getElementById('ia-generate-btn'); if(bt){ bt.classList.add('busy', 'stop'); bt.innerHTML = gmStopLibelle('Arrêter la recherche d’images'); }
+    const bt = document.getElementById('ia-generate-btn'); if(bt){ bt.classList.add('busy', 'stop'); bt.textContent = 'Recherche des images…'; }
     try{ bilanImages = await ppImgChercherPourCartes(cartes, ctlImg.signal); }
     finally{ iaGenerationEnCours = false; gmAnnulFin('img', ctlImg); }
     if(bilanImages && bilanImages.annule){ bilanImages = null; setTimeout(() => ppToast('Recherche d’images arrêtée'), 300); }
@@ -13845,7 +13895,6 @@ function gmAnnulFin(cle, c){ if(GM_ANNULS[cle] === c) delete GM_ANNULS[cle]; }
 function gmAnnuler(cle){ const c = GM_ANNULS[cle]; if(c) c.abort(); return !!c; }
 function gmErrAnnule(err){ return !!(err && err.codeGemini === 'annule'); }
 const GM_SVG_STOP = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>';
-function gmStopLibelle(txt){ return GM_SVG_STOP + txt; }
 function gmAttente(ms, signal){ return new Promise(res => { const t = setTimeout(res, ms); if(signal) signal.addEventListener('abort', () => { clearTimeout(t); res(); }, { once: true }); }); }
 
 async function fetchGeminiTimeout(url, optionsBrutes){
@@ -14230,7 +14279,7 @@ function renderEditionIA(){
     const dis = e.enCours ? ' disabled' : '';
     ppSheet(`<div class="pp-grab"></div><h2 style="font-size:22px;line-height:1.15">Modifier « ${escapeHtml(e.matiere)} » avec l'IA</h2><p class="pp-hint">${e.base.length} carte${e.base.length > 1 ? 's' : ''} dans cette matière. Tu vérifies chaque changement avant de l'appliquer.</p>${msgHtml}
     <textarea class="pp-tall" id="ia-edit-consigne" oninput="iaEdit.consigne = this.value" placeholder="Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur…">${escapeHtml(e.consigne)}</textarea>
-    <div class="pp-duo"><button class="pp-sec" onclick="fermerEditionIA()"${dis}>Annuler</button><button class="pp-cta${e.enCours ? ' busy stop' : ''}" id="ia-edit-envoyer" onclick="envoyerEditionIA()">${e.enCours ? gmStopLibelle('Arrêter') : "Envoyer à l'IA"}</button></div>`);
+    <div class="pp-duo"><button class="pp-sec" onclick="fermerEditionIA()"${dis}>Annuler</button><button class="pp-cta${e.enCours ? ' busy stop' : ''}" id="ia-edit-envoyer" onclick="envoyerEditionIA()">${e.enCours ? 'Génération en cours…' : "Envoyer à l'IA"}</button></div>`);
     if(!e.enCours) ppFocusChamp('ia-edit-consigne');   /* v280 : le clavier se déploie tout de suite */
     return;
   }
@@ -14295,7 +14344,7 @@ async function envoyerEditionIA(){
 
   e.enCours = true; e.msg = null;
   const btn = document.getElementById('ia-edit-envoyer');
-  if(btn){ btn.classList.add('busy', 'stop'); btn.innerHTML = gmStopLibelle('Arrêter'); }   /* v378 */
+  if(btn){ btn.classList.add('busy', 'stop'); btn.textContent = 'Génération en cours…'; }   /* v378 ; v389 : texte seul */
   const actuelles = JSON.stringify(e.base.map((c, i) => ({ n: i + 1, question: c.question, reponse: c.reponse })));
   const parts = [{ text: `${GEMINI_SYSTEM_PROMPT}
 
@@ -14737,7 +14786,7 @@ function ouvrirSynthese(base){
   syntheseEtat = {
     ...base,
     consignes: '', modeleChoisi: '', markdown: '',
-    vue: 'edition', etape: 'consignes', enCours: false, msg: null, copie: false,
+    vue: 'edition', etape: 'consignes', enCours: false, msg: null, copie: false, lecture: false,
     fichiersSupp: [], suppMsg: null, texteSupp: '', images: base.images || [], curseur: null
   };
   renderSynthese();
@@ -14745,8 +14794,24 @@ function ouvrirSynthese(base){
 
 function fermerSynthese(){
   const retourListe = !!(syntheseEtat && syntheseEtat.depuisBiblio);   /* v371 : ouverte depuis « Synthèses » : on y revient */
-  syntheseEtat = null;
+  syntheseEtat = null; ppSynKey = '';
   const root = document.getElementById('modal-root');
+  const page = root && root.querySelector(':scope > .pp-page:not(.pp-pgout)');
+  /* v390 : sortie douce (fondu + glissade) ; sur téléphone, la liste « Synthèses » est posée dessous avant, donc elle apparaît au fil de la sortie */
+  if(page && !matchMedia('(prefers-reduced-motion:reduce)').matches){
+    const listeDessous = retourListe && !ppWide();
+    if(listeDessous) sbRendreListe(false, true);
+    page.style.pointerEvents = 'none';
+    page.classList.add('pp-pgout');
+    setTimeout(() => {
+      if(!page.isConnected) return;
+      if(listeDessous) page.remove();
+      else if(root && root.querySelector(':scope > .pp-page:not(.pp-pgout)') === null) root.innerHTML = '';
+      else page.remove();
+      if(retourListe && !listeDessous) sbRendreListe(false);
+    }, 400);
+    return;
+  }
   if(root) root.innerHTML = '';
   if(retourListe) setTimeout(() => sbRendreListe(false), 0);
 }
@@ -15036,7 +15101,7 @@ function sbRafraichir(){
 }
 function sbOuvrirListe(){ sbRendreListe(false); }
 function sbFermerListe(){ closeStreakModal(); }
-function sbRendreListe(same){
+function sbRendreListe(same, dessous){
   const liste = sbIndexLire().sort((a, b) => sbTs(b.modifieLe) - sbTs(a.modifieLe));
   const head = `<div class="pp-sh"><button class="pp-back" aria-label="Retour" onclick="sbFermerListe()">${PP_IC.back}</button><div><small>Parcourir</small><h2>Synthèses</h2></div></div>`;
   let corps;
@@ -15055,6 +15120,14 @@ function sbRendreListe(same){
       }).join('');
       return `<div class="sb-grp" style="--c:${col}"><div class="sb-gh"><i></i><span>${ppEsc(m || 'Sans matière')}</span><small>${parM[m].length}</small></div>${items}</div>`;
     }).join('');
+  }
+  if(dessous){   /* v390 : posée DERRIÈRE la page actuelle (la synthèse qui se ferme), sans animation d'arrivée */
+    const r0 = document.getElementById('modal-root');
+    if(r0 && r0.querySelector(':scope > .pp-page')){
+      r0.insertAdjacentHTML('afterbegin', `<div class="pp-page" id="sb-overlay" style="animation:none">${head}<div class="pp-sb pp-view sb-lib pp-still">${corps}</div></div>`);
+      ppPageSwipe(r0.querySelector('#sb-overlay'), closeStreakModal);
+      return;
+    }
   }
   const root = ppPageShow(head + `<div class="pp-sb pp-view sb-lib">${corps}</div>`, 'sb-overlay', same);
   if(root && same){ const p = root.querySelector('.pp-page'); if(p) p.style.animation = 'none'; const v = root.querySelector('.pp-view'); if(v) v.classList.add('pp-still'); }
@@ -15085,7 +15158,7 @@ function sbOuvrirCorps(e, c){
   const images = []; c.img.forEach(u => synImgPush(images, u));
   syntheseEtat = { source: 'biblio', matiere: e.matiere, cours: '', fichiers: [], images, consignes: '', modeleChoisi: '', markdown: c.md,
     vue: 'apercu', etape: 'resultat', enCours: false, msg: null, copie: false, fichiersSupp: [], suppMsg: null, texteSupp: '', curseur: null,
-    idSauve: e.id, sbSig: '', depuisBiblio: true };
+    idSauve: e.id, sbSig: '', depuisBiblio: true, lecture: true };   /* v390 : s'ouvre en lecture plein écran */
   syntheseEtat.sbSig = sbSignature(syntheseEtat);
   ppSynKey = '';
   renderSynthese();
@@ -15323,7 +15396,7 @@ async function genererSyntheseCorps(s){
   s.enCours = false;
   if(res.annule){ s.msg = null; renderSynthese(); return 'annule'; }   /* v378 : annulé : les précisions tapées restent */
   if(res.erreur){ s.msg = { type:'err', text: res.erreur }; renderSynthese(); return; }
-  s.markdown = res.texte; s.etape = 'resultat'; s.vue = 'edition'; s.msg = res.tronque ? { type:'err', text: MSG_SYNTHESE_TRONQUEE } : null; s.copie = false;
+  s.markdown = res.texte; s.etape = 'resultat'; s.vue = 'edition'; s.lecture = true; s.msg = res.tronque ? { type:'err', text: MSG_SYNTHESE_TRONQUEE } : null; s.copie = false;
   renderSynthese();
 }
 
@@ -18754,6 +18827,16 @@ function ppFormatAide(){
 function ppPageShow(html, id, still){
   const root = document.getElementById('modal-root');
   if(!root) return null;
+  /* v390 : la synthèse (téléphone) arrive PAR-DESSUS la page actuelle (liste « Synthèses », ou l'écran précédent de la synthèse) au lieu de la remplacer d'un coup :
+     fondu + petite glissade douce ; l'ancienne page reste dessous puis est retirée. La nouvelle est posée EN PREMIER dans le DOM (les getElementById / querySelector trouvent donc la nouvelle). */
+  const sous = (id === 'synth-overlay' && !still && !ppWide() && !matchMedia('(prefers-reduced-motion:reduce)').matches) ? root.querySelector(':scope > .pp-page:not(.pp-pgout)') : null;
+  if(sous){
+    sous.removeAttribute('id'); sous.style.pointerEvents = 'none';
+    root.insertAdjacentHTML('afterbegin', `<div class="pp-page pp-pgsoft" id="${id}">${html}</div>`);
+    setTimeout(() => { if(sous.isConnected) sous.remove(); }, 580);
+    ppPageSwipe(root.querySelector('#' + id), tryFermerSynthese);
+    return root;
+  }
   const ancien = root.querySelector('.pp-sb');
   const y = ancien ? ancien.scrollTop : 0;
   root.innerHTML = `<div class="pp-page" id="${id}">${html}</div>`;
@@ -18920,6 +19003,15 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v391', t:["Envoyer ↔ stop tout en douceur", "Send ↔ stop, smoothly"], p:[
+    ["Quand l'IA répond, la flèche d'envoi se transforme en carré « stop » (et revient ensuite) avec une petite animation, au lieu de changer d'un coup.", "When the AI answers, the send arrow now turns into the “stop” square (and back again) with a small animation, instead of switching all at once."],
+    ["Dans la présentation de Prof, « Planning » passe avant « Matières ».", "In the Prof introduction, “Planning” now comes before “Subjects”."]] },
+  { v:'v390', t:["Ta synthèse, comme un vrai document", "Your summary, like a real document"], p:[
+    ["Quand tu ouvres une synthèse (ou qu'elle vient d'être créée), elle s'affiche en plein écran, toute propre : juste le texte, une flèche retour et un bouton « Ajuster » tout en bas, qui t'amène au menu pour la modifier. Retour depuis ce menu te ramène à la synthèse.", "When you open a summary (or one has just been made), it shows full screen and clean: just the text, a back arrow and an “Adjust” button at the bottom, which takes you to the menu to edit it. Going back from that menu brings you back to the summary."],
+    ["L'ouverture et la fermeture d'une synthèse glissent maintenant en douceur, et le texte apparaît ligne après ligne.", "Opening and closing a summary now glide smoothly, and the text appears line by line."]] },
+  { v:'v389', t:["Des boutons plus propres", "Cleaner buttons"], p:[
+    ["Pendant que l'IA crée tes cartes, ta synthèse ou tes modifications, le bouton affiche seulement « Génération en cours… » avec sa bande lumineuse : plus de carré ni de mot « Arrêter ». La synthèse a maintenant la même animation que les cartes.", "While the AI makes your cards, summary or edits, the button just shows “Generating…” with its light band: no more square or “Stop” word. The summary now has the same animation as the cards."],
+    ["L'étoile de Prof reste noire sur son fond orange, même en mode clair.", "Prof's star stays black on its orange background, even in light mode."]] },
   { v:'v385', t:["Du quota en plus pour Prof", "More quota for Prof"], p:[
     ["La détection de la matière et la recherche d'image utilisent maintenant un autre modèle léger : Prof garde plus de réponses gratuites dans la journée.", "Subject detection and image search now use another light model: Prof keeps more free answers during the day."]] },
   { v:'v384', t:["Les IA changent de modèle", "The AIs switch models"], p:[
@@ -19214,12 +19306,13 @@ function ppSynMsg(s){ return s.msg ? `<p class="pp-warn ${s.msg.type === 'ok' ? 
 function renderSynthese(){
   const s = syntheseEtat;
   if(!s) return;
-  const cle = s.etape + '/' + s.vue;
+  const cons = s.etape === 'consignes';
+  const lect = !cons && !!s.lecture && !!(s.markdown || '').trim();   /* v390 : lecture plein écran */
+  const cle = s.etape + '/' + s.vue + (lect ? '/l' : '');
   const same = ppSynKey === cle && !!document.getElementById('synth-overlay');
   ppSynKey = cle;
-  const cons = s.etape === 'consignes';
-  const head = `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="tryFermerSynthese()">${PP_IC.back}</button><div><small>Synthèse${s.matiere ? ' · ' + ppEsc(s.matiere) : ''}</small><h2>${cons ? 'Précisions' : 'Ta synthèse'}</h2></div></div>`;
-  const root = ppPageShow(head + (cons ? renderSyntheseConsignes() : renderSyntheseResultat()), 'synth-overlay', same);
+  const head = lect ? `<div class="pp-sh pp-sh-lect"><button class="pp-back" aria-label="Retour" onclick="tryFermerSynthese()">${PP_IC.back}</button></div>` : `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="tryFermerSynthese()">${PP_IC.back}</button><div><small>Synthèse${s.matiere ? ' · ' + ppEsc(s.matiere) : ''}</small><h2>${cons ? 'Précisions' : 'Ta synthèse'}</h2></div></div>`;
+  const root = ppPageShow(head + (cons ? renderSyntheseConsignes() : lect ? renderSyntheseLecture() : renderSyntheseResultat()), 'synth-overlay', same);
   if(root && same){ const p = root.querySelector('.pp-page'); if(p) p.style.animation = 'none'; const v = root.querySelector('.pp-view'); if(v) v.classList.add('pp-still'); }
 }
 function renderSyntheseConsignes(){
@@ -19235,7 +19328,7 @@ function renderSyntheseConsignes(){
   <div class="pp-numh"><b>${s.source === 'parcourir' ? '2' : '1'}</b>Précisions pour l'IA <span>(facultatif)</span></div>
   <textarea class="pp-txa pp-tall" id="synth-consignes" oninput="syntheseEtat.consignes=this.value" placeholder="Ex. Fais un tableau pour comparer les régimes, garde les dates en gras.">${ppEsc(s.consignes)}</textarea>
   <button class="pp-cta pp-ghost" style="margin:0 0 10px" onclick="enregistrerModeleSynthese()">Enregistrer comme modèle</button>
-  <button class="pp-cta ${s.enCours ? 'busy' : ''}${s.enCours && GM_ANNULS['synth'] ? ' stop' : ''}" id="synth-generer-btn" style="margin:0" onclick="genererSynthese()" ${s.enCours && !GM_ANNULS['synth'] ? 'disabled' : ''}>${s.enCours ? (GM_ANNULS['synth'] ? gmStopLibelle('Génération en cours…') : 'Génération en cours…') : 'Générer la synthèse'}</button></div>`;
+  <button class="pp-cta ${s.enCours ? 'busy' : ''}${s.enCours && GM_ANNULS['synth'] ? ' stop' : ''}" id="synth-generer-btn" style="margin:0" onclick="genererSynthese()" ${s.enCours && !GM_ANNULS['synth'] ? 'disabled' : ''}>${s.enCours ? 'Génération en cours…' : 'Générer la synthèse'}</button></div>`;
 }
 /* même rendu que le prototype : numéro en pastille, date à droite, bloc « À retenir » */
 function ppSynRendu(md){
@@ -19246,6 +19339,17 @@ function ppSynRendu(md){
   });
   h = h.replace(/<h2>(À retenir[^<]*)<\/h2>\s*(<ul>[\s\S]*?<\/ul>)/i, '<div class="ret"><h2>$1</h2>$2</div>');
   return h;
+}
+/* v390 : LECTURE — la synthèse seule, plein écran, comme un vrai document : une flèche retour, le texte, et « Ajuster » tout en bas (ramène au menu pour modifier). */
+function renderSyntheseLecture(){
+  const s = syntheseEtat;
+  const err = (s.msg && s.msg.type === 'err') ? ppSynMsg(s) : '';
+  return `<div class="pp-sb pp-view pp-lect">${err}<div class="pp-rend">${ppSynRendu(s.markdown)}</div><button type="button" class="pp-cta pp-lectb" onclick="synLectAjuster()">${ppSvg('<path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/>', 20)}Ajuster</button></div>`;
+}
+function synLectAjuster(){
+  const s = syntheseEtat; if(!s || s.enCours) return;
+  s.lecture = false; s.msg = null;
+  renderSynthese();
 }
 function renderSyntheseResultat(){
   const s = syntheseEtat;
@@ -19260,7 +19364,7 @@ function renderSyntheseResultat(){
   <div class="pp-imgadd"><button type="button" class="pp-sec" onclick="synImgMenu()">${PP_IMG_IC}Ajouter une image</button><input type="file" id="synth-img-in" accept="image/*" style="display:none" onchange="synImgChoisie(event)">${ap ? '' : '<p class="pp-hint" style="margin:6px 2px 0">Elle se place à l\'endroit du curseur. Pour la retirer, efface sa ligne « ![](img:N) ».</p>'}</div>
   ${sbBoutonHtml(s)}<div class="pp-sy3"><button class="pp-sec" onclick="copierSynthese()">${s.copie ? 'Copié ✓' : 'Copier'}</button><button class="pp-sec" onclick="ppSynExport('docx')">Word (.docx)</button><button class="pp-sec" onclick="ppSynExport('pdf')">PDF</button></div>
   <hr class="pp-hr1">${composer}${inputs}
-  <hr class="pp-hr1"><div class="pp-duo"><button class="pp-sec" onclick="retourConsignesSynthese()">Modifier les précisions</button><button class="pp-sec" onclick="tryFermerSynthese()">Fermer</button></div></div>`;
+  <hr class="pp-hr1"><div class="pp-duo"><button class="pp-sec" onclick="retourConsignesSynthese()">Modifier les précisions</button><button class="pp-sec" onclick="tryFermerSynthese(true)">Fermer</button></div></div>`;
 }
 /* même règle que l'aperçu des cartes : un fichier ou un long texte = nouveau contenu ; sinon = consigne d'ajustement */
 async function ppSynSend(){
@@ -19280,12 +19384,17 @@ async function ppSynSend(){
     if(syntheseEtat === s && !(s.msg && s.msg.type === 'err')){ s.texteSupp = ''; renderSynthese(); ppToast('Synthèse ajustée'); }
   }
 }
-function tryFermerSynthese(){
+function tryFermerSynthese(direct){
   const s = syntheseEtat;
   if(s && s.enCours) return; // ne pas perdre une génération en route
   /* v182 : depuis « Modifier les précisions », la flèche retour ramène à « Ta synthèse » (et ne ferme plus tout) */
   if(s && s.etape === 'consignes' && (s.markdown || '').trim()){ s.etape = 'resultat'; s.msg = null; renderSynthese(); return; }
   if(s && s.etape === 'resultat' && s.markdown.trim()){
+    /* v390 : depuis le menu « Ajuster », Retour (flèche, geste, Échap) ramène à la lecture plein écran ; « Fermer » (direct) ferme vraiment */
+    if(!s.lecture && direct !== true){
+      const zone = document.getElementById('synth-markdown'); if(zone) s.markdown = zone.value;
+      s.lecture = true; s.msg = null; renderSynthese(); return;
+    }
     if(!sbEstModifie(s)){ fermerSynthese(); return; }   /* v371 : déjà enregistrée et inchangée : on ferme sans question */
     sbFermerSheet(s);
     return;
@@ -19575,6 +19684,7 @@ function ppProfondeur(){
   if(fe && fe.classList.contains('on')){ d++; if(ppFeuilleEnfant(fe)) d++; }
   try{ if(pcOuvert){ d++; if(pcEl('pch-back') || pcEl('pcn-back') || pcMenuMode || pcPlusOn) d++; } }catch(e){}
   if(!ppModalVide()) d++;
+  try{ const sy = syntheseEtat; if(sy && sy.etape === 'resultat' && !sy.lecture && (sy.markdown || '').trim() && document.getElementById('synth-overlay')) d++; }catch(e){}   /* v390 : menu « Ajuster » → Retour = lecture plein écran */
   const ses = document.getElementById('pp-ses');
   if(ses && getComputedStyle(ses).display !== 'none') d++;
   if(ppNavSousEcranAjout()) d++;
@@ -19808,6 +19918,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       try{
         var y2 = { s: sy.source, e: sy.etape === 'resultat' ? 'resultat' : 'consignes', v: sy.vue === 'apercu' ? 'apercu' : 'edition' };
         if(sy.matiere) y2.m = sy.matiere;
+        if(sy.lecture) y2.l = 1;   /* v390 */
         if(sy.idSauve) y2.id = sy.idSauve;   /* v371 : synthèse déjà enregistrée */
         if(sy.consignes) y2.k = sy.consignes;
         if(sy.modeleChoisi) y2.mo = sy.modeleChoisi;
@@ -19973,6 +20084,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
           if(Y.s !== 'biblio' && typeof Y.id === 'string' && SB_ID_RE.test(Y.id)){ var cs = sbCorpsLire(Y.id); if(cs){ sy2.idSauve = Y.id; cs.img.forEach(function(u){ synImgPush(sy2.images, u); }); } }   /* v371 : retrouve l'enregistrement (et ses images) */
           sy2.vue = Y.v === 'apercu' ? 'apercu' : 'edition';
           sy2.etape = (Y.e === 'resultat' && sy2.markdown.trim()) ? 'resultat' : 'consignes';
+          sy2.lecture = sy2.etape === 'resultat' && !!Y.l;   /* v390 */
           renderSynthese();
           parts.push('synthèse (' + sy2.etape + ')');
         }else parts.push('synthèse non rouverte');
@@ -20236,8 +20348,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     pla:'Planning',h2:'Un contrôle ? Donne la date.',d5:'Dans 5 j',d10:'Dans 10 j',d14:'Dans 2 sem',lgR:'Révisions',lgB:'Juste avant le contrôle',
     syn:'Synchro',h3:'Même progression partout.',s3:'Téléphone, Chromebook : entre le même code et tout suit.',where:'Réglages › Synchronisation',
     pr:'Prof · IA',h6:'Ton prof perso.',s6:"Il sait où tu bloques, t'interroge dans le chat, et agit sur tes cartes, matières et planning.",ap:'Appliquer',ok:'Appliqué',
-    ch:['Matières','Planning','Difficultés'],
-    sc:[[["Crée Géographie avec les capitales, une image par carte","Voilà, je m'en suis occupé. Jette un œil !",1],["Fusionne « Géo » dedans et passe Rome en Histoire","Hop, tout est rangé.",1]],[["Étale mes révisions d'ici vendredi","Plus de gros pic avant vendredi.",1],["Pause mercredi","Repos mérité, mercredi est libre.",1]],[["Où est-ce que je bloque ?","Ottawa, Brasilia, Canberra. Je t'interroge ?",0],["Oui","Capitale de l'Australie ?",0],["Sydney ?","Non, Canberra. Suivante : capitale du Brésil ?",0]]],
+    ch:['Planning','Matières','Difficultés'],
+    sc:[[["Étale mes révisions d'ici vendredi","Plus de gros pic avant vendredi.",1],["Pause mercredi","Repos mérité, mercredi est libre.",1]],[["Crée Géographie avec les capitales, une image par carte","Voilà, je m'en suis occupé. Jette un œil !",1],["Fusionne « Géo » dedans et passe Rome en Histoire","Hop, tout est rangé.",1]],[["Où est-ce que je bloque ?","Ottawa, Brasilia, Canberra. Je t'interroge ?",0],["Oui","Capitale de l'Australie ?",0],["Sydney ?","Non, Canberra. Suivante : capitale du Brésil ?",0]]],
     ia:'IA · gratuit',h4:"Tes cartes générées par l'IA, à partir de ton cours",s4:"Donne ton cours à l'IA, elle crée tes cartes et fait marcher ton IA perso (Prof).",yes:"Brancher l'IA à l'app (2 minutes)",later:'Pas maintenant',
     steps:'3 étapes',st1:'Ouvre Google AI Studio',st1s:'<b>Connecte-toi</b> avec Google',open:'Ouvrir Google AI Studio',
     st2:'Touche «\u00a0Créer\u00a0une\u00a0clé\u00a0API\u00a0»',st2s:'<b>Copie</b> la première ligne «\u00a0<b>Clé\u00a0API</b>\u00a0»<i>Puis reviens ici.</i>',how:'Comment faire ?',hide:'Masquer l\u2019aide',c1:'Touche ce bouton',c2:'Puis copie ta clé',ph:'Colle la clé API ici',paste:'Coller',
@@ -20256,8 +20368,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     pla:'Planning',h2:'A test coming up? Set the date.',d5:'In 5 d',d10:'In 10 d',d14:'In 2 wk',lgR:'Reviews',lgB:'Right before the test',
     syn:'Sync',h3:'Same progress everywhere.',s3:'Phone, Chromebook: enter the same code and everything follows.',where:'Settings › Sync',
     pr:'Prof · AI',h6:'Your personal tutor.',s6:'It knows where you struggle, quizzes you in the chat, and acts on your cards, subjects and planning.',ap:'Apply',ok:'Applied',
-    ch:['Subjects','Planning','Struggles'],
-    sc:[[['Create Geography with the capitals, one image per card','Done, I took care of it. Take a look!',1],['Merge \u201cGeo\u201d into it and move Rome to History','Hop, everything\u2019s sorted.',1]],[['Spread my reviews until Friday','No more big spike before Friday.',1],['Rest day Wednesday','Well-earned rest, Wednesday\u2019s free.',1]],[['Where do I struggle?','Ottawa, Brasilia, Canberra. Quiz you on them?',0],['Yes','Capital of Australia?',0],['Sydney?','No, Canberra. Next: capital of Brazil?',0]]],
+    ch:['Planning','Subjects','Struggles'],
+    sc:[[['Spread my reviews until Friday','No more big spike before Friday.',1],['Rest day Wednesday','Well-earned rest, Wednesday\u2019s free.',1]],[['Create Geography with the capitals, one image per card','Done, I took care of it. Take a look!',1],['Merge \u201cGeo\u201d into it and move Rome to History','Hop, everything\u2019s sorted.',1]],[['Where do I struggle?','Ottawa, Brasilia, Canberra. Quiz you on them?',0],['Yes','Capital of Australia?',0],['Sydney?','No, Canberra. Next: capital of Brazil?',0]]],
     ia:'AI · free',h4:'Your cards, generated by AI from your course',s4:'Give your course to the AI: it creates your cards and powers your personal AI (Prof).',yes:'Connect the AI to the app (2 minutes)',later:'Not now',
     steps:'3 steps',st1:'Open Google AI Studio',st1s:'<b>Sign in</b> with Google',open:'Open Google AI Studio',
     st2:'Tap \u201cCreate\u00a0API\u00a0key\u201d',st2s:'<b>Copy</b> the first line under “<b>API\u00a0key</b>”<i>Then come back here.</i>',how:'How to?',hide:'Hide help',c1:'Tap this button',c2:'Then copy your key',ph:'Paste the API key here',paste:'Paste',
