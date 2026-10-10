@@ -3782,6 +3782,24 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #fci .fi-stp small b{color:var(--ink);font-weight:800}
 #fci .fi-stp small.fi-cp{margin-top:4px;font-size:17px;line-height:1.3;color:var(--ink);font-weight:500}
 #fci .fi-stp small.fi-cp i{display:block;margin-top:3px;font-style:normal;font-size:13px;font-weight:500;color:var(--muted)}
+/* v359 : le bouton du bas annonce que la clé est prête (coche qui se dessine, rebond, onde verte, éclat) */
+#fci .fi-cta{position:relative}
+#fci .fi-cta .fi-nl{display:inline-block}
+#fci .fi-cta.fi-unr .fi-nl{animation:fi-nlin .35s var(--sp) both}
+#fci .fi-cta.fi-rdy{animation:fi-btpop .75s var(--sp)}
+#fci .fi-cta.fi-rdy .fi-nl{animation:fi-nlin .55s .1s var(--sp) both}
+#fci .fi-cta .fi-chk{flex:none}
+#fci .fi-cta.fi-rdy .fi-chk{animation:fi-chk .45s .05s var(--sp) both}
+#fci .fi-cta.fi-rdy .fi-chk path{stroke-dasharray:24;animation:fi-draw .45s .12s ease-out both}
+#fci .fi-cta.fi-rdy::after{content:"";position:absolute;inset:0;border-radius:inherit;border:3px solid var(--green);pointer-events:none;animation:fi-btring .9s ease-out both}
+#fci .fi-cta.fi-rdy::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%) 130% 0/250% 100% no-repeat;animation:fi-shine .8s .15s ease-out both}
+@keyframes fi-nlin{from{opacity:0;transform:translateY(14px)}}
+@keyframes fi-btpop{0%{transform:scale(.95)}40%{transform:scale(1.07)}100%{transform:none}}
+@keyframes fi-chk{from{opacity:0;transform:scale(.2) rotate(-40deg)}}
+@keyframes fi-draw{from{stroke-dashoffset:24}to{stroke-dashoffset:0}}
+@keyframes fi-btring{from{opacity:.95;transform:scale(1)}to{opacity:0;transform:scale(1.12,1.7)}}
+@keyframes fi-shine{from{background-position:130% 0}to{background-position:-30% 0}}
+@media (prefers-reduced-motion:reduce){#fci .fi-cta.fi-rdy,#fci .fi-cta.fi-rdy::before,#fci .fi-cta.fi-rdy::after,#fci .fi-cta .fi-nl,#fci .fi-cta .fi-chk,#fci .fi-cta .fi-chk path{animation:none!important}}
 /* v359 : écran IA, 1er état — les deux boutons vont dans la barre du bas (« Pas maintenant » au-dessus, bouton principal tout en bas) */
 #fci .fi-foot.fi-rev{flex-direction:column-reverse}
 #fci .fi-stp.fi-op{border-color:var(--yellow)}
@@ -19229,7 +19247,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   var S={
    fr:{chb:'Chromebook scolaire ?',chb1:'Ouvre « Google AI Studio API Keys » sur ton téléphone, copie la clé et envoie-la-toi.',chb2:'Ou fais la manip sur ton téléphone avec la synchro activée : la clé arrive toute seule ici.',chbo:'ou',
     have:'Déjà configuré sur un autre appareil ?',ovS:'Synchro',ovH:'Retrouve ta progression.',ovP:'Entre le code de synchro de ton autre appareil.',ovPh:'Ton code de synchro',ovGo:'Retrouver mes cartes',ovBusy:'Recherche…',ovBad:'Code invalide : 10 caractères minimum, lettres sans accent, chiffres, - et _.',ovE404:'Aucun appareil n’utilise ce code. Vérifie chaque caractère : une seule faute suffit.',ovNet:'Pas de connexion. Réessaie.',ovSrv:'Serveur indisponible. Réessaie dans un instant.',ovFull:'Stockage plein : code non enregistré.',ovN:function(n){ return n+(n===1?' carte retrouvée':' cartes retrouvées'); },
-    lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Continuer',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
+    lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Terminé !',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
     wel:'Bienvenue',h0:'Retiens tout, sans y penser.',s0:"Quelques cartes par jour. L'app s'occupe du reste.",
     mas:'Maîtrise',h1:'Chaque carte gagne en maîtrise.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
     f1:'Demain',f2:'Dans 3 jours',f3:'Dans 7 jours',qs:["Capitale de l'Australie ?",'7 × 8 ?',"Capitale du Canada ?","Symbole de l'or ?"],backIn:'Revient dans ',d:' j',noNeed:"Plus besoin d\u2019y penser",mastered:'Maîtrisée',
@@ -19249,7 +19267,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
           gen:[['Ouvre le menu du navigateur','Les petits points ou les trois traits.'],['Touche « Installer l’application »','Ou « Ajouter à l’écran d’accueil ».'],['Confirme','Memoria apparaît avec tes autres apps.']]}}},
    en:{chb:'School Chromebook?',chb1:'Open “Google AI Studio API Keys” on your phone, copy the key and send it to yourself.',chb2:'Or do it on your phone with sync turned on: the key shows up here by itself.',chbo:'or',
     have:'Already set up on another device?',ovS:'Sync',ovH:'Get your progress back.',ovP:'Enter the sync code from your other device.',ovPh:'Your sync code',ovGo:'Get my cards back',ovBusy:'Looking…',ovBad:'Invalid code: 10 characters minimum, letters without accents, digits, - and _.',ovE404:'No device uses this code. Check every character: a single typo is enough.',ovNet:'No connection. Try again.',ovSrv:'Server unavailable. Try again in a moment.',ovFull:'Storage full: code not saved.',ovN:function(n){ return n+(n===1?' card found':' cards found'); },
-    lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Continue',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
+    lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Done!',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
     wel:'Welcome',h0:'Remember everything, effortlessly.',s0:'A few cards a day. The app handles the rest.',
     mas:'Mastery',h1:'Every card builds mastery.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
     f1:'Tomorrow',f2:'In 3 days',f3:'In 7 days',qs:['Capital of Australia?','7 × 8?','Capital of Canada?','Symbol for gold?'],backIn:'Back in ',d:' d',noNeed:'No need to think about it',mastered:'Mastered',
@@ -19373,7 +19391,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       +'<figure class="fi-shot"><span class="fi-cap">'+T.c1+'</span><img alt="" src="'+IMG1+'"><i class="fi-ringo" style="--l:4.7%;--t:16.0%;--w:87.5%;--h:68.0%"></i></figure>'
       +'<figure class="fi-shot"><span class="fi-cap">'+T.c2+'</span><img alt="" src="'+IMG2+'"><i class="fi-ringo fi-c" style="--l:93.9%;--t:69.3%"></i></figure>'
       +'</div></div></div>'
-      +'<div class="fi-stp" data-i="s3"><span class="fi-n">3</span><input class="fi-key" data-i="ky" placeholder="'+T.ph+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"><button class="fi-ghost fi-bt" data-i="pst" style="width:auto;height:50px">'+T.paste+'</button></div>'
+      +'<div class="fi-stp" data-i="s3"><span class="fi-n">3</span><input class="fi-key" data-i="ky" placeholder="'+T.ph+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"></div>'
       +(crOS()?'<div class="fi-chw"><button type="button" class="fi-chb" data-i="cbh" aria-expanded="false"><i class="fi-chi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 20h20"/></svg></i><b>'+T.chb+'</b><span class="fi-chc"><svg class="fi-chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></span></button>'
       +'<div class="fi-chd" data-i="cbb"><div><div class="fi-chx"><p class="fi-c1">'+T.chb1+'</p><span class="fi-cor"><s></s>'+T.chbo+'<s></s></span><p class="fi-c2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4.5L20 15"/><path d="M20 20v-5h-5"/></svg><span>'+T.chb2+'</span></p></div></div></div></div>':'')+'</div></section>'
     +(INST?htmlInst():'')
@@ -19389,13 +19407,14 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     +'<div class="fi-ovs" data-i="ovs" role="dialog" aria-modal="true" aria-labelledby="fi-ovh">'
     +'<button type="button" class="fi-ovx fi-bt" data-i="ovx" aria-label="'+T.back+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
     +'<span class="fi-stk fi-o1">'+T.ovS+'</span><h2 id="fi-ovh" class="fi-o2">'+T.ovH+'</h2><p class="fi-ovp fi-o3">'+T.ovP+'</p>'
-    +'<div class="fi-ovf fi-o4" data-i="ovf"><input class="fi-key" data-i="ovk" placeholder="'+T.ovPh+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" data-lpignore="true" data-1p-ignore maxlength="100"><button type="button" class="fi-ghost fi-bt" data-i="ovpst" style="width:auto;height:50px">'+T.paste+'</button></div>'
+    +'<div class="fi-ovf fi-o4" data-i="ovf"><input class="fi-key" data-i="ovk" placeholder="'+T.ovPh+'" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" data-lpignore="true" data-1p-ignore maxlength="100"></div>'
     +'<div class="fi-ove" data-i="ove" role="alert"><div><p></p></div></div>'
     +'<div class="fi-where fi-o5"><i>\u2699</i>'+T.where+'</div>'
     +'<button type="button" class="fi-cta fi-bt fi-ovg fi-o6" data-i="ovg" disabled><span class="fi-ovl">'+T.ovGo+'</span><i class="fi-spin" aria-hidden="true"></i><svg class="fi-okc" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>'
     +'</div></div>';
   }
 
+  var nxT=0;
   function ui(){
     var pills=q('[data-i=pl]').children, k;
     for(k=0;k<pills.length;k++) pills[k].className = k===i?'fi-on':k<i?'fi-ok':'';
@@ -19405,8 +19424,19 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var ia0=(i===5 && !ia);   /* v359 : 1er état de l'écran IA = boutons dans la barre du bas */
     q('[data-i=ft]').classList.remove('fi-hide'); q('[data-i=ft]').classList.toggle('fi-rev',ia0);
     var lbl=[T.lets,T.next,T.next,T.next,T.next,T.cont], nonMnt=(INST && i===6);   /* v358 : sur l'écran « Installer l'app », le bouton du bas devient discret (« Pas maintenant ») */
-    nx.textContent = ia0 ? T.yes : (i===5 && ia) ? (keyOk?T.cont:T.contNo) : nonMnt ? T.ins.now : (i===N-1 ? T.fin : lbl[i]);
-    nx.className = nonMnt ? 'fi-ghost fi-bt' : 'fi-cta fi-bt'; nx.style.height = nonMnt ? '56px' : '';
+    var lab = ia0 ? T.yes : (i===5 && ia) ? (keyOk?T.cont:T.contNo) : nonMnt ? T.ins.now : (i===N-1 ? T.fin : lbl[i]);
+    nx.classList.toggle('fi-ghost',nonMnt); nx.classList.toggle('fi-cta',!nonMnt); nx.classList.add('fi-bt'); nx.style.height = nonMnt ? '56px' : '';
+    if(nx.getAttribute('data-l')!==lab){   /* v359 : le libellé change → il glisse ; « Continuer sans clé » → « Continuer » (clé collée) : coche, rebond, onde verte et éclat, pour que ça se voie */
+      var prev=nx.getAttribute('data-l'), ready=(i===5 && ia && keyOk);
+      nx.setAttribute('data-l',lab); nx.textContent='';
+      if(ready) nx.insertAdjacentHTML('beforeend','<svg class="fi-chk" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>');
+      var sp=document.createElement('span'); sp.className='fi-nl'; sp.textContent=lab; nx.appendChild(sp);
+      if(prev!==null && i===5 && ia){
+        nx.classList.remove('fi-rdy','fi-unr'); void nx.offsetWidth; nx.classList.add(ready?'fi-rdy':'fi-unr');
+        if(ready) vib([10,40,16]);
+        clearTimeout(nxT); nxT=setTimeout(function(){ nx.classList.remove('fi-rdy','fi-unr'); },1100);
+      }
+    }
     var hm=q('[data-i=hm]'); hm.style.display=ia0?'':'none';   /* v295 : un seul bouton à la fin ; v359 : « Pas maintenant » sur l'écran IA */
     if(ia0) hm.textContent=T.later;
     nx.disabled=false;
@@ -19834,10 +19864,6 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     var k=q('[data-i=ovk]');
     k.oninput=function(){ if(ov.querySelector('.fi-ove.fi-show')) ovErr(''); ovMaj(); };
     q('[data-i=ovg]').onclick=ovSubmit;
-    q('[data-i=ovpst]').onclick=function(){
-      var done=function(t){ k.value=(t||'').trim(); k.oninput(); k.focus(); };
-      try{ navigator.clipboard.readText().then(done,function(){ k.focus(); }); }catch(e){ k.focus(); }
-    };
   }
 
   function ouvrir(etat){
@@ -19886,10 +19912,6 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     function voir(){ if(document.activeElement===ky && !closing) q('[data-i=s3]').scrollIntoView({block:'end',behavior:'smooth'}); }
     ky.addEventListener('focus',function(){ setTimeout(voir,120); setTimeout(voir,450); });
     window.addEventListener('resize',voir);
-    q('[data-i=pst]').onclick=function(){
-      var done=function(t){ ky.value=(t||'').trim(); ky.oninput(); };
-      try{ navigator.clipboard.readText().then(done,function(){ ky.focus(); }); }catch(e){ ky.focus(); }
-    };
     ovInit();
     /* clavier (capturé : les raccourcis de l'app, ex. Espace, ne doivent pas partir derrière l'intro) */
     onKey=function(e){
