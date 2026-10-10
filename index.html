@@ -4169,6 +4169,8 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 /* v372 : mode clair, grand chiffre « à réviser » : chiffre orange, ombre indigo (l'inverse d'avant) */
 :root:root:root[data-theme="light"] .pp-big{color:var(--orange);text-shadow:6px 6px 0 var(--cream)}
 :root:root:root[data-theme="light"] .pp-hero .pp-big{color:var(--orange);text-shadow:6px 6px 0 var(--cream)}
+/* v375 : l'accueil (.pp-home .pp-hero .pp-big, règle v146 plus haut) gardait une ombre orange : même spécificité ici, placée après, pour que l'ombre indigo (--cream en clair) passe vraiment */
+:root:root:root[data-theme="light"] .pp-home .pp-hero .pp-big{color:var(--orange);text-shadow:6px 6px 0 var(--cream)}
 </style></head>
 <body>
 <div id="boot-splash" aria-hidden="true">
@@ -7571,18 +7573,55 @@ function pcSchema(actionsFirst, forcer){
     propertyOrdering: actionsFirst ? ['actions', 'suite', 'reponse', 'hors_cartes', 'ajoutable', 'image', 'titre', 'matieres_proposees'] : ['reponse', 'hors_cartes', 'ajoutable', 'image', 'titre', 'suite', 'actions', 'matieres_proposees']
   };
 }
+/* v376 : ÉCHELLE DE MODÈLES PARTAGÉE (Prof, cartes, synthèses). Le quota gratuit de Google se compte PAR MODÈLE : chaque fonction a donc une liste de modèles « principaux »
+   essayés dans l'ordre ; quand l'un répond 429 (quota épuisé) il est mis en pause (1 minute, ou 30 minutes si Google parle d'un quota « par jour ») et l'appli passe au suivant, puis au
+   modèle de secours (flash-lite) en dernier. Une erreur 400 / 404 (réglage ou modèle refusé) descend d'un cran ; si un cran suivant marche, les crans refusés sont oubliés jusqu'au
+   rechargement. Le dernier cran est toujours tenté. `appel(cran)` renvoie la réponse fetch ; `etat` = { rates: Set, pauses: {modèle: fin de pause} } propre à chaque fonction. */
+const GM_PAUSE_QUOTA_MS = 60000, GM_PAUSE_QUOTA_JOUR_MS = 30 * 60000;
+function gmEchelle(principaux, refl, secours, reflSecours, schema){
+  const e = [];
+  principaux.forEach(m => { e.push({ m, t: refl, s: !!schema }); e.push({ m, t: '', s: !!schema }); });   /* chaque principal : avec réflexion, puis sans réglage */
+  e.push({ m: secours, t: reflSecours, s: !!schema });   /* secours : réflexion haute pour limiter les oublis (v335) */
+  e.push({ m: secours, t: '', s: !!schema });
+  if(schema) e.push({ m: secours, t: '', s: false });   /* Prof : tout dernier cran = JSON libre, comme avant la v320 */
+  return e;
+}
+async function gmAppelEchelle(ech, etat, secours, appel){
+  const dernier = ech.length - 1;
+  const pausee = c => c.m !== secours && (etat.pauses[c.m] || 0) > Date.now();
+  const suivant = (i, saufModele) => {
+    for(let j = i + 1; j < dernier; j++){
+      const c = ech[j];
+      if(c.m === saufModele || pausee(c) || etat.rates.has(j)) continue;
+      return j;
+    }
+    return dernier;
+  };
+  let i = suivant(-1, null);
+  let r = await appel(ech[i]);
+  const refuses = [];
+  while(i < dernier){
+    if(r.status === 429 && ech[i].m !== secours){
+      let txt = ''; try{ txt = await r.clone().text(); }catch(e){}
+      etat.pauses[ech[i].m] = Date.now() + (/PerDay|per day/i.test(txt) ? GM_PAUSE_QUOTA_JOUR_MS : GM_PAUSE_QUOTA_MS);   /* quota de CE modèle épuisé : on passe à un autre (autre quota) */
+      i = suivant(i, ech[i].m);
+    }else if(r.status === 400 || r.status === 404){
+      let txt = ''; try{ txt = await r.clone().text(); }catch(e){}
+      if(/API key|API_KEY/i.test(txt)) break;   /* clé invalide : inutile de descendre l'échelle, l'erreur est la vraie */
+      refuses.push(i);
+      i = suivant(i, null);
+    }else break;
+    r = await appel(ech[i]);
+  }
+  if(r.ok) refuses.forEach(j => etat.rates.add(j));   /* on n'oublie un cran refusé que si un suivant a marché */
+  return r;
+}
 /* v330 : MODÈLE ET NIVEAU DE RÉFLEXION DE PROF. Prof (beaucoup de règles + choix d'une action parmi ~25) comprend mieux avec un modèle plus gros et en réfléchissant avant de répondre.
-   Pour changer : PC_MODELE_PRINCIPAL (modèle de Prof), PC_MODELE_SECOURS (modèle de repli, plus léger), PC_REFLEXION ('minimal' | 'low' | 'medium' | 'high' ; 'high' = plus lent et un peu plus gourmand en quota).
+   Pour changer : PC_MODELES_PRINCIPAUX (liste des modèles de Prof, essayés dans l'ordre, v376), PC_MODELE_SECOURS (modèle de repli, plus léger), PC_REFLEXION ('minimal' | 'low' | 'medium' | 'high' ; 'high' = plus lent et un peu plus gourmand en quota).
    Tout est gratuit avec une clé Gemini gratuite. Si Google refuse un réglage (erreur 400 / 404) l'appli descend toute seule d'un cran (échelle ci-dessous) et s'en souvient jusqu'au rechargement ; si le quota du modèle principal est épuisé (429), elle utilise le modèle de secours pendant 1 minute. Rien ne peut se casser. */
-const PC_MODELE_PRINCIPAL = 'gemini-3.5-flash', PC_MODELE_SECOURS = 'gemini-3.5-flash-lite', PC_REFLEXION = 'medium', PC_REFLEXION_SECOURS = 'high';   /* v335 : le secours réfléchit plus fort */
-const PC_ECHELLE = [
-  { m: PC_MODELE_PRINCIPAL, t: PC_REFLEXION, s: true },   /* 0 : modèle principal + réflexion + sortie contrainte (schéma) */
-  { m: PC_MODELE_PRINCIPAL, t: '', s: true },             /* 1 : sans réglage de réflexion */
-  { m: PC_MODELE_SECOURS, t: PC_REFLEXION_SECOURS, s: true },     /* 2 : modèle de secours + réflexion haute (v335) */
-  { m: PC_MODELE_SECOURS, t: '', s: true },               /* 3 : modèle de secours sans réflexion */
-  { m: PC_MODELE_SECOURS, t: '', s: false }               /* 4 : comme avant v320 (JSON libre) */
-];
-let pcEch = 0, pcQuotaJusqua = 0;   /* cran qui a déjà marché ; fin de la pause « quota épuisé » du modèle principal */
+const PC_MODELES_PRINCIPAUX = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash'], PC_MODELE_SECOURS = 'gemini-3.5-flash-lite', PC_REFLEXION = 'medium', PC_REFLEXION_SECOURS = 'high';   /* v376 : trois Flash en chaîne (un quota gratuit chacun), flash-lite en dernier */
+const PC_ECHELLE = gmEchelle(PC_MODELES_PRINCIPAUX, PC_REFLEXION, PC_MODELE_SECOURS, PC_REFLEXION_SECOURS, true);
+const PC_ETAT = { rates: new Set(), pauses: {} };
 async function pcAppelGemini(key, systeme, contents, opts){
   const o = opts || {};
   const appel = e => {
@@ -7594,19 +7633,7 @@ async function pcAppelGemini(key, systeme, contents, opts){
       body: JSON.stringify({ system_instruction: { parts: [{ text: systeme }] }, contents, generationConfig: cfg })
     });
   };
-  let i = Math.max(pcEch, Date.now() < pcQuotaJusqua ? 2 : 0);
-  let r = await appel(PC_ECHELLE[i]);
-  while(i < PC_ECHELLE.length - 1){
-    if(r.status === 429 && PC_ECHELLE[i].m === PC_MODELE_PRINCIPAL){ pcQuotaJusqua = Date.now() + 60000; i = Math.max(i + 1, 2); }   /* quota du modèle principal épuisé : on passe au modèle de secours (autre quota) */
-    else if(r.status === 400 || r.status === 404){
-      let txt = ''; try{ txt = await r.clone().text(); }catch(e){}
-      if(/API key|API_KEY/i.test(txt)) break;   /* clé invalide : inutile de descendre l'échelle, l'erreur est la vraie */
-      i++;
-    } else break;
-    r = await appel(PC_ECHELLE[i]);
-  }
-  if(r.ok && i > pcEch && !(i === 2 && Date.now() < pcQuotaJusqua)) pcEch = i;   /* on retient le cran qui marche (sauf le simple repli de quota, qui est temporaire) */
-  return r;
+  return gmAppelEchelle(PC_ECHELLE, PC_ETAT, PC_MODELE_SECOURS, appel);   /* v376 : échelle partagée */
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
 async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){   /* v314 : `citation` = { a, t } du message auquel l'utilisateur répond */   /* v298 : `rappel` = note de l'appli jointe au message (nouvel essai) */
@@ -12922,7 +12949,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v372';
+const PP_APP_VERSION = 'v377';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13588,7 +13615,7 @@ const PROMPT_GRAS_BASE = `Gras : très rare, seulement pour un mot-clé à reten
 const PROMPT_FORMULES = `Formules : écris en texte simple tout ce qui se lit clairement sans LaTeX (a + b = c, x², H₂O, 5 %, 3 × 4, ≤, →, °C). N'utilise $…$ que pour ce que le texte simple ne peut pas montrer (fraction, racine, somme, intégrale, exposant ou indice composé, symbole grec dans une formule, équation chimique). Jamais pour un nombre seul, une date, une unité, un mot, ni en histoire, géographie, langues ou droit. Le signe $ ne sert qu'aux formules (écris « 5 euros »). Dans le doute, texte simple.`;
 const PROMPT_REGLES_CARTES = `Règles pour chaque carte :
 - Une carte = une seule notion précise (jamais une question qui couvre plusieurs concepts). MAIS ne découpe pas à l'excès : si deux ou trois informations vont toujours ensemble et se retiennent d'un seul bloc (une définition et son unique précision, une date et son lieu), garde-les sur UNE carte. Cette règle ne vaut jamais pour le vocabulaire des cours de langue ni pour les éléments d'une liste importante (voir plus bas) ; et la réponse doit toujours désigner une seule chose claire. Ne fais pas une carte à part pour un détail secondaire, une redite, un exemple ou une nuance : ajoute-le à la carte de la notion principale seulement s'il est utile, sinon laisse-le de côté. Avant d'ajouter une carte, demande-toi : « est-ce une notion que l'élève doit vraiment retenir seule ? » Sinon, ne la crée pas.
-- La question est courte (une ligne, sans détour), claire, et se comprend toute seule : jamais « selon le texte », « dans ce cours », « d'après le document », ni renvoi à un schéma ou à une autre carte. Si un mot ou un nom seul est ambigu, précise le contexte dans la question.
+- La question est télégraphique, comme la réponse : un mot-clé, une expression ou une formule suivie de « ? » (2 à 6 mots en général), jamais une phrase construite ni une tournure du genre « Combien font… », « Quelle est la définition de… », « Peux-tu citer… », « Comment s'appelle… » quand un mot suffit. Exemples : « 2 + 2 ? » (jamais « Combien font l'addition 2 + 2 ? »), « Définition de l'inflation ? » (jamais « Quelle est la définition de l'inflation ? »), « Capitale de la Belgique ? ». Elle reste claire (une ligne, sans détour) et se comprend toute seule : jamais « selon le texte », « dans ce cours », « d'après le document », ni renvoi à un schéma ou à une autre carte. Si un mot ou un nom seul est ambigu, précise le contexte dans la question.
 - STYLE DES CARTES : style télégraphique, comme une fiche de révision. La réponse est unique et se lit en un coup d'œil : par défaut un mot-clé, un nombre, une date ou un petit groupe de mots (2 à 6 mots en général), SANS phrase complète, sans « c'est », sans sujet ni verbe qui répète la question, sans introduction, sans mots de remplissage ni précision inutile (pas de « il s'agit de », « on appelle ça », « permet de… » quand un mot suffit). Exemple : « Capitale de la Belgique ? » → « Bruxelles » (jamais « La capitale de la Belgique est Bruxelles. »). Passe à un fragment de phrase ou à 1 courte phrase seulement quand un mot-clé ne suffit pas à répondre (par ex. une carte « Pourquoi… ? » ou une définition qui ne se résume pas à un terme), et jamais plus de 2 phrases courtes. Si tu hésites entre une réponse longue et une réponse courte qui reste juste, choisis la courte. La question aussi reste brève : pas de longue mise en contexte ni de formulation lourde. Juge toi-même carte par carte : mots-clés d'abord, un peu plus long seulement si c'est nécessaire pour que la réponse reste juste et complète. Pas de question à réponse oui/non, pas de réponse vague ou à plusieurs versions possibles.
 - Une liste de notions importantes (« les 5 causes de… », « les étapes de… », tous les pays, toutes les dates, tout le vocabulaire d'un tableau) : une carte par élément, avec une question qui vise un seul élément précis (jamais « cite une des causes »), sans en oublier. En revanche, une liste de simples détails ou d'énumérations secondaires (exemples, précisions, variantes) ne mérite pas une carte par ligne : ne retiens que les éléments essentiels, ou regroupe-les sur une seule carte quand la liste est courte (3 éléments ou moins) et se retient d'un bloc.
 - Cours de langue (vocabulaire, expressions) : une carte par mot ou expression, dans le sens où le cours les présente ; la réponse est la traduction seule (pas de phrase d'exemple, sauf si le cours en donne une à retenir).
@@ -13741,19 +13768,13 @@ function messageErreurGemini(status, texteConserve){
 }
 
 /* v334 : MODÈLE ET RÉFLEXION DE LA CRÉATION DE CARTES. Même principe que Prof (v330) et la synthèse (v333) : créer des cartes = appliquer beaucoup de règles (PROMPT_REGLES_CARTES) sans oublier
-   aucun élément d'une liste ou d'un tableau ; flash-lite en oubliait, un modèle plus gros qui réfléchit un peu est plus complet. Pour changer : CAR_MODELE_PRINCIPAL, CAR_MODELE_SECOURS, CAR_REFLEXION
+   aucun élément d'une liste ou d'un tableau ; flash-lite en oubliait, un modèle plus gros qui réfléchit un peu est plus complet. Pour changer : CAR_MODELES_PRINCIPAUX (liste, v376), CAR_MODELE_SECOURS, CAR_REFLEXION
    ('minimal' | 'low' | 'medium' | 'high'). Sert à l'écran « Ajouter », à l'ajustement, à l'édition IA et aux cartes supplémentaires (tout passe par appelerGeminiPourCartes).
    Si Google refuse un réglage (400 / 404), l'appli descend d'un cran (échelle ci-dessous) et s'en souvient jusqu'au rechargement ; si le quota du modèle principal est épuisé (429), elle utilise le
    modèle de secours pendant 1 minute. Cran 2 = flash-lite avec réflexion haute (CAR_REFLEXION_SECOURS, v335) ; dernier cran = exactement l'ancien comportement (flash-lite, sans réglage). La recherche d'image (ppImgMotCle, 2 à 5 mots) reste volontairement sur flash-lite. */
-const CAR_MODELE_PRINCIPAL = 'gemini-3.5-flash', CAR_MODELE_SECOURS = 'gemini-3.5-flash-lite', CAR_REFLEXION = 'low', CAR_REFLEXION_SECOURS = 'high';   /* v335 : le secours réfléchit plus fort pour compenser */
-const CAR_ECHELLE = [
-  { m: CAR_MODELE_PRINCIPAL, t: CAR_REFLEXION },   /* 0 : modèle principal + réflexion légère */
-  { m: CAR_MODELE_PRINCIPAL, t: '' },              /* 1 : modèle principal sans réglage de réflexion */
-  { m: CAR_MODELE_SECOURS, t: CAR_REFLEXION_SECOURS },   /* 2 : filet de secours (v335) : flash-lite avec réflexion haute pour limiter les oublis */
-  { m: CAR_MODELE_SECOURS, t: '' }                 /* 3 : flash-lite sans réglage, comme avant la v334 */
-];
-const CAR_CRAN_SECOURS = 2;   /* premier cran du modèle de secours */
-let carEch = 0, carQuotaJusqua = 0;   /* cran qui a déjà marché ; fin de la pause « quota épuisé » du modèle principal */
+const CAR_MODELES_PRINCIPAUX = ['gemini-3.5-flash'], CAR_MODELE_SECOURS = 'gemini-3.5-flash-lite', CAR_REFLEXION = 'medium', CAR_REFLEXION_SECOURS = 'high';   /* v376 : 3.5 Flash (quota propre, les 3.8 / 3.7 / 3.6 sont gardés pour Prof), flash-lite en secours */
+const CAR_ECHELLE = gmEchelle(CAR_MODELES_PRINCIPAUX, CAR_REFLEXION, CAR_MODELE_SECOURS, CAR_REFLEXION_SECOURS, false);
+const CAR_ETAT = { rates: new Set(), pauses: {} };
 async function carAppelGemini(key, parts, onRetry){
   const appel = e => {
     const cfg = { responseMimeType: 'application/json' };
@@ -13763,20 +13784,7 @@ async function carAppelGemini(key, parts, onRetry){
       body: JSON.stringify({ contents: [{ parts }], generationConfig: cfg })
     }, onRetry);
   };
-  const dernier = CAR_ECHELLE.length - 1;
-  let i = Math.max(carEch, Date.now() < carQuotaJusqua ? CAR_CRAN_SECOURS : 0);
-  let r = await appel(CAR_ECHELLE[i]);
-  while(i < dernier){
-    if(r.status === 429 && CAR_ECHELLE[i].m === CAR_MODELE_PRINCIPAL){ carQuotaJusqua = Date.now() + 60000; i = Math.max(i + 1, CAR_CRAN_SECOURS); }   /* quota du modèle principal épuisé : modèle de secours (autre quota) */
-    else if(r.status === 400 || r.status === 404){
-      let txt = ''; try{ txt = await r.clone().text(); }catch(e){}
-      if(/API key|API_KEY/i.test(txt)) break;   /* clé invalide : inutile de descendre l'échelle, l'erreur est la vraie */
-      i++;
-    } else break;
-    r = await appel(CAR_ECHELLE[i]);
-  }
-  if(r.ok && i > carEch && !(i === CAR_CRAN_SECOURS && Date.now() < carQuotaJusqua)) carEch = i;   /* on retient le cran qui marche (sauf le simple repli de quota, temporaire) */
-  return r;
+  return gmAppelEchelle(CAR_ECHELLE, CAR_ETAT, CAR_MODELE_SECOURS, appel);   /* v376 : échelle partagée */
 }
 
 /* Appelle Gemini avec les `parts` fournies et renvoie un tableau de cartes
@@ -15086,18 +15094,12 @@ function synthErreurImprevue(s, err){
 }
 
 /* v333 : MODÈLE ET RÉFLEXION DE LA SYNTHÈSE. Même principe que Prof (v330) : la synthèse applique une quinzaine de règles de style tout en compressant un cours,
-   un modèle plus gros qui réfléchit un peu les suit mieux que « flash-lite ». Pour changer : SYN_MODELE_PRINCIPAL, SYN_MODELE_SECOURS, SYN_REFLEXION ('minimal' | 'low' | 'medium' | 'high').
+   un modèle plus gros qui réfléchit un peu les suit mieux que « flash-lite ». Pour changer : SYN_MODELES_PRINCIPAUX (liste, v376), SYN_MODELE_SECOURS, SYN_REFLEXION ('minimal' | 'low' | 'medium' | 'high').
    Si Google refuse un réglage (400 / 404), l'appli descend d'un cran (échelle ci-dessous) et s'en souvient jusqu'au rechargement ; si le quota du modèle principal est épuisé (429),
    elle utilise le modèle de secours pendant 1 minute. Dernier cran = exactement l'ancien comportement (flash-lite, sans réglage). */
-const SYN_MODELE_PRINCIPAL = 'gemini-3.5-flash', SYN_MODELE_SECOURS = 'gemini-3.5-flash-lite', SYN_REFLEXION = 'low', SYN_REFLEXION_SECOURS = 'high';   /* v335 : le secours réfléchit plus fort */
-const SYN_ECHELLE = [
-  { m: SYN_MODELE_PRINCIPAL, t: SYN_REFLEXION },   /* 0 : modèle principal + réflexion légère */
-  { m: SYN_MODELE_PRINCIPAL, t: '' },              /* 1 : modèle principal sans réglage de réflexion */
-  { m: SYN_MODELE_SECOURS, t: SYN_REFLEXION_SECOURS },   /* 2 : filet de secours (v335) : flash-lite avec réflexion haute */
-  { m: SYN_MODELE_SECOURS, t: '' }                 /* 3 : flash-lite sans réglage, comme avant la v333 */
-];
-const SYN_CRAN_SECOURS = 2;   /* premier cran du modèle de secours */
-let synEch = 0, synQuotaJusqua = 0;   /* cran qui a déjà marché ; fin de la pause « quota épuisé » du modèle principal */
+const SYN_MODELES_PRINCIPAUX = ['gemini-3.5-flash'], SYN_MODELE_SECOURS = 'gemini-3.5-flash-lite', SYN_REFLEXION = 'medium', SYN_REFLEXION_SECOURS = 'high';   /* v376 : comme les cartes (3.5 Flash puis flash-lite) */
+const SYN_ECHELLE = gmEchelle(SYN_MODELES_PRINCIPAUX, SYN_REFLEXION, SYN_MODELE_SECOURS, SYN_REFLEXION_SECOURS, false);
+const SYN_ETAT = { rates: new Set(), pauses: {} };
 async function synAppelGemini(key, systeme, parts, onRetry){
   const appel = e => {
     const corps = { contents: [{ parts }] };
@@ -15108,20 +15110,7 @@ async function synAppelGemini(key, systeme, parts, onRetry){
       body: JSON.stringify(corps)
     }, onRetry);
   };
-  const dernier = SYN_ECHELLE.length - 1;
-  let i = Math.max(synEch, Date.now() < synQuotaJusqua ? SYN_CRAN_SECOURS : 0);
-  let r = await appel(SYN_ECHELLE[i]);
-  while(i < dernier){
-    if(r.status === 429 && SYN_ECHELLE[i].m === SYN_MODELE_PRINCIPAL){ synQuotaJusqua = Date.now() + 60000; i = Math.max(i + 1, SYN_CRAN_SECOURS); }   /* quota du modèle principal épuisé : modèle de secours (autre quota) */
-    else if(r.status === 400 || r.status === 404){
-      let txt = ''; try{ txt = await r.clone().text(); }catch(e){}
-      if(/API key|API_KEY/i.test(txt)) break;   /* clé invalide : inutile de descendre l'échelle */
-      i++;
-    } else break;
-    r = await appel(SYN_ECHELLE[i]);
-  }
-  if(r.ok && i > synEch && !(i === SYN_CRAN_SECOURS && Date.now() < synQuotaJusqua)) synEch = i;   /* on retient le cran qui marche (sauf le simple repli de quota, temporaire) */
-  return r;
+  return gmAppelEchelle(SYN_ECHELLE, SYN_ETAT, SYN_MODELE_SECOURS, appel);   /* v376 : échelle partagée */
 }
 
 async function appelerGeminiPourSynthese(parts, options){
@@ -18772,6 +18761,17 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v377', t:["Cartes et synthèses plus soignées", "Neater cards and summaries"], p:[
+    ["L'IA réfléchit un peu plus avant de créer tes cartes et tes synthèses : un peu plus lent, mais moins d'oublis.", "The AI now thinks a bit longer before making your cards and summaries: slightly slower, but fewer omissions."]] },
+  { v:'v376', t:["Moins de quota gaspillé", "Less quota wasted"], p:[
+    ["Prof utilise trois modèles Gemini Flash à la suite : quand le quota gratuit de l'un est épuisé, il passe au suivant, puis à flash-lite en dernier.", "Prof uses three Gemini Flash models in turn: when one's free quota runs out, it moves to the next, then to flash-lite last."],
+    ["Les cartes et les synthèses passent sur Gemini 3.5 Flash, avec flash-lite en secours : elles n'entament plus le quota de Prof.", "Cards and summaries now use Gemini 3.5 Flash, with flash-lite as backup: they no longer eat into Prof's quota."]] },
+  { v:'v375', t:["Le gros chiffre ressort enfin", "The big number finally pops"], p:[
+    ["En mode clair, le chiffre « à réviser » de l'accueil est orange avec une ombre indigo, au lieu de deux orange qui se mélangeaient.", "In light mode, the home screen's “to review” number is orange with an indigo shadow, instead of two oranges blending together."]] },
+  { v:'v374', t:["Des cartes plus télégraphiques", "More telegraphic cards"], p:[
+    ["Les questions des cartes créées par l'IA sont maintenant courtes, en mots-clés, comme les réponses : « 2 + 2 ? » au lieu d'une phrase entière.", "Questions on AI-made cards are now short and keyword-style, like the answers: “2 + 2?” instead of a full sentence."]] },
+  { v:'v373', t:["Un cerveau plus récent", "A newer brain"], p:[
+    ["Prof, la création de cartes et les synthèses passent sur le dernier modèle Gemini Flash. Si ta clé ne le permet pas, l'appli bascule toute seule sur l'ancien.", "Prof, card creation and summaries now run on the latest Gemini Flash model. If your key can't use it, the app falls back on the older one by itself."]] },
   { v:'v372', t:["Des images au choix, un orange partout", "Pictures your way, orange everywhere"], p:[
     ["Chaque bouton « Image » propose maintenant Galerie ou IA : sur les cartes de l'aperçu et dans les synthèses, comme quand tu écris une carte.", "Every “Image” button now offers Gallery or AI: on the preview cards and in summaries, just like when you write a card."],
     ["Les interrupteurs passent à l'orange, et en mode clair le grand chiffre « à réviser » inverse ses couleurs.", "Switches turn orange, and in light mode the big “to review” number swaps its colors."]] },

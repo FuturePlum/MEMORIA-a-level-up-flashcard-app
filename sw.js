@@ -19,6 +19,16 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v182 : v377 (réflexion des cartes et des synthèses : low -> medium) : index.html change, donc nouvelle version du cache.
+
+   v181 : v376 (modèles des IA : chaîne de modèles par fonction, échelle partagée gmEchelle / gmAppelEchelle) : index.html change, donc nouvelle version du cache.
+
+   v180 : v375 (mode clair : ombre indigo du gros chiffre de l'accueil) : index.html change, donc nouvelle version du cache.
+
+   v179 : v374 (prompt des cartes : questions télégraphiques en mots-clés, comme les réponses) : index.html change, donc nouvelle version du cache.
+
+   v178 : v373 (modèle principal des IA : gemini-3.5-flash -> gemini-3.8-flash ; secours et petites tâches inchangés) : index.html change, donc nouvelle version du cache.
+
    v177 : v372 (Image : choix Galerie / IA sur l'aperçu des cartes IA et dans les synthèses ; interrupteurs orange ; grand chiffre du mode clair inversé) : index.html change, donc nouvelle version du cache.
 
    v176 : v371 (synthèses enregistrées : carte dans Parcourir, synchro, partage par code) : index.html change, donc nouvelle version du cache.
@@ -119,7 +129,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v177';
+const SW_VERSION = 'v182';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
