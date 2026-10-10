@@ -460,6 +460,10 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     /* v223 : pastilles renommées, « Plus… » / « Moins », précisions de la synthèse */
     'Résumé rapide':'Quick summary','Fiche de synthèse':'Summary sheet',"Je t'explique, corrige-moi":'I explain, you correct me','Plus…':'More…','Moins':'Less',
     'Précisions pour la synthèse (facultatif)':'Details for the summary (optional)','Précisions':'Details' });
+  Object.assign(D,{ /* v371 : synthèses enregistrées */
+    "Synthèses":"Summaries","Tes fiches enregistrées":"Your saved summaries","Génère ta première synthèse":"Generate your first summary","Aucune synthèse pour l'instant":"No summaries yet","Génère une synthèse, puis touche « Enregistrer » : elle apparaîtra ici.":"Generate a summary, then tap “Save”: it will show up here.","Enregistrer la synthèse":"Save summary","Mettre à jour la synthèse":"Update summary","Enregistrée":"Saved","Enregistrer et fermer":"Save and close","Fermer sans enregistrer":"Close without saving","Fermer sans enregistrer ?":"Close without saving?","Tes modifications ne sont pas enregistrées.":"Your changes are not saved.","Enregistre-la pour la retrouver dans Parcourir, sur tous tes appareils.":"Save it to find it again in Browse, on all your devices.","Synthèse enregistrée":"Summary saved","Synthèse mise à jour":"Summary updated","Synthèse supprimée":"Summary deleted","Synthèse vide":"Empty summary","Limite atteinte : supprime une synthèse":"Limit reached: delete a summary","Titre modifié":"Title changed","Écris un titre":"Write a title","Choisis un nouveau titre.":"Choose a new title.","Ouvrir":"Open","Lire, modifier, exporter":"Read, edit, export","Changer le titre":"Change the title","Un code, comme pour les cartes":"A code, like for cards","La retire de tous tes appareils":"Removes it from all your devices","Supprimer cette synthèse ?":"Delete this summary?","Elle disparaît de tous tes appareils.":"It disappears from all your devices.","Pas encore sur cet appareil":"Not on this device yet","Récupération…":"Fetching…","Pas encore envoyée par l'autre appareil":"Not sent yet by the other device","Limite du jour atteinte, réessaie plus tard":"Daily limit reached, try again later","Récupération impossible, réessaie":"Couldn't fetch it, try again","Cette synthèse vient d'un autre appareil : active la synchro pour la lire":"This summary comes from another device: turn on sync to read it","Récupération impossible pour le moment":"Can't fetch it right now","Cette synthèse est déjà dans ta liste":"This summary is already in your list","Synthèse importée":"Summary imported","Partage impossible, réessaie":"Couldn't share, try again","Importer":"Import","Cartes ou synthèse d'un pote : un seul code":"A friend's cards or summary: one code","Hier":"Yesterday","Retour":"Back" });
+  Object.assign(D,{ /* v372 : choix Galerie / IA partout */
+    "Tes photos":"Your photos","Celles que l'IA a reçues":"The ones the AI received" });
   Object.assign(D,{ 'Répondre':'Reply','Toi':'You','Annuler la réponse':'Cancel reply',"Plus d'options":'More options','Change le nom de la matière':'Change the subject name','Envoie les cartes avec un code':'Send the cards with a code','Renommer, partager, supprimer':'Rename, share, delete','Cherche les doublons':'Find duplicates','Date de contrôle':'Test date','Renommer la matière':'Rename subject','Fusionner':'Merge','Archiver la matière':'Archive subject','Désarchiver la matière':'Unarchive subject','Supprimer la matière':'Delete subject','Mettre en pause':'Pause','Reprendre':'Resume','retirée':'removed',
     'Attention : la matière ET toutes ses cartes seront supprimées, sans retour possible.':'Warning: the subject AND all its cards will be deleted, with no way back.' });
   Object.assign(D,{ /* v277 : bouton Image (Galerie / IA) */
@@ -4124,7 +4128,48 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 /* J. Intro : boutons de démo « Pas su / Difficile / Facile » (jetons propres à l'intro, trop clairs en texte) */
 :root:root:root[data-theme="light"] #fci .fi-ans .fi-bt{ color:color-mix(in srgb,var(--c) 68%,#000); }
 </style>
-</head>
+<style id="sb-style">
+/* v371 : synthèses enregistrées */
+.sb-save{width:100%;height:50px;margin:14px 0 4px;border-radius:15px;background:var(--blue);color:#06101f;font-size:16px;font-weight:800;letter-spacing:-.01em;box-shadow:0 4px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .3s var(--pps),box-shadow .25s,background .25s}
+.sb-save:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.sb-save.ok,.sb-save[disabled]{background:var(--c-gsoft);color:var(--green);box-shadow:none;border:1.5px solid var(--green);cursor:default}
+.sb-card{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:14px;margin:0 0 12px;border-radius:19px;background:linear-gradient(135deg,var(--c-bsoft),var(--panel));border:1.5px solid var(--blue);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.sb-card:active{transform:translateY(2px)}
+.sb-ico{width:44px;height:44px;border-radius:13px;background:var(--blue);color:#06101f;display:grid;place-items:center;flex:none;font-style:normal}
+.sb-tx{flex:1;min-width:0}
+.sb-tx b{display:block;font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--cream)}
+.sb-tx span{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.sb-n{font-style:normal;min-width:30px;height:30px;padding:0 9px;border-radius:15px;background:var(--blue);color:#06101f;font-size:14px;font-weight:800;display:grid;place-items:center}
+.sb-chev{color:var(--muted);display:grid;place-items:center;flex:none;font-style:normal}
+.sb-lib{padding-bottom:40px}
+.sb-empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.sb-empty .sb-ico{margin:0 auto 14px;width:56px;height:56px;border-radius:17px}
+.sb-empty b{display:block;color:var(--cream);font-size:17px;font-weight:800;margin-bottom:6px}
+.sb-empty p{font-size:14px;line-height:1.45}
+.sb-grp{margin:0 0 18px}
+.sb-gh{display:flex;align-items:center;gap:9px;margin:0 2px 8px;font-size:13px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+.sb-gh i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.sb-gh span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--cream)}
+.sb-gh small{font-size:12px;font-weight:700;color:var(--muted)}
+.sb-it{display:flex;align-items:center;gap:10px;padding:12px 8px 12px 14px;margin:0 0 8px;border-radius:16px;background:var(--panel);border:1.5px solid var(--line);border-left:5px solid var(--c);cursor:pointer;animation:ppflipIn .35s var(--pps) both}
+.sb-it:active{background:var(--c-press)}
+.sb-main{flex:1;min-width:0}
+.sb-main b{display:block;font-size:15px;font-weight:800;color:var(--cream);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-main small{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:12.5px;color:var(--muted)}
+.sb-off{display:inline-flex;align-items:center;gap:4px;color:var(--orange-t)}
+.sb-off svg{width:14px;height:14px}
+.sb-more{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:var(--muted);flex:none}
+.sb-more:active{background:var(--c-s1)}
+@media (prefers-reduced-motion:reduce){.sb-it{animation:none}.sb-save,.sb-card{transition:none}}
+</style>
+<style id="v372-style">
+/* v372 : interrupteurs orange, partout */
+.pp-tg.on{background:var(--orange);box-shadow:inset 0 -2px 0 rgba(0,0,0,.16)}
+.pp-tg.on::after{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.28)}
+/* v372 : mode clair, grand chiffre « à réviser » : chiffre orange, ombre indigo (l'inverse d'avant) */
+:root:root:root[data-theme="light"] .pp-big{color:var(--orange);text-shadow:6px 6px 0 var(--cream)}
+:root:root:root[data-theme="light"] .pp-hero .pp-big{color:var(--orange);text-shadow:6px 6px 0 var(--cream)}
+</style></head>
 <body>
 <div id="boot-splash" aria-hidden="true">
   <div id="boot-splash-icon">
@@ -4730,7 +4775,7 @@ function ppImgSlotInner(ctx, cote){
 function ppImgPanneauHtml(ctx, cote){
   const cible = ppImgCible(ctx), img = cible ? (cible[ppImgChamp(cote)] || '') : '';
   const vignettes = iaImgBanque.map((b, k) => b ? `<img src="${b}" alt="Photo ${k + 1}" class="${b === img ? 'on' : ''}" onclick="ppImgDeBanque('${ctx}','${cote}',${k})">` : '').join('');
-  return `<p class="pp-imgcap">Une de tes photos :</p><div class="pp-imgbank">${vignettes}</div><div class="pp-imgacts"><button type="button" class="pp-imgbtn" onclick="ppImgFichier('${ctx}','${cote}')">Une autre image…</button><button type="button" class="pp-imgbtn" onclick="ppImgChoisir('${ctx}','${cote}')">Fermer</button></div>`;
+  return `<p class="pp-imgcap">Une de tes photos :</p><div class="pp-imgbank">${vignettes}</div><div class="pp-imgacts"><button type="button" class="pp-imgbtn" onclick="ppImgMenu('${ctx}','${cote}')">Une autre image…</button><button type="button" class="pp-imgbtn" onclick="ppImgBanqueBascule('${ctx}','${cote}')">Fermer</button></div>`;
 }
 function ppImgSlotWrap(ctx, cote){ return `<div class="pp-imgslot" id="pp-imgs-${ppImgId(ctx)}-${cote}">${ppImgSlotInner(ctx, cote)}</div>`; }
 function ppImgPanelWrap(ctx, cote){
@@ -4751,16 +4796,24 @@ function ppImgRafraichir(ctx, cote){
 }
 /* Toucher une pastille : si l'IA a reçu des photos (aperçu), on propose d'abord ces photos ; sinon on ouvre directement le choix d'une image. */
 function ppImgChoisir(ctx, cote){
-  if(ctx === 'man' || ctx === 'fi'){ ppImgMenu(ctx, cote); return; }   /* v277 : menu Galerie / IA */
-  if(String(ctx).indexOf('pv:') === 0 && iaImgBanque.some(Boolean)){
-    const cle = ctx + '|' + cote, ancien = ppImgOuvert;
-    ppImgOuvert = (ancien === cle) ? null : cle;
-    if(ancien && ancien !== cle){ const a = ancien.split('|'); ppImgRafraichir(a[0], a[1]); }
-    ppImgRafraichir(ctx, cote);
-    return;
-  }
+  const pv = String(ctx).indexOf('pv:') === 0;
+  if(pv && ppImgOuvert === ctx + '|' + cote){ ppImgBanqueBascule(ctx, cote); return; }   /* v372 : panneau « Tes photos » déjà ouvert : la pastille le referme */
+  if(ctx === 'man' || ctx === 'fi' || pv || ctx === 'syn'){ ppImgMenu(ctx, cote); return; }   /* v277 : menu Galerie / IA ; v372 : aussi pour l'aperçu des cartes IA et la synthèse */
   ppImgFichier(ctx, cote);
 }
+/* v372 : ouvre / ferme le panneau « Tes photos » (celles que l'IA a reçues) sous une carte de l'aperçu */
+function ppImgBanqueBascule(ctx, cote){
+  const cle = ctx + '|' + cote, ancien = ppImgOuvert;
+  ppImgOuvert = (ancien === cle) ? null : cle;
+  if(ancien && ancien !== cle){ const a = ancien.split('|'); ppImgRafraichir(a[0], a[1]); }
+  ppImgRafraichir(ctx, cote);
+}
+function ppImgMenuTitre(ctx, cote){ return ctx === 'syn' ? 'Ajouter une image' : 'Image ' + (cote === 'q' ? 'de la question' : 'de la réponse'); }
+function ppImgMenuBanque(ctx, cote){
+  if(String(ctx).indexOf('pv:') !== 0 || !iaImgBanque.some(Boolean)) return '';
+  return `<button class="pp-row" type="button" onclick="ppImgMenuBanqueGo('${ctx}','${cote}')"><i class="pp-ri">${PP_IMG_IC}</i><div><b>Tes photos</b><span>Celles que l'IA a reçues</span></div></button>`;
+}
+function ppImgMenuBanqueGo(ctx, cote){ ppPickClose(); ppImgIA = null; if(ppImgOuvert !== ctx + '|' + cote) ppImgBanqueBascule(ctx, cote); }
 function ppImgFichier(ctx, cote){
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*'; inp.style.display = 'none';
@@ -4794,16 +4847,20 @@ function ppImgMenu(ctx, cote){
   ppEnsureSheets();
   ppImgIA = { ctx, cote, desc: '', mot: '', passer: 0, url: '', etat: 'vide', n: 0 };
   const e = document.getElementById('pp-psheet'); e.scrollTop = 0; e.style.translate = ''; e.style.transition = '';
-  e.innerHTML = `<div class="pp-grab"></div><div class="pp-sbh"><div><h2>Image ${cote === 'q' ? 'de la question' : 'de la réponse'}</h2></div></div>
-  <div class="pp-opts"><button class="pp-row" type="button" onclick="ppImgMenuGalerie('${ctx}','${cote}')"><i class="pp-ri">${PP_IMG_IC}</i><div><b>Galerie</b><span>Une photo de ton appareil</span></div></button><button class="pp-row" type="button" onclick="ppImgIAOuvrir()"><i class="pp-ri">${PP_IC.spark}</i><div><b>IA</b><span>Décris l'image que tu veux</span></div></button></div>`;
+  e.innerHTML = `<div class="pp-grab"></div><div class="pp-sbh"><div><h2>${ppImgMenuTitre(ctx, cote)}</h2></div></div>
+  <div class="pp-opts"><button class="pp-row" type="button" onclick="ppImgMenuGalerie('${ctx}','${cote}')"><i class="pp-ri">${PP_IMG_IC}</i><div><b>Galerie</b><span>Une photo de ton appareil</span></div></button><button class="pp-row" type="button" onclick="ppImgIAOuvrir()"><i class="pp-ri">${PP_IC.spark}</i><div><b>IA</b><span>Décris l'image que tu veux</span></div></button>${ppImgMenuBanque(ctx, cote)}</div>`;
   document.getElementById('pp-pveil').classList.add('on'); e.classList.add('on');
 }
-function ppImgMenuGalerie(ctx, cote){ ppPickClose(); ppImgIA = null; ppImgFichier(ctx, cote); }
+function ppImgMenuGalerie(ctx, cote){
+  ppPickClose(); ppImgIA = null;
+  if(ctx === 'syn'){ const i = document.getElementById('synth-img-in'); if(i) i.click(); return; }   /* v372 : synthèse */
+  ppImgFichier(ctx, cote);
+}
 function ppImgIAOuvrir(){
   const st = ppImgIA; if(!st) return;
   const e = document.getElementById('pp-psheet'); e.scrollTop = 0;
   e.innerHTML = `<div class="pp-grab"></div>
-  <div class="pp-sbh"><button class="pp-back" type="button" aria-label="Retour" onclick="ppImgMenu('${st.ctx}','${st.cote}')">${PP_IC.back}</button><div><h2>Image par IA</h2><span>${st.cote === 'q' ? 'Question' : 'Réponse'}</span></div></div>
+  <div class="pp-sbh"><button class="pp-back" type="button" aria-label="Retour" onclick="ppImgMenu('${st.ctx}','${st.cote}')">${PP_IC.back}</button><div><h2>Image par IA</h2><span>${st.ctx === 'syn' ? 'Synthèse' : (st.cote === 'q' ? 'Question' : 'Réponse')}</span></div></div>
   <h4>Ce que tu veux voir</h4>${ppCEHtml({ id: 'pp-iai', cls: 'pp-q', ph: 'Ex. le traité de Rome, une cellule en mitose…', max: 120, enter: 'search', cap: 'sentences', attrs: `style="margin-bottom:14px" onkeydown="if(event.key==='Enter'){event.preventDefault();ppImgIAChercher(false)}"` })}
   <div class="pp-iaprev" id="pp-iap" hidden></div><div id="pp-iab"></div>`;
   ppCEScan(e); ppImgIADessiner();
@@ -4857,6 +4914,7 @@ function ppImgIAValider(){
   const st = ppImgIA; if(!st || !st.url) return;
   const ctx = st.ctx, cote = st.cote, url = st.url;
   ppPickClose(); ppImgIA = null;
+  if(ctx === 'syn'){ synImgAjouterUrl(url); return; }   /* v372 : l'image IA rejoint la synthèse */
   ppImgPoser(ctx, cote, url, true);
 }
 /* IA : envoie les fichiers à Gemini en numérotant les photos (« Image 1 », « Image 2 »…) ; `debut` = nb de photos déjà numérotées. */
@@ -11173,7 +11231,7 @@ function ppBrowseGroupsHtml(){
     }).join('');
     return `<div class="pp-grp${ppBrowseClosed[m] ? ' closed' : ''}${estArch(m) ? ' pp-garch' : ''}" style="--c:${couleurMatiere(m)}"><div class="pp-gh"><button class="pp-ghm" onclick="ppBrowseToggle(this,'${mA}')"><span class="pp-dot"></span>${escapeHtml(m)}<small>${n} carte${n > 1 ? 's' : ''}${estArch(m) ? ' · archivée' : ''}</small></button><button class="pp-ib" aria-label="Options" onclick="ppGrpMenu('${mA}')">${PP_DOTS_H}</button><button class="pp-ib pp-chv" aria-label="Replier" onclick="ppBrowseToggle(this,'${mA}')">${PP_IC.up}</button></div><div class="pp-list">${items}</div></div>`;
   }).join('');
-  return barrePause + (html || `<p class="pp-empty">${requete ? 'Aucune carte trouvée. Essaie un autre mot.' : 'Rien à afficher ici.'}</p>`);
+  return sbCarteHtml(requete) + barrePause + (html || `<p class="pp-empty">${requete ? 'Aucune carte trouvée. Essaie un autre mot.' : 'Rien à afficher ici.'}</p>`);
 }
 function ppBrowseArchFiltre(){
   browseArchSeul = !browseArchSeul;
@@ -11223,7 +11281,7 @@ function renderBrowse(){
   ppBrowseShown = true;
   const cls = 'pp-view pp-brw' + (same ? ' pp-still' : '');
   if(CARDS.length === 0 && !getMatieres().length){
-    el.innerHTML = `<div class="${cls}"><h2 class="pp-t">Parcourir</h2><p class="pp-empty">Aucune carte pour l'instant.<br>Va dans « Ajouter » pour en créer.</p></div>`;
+    el.innerHTML = `<div class="${cls}"><h2 class="pp-t">Parcourir</h2>${sbIndexLire().length ? sbCarteHtml('') : ''}<p class="pp-empty">Aucune carte pour l'instant.<br>Va dans « Ajouter » pour en créer.</p></div>`;
     return;
   }
   el.innerHTML = `<div class="${cls}"><h2 class="pp-t">Parcourir</h2><input class="pp-q" id="browse-search-input" type="search" enterkeyhint="search" autocomplete="off" placeholder="Rechercher une carte" value="${escapeHtml(browseSearch)}" oninput="onBrowseSearchInput(this.value)">${ppBrowseGroupsHtml()}</div><div class="pp-fp" id="pp-fp"></div>`;
@@ -12864,7 +12922,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v370';
+const PP_APP_VERSION = 'v372';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -13069,7 +13127,7 @@ function ppMkSubj(){
 /* « Importer » */
 function ppImportSheet(){
   /* v367 : plus besoin d'avoir une matière avant d'importer : le partage arrive avec le nom de sa matière (créée si elle n'existe pas, fusionnée si elle existe déjà) */
-  ppSheet(`<div class="pp-grab"></div><h2>Importer des cartes</h2><p class="pp-hint">Les cartes d'un pote arrivent avec leur matière</p>
+  ppSheet(`<div class="pp-grab"></div><h2>Importer</h2><p class="pp-hint">Cartes ou synthèse d'un pote : un seul code</p>
   <input id="pp-ij-code" class="pp-codein" type="search" name="pp-import-code" enterkeyhint="go" data-lpignore="true" data-1p-ignore data-form-type="other" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9" placeholder="Code" onkeydown="if(event.key==='Enter'){event.preventDefault();ppDoImport();}">
   <div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" onclick="ppDoImport()">Importer</button></div>`);
   ppFocusChamp('pp-ij-code');   /* v280 : le clavier se déploie tout de suite */
@@ -13104,6 +13162,7 @@ async function ppImportParCode(code){
   // fenêtre fermée pendant la recherche : on n'importe rien dans le dos de l'utilisateur
   const feuille = document.getElementById('pp-sheet');
   if(!document.getElementById('pp-ij-code') || !feuille || !feuille.classList.contains('on')) return;
+  if(data && data.format === 'synthese-partage'){ sbImporterPartage(data); return; }   /* v371 : un code peut aussi être une synthèse */
   ppImporterDonnees(data);
 }
 function ppImporterDonnees(data){
@@ -14370,6 +14429,19 @@ async function synImgChoisie(ev){
   if(s.images.length >= SYN_IMG_MAX){ ppToast('Maximum ' + SYN_IMG_MAX + ' images'); return; }
   let url = '';
   try{ url = await ppImgReduire(file); }catch(e){ ppToast('Image illisible'); return; }
+  synImgAjouterUrl(url);
+}
+/* v372 : « Ajouter une image » propose Galerie ou IA, comme sur les cartes */
+function synImgMenu(){
+  const s = syntheseEtat; if(!s) return;
+  if(s.images.length >= SYN_IMG_MAX){ ppToast('Maximum ' + SYN_IMG_MAX + ' images'); return; }
+  const zone = document.getElementById('synth-markdown');
+  if(zone){ s.markdown = zone.value; if(typeof zone.selectionStart === 'number') s.curseur = zone.selectionStart; }   /* garde le texte et la place du curseur pendant le menu */
+  ppImgMenu('syn', 's');
+}
+function synImgAjouterUrl(url){
+  const s = syntheseEtat; if(!s) return;
+  if(s.images.length >= SYN_IMG_MAX){ ppToast('Maximum ' + SYN_IMG_MAX + ' images'); return; }
   const n = synImgPush(s.images, url);
   if(!n){ ppToast('Image illisible'); return; }
   const zone = document.getElementById('synth-markdown');
@@ -14519,12 +14591,441 @@ function ouvrirSynthese(base){
 }
 
 function fermerSynthese(){
+  const retourListe = !!(syntheseEtat && syntheseEtat.depuisBiblio);   /* v371 : ouverte depuis « Synthèses » : on y revient */
   syntheseEtat = null;
   const root = document.getElementById('modal-root');
   if(root) root.innerHTML = '';
+  if(retourListe) setTimeout(() => sbRendreListe(false), 0);
 }
 
 /* --- Écran --- */
+
+/* ================= v371 : SYNTHÈSES ENREGISTRÉES (carte « Synthèses » dans Parcourir, synchro, partage par code) =================
+   Clés locales : synthese-index (liste : id, titre, matiere, creeLe, modifieLe, cMaj, nImg, tr), synthese-c-<id> (corps : { v:1, maj, md, img:[jpeg…] }, « maj » toujours en 2e position),
+   synthese-supprimees (ids supprimés, 100 max), synthese-envoyes ({ id: maj du corps déjà sur le serveur }), synthese-a-effacer (file d'effacement côté serveur, 50 max).
+   Synchro : la liste (syntheses) et les suppressions (synthesesSupprimees) voyagent dans la synchro principale (construireDonneesProgression) ;
+   chaque corps (texte + images) part À PART vers /synth (même code de synchro, 1 écriture KV par enregistrement) et se récupère au rattrapage ou à l'ouverture.
+   Règle : la dernière modification gagne (par synthèse). « modifieLe » = n'importe quel changement (titre compris), « cMaj » = dernière version du contenu.
+   Une sauvegarde (Exporter la progression) emporte aussi les corps (synthesesContenus). Partage : POST /partage avec format « synthese-partage ». */
+const SB_ID_RE = /^[a-z0-9]{6,40}$/;
+const SB_CORPS_MAX = 3500000;      // caractères d'un corps envoyé (le Worker refuse au-delà de 4 000 000)
+const SB_MAX = 200;
+const SB_IMG_RE = /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/;
+let sbWorkerKo = false, sbRattrapageTs = 0, sbPartageEnCours = false, sbSupprWorkerKo = false, sbSupprEnCours = false;
+const sbEnCours = {}, sbAbsentTs = {};
+
+function sbTs(v){ const t = v ? Date.parse(v) : 0; return Number.isFinite(t) ? t : 0; }
+function sbNouvelId(){ return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function sbEntreeOk(e){ return ppEstObjet(e) && typeof e.id === 'string' && SB_ID_RE.test(e.id); }
+function sbDateOk(v){ return (typeof v === 'string' && sbTs(v)) ? v.slice(0, 40) : ''; }
+function sbNet(e){
+  return { id: e.id, titre: String(e.titre || '').trim().slice(0, 120) || 'Synthèse', matiere: String(e.matiere || '').trim().slice(0, 80),
+    creeLe: sbDateOk(e.creeLe), modifieLe: sbDateOk(e.modifieLe), cMaj: sbDateOk(e.cMaj) || sbDateOk(e.modifieLe),
+    nImg: Number.isFinite(e.nImg) ? Math.max(0, Math.min(SYN_IMG_MAX, Math.floor(e.nImg))) : 0, tr: e.tr === true };
+}
+function sbIndexLire(){ return ppLireJSON('synthese-index', [], Array.isArray).filter(sbEntreeOk).map(sbNet); }
+function sbIndexEcrire(l){ return ppEcrire('synthese-index', JSON.stringify(l.slice(0, SB_MAX))); }
+function sbSupprimeesLire(){ return ppLireJSON('synthese-supprimees', [], Array.isArray).filter(x => typeof x === 'string' && SB_ID_RE.test(x)); }
+function sbCorpsOk(v){ return ppEstObjet(v) && typeof v.md === 'string' && Array.isArray(v.img) && typeof v.maj === 'string'; }
+function sbCorpsLire(id){ return ppLireJSON('synthese-c-' + id, null, sbCorpsOk); }
+function sbCorpsEfface(id){ try{ localStorage.removeItem('synthese-c-' + id); }catch(e){} }
+function sbCorpsTexte(maj, md, img){ return JSON.stringify({ v: 1, maj, md, img }); }
+/* version du corps local, lue sans tout décoder (le corps peut peser plusieurs Mo) */
+function sbCorpsMaj(id){
+  try{
+    const brut = localStorage.getItem('synthese-c-' + id); if(!brut) return '';
+    const m = /^\{"v":1,"maj":"([^"]+)"/.exec(brut.slice(0, 80));
+    return m ? m[1] : '';
+  }catch(e){ return ''; }
+}
+function sbCorpsAJour(e){ const m = sbCorpsMaj(e.id); return !!m && sbTs(m) >= sbTs(e.cMaj); }
+function sbEnvoyesLire(){
+  const o = ppLireJSON('synthese-envoyes', {}, ppEstObjet), r = {};
+  Object.keys(o).forEach(k => { if(SB_ID_RE.test(k) && typeof o[k] === 'string') r[k] = o[k]; });
+  return r;
+}
+function sbEnvoyesNote(id, maj){
+  const o = sbEnvoyesLire(), ids = new Set(sbIndexLire().map(e => e.id)); ids.add(id);
+  Object.keys(o).forEach(k => { if(!ids.has(k)) delete o[k]; });
+  o[id] = maj; ppEcrire('synthese-envoyes', JSON.stringify(o));
+}
+function sbTitreDe(md, matiere){
+  const m = /^\s*#\s+(.+?)\s*$/m.exec(md || '');
+  const t = m ? m[1].replace(/[*_`#]+/g, '').trim() : '';
+  return (t || ('Synthèse' + (matiere ? ' · ' + matiere : ''))).slice(0, 120);
+}
+function sbDateCourte(iso){
+  const t = sbTs(iso); if(!t) return '';
+  const p = n => String(n).padStart(2, '0'), d = new Date(t);
+  const dj = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()), auj = todayStr();
+  if(dj === auj) return "Aujourd'hui";
+  if(dj === addDays(auj, -1)) return 'Hier';
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+
+/* --- Enregistrer (bouton de l'écran « Ta synthèse ») --- */
+function sbSignature(s){ return (s.markdown || '') + '\u0001' + (s.images || []).length; }
+function sbEstModifie(s){ return !!s && (!s.idSauve || s.sbSig !== sbSignature(s)); }
+function sbBoutonEtat(s){
+  const sauve = !!s.idSauve, modif = sbEstModifie(s);
+  if(sauve && !modif) return { cls: 'sb-save ok', html: PP_IC.ok + 'Enregistrée', dis: true };
+  return { cls: 'sb-save', html: PP_IC.file + (sauve ? 'Mettre à jour la synthèse' : 'Enregistrer la synthèse'), dis: false };
+}
+function sbBoutonHtml(s){
+  const b = sbBoutonEtat(s);
+  return `<button type="button" class="${b.cls}" id="sb-save-btn" onclick="sbEnregistrer()" ${b.dis ? 'disabled' : ''}>${b.html}</button>`;
+}
+function sbMajBouton(){
+  const s = syntheseEtat, el = document.getElementById('sb-save-btn'); if(!s || !el) return;
+  const b = sbBoutonEtat(s); el.className = b.cls; el.innerHTML = b.html; el.disabled = b.dis;
+}
+function sbEnregistrer(){
+  const s = syntheseEtat; if(!s || s.enCours) return false;
+  const zone = document.getElementById('synth-markdown'); if(zone) s.markdown = zone.value;
+  if(!(s.markdown || '').trim()){ ppToast('Synthèse vide'); return false; }
+  const imgs = (s.images || []).map(i => i.url).filter(u => SB_IMG_RE.test(u || ''));
+  const maintenant = new Date().toISOString();
+  const liste = sbIndexLire();
+  const e = s.idSauve ? liste.find(x => x.id === s.idSauve) : null;
+  if(!e && liste.length >= SB_MAX){ ppToast('Limite atteinte : supprime une synthèse'); return false; }
+  const id = e ? e.id : sbNouvelId();
+  if(!ppEcrire('synthese-c-' + id, sbCorpsTexte(maintenant, s.markdown, imgs))) return false;   /* stockage plein : ppEcrire prévient */
+  const nv = sbNet({ id, titre: (e && e.tr) ? e.titre : sbTitreDe(s.markdown, s.matiere), matiere: e ? e.matiere : (s.matiere || ''),
+    creeLe: e ? (e.creeLe || maintenant) : maintenant, modifieLe: maintenant, cMaj: maintenant, nImg: imgs.length, tr: !!(e && e.tr) });
+  if(e) liste.splice(liste.indexOf(e), 1, nv); else liste.unshift(nv);
+  if(!sbIndexEcrire(liste)){ if(!e) sbCorpsEfface(id); return false; }
+  const maj = !!s.idSauve && !!e;
+  s.idSauve = id; s.sbSig = sbSignature(s); s.copie = false;
+  sbEnvoyerCorps(id);
+  try{ planifierSyncDiffere(); }catch(_){}
+  ppToast(maj ? 'Synthèse mise à jour' : 'Synthèse enregistrée');
+  renderSynthese();
+  const b = document.getElementById('sb-save-btn');
+  if(b && b.animate && !matchMedia('(prefers-reduced-motion:reduce)').matches){ try{ b.animate([{ transform: 'scale(.94)' }, { transform: 'scale(1.05)' }, { transform: 'none' }], { duration: 440, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }catch(_){} }
+  return true;
+}
+/* confirmation à la fermeture (appelée par tryFermerSynthese quand il y a quelque chose de non enregistré) */
+function sbFermerSheet(s){
+  const sauve = !!s.idSauve;
+  ppSheet(`<div class="pp-grab"></div><h2>${sauve ? 'Fermer sans enregistrer ?' : 'Fermer la synthèse ?'}</h2><p class="pp-hint">${sauve ? 'Tes modifications ne sont pas enregistrées.' : "Enregistre-la pour la retrouver dans Parcourir, sur tous tes appareils."}</p>
+  <button type="button" class="sb-save" style="margin-bottom:12px" onclick="sbEnregistrerEtFermer()">${PP_IC.file}Enregistrer et fermer</button>
+  <div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" style="margin:0;background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="ppSheetClose();fermerSynthese()">Fermer sans enregistrer</button></div>`);
+}
+function sbEnregistrerEtFermer(){
+  const ok = sbEnregistrer();
+  if(!ok) return;
+  ppSheetClose();
+  setTimeout(fermerSynthese, 180);
+}
+
+/* --- Données de synchro / de sauvegarde --- */
+function sbDonneesSync(pourSync){
+  const idx = sbIndexLire().sort((a, b) => a.id < b.id ? -1 : 1), sup = sbSupprimeesLire().sort(), out = {};
+  if(idx.length) out.syntheses = idx;
+  if(sup.length) out.synthesesSupprimees = sup;
+  if(!pourSync && idx.length){
+    const c = {};
+    idx.forEach(e => { const k = sbCorpsLire(e.id); if(k) c[e.id] = k; });
+    if(Object.keys(c).length) out.synthesesContenus = c;
+  }
+  return out;
+}
+function sbFusionnerDepuisSync(data){
+  try{
+    if(!ppEstObjet(data)) return;
+    let change = false;
+    /* suppressions : union locale + reçue, 100 derniers ; une synthèse supprimée quelque part ne revient pas */
+    const supLoc = sbSupprimeesLire();
+    const supRecu = Array.isArray(data.synthesesSupprimees) ? data.synthesesSupprimees.slice(0, 300).filter(x => typeof x === 'string' && SB_ID_RE.test(x)) : [];
+    const sup = supLoc.slice(); supRecu.forEach(x => { if(sup.indexOf(x) < 0) sup.push(x); });
+    const supFin = sup.slice(-100);
+    if(supFin.length !== supLoc.length || supFin.some((x, i) => x !== supLoc[i])){ ppEcrire('synthese-supprimees', JSON.stringify(supFin)); change = true; }
+    const supSet = new Set(sup);
+    /* liste : union par id, la plus récente gagne, moins les supprimées */
+    const loc = sbIndexLire(), parId = new Map(loc.map(e => [e.id, e]));
+    const recu = Array.isArray(data.syntheses) ? data.syntheses.slice(0, SB_MAX).filter(sbEntreeOk).map(sbNet) : [];
+    recu.forEach(e => { const l = parId.get(e.id); if(!l || sbTs(e.modifieLe) > sbTs(l.modifieLe)) parId.set(e.id, e); });
+    const tous = [...parId.values()].filter(e => !supSet.has(e.id))
+      .sort((a, b) => sbTs(b.modifieLe) - sbTs(a.modifieLe) || (a.id < b.id ? -1 : 1)).slice(0, SB_MAX);
+    const garde = new Set(tous.map(e => e.id));
+    loc.forEach(e => { if(!garde.has(e.id)) sbCorpsEfface(e.id); });
+    if(JSON.stringify(tous) !== JSON.stringify(loc)){ if(sbIndexEcrire(tous)) change = true; }
+    /* corps fournis par une sauvegarde importée */
+    const corps = ppEstObjet(data.synthesesContenus) ? data.synthesesContenus : null;
+    if(corps) tous.forEach(e => {
+      const c = corps[e.id];
+      if(!sbCorpsOk(c) || !sbTs(c.maj)) return;
+      if(sbTs(c.maj) > sbTs(sbCorpsMaj(e.id))){
+        const img = c.img.filter(u => typeof u === 'string' && SB_IMG_RE.test(u)).slice(0, SYN_IMG_MAX);
+        if(ppEcrire('synthese-c-' + e.id, sbCorpsTexte(c.maj, c.md, img))) change = true;
+      }
+    });
+    if(change){ sbRafraichir(); setTimeout(() => sbRattrapage(true), 1500); }
+  }catch(e){}
+}
+
+/* --- Serveur : envoi, réception, effacement (route /synth du Worker) --- */
+function sbPeutLire(){ return !!(syncActif() && !sbWorkerKo); }
+function sbPeutEnvoyer(){ return sbPeutLire() && !syncPauseActive(); }
+function sbCorpsUrl(id){ return `${SYNC_WORKER_URL}/synth?code=${encodeURIComponent(syncCodePerso())}&id=${encodeURIComponent(id)}`; }
+async function sbReponse(res){ let j = null; try{ j = JSON.parse(await res.text()); }catch(e){} return j; }
+async function sbEnvoyerCorps(id){
+  let ctl = null, tm = null;
+  try{
+    if(!SB_ID_RE.test(id) || !sbPeutEnvoyer() || sbEnCours[id]) return;
+    const e = sbIndexLire().find(x => x.id === id); if(!e) return;
+    const c = sbCorpsLire(id); if(!c) return;
+    if(sbEnvoyesLire()[id] === c.maj) return;   /* le serveur a déjà cette version */
+    let corps = sbCorpsTexte(c.maj, c.md, c.img);
+    if(corps.length > SB_CORPS_MAX) corps = sbCorpsTexte(c.maj, c.md, []);   /* trop lourd : le texte part seul, les images restent sur cet appareil */
+    if(corps.length > SB_CORPS_MAX) return;
+    sbEnCours[id] = true;
+    ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+    if(ctl) tm = setTimeout(() => { try{ ctl.abort(); }catch(_){} }, SYNC_DELAI_MS * 2);
+    const res = await fetch(sbCorpsUrl(id), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corps, ...(ctl ? { signal: ctl.signal } : {}) });
+    const j = await sbReponse(res);
+    if(j === null || res.status === 404 || res.status === 405){ sbWorkerKo = true; return; }   /* Worker pas à jour : plus d'essai avant le prochain démarrage */
+    if(res.status === 429){ if(j.quota === 'ecriture') syncMettreEnPause(); return; }
+    if(res.ok && j.ok === true){ sbEnvoyesNote(id, c.maj); syncBudgetCompter(); }
+  }catch(_){ /* hors ligne ou délai : le rattrapage réessaiera */ }
+  finally{ if(tm) clearTimeout(tm); delete sbEnCours[id]; }
+}
+/* Demande le corps au serveur et le met en cache local. Renvoie 'ok' | 'absent' | 'nonmaj' | 'quota' | 'err'. */
+async function sbCorpsCharger(id){
+  let ctl = null, tm = null;
+  try{
+    if(!SB_ID_RE.test(id) || !sbPeutLire()) return 'nonmaj';
+    ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+    if(ctl) tm = setTimeout(() => { try{ ctl.abort(); }catch(_){} }, SYNC_DELAI_MS * 2);
+    const res = await fetch(sbCorpsUrl(id), { method: 'GET', ...(ctl ? { signal: ctl.signal } : {}) });
+    const j = await sbReponse(res);
+    if(j === null){ sbWorkerKo = true; return 'nonmaj'; }
+    if(res.status === 429) return 'quota';
+    if(res.status === 404 && j.error === 'Synthèse introuvable'){ sbAbsentTs[id] = Date.now(); return 'absent'; }
+    if(res.status === 404 || res.status === 405){ sbWorkerKo = true; return 'nonmaj'; }
+    if(!res.ok || !sbCorpsOk(j) || !sbTs(j.maj)) return 'err';
+    if(!sbIndexLire().some(x => x.id === id)) return 'err';   /* supprimée entre-temps */
+    const img = j.img.filter(u => typeof u === 'string' && SB_IMG_RE.test(u)).slice(0, SYN_IMG_MAX);
+    if(!ppEcrire('synthese-c-' + id, sbCorpsTexte(j.maj, j.md.slice(0, 400000), img))) return 'err';
+    sbEnvoyesNote(id, j.maj);   /* ce corps vient du serveur : inutile de le renvoyer */
+    return 'ok';
+  }catch(_){ return 'err'; }
+  finally{ if(tm) clearTimeout(tm); }
+}
+function sbServeurFile(){ return ppLireJSON('synthese-a-effacer', [], Array.isArray).filter(x => typeof x === 'string' && SB_ID_RE.test(x)); }
+function sbServeurEfface(id){
+  try{
+    if(!SB_ID_RE.test(id) || !syncActif()) return;   /* synchro inactive : aucune copie n'a pu partir de cet appareil */
+    const f = sbServeurFile(); if(f.indexOf(id) < 0) f.push(id);
+    ppEcrire('synthese-a-effacer', JSON.stringify(f.slice(-50)));
+    setTimeout(sbServeurNettoie, 1500);
+  }catch(_){}
+}
+async function sbServeurNettoie(){
+  if(sbSupprEnCours || sbSupprWorkerKo || !sbPeutEnvoyer()) return;
+  sbSupprEnCours = true;
+  try{
+    for(const id of sbServeurFile().slice(0, 3)){
+      if(!sbPeutEnvoyer()) break;
+      let ctl = null, tm = null, fini = false;
+      try{
+        ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+        if(ctl) tm = setTimeout(() => { try{ ctl.abort(); }catch(_){} }, SYNC_DELAI_MS);
+        const res = await fetch(sbCorpsUrl(id) + '&suppr=1', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '', ...(ctl ? { signal: ctl.signal } : {}) });
+        const j = await sbReponse(res);
+        if(j === null){ sbSupprWorkerKo = true; break; }
+        if(res.status === 429){ if(j.quota === 'ecriture') syncMettreEnPause(); break; }
+        if(res.ok && j.ok === true){ syncBudgetCompter(); fini = true; }
+        else if(res.status === 400 && j.error === 'Corps vide'){ sbSupprWorkerKo = true; break; }
+        else if(res.status === 400) fini = true;
+        else break;
+      }catch(_){ break; }
+      finally{ if(tm) clearTimeout(tm); }
+      if(fini) ppEcrire('synthese-a-effacer', JSON.stringify(sbServeurFile().filter(x => x !== id)));
+    }
+  }catch(_){}
+  finally{ sbSupprEnCours = false; }
+}
+/* démarrage / retour dans l'app : envoie ce qui n'est pas parti, récupère les corps absents ou périmés (3 + 3 par passage, un passage par minute) */
+async function sbRattrapage(sans){
+  try{
+    if(!sbPeutLire()) return;
+    if(!sans && Date.now() - sbRattrapageTs < 60000) return;
+    sbRattrapageTs = Date.now();
+    await sbServeurNettoie();
+    const liste = sbIndexLire(), env = sbEnvoyesLire();
+    const aEnvoyer = liste.filter(e => { const m = sbCorpsMaj(e.id); return m && env[e.id] !== m; }).slice(0, 3);
+    for(const e of aEnvoyer){ if(!sbPeutEnvoyer()) break; await sbEnvoyerCorps(e.id); }
+    const aPrendre = liste.filter(e => !sbCorpsAJour(e) && !(sbAbsentTs[e.id] && Date.now() - sbAbsentTs[e.id] < 600000)).slice(0, 3);
+    let recu = false;
+    for(const e of aPrendre){
+      const r = await sbCorpsCharger(e.id);
+      if(r === 'ok') recu = true;
+      if(r === 'nonmaj' || r === 'quota') break;
+    }
+    if(recu) sbRafraichir();
+  }catch(_){}
+}
+setTimeout(() => { sbRattrapage(); }, 9000);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') setTimeout(() => sbRattrapage(), 4500); });
+
+/* --- Carte « Synthèses » dans Parcourir + liste --- */
+function sbCarteHtml(requete){
+  if(requete || browsePauseSeul || browseArchSeul) return '';
+  const n = sbIndexLire().length;
+  return `<button type="button" class="sb-card" onclick="sbOuvrirListe()"><i class="sb-ico">${PP_IC.file}</i><span class="sb-tx"><b>Synthèses</b><span>${n ? 'Tes fiches enregistrées' : 'Génère ta première synthèse'}</span></span>${n ? `<em class="sb-n">${n}</em>` : ''}<i class="sb-chev">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</i></button>`;
+}
+function sbRafraichir(){
+  try{
+    if(document.getElementById('sb-overlay')) sbRendreListe(true);
+    if(typeof activeTab !== 'undefined' && activeTab === 'browse') renderBrowse();
+  }catch(e){}
+}
+function sbOuvrirListe(){ sbRendreListe(false); }
+function sbFermerListe(){ closeStreakModal(); }
+function sbRendreListe(same){
+  const liste = sbIndexLire().sort((a, b) => sbTs(b.modifieLe) - sbTs(a.modifieLe));
+  const head = `<div class="pp-sh"><button class="pp-back" aria-label="Retour" onclick="sbFermerListe()">${PP_IC.back}</button><div><small>Parcourir</small><h2>Synthèses</h2></div></div>`;
+  let corps;
+  if(!liste.length){
+    corps = `<div class="sb-empty"><i class="sb-ico">${PP_IC.file}</i><b>Aucune synthèse pour l'instant</b><p>Génère une synthèse, puis touche « Enregistrer » : elle apparaîtra ici.</p></div>`;
+  }else{
+    const parM = {};
+    liste.forEach(e => { (parM[e.matiere || ''] = parM[e.matiere || ''] || []).push(e); });
+    const noms = Object.keys(parM).sort((a, b) => (a === '') - (b === '') || a.localeCompare(b, 'fr'));
+    let i = 0;
+    corps = noms.map(m => {
+      let col = 'var(--muted)'; try{ if(m) col = couleurMatiere(m); }catch(_){}
+      const items = parM[m].map(e => {
+        const hors = !sbCorpsAJour(e);
+        return `<div class="sb-it" role="button" tabindex="0" style="animation-delay:${Math.min(i++, 9) * 35}ms" onclick="sbOuvrir('${e.id}')" onkeydown="if(event.key==='Enter')sbOuvrir('${e.id}')"><div class="sb-main"><b>${ppEsc(e.titre)}</b><small><span>${ppEsc(sbDateCourte(e.modifieLe))}</span>${e.nImg ? `<span>🖼 ${e.nImg}</span>` : ''}${hors ? `<span class="sb-off">${PP_IC.cloud}Pas encore sur cet appareil</span>` : ''}</small></div><button type="button" class="sb-more" aria-label="Options" onclick="event.stopPropagation();sbMenu('${e.id}')">${PP_DOTS_H}</button></div>`;
+      }).join('');
+      return `<div class="sb-grp" style="--c:${col}"><div class="sb-gh"><i></i><span>${ppEsc(m || 'Sans matière')}</span><small>${parM[m].length}</small></div>${items}</div>`;
+    }).join('');
+  }
+  const root = ppPageShow(head + `<div class="pp-sb pp-view sb-lib">${corps}</div>`, 'sb-overlay', same);
+  if(root && same){ const p = root.querySelector('.pp-page'); if(p) p.style.animation = 'none'; const v = root.querySelector('.pp-view'); if(v) v.classList.add('pp-still'); }
+}
+
+/* --- Ouvrir / renommer / supprimer / partager --- */
+async function sbOuvrir(id){
+  const e = sbIndexLire().find(x => x.id === id); if(!e) return;
+  if(!sbCorpsAJour(e)){
+    if(sbPeutLire()){
+      ppToast('Récupération…');
+      const r = await sbCorpsCharger(id);
+      if(r !== 'ok' && !sbCorpsMaj(id)){
+        ppToast(r === 'absent' ? "Pas encore envoyée par l'autre appareil" : r === 'quota' ? 'Limite du jour atteinte, réessaie plus tard' : 'Récupération impossible, réessaie');
+        return;
+      }
+      sbRafraichir();
+    }else if(!sbCorpsMaj(id)){
+      ppToast(syncActif() ? 'Récupération impossible pour le moment' : "Cette synthèse vient d'un autre appareil : active la synchro pour la lire");
+      return;
+    }
+  }
+  const c = sbCorpsLire(id); if(!c) return;
+  const e2 = sbIndexLire().find(x => x.id === id) || e;
+  sbOuvrirCorps(e2, c);
+}
+function sbOuvrirCorps(e, c){
+  const images = []; c.img.forEach(u => synImgPush(images, u));
+  syntheseEtat = { source: 'biblio', matiere: e.matiere, cours: '', fichiers: [], images, consignes: '', modeleChoisi: '', markdown: c.md,
+    vue: 'apercu', etape: 'resultat', enCours: false, msg: null, copie: false, fichiersSupp: [], suppMsg: null, texteSupp: '', curseur: null,
+    idSauve: e.id, sbSig: '', depuisBiblio: true };
+  syntheseEtat.sbSig = sbSignature(syntheseEtat);
+  ppSynKey = '';
+  renderSynthese();
+}
+function sbMenu(id){
+  const e = sbIndexLire().find(x => x.id === id); if(!e) return;
+  ppSheet(`<div class="pp-grab"></div><h2>${ppEsc(e.titre)}</h2><p class="pp-hint">${ppEsc(e.matiere || 'Sans matière')}</p>
+  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();sbOuvrir('${id}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Ouvrir</b><span>Lire, modifier, exporter</span></div></button>
+  <button class="pp-row" onclick="sbRenommerSheet('${id}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b><span>Changer le titre</span></div></button>
+  <button class="pp-row" onclick="ppSheetClose();sbPartager('${id}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b><span>Un code, comme pour les cartes</span></div></button>
+  <button class="pp-row" onclick="sbSupprimerSheet('${id}')"><i class="pp-ri">${PP_IC.trash}</i><div><b>Supprimer</b><span>La retire de tous tes appareils</span></div></button></div>`);
+}
+function sbRenommerSheet(id){
+  const e = sbIndexLire().find(x => x.id === id); if(!e) return;
+  ppSheet(`<div class="pp-grab"></div><h2>Renommer</h2><p class="pp-hint">Choisis un nouveau titre.</p><input class="pp-fld" id="sb-rn" value="${attrEchappe(e.titre)}" maxlength="120" autocomplete="off" style="margin:0 0 14px" onkeydown="if(event.key==='Enter')sbRenommerGo('${id}')"><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" style="margin:0" onclick="sbRenommerGo('${id}')">Enregistrer</button></div>`);
+  ppFocusChamp('sb-rn');
+}
+function sbRenommerGo(id){
+  const ch = document.getElementById('sb-rn');
+  const t = ((ch && ch.value) || '').trim().replace(/[<>"]/g, '').slice(0, 120);
+  if(!t){ ppToast('Écris un titre'); return; }
+  const l = sbIndexLire(), e = l.find(x => x.id === id); if(!e) return;
+  e.titre = t; e.tr = true; e.modifieLe = new Date().toISOString();
+  sbIndexEcrire(l); ppSheetClose();
+  try{ planifierSyncDiffere(); }catch(_){}
+  sbRafraichir(); ppToast('Titre modifié');
+}
+function sbSupprimerSheet(id){
+  ppSheet(`<div class="pp-grab"></div><h2>Supprimer cette synthèse ?</h2><p class="pp-hint">Elle disparaît de tous tes appareils.</p><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" style="margin:0;background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="sbSupprimerGo('${id}')">Supprimer</button></div>`);
+}
+function sbSupprimerGo(id){
+  sbIndexEcrire(sbIndexLire().filter(e => e.id !== id));
+  sbCorpsEfface(id);
+  const sup = sbSupprimeesLire(); if(sup.indexOf(id) < 0) sup.push(id);
+  ppEcrire('synthese-supprimees', JSON.stringify(sup.slice(-100)));
+  sbServeurEfface(id);
+  try{ planifierSyncDiffere(); }catch(_){}
+  ppSheetClose(); sbRafraichir(); ppToast('Synthèse supprimée');
+}
+async function sbPartager(id){
+  if(sbPartageEnCours) return;
+  const e = sbIndexLire().find(x => x.id === id); if(!e) return;
+  if(!sbCorpsAJour(e) && sbPeutLire()) await sbCorpsCharger(id);
+  const c = sbCorpsLire(id);
+  if(!c){ ppToast('Pas encore sur cet appareil'); return; }
+  if(!SYNC_WORKER_URL || navigator.onLine === false){ ppToast('Pas de connexion'); return; }
+  const json = JSON.stringify({ format: 'synthese-partage', version: 1, titre: e.titre, matiere: e.matiere, markdown: c.md, images: c.img });
+  sbPartageEnCours = true;
+  ppSheet(`<div class="pp-grab"></div><h2>Partager</h2><p class="pp-hint">Envoi…</p>`);
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), PARTAGE_ENVOI_MAX_MS);
+  let code = '', jours = 14;
+  try{
+    const res = await fetch(`${SYNC_WORKER_URL}/partage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: json, signal: ctrl.signal });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    if(!j || typeof j.code !== 'string' || !/^[A-HJKMNP-Z2-9]{6}$/.test(j.code)) throw new Error('réponse inattendue');
+    code = j.code; if(+j.jours > 0) jours = +j.jours;
+  }catch(err){ code = ''; }
+  clearTimeout(t); sbPartageEnCours = false;
+  const feuille = document.getElementById('pp-sheet');
+  const ouverte = !!feuille && feuille.classList.contains('on');
+  if(!code){ if(ouverte) ppSheetClose(); ppToast('Partage impossible, réessaie'); return; }
+  if(!ouverte) return;
+  ppSheet(`<div class="pp-grab"></div><h2>Partager</h2><p class="pp-hint">${ppEsc(e.titre)} · valable ${jours} jours</p>
+  <div class="pp-sharecode">${code.slice(0, 3)} ${code.slice(3)}</div>
+  <div class="pp-duo"><button class="pp-sec" onclick="ppPartageCopier('${code}')">Copier</button><button class="pp-cta" onclick="sbPartageEnvoyer('${code}','${id}')">Envoyer</button></div>`);
+}
+function sbPartageEnvoyer(code, id){
+  const e = sbIndexLire().find(x => x.id === id);
+  const texte = `Synthèse « ${e ? e.titre : ''} » : ouvre Memoria → Ajouter → Importer, code ${code}`;
+  if(navigator.share){ navigator.share({ text: texte }).catch(() => {}); return; }
+  ppPartageCopier(code);
+}
+/* Importer : un code de partage peut être une synthèse (format « synthese-partage ») */
+function sbImporterPartage(data){
+  const md = (data && typeof data.markdown === 'string') ? data.markdown.slice(0, 400000) : '';
+  if(!md.trim()){ ppToast('Synthèse vide'); return; }
+  const liste = sbIndexLire();
+  if(liste.length >= SB_MAX){ ppToast('Limite atteinte : supprime une synthèse'); return; }
+  const matiere = (typeof data.matiere === 'string') ? data.matiere.trim().slice(0, 60) : '';
+  if(liste.some(e => { const c = sbCorpsLire(e.id); return !!c && c.md === md; })){ ppSheetClose(); ppToast('Cette synthèse est déjà dans ta liste'); return; }
+  const img = Array.isArray(data.images) ? data.images.filter(u => typeof u === 'string' && SB_IMG_RE.test(u)).slice(0, SYN_IMG_MAX) : [];
+  const maintenant = new Date().toISOString(), id = sbNouvelId();
+  if(!ppEcrire('synthese-c-' + id, sbCorpsTexte(maintenant, md, img))) return;
+  const titre = (typeof data.titre === 'string' && data.titre.trim()) ? data.titre.trim().slice(0, 120) : sbTitreDe(md, matiere);
+  liste.unshift(sbNet({ id, titre, matiere, creeLe: maintenant, modifieLe: maintenant, cMaj: maintenant, nImg: img.length, tr: false }));
+  if(!sbIndexEcrire(liste)){ sbCorpsEfface(id); return; }
+  ppSheetClose();
+  sbEnvoyerCorps(id);
+  try{ planifierSyncDiffere(); }catch(_){}
+  ppToast('Synthèse importée');
+  setTimeout(sbOuvrirListe, 260);
+}
 
 function resumeSourceSynthese(s){
   const nb = s.fichiers.length;
@@ -15533,6 +16034,7 @@ function construireDonneesProgression(options){
     geminiApiKey,
     geminiApiKeyMaj,
     modelesSynthese,
+    ...sbDonneesSync(!!(options && options.pourSync)),   // v371 : synthèses enregistrées (liste + suppressions ; corps seulement dans la sauvegarde)
     // v173 : données propres à l'appareil. Absentes de la synchro (pourSync : le contenu envoyé au serveur ne change pas),
     // présentes dans la sauvegarde pour que « Exporter la progression » soit complet.
     ...((options && options.pourSync) ? pcSyncHistEnvoi() : {
@@ -16562,6 +17064,7 @@ function fusionnerDepuisSync(data){
     cartesRecues = data.cartes;
     tombstonesRecus = Array.isArray(data.cartesSupprimees) ? data.cartesSupprimees : [];
     fusionnerModelesSynthese(data.modelesSynthese); // modèles de consignes de synthèse
+    sbFusionnerDepuisSync(data);                       // v371 : synthèses enregistrées
     reglagesRecus = data; // dates de contrôle + clé Gemini, appliquées après les cartes
   } else {
     return;
@@ -18109,6 +18612,7 @@ function ppPageShow(html, id, still){
   const nouveau = root.querySelector('.pp-sb');
   if(nouveau && still) nouveau.scrollTop = y;
   if(id === 'pp-stats-page') ppPageSwipe(root.querySelector('.pp-page'), closeStreakModal);
+  else if(id === 'sb-overlay') ppPageSwipe(root.querySelector('.pp-page'), closeStreakModal);
   else if(id === 'synth-overlay') ppPageSwipe(root.querySelector('.pp-page'), tryFermerSynthese); /* v127 : même geste, avec la confirmation « Fermer la synthèse ? » */
   return root;
 }
@@ -18268,6 +18772,12 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v372', t:["Des images au choix, un orange partout", "Pictures your way, orange everywhere"], p:[
+    ["Chaque bouton « Image » propose maintenant Galerie ou IA : sur les cartes de l'aperçu et dans les synthèses, comme quand tu écris une carte.", "Every “Image” button now offers Gallery or AI: on the preview cards and in summaries, just like when you write a card."],
+    ["Les interrupteurs passent à l'orange, et en mode clair le grand chiffre « à réviser » inverse ses couleurs.", "Switches turn orange, and in light mode the big “to review” number swaps its colors."]] },
+  { v:'v371', t:["Tes synthèses, enfin rangées", "Your summaries, finally filed"], p:[
+    ["Un bouton « Enregistrer » apparaît sous chaque synthèse. Retrouve-les toutes dans Parcourir, dans la carte « Synthèses », rangées par matière.", "A “Save” button now sits under each summary. Find them all in Browse, in the “Summaries” card, filed by subject."],
+    ["Elles suivent sur tous tes appareils (images comprises) et se partagent par code, comme les cartes : Ajouter → Importer.", "They follow you across all your devices (images included) and can be shared with a code, like cards: Add → Import."]] },
   { v:'v370', t:["Un vrai mode clair", "A proper light mode"], p:[
     ["Le mode clair a maintenant sa propre allure : couleurs plus vives, contours plus nets, texte blanc sur les boutons orange.", "Light mode now has a look of its own: livelier colors, sharper outlines, white text on the orange buttons."],
     ["Les couleurs des matières sont plus franches en clair, et changent tout de suite quand tu passes de Sombre à Clair. Le mode sombre ne bouge pas.", "Subject colors are bolder in light mode and change right away when you switch between Dark and Light. Dark mode is unchanged."]] },
@@ -18567,9 +19077,9 @@ function renderSyntheseResultat(){
     <input type="file" id="sup-synth-gal" accept="image/*" multiple style="display:none;" onchange="handleFichiersSupp(event,'synth')">
     <input type="file" id="sup-synth-doc" accept="${ACCEPT_DOCS}" multiple style="display:none;" onchange="handleFichiersSupp(event,'synth')">`;
   return `<div class="pp-sb pp-view">${ppSynMsg(s)}<div class="pp-mode ${ap ? 'ia' : 'man'}"><i></i><button class="${ap ? '' : 'on'}" onclick="basculerVueSynthese('edition')">Modifier</button><button class="${ap ? 'on' : ''}" onclick="basculerVueSynthese('apercu')">Aperçu</button></div>
-  ${ap ? `<div class="pp-rend">${ppSynRendu(s.markdown)}</div>` : `<textarea class="pp-txa pp-md" id="synth-markdown" spellcheck="false" oninput="syntheseEtat.markdown=this.value" onblur="if(syntheseEtat)syntheseEtat.curseur=this.selectionStart">${ppEsc(s.markdown)}</textarea>`}
-  <div class="pp-imgadd"><button type="button" class="pp-sec" onclick="document.getElementById('synth-img-in').click()">${PP_IMG_IC}Ajouter une image</button><input type="file" id="synth-img-in" accept="image/*" style="display:none" onchange="synImgChoisie(event)">${ap ? '' : '<p class="pp-hint" style="margin:6px 2px 0">Elle se place à l\'endroit du curseur. Pour la retirer, efface sa ligne « ![](img:N) ».</p>'}</div>
-  <div class="pp-sy3"><button class="pp-sec" onclick="copierSynthese()">${s.copie ? 'Copié ✓' : 'Copier'}</button><button class="pp-sec" onclick="ppSynExport('docx')">Word (.docx)</button><button class="pp-sec" onclick="ppSynExport('pdf')">PDF</button></div>
+  ${ap ? `<div class="pp-rend">${ppSynRendu(s.markdown)}</div>` : `<textarea class="pp-txa pp-md" id="synth-markdown" spellcheck="false" oninput="syntheseEtat.markdown=this.value;sbMajBouton()" onblur="if(syntheseEtat)syntheseEtat.curseur=this.selectionStart">${ppEsc(s.markdown)}</textarea>`}
+  <div class="pp-imgadd"><button type="button" class="pp-sec" onclick="synImgMenu()">${PP_IMG_IC}Ajouter une image</button><input type="file" id="synth-img-in" accept="image/*" style="display:none" onchange="synImgChoisie(event)">${ap ? '' : '<p class="pp-hint" style="margin:6px 2px 0">Elle se place à l\'endroit du curseur. Pour la retirer, efface sa ligne « ![](img:N) ».</p>'}</div>
+  ${sbBoutonHtml(s)}<div class="pp-sy3"><button class="pp-sec" onclick="copierSynthese()">${s.copie ? 'Copié ✓' : 'Copier'}</button><button class="pp-sec" onclick="ppSynExport('docx')">Word (.docx)</button><button class="pp-sec" onclick="ppSynExport('pdf')">PDF</button></div>
   <hr class="pp-hr1">${composer}${inputs}
   <hr class="pp-hr1"><div class="pp-duo"><button class="pp-sec" onclick="retourConsignesSynthese()">Modifier les précisions</button><button class="pp-sec" onclick="tryFermerSynthese()">Fermer</button></div></div>`;
 }
@@ -18596,7 +19106,8 @@ function tryFermerSynthese(){
   /* v182 : depuis « Modifier les précisions », la flèche retour ramène à « Ta synthèse » (et ne ferme plus tout) */
   if(s && s.etape === 'consignes' && (s.markdown || '').trim()){ s.etape = 'resultat'; s.msg = null; renderSynthese(); return; }
   if(s && s.etape === 'resultat' && s.markdown.trim()){
-    ppSheet(`<div class="pp-grab"></div><h2>Fermer la synthèse ?</h2><p class="pp-hint">Elle n'est pas enregistrée : pense à l'exporter d'abord.</p><div class="pp-duo"><button class="pp-sec" onclick="ppSheetClose()">Annuler</button><button class="pp-cta" style="margin:0;background:var(--pink);box-shadow:0 4px 0 #a02a4a;color:#1a0510" onclick="ppSheetClose();fermerSynthese()">Fermer</button></div>`);
+    if(!sbEstModifie(s)){ fermerSynthese(); return; }   /* v371 : déjà enregistrée et inchangée : on ferme sans question */
+    sbFermerSheet(s);
     return;
   }
   fermerSynthese();
@@ -19112,11 +19623,12 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     if(ppCtrlM || ppCtrlD || ppCtrlAjout) o.cc = { m: ppCtrlM || '', d: ppCtrlD || '', a: ppCtrlAjout ? 1 : 0 };
     if(planningDatesControleOpen === false) o.pd = 0;
     /* v182 : page « Synthèse » (Précisions / Ta synthèse) : étape, textes, vue. Les fichiers joints et les images ajoutées sont trop lourds : non gardés. */
-    if(syntheseEtat && (syntheseEtat.source === 'ajout' || syntheseEtat.source === 'apercu' || syntheseEtat.source === 'parcourir')){
+    if(syntheseEtat && (syntheseEtat.source === 'ajout' || syntheseEtat.source === 'apercu' || syntheseEtat.source === 'parcourir' || syntheseEtat.source === 'biblio')){
       var sy = syntheseEtat;
       try{
         var y2 = { s: sy.source, e: sy.etape === 'resultat' ? 'resultat' : 'consignes', v: sy.vue === 'apercu' ? 'apercu' : 'edition' };
         if(sy.matiere) y2.m = sy.matiere;
+        if(sy.idSauve) y2.id = sy.idSauve;   /* v371 : synthèse déjà enregistrée */
         if(sy.consignes) y2.k = sy.consignes;
         if(sy.modeleChoisi) y2.mo = sy.modeleChoisi;
         if(sy.markdown && sy.markdown.length < 250000) y2.md = sy.markdown;
@@ -19270,13 +19782,15 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
 
     /* 2 bis) v182 : page « Synthèse » rouverte à la même étape, avec ses textes */
     var Y = o.sy;
-    if(!fait && Y && (Y.s === 'ajout' || Y.s === 'apercu' || Y.s === 'parcourir')){
+    if(!fait && Y && (Y.s === 'ajout' || Y.s === 'apercu' || Y.s === 'parcourir' || Y.s === 'biblio')){
       try{
         if(Y.s === 'parcourir') ouvrirSyntheseDepuisParcourir(Y.m || '');
+        else if(Y.s === 'biblio'){ var eb = sbIndexLire().find(function(x){ return x.id === Y.id; }), cb = eb && sbCorpsLire(Y.id); if(eb && cb) sbOuvrirCorps(eb, cb); }
         else ouvrirSynthese({ source: Y.s, matiere: Y.m || '', cours: (typeof Y.c === 'string' && Y.c) ? Y.c : (Y.s === 'apercu' ? (iaCoursOriginal || '') : ((iaBrouillon && iaBrouillon.cours) || '')), fichiers: [] });
         var sy2 = syntheseEtat;
         if(sy2){
           sy2.consignes = txt(Y.k, 200000); sy2.modeleChoisi = txt(Y.mo, 500); sy2.markdown = txt(Y.md, 250000); sy2.texteSupp = txt(Y.ts, 200000);
+          if(Y.s !== 'biblio' && typeof Y.id === 'string' && SB_ID_RE.test(Y.id)){ var cs = sbCorpsLire(Y.id); if(cs){ sy2.idSauve = Y.id; cs.img.forEach(function(u){ synImgPush(sy2.images, u); }); } }   /* v371 : retrouve l'enregistrement (et ses images) */
           sy2.vue = Y.v === 'apercu' ? 'apercu' : 'edition';
           sy2.etape = (Y.e === 'resultat' && sy2.markdown.trim()) ? 'resultat' : 'consignes';
           renderSynthese();
