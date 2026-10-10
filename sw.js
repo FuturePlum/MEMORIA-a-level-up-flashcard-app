@@ -19,6 +19,10 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v198 : v394 (menu « Modifier la carte » allégé sur Chromebook) : index.html change, donc nouvelle version du cache.
+
+   v197 : v393 (synthèses : changement d'écran dans la même fenêtre, boutons pleine largeur, barre de défilement masquée) : index.html change, donc nouvelle version du cache.
+
    v190 : v385 (routeur de Prof et recherche d'image : 3.1 Flash-Lite, pour décharger le quota de 3.5 Flash-Lite) : index.html change, donc nouvelle version du cache.
 
    v189 : v384 (modèles des IA : cartes sur 3.6 Flash puis 3.5 Flash-Lite high ; Prof et synthèses sur 3.5 Flash-Lite high puis 3.1 Flash-Lite high) : index.html change, donc nouvelle version du cache.
@@ -153,7 +157,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v196';
+const SW_VERSION = 'v198';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

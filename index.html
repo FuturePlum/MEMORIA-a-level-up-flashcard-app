@@ -4267,6 +4267,16 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .sb-more:active svg circle:nth-child(2),.sb-more.js-press svg circle:nth-child(2){transition-delay:.04s}
 .sb-more:active svg circle:nth-child(3),.sb-more.js-press svg circle:nth-child(3){transition-delay:.08s}
 </style>
+<style id="v393-style">
+/* v393 : « Synthèses » et « Enregistrer » prennent toute la largeur ; plus de barre de défilement dans les synthèses ; changement d'écran sans clignotement */
+.sb-card{width:100%}
+.sb-save{width:100%;min-width:0;padding:0 18px;margin:16px 0 6px}
+#synth-overlay .pp-sb,#sb-overlay .pp-sb,#synth-overlay textarea{scrollbar-width:none;-ms-overflow-style:none}
+#synth-overlay .pp-sb::-webkit-scrollbar,#sb-overlay .pp-sb::-webkit-scrollbar,#synth-overlay textarea::-webkit-scrollbar{display:none;width:0;height:0}
+/* ancien contenu posé par-dessus pendant le changement d'écran : il s'efface, le nouveau arrive (la fenêtre et son fond sombre ne bougent pas) */
+.pp-ghost{position:absolute;inset:0;display:flex;flex-direction:column;padding:inherit;pointer-events:none;z-index:5;overflow:hidden}
+.pp-nofx .pp-view>*,.pp-nofx .pp-lect .pp-rend>*,.pp-nofx .pp-view.pp-lect>.pp-lectb{animation:none!important}
+</style>
 </head>
 <body>
 <div id="boot-splash" aria-hidden="true">
@@ -11671,8 +11681,8 @@ function ppFiche(id, retour){
   ${pills}<label class="pp-l" for="pp-eq">Question</label>${ppChampImg('fi', 'q', `<textarea id="pp-eq" oninput="ppIvGris('fi');ppRvMaj('pp-eq')">${escapeHtml(qv)}</textarea>`)}${ppRvDiv('pp-eq-rv', qv)}<label class="pp-l" for="pp-ea">Réponse</label>${ppChampImg('fi', 'r', `<textarea id="pp-ea" oninput="ppRvMaj('pp-ea')">${escapeHtml(av)}</textarea>`)}${ppRvDiv('pp-ea-rv', av)}
   <div class="pp-set" style="margin-bottom:14px"><div class="pp-li${ivOff ? ' pp-off' : ''}"><i class="pp-ico">${PP_IC.swap}</i><span>Sens inversé<small>La carte est aussi posée dans l'autre sens</small></span><button class="pp-tg${ppFi.iv ? ' on' : ''}" aria-label="Sens inversé" onclick="ppFicheIv(this)"></button></div>
   <div class="pp-li${ecOk ? '' : ' pp-off'}"><i class="pp-ico">${PP_IC.edit}</i><span>Réponse à écrire<small>${ecLong ? 'Réponse longue : peu pratique à écrire' : 'Tu tapes ta réponse avant de la voir'}</small></span><button class="pp-tg${ppFi.ec ? ' on' : ''}" aria-label="Réponse à écrire" onclick="ppFicheEc(this)"></button></div>
-  <button class="pp-li" onclick="ppSheetClose();ppCoachOuvrir({carteId:'${iA}'});ppCoachDe(()=>ppFiche('${iA}'))"><i class="pp-ico">${PP_IC.spark}</i><span>Discuter de la carte<small>Explication, astuce pour la retenir</small></span></button>
-  <button class="pp-li" onclick="ppPauseBascule('${iA}')"><i class="pp-ico">${c.pausee === true ? ppSvg('<path d="M7 4l12 8-12 8z"/>', 15) : ppSvg('<path d="M8 5v14M16 5v14"/>', 15)}</i><span>${c.pausee === true ? 'Reprendre la carte' : 'Mettre en pause'}<small>${c.pausee === true ? 'Elle revient dans tes révisions' : 'Elle sort des révisions, sans rien perdre'}</small></span></button>
+  ${ppWide() ? '' : `<button class="pp-li" onclick="ppSheetClose();ppCoachOuvrir({carteId:'${iA}'});ppCoachDe(()=>ppFiche('${iA}'))"><i class="pp-ico">${PP_IC.spark}</i><span>Discuter de la carte<small>Explication, astuce pour la retenir</small></span></button>
+  <button class="pp-li" onclick="ppPauseBascule('${iA}')"><i class="pp-ico">${c.pausee === true ? ppSvg('<path d="M7 4l12 8-12 8z"/>', 15) : ppSvg('<path d="M8 5v14M16 5v14"/>', 15)}</i><span>${c.pausee === true ? 'Reprendre la carte' : 'Mettre en pause'}<small>${c.pausee === true ? 'Elle revient dans tes révisions' : 'Elle sort des révisions, sans rien perdre'}</small></span></button>`}
   <button class="pp-li" onclick="ppFicheResetAsk('${iA}')"><i class="pp-ico">${PP_IC.loop}</i><span>Remettre la maîtrise à zéro<small>Repart en « Nouvelle »</small></span></button></div>
   <div class="pp-duo" style="grid-template-columns:52px 1fr 1.5fr"><button class="pp-sec" style="color:var(--pink);padding:0" aria-label="Supprimer la carte" title="Supprimer la carte" onclick="ppFicheAsk('${iA}')">${PP_IC.trash}</button><button class="pp-sec" onclick="ppFicheAnnuler()">Annuler</button><button class="pp-cta" onclick="ppFicheSave('${iA}')">Enregistrer</button></div>`);
   ppFiAuto = true;
@@ -13146,7 +13156,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v392';
+const PP_APP_VERSION = 'v394';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -14831,11 +14841,12 @@ function ouvrirSynthese(base){
 
 function fermerSynthese(){
   const retourListe = !!(syntheseEtat && syntheseEtat.depuisBiblio);   /* v371 : ouverte depuis « Synthèses » : on y revient */
-  syntheseEtat = null; ppSynKey = '';
+  syntheseEtat = null; ppSynKey = ''; ppSynEcran = '';
   const root = document.getElementById('modal-root');
   const page = root && root.querySelector(':scope > .pp-page:not(.pp-pgout)');
   /* v390 : sortie douce (fondu + glissade) ; sur téléphone, la liste « Synthèses » est posée dessous avant, donc elle apparaît au fil de la sortie */
   if(page && !matchMedia('(prefers-reduced-motion:reduce)').matches){
+    if(retourListe && ppWide()){ ppSynDir = -1; sbRendreListe(false); return; }   /* v393 : Chromebook : la liste revient DANS la même fenêtre (avant : la fenêtre et son fond sombre disparaissaient puis revenaient) */
     const listeDessous = retourListe && !ppWide();
     if(listeDessous) sbRendreListe(false, true);
     page.style.pointerEvents = 'none';
@@ -15197,14 +15208,13 @@ function sbOuvrirCorps(e, c){
     vue: 'apercu', etape: 'resultat', enCours: false, msg: null, copie: false, fichiersSupp: [], suppMsg: null, texteSupp: '', curseur: null,
     idSauve: e.id, sbSig: '', depuisBiblio: true, lecture: true };   /* v390 : s'ouvre en lecture plein écran */
   syntheseEtat.sbSig = sbSignature(syntheseEtat);
-  ppSynKey = '';
+  ppSynKey = ''; ppSynEcran = '';
   renderSynthese();
 }
 function sbMenu(id){
   const e = sbIndexLire().find(x => x.id === id); if(!e) return;
   ppSheet(`<div class="pp-grab"></div><h2>${ppEsc(e.titre)}</h2><p class="pp-hint">${ppEsc(e.matiere || 'Sans matière')}</p>
-  <div class="pp-opts"><button class="pp-row" onclick="ppSheetClose();sbOuvrir('${id}')"><i class="pp-ri">${PP_IC.file}</i><div><b>Ouvrir</b><span>Lire, modifier, exporter</span></div></button>
-  <button class="pp-row" onclick="sbRenommerSheet('${id}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b><span>Changer le titre</span></div></button>
+  <div class="pp-opts"><button class="pp-row" onclick="sbRenommerSheet('${id}')"><i class="pp-ri">${PP_IC.edit}</i><div><b>Renommer</b><span>Changer le titre</span></div></button>
   <button class="pp-row" onclick="ppSheetClose();sbPartager('${id}')"><i class="pp-ri">${PP_IC.ul}</i><div><b>Partager</b><span>Un code, comme pour les cartes</span></div></button>
   <button class="pp-row" onclick="sbSupprimerSheet('${id}')"><i class="pp-ri">${PP_IC.trash}</i><div><b>Supprimer</b><span>La retire de tous tes appareils</span></div></button></div>`);
 }
@@ -18861,9 +18871,44 @@ function ppFormatAide(){
 }
 
 /* ---- pages plein écran (Statistiques, Synthèse) : posées dans #modal-root ---- */
+/* v393 : changement d'écran À L'INTÉRIEUR de la même fenêtre. Avant, on recréait toute la page (fondu depuis l'opacité 0) : sur Chromebook le fond sombre
+   (c'est l'ombre de la page) disparaissait puis revenait (« tout part puis l'écran précédent revient »), sur téléphone la page entière (grosse, avec
+   dégradés) était refaite avec échelle + opacité : saccadé. Maintenant la page RESTE ; son ancien contenu (« fantôme ») est posé par-dessus et s'efface,
+   le nouveau glisse depuis le côté (dir 1 = on avance, -1 = on recule, 0 = simple fondu). Uniquement opacity + transform (compositeur). */
+let ppSynDir = 0;
+function ppPageSwap(cur, html, id, dir){
+  cur.querySelectorAll(':scope > .pp-ghost').forEach(g => g.remove());
+  const vieux = Array.from(cur.childNodes);
+  const ys = vieux.map(n => (n.nodeType === 1 && n.classList.contains('pp-sb')) ? n.scrollTop : 0);
+  cur.innerHTML = html;
+  cur.id = id; cur.style.animation = 'none'; cur.style.pointerEvents = '';
+  cur._fermer = (id === 'synth-overlay') ? tryFermerSynthese : closeStreakModal;
+  const fantome = document.createElement('div');
+  fantome.className = 'pp-ghost'; fantome.setAttribute('aria-hidden', 'true');
+  vieux.forEach(n => { if(n.nodeType === 1){ n.removeAttribute('id'); n.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); } fantome.appendChild(n); });
+  const neufs = Array.from(cur.children);
+  cur.appendChild(fantome);
+  vieux.forEach((n, i) => { if(ys[i]) n.scrollTop = ys[i]; });
+  cur.classList.add('pp-nofx');
+  const ease = 'cubic-bezier(.22,1,.36,1)', dx = dir * 26;
+  try{
+    fantome.animate([{ opacity:1, transform:'translateX(0)' }, { opacity:0, transform:'translateX(' + (-dir * 14) + 'px)' }], { duration:dir ? 110 : 100, easing:'ease-in', fill:'forwards' });
+    neufs.forEach(el => el.animate([{ opacity:0, transform:'translateX(' + dx + 'px)' }, { opacity:1, transform:'translateX(0)' }], { duration:dir ? 330 : 230, delay:dir ? 85 : 75, easing:ease, fill:'backwards' }));
+  }catch(e){}
+  setTimeout(() => { fantome.remove(); cur.classList.remove('pp-nofx'); }, 460);
+  return cur.parentNode;
+}
 function ppPageShow(html, id, still){
   const root = document.getElementById('modal-root');
   if(!root) return null;
+  if(!still && (id === 'synth-overlay' || id === 'sb-overlay') && !matchMedia('(prefers-reduced-motion:reduce)').matches){
+    const cur = root.querySelector(':scope > .pp-page:not(.pp-pgout)');
+    if(cur && ((cur.id === 'synth-overlay' && id === 'synth-overlay') || (ppWide() && (cur.id === 'synth-overlay' || cur.id === 'sb-overlay')))){
+      const dir = ppSynDir; ppSynDir = 0;
+      return ppPageSwap(cur, html, id, dir);
+    }
+  }
+  ppSynDir = 0;
   /* v390 : la synthèse (téléphone) arrive PAR-DESSUS la page actuelle (liste « Synthèses », ou l'écran précédent de la synthèse) au lieu de la remplacer d'un coup :
      fondu + petite glissade douce ; l'ancienne page reste dessous puis est retirée. La nouvelle est posée EN PREMIER dans le DOM (les getElementById / querySelector trouvent donc la nouvelle). */
   const sous = (id === 'synth-overlay' && !still && !ppWide() && !matchMedia('(prefers-reduced-motion:reduce)').matches) ? root.querySelector(':scope > .pp-page:not(.pp-pgout)') : null;
@@ -18888,8 +18933,9 @@ function ppPageShow(html, id, still){
    Démarre seulement si la liste est tout en haut ; `translate` se cumule avec le centrage du grand écran. */
 function ppPageSwipe(pg, fermer){
   if(!pg) return;
-  fermer = fermer || closeStreakModal;
-  const sb = pg.querySelector('.pp-sb');
+  pg._fermer = fermer || closeStreakModal;   /* v393 : la page peut garder son élément quand l'écran change : la fonction de fermeture et la zone qui défile se relisent à chaque geste */
+  if(pg._swipeLie) return; pg._swipeLie = true;
+  const sb = { get scrollTop(){ const e = pg.querySelector('.pp-sb'); return e ? e.scrollTop : 0; } };
   let y0 = 0, dy = 0, on = false, mv = false;
   pg.addEventListener('touchstart', t => {
     if(pg.classList.contains('pp-pgout') || t.target.closest('input,textarea,select')){ on = false; return; }
@@ -18908,7 +18954,7 @@ function ppPageSwipe(pg, fermer){
     if(!on || !mv){ on = false; return; }
     on = false; mv = false;
     if(dy > 110){
-      fermer();
+      pg._fermer();
       /* fermée (ou en train de l'être) : rien à remettre ; sinon (confirmation demandée, génération en cours) la page revient en place */
       if(!pg.isConnected || pg.classList.contains('pp-pgout')) return;
     }
@@ -19040,6 +19086,11 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v394', t:["Menu « Modifier la carte » allégé (Chromebook)", "Lighter “Edit card” menu (Chromebook)"], p:[
+    ["Sur Chromebook, « Discuter de la carte » et « Mettre en pause » ne sont plus répétés dans le menu « Modifier la carte » : ils sont déjà sur la fiche de la carte.", "On Chromebook, “Discuss the card” and “Pause” are no longer repeated in the “Edit card” menu: they are already on the card."]] },
+  { v:'v393', t:["Synthèses : transitions et boutons", "Summaries: transitions and buttons"], p:[
+    ["Passer de la lecture au menu « Ajuster » (et revenir) glisse maintenant en douceur, sans saccade. Sur Chromebook, le retour ne fait plus tout disparaître puis revenir : la fenêtre reste en place.", "Going from reading to the “Adjust” menu (and back) now glides smoothly, without stutter. On Chromebook, going back no longer makes everything vanish and come back: the window stays in place."],
+    ["Les boutons « Synthèses » (dans Parcourir) et « Enregistrer » prennent toute la largeur disponible. La barre de défilement sur le côté a disparu dans les synthèses. Le bouton « Ouvrir » du menu « ⋯ » est retiré.", "The “Summaries” (in Browse) and “Save” buttons now use the full width. The side scrollbar is gone inside summaries. The “Open” button in the “⋯” menu is removed."]] },
   { v:'v392', t:["Pages Synthèse plus soignées", "Neater Summary pages"], p:[
     ["La synthèse, son menu « Ajuster » et la liste « Synthèses » ont leur propre fond, avec un fin cadre orange et des coins arrondis : on les distingue bien du reste de l'application, sur téléphone comme sur Chromebook.", "The summary, its “Adjust” menu and the “Summaries” list have their own background, with a thin orange frame and rounded corners: they stand out from the rest of the app, on phone and on Chromebook."],
     ["Le passage de la lecture au menu « Ajuster » glisse de nouveau en douceur (la page clignotait avant). Le bouton « ⋯ » de la liste est refait et animé, et la barre colorée courbe a disparu.", "Going from reading to the “Adjust” menu glides smoothly again (the page used to flicker). The “⋯” button in the list is redone and animated, and the curved colour bar is gone."],
@@ -19342,7 +19393,7 @@ function ppExportGo(k){
 }
 
 /* ================= Synthèse (page) ================= */
-let ppSynKey = '';
+let ppSynKey = '', ppSynEcran = '';
 function ppSynMsg(s){ return s.msg ? `<p class="pp-warn ${s.msg.type === 'ok' ? 'ok' : ''}">${ppEsc(s.msg.text)}</p>` : ''; }
 function renderSynthese(){
   const s = syntheseEtat;
@@ -19352,6 +19403,9 @@ function renderSynthese(){
   const cle = s.etape + '/' + s.vue + (lect ? '/l' : '');
   const same = ppSynKey === cle && !!document.getElementById('synth-overlay');
   ppSynKey = cle;
+  const ecran = s.etape + (lect ? '/l' : '');   /* v393 : sens du glissement : nouvel écran = on avance (les retours posent -1 avant) ; même écran (Modifier ↔ Aperçu) = simple fondu */
+  if(!ppSynDir) ppSynDir = (ppSynEcran === ecran) ? 0 : 1;
+  ppSynEcran = ecran;
   const head = lect ? `<div class="pp-sh pp-sh-lect"><button class="pp-back" aria-label="Retour" onclick="tryFermerSynthese()">${PP_IC.back}</button></div>` : `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="tryFermerSynthese()">${PP_IC.back}</button><div><small>Synthèse${s.matiere ? ' · ' + ppEsc(s.matiere) : ''}</small><h2>${cons ? 'Précisions' : 'Ta synthèse'}</h2></div></div>`;
   const root = ppPageShow(head + (cons ? renderSyntheseConsignes() : lect ? renderSyntheseLecture() : renderSyntheseResultat()), 'synth-overlay', same);
   if(root && same){ const p = root.querySelector('.pp-page'); if(p) p.style.animation = 'none'; const v = root.querySelector('.pp-view'); if(v) v.classList.add('pp-still'); }
@@ -19429,12 +19483,12 @@ function tryFermerSynthese(direct){
   const s = syntheseEtat;
   if(s && s.enCours) return; // ne pas perdre une génération en route
   /* v182 : depuis « Modifier les précisions », la flèche retour ramène à « Ta synthèse » (et ne ferme plus tout) */
-  if(s && s.etape === 'consignes' && (s.markdown || '').trim()){ s.etape = 'resultat'; s.msg = null; renderSynthese(); return; }
+  if(s && s.etape === 'consignes' && (s.markdown || '').trim()){ s.etape = 'resultat'; s.msg = null; ppSynDir = -1; renderSynthese(); return; }
   if(s && s.etape === 'resultat' && s.markdown.trim()){
     /* v390 : depuis le menu « Ajuster », Retour (flèche, geste, Échap) ramène à la lecture plein écran ; « Fermer » (direct) ferme vraiment */
     if(!s.lecture && direct !== true){
       const zone = document.getElementById('synth-markdown'); if(zone) s.markdown = zone.value;
-      s.lecture = true; s.msg = null; renderSynthese(); return;
+      s.lecture = true; s.msg = null; ppSynDir = -1; renderSynthese(); return;
     }
     if(!sbEstModifie(s)){ fermerSynthese(); return; }   /* v371 : déjà enregistrée et inchangée : on ferme sans question */
     sbFermerSheet(s);
