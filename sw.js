@@ -123,6 +123,10 @@
 
    v121 : v265 (aperçu flottant d'une seule phrase au-dessus du clavier) : index.html change, donc nouvelle version du cache.
 
+   v192 : v387 (Prof : réflexion « low » pour les salutations et l'interrogation sur le cours, « high » pour le reste) : index.html change, donc nouvelle version du cache.
+
+   v191 : v386 (Chromebook : le voile de sortie n'est plus posé quand on quitte l'app pour un autre onglet ; téléphone inchangé) : index.html change, donc nouvelle version du cache.
+
    v101 : v228 (Prof : champ sans barre d'autofill, « Nouvelle conversation » sans confirmation + « Annuler », animation de changement de conversation, clavier sans saut, prototype Chromebook) : index.html change, donc nouvelle version du cache.
 
    v89 : Prof branché à Gemini (v207) : index.html change, donc nouvelle version du cache.
@@ -145,7 +149,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v190';
+const SW_VERSION = 'v192';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

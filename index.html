@@ -127,7 +127,14 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
      telle qu'elle était : si le voile y est déjà, la première image montrée est le voile (fond uni) et non plus l'écran d'avant. Au retour, s'il
      ne se passe rien (applis récentes, déverrouillage), il s'efface en 0,18 s après 0,8 s ; si la page est relancée, il disparaît avec elle. */
   var minuteurVoile = null;
+  /* v386 : sur Chromebook (navigateur ChromeOS, même détection « CrOS » que le reste de l'app) le voile n'est JAMAIS posé : quitter l'app en allant sur un
+     autre onglet ou une autre fenêtre ne doit pas recouvrir l'écran. Seul l'AFFICHAGE du voile est coupé : tous les écouteurs ci-dessous continuent
+     de tourner (marquer(), pp-vu, pp-pagehide, journal) et l'enregistrement / la synchro à la sortie, faits ailleurs dans l'app, ne changent pas.
+     Téléphone : inchangé. */
+  var CHROMEBOOK = false;
+  try{ CHROMEBOOK = /CrOS/.test(navigator.userAgent || '') || !!(navigator.userAgentData && /Chrome ?OS/i.test(navigator.userAgentData.platform || '')); }catch(e){}
   function poserVoile(){
+    if(CHROMEBOOK) return null;
     try{
       var v = document.getElementById('pp-voile');
       if(!v){
@@ -7670,6 +7677,35 @@ async function gmAppelEchelle(ech, etat, secours, appel){
 const PC_MODELES_PRINCIPAUX = ['gemini-3.5-flash-lite'], PC_MODELE_SECOURS = 'gemini-3.1-flash-lite', PC_REFLEXION = 'high', PC_REFLEXION_SECOURS = 'high';   /* v384 : Prof tourne sur 3.5 Flash-Lite en réflexion « high » (le niveau le plus élevé ; 'low', 'medium' et 'high' existent bien sur flash-lite), puis sur 3.1 Flash-Lite en « high » quand le quota du premier est épuisé (429). Prof partage le quota de 3.5 Flash-Lite avec les synthèses et le secours des cartes (le routeur et la recherche d'image sont sur 3.1 Flash-Lite, qui est aussi le secours de Prof et des synthèses). gemini-3.5-flash est déprécié : Google le renvoie vers 3.6 Flash. Si « high » est trop lent : PC_REFLEXION = 'medium'. Pour remettre un gros modèle en premier : PC_MODELES_PRINCIPAUX = ['gemini-3.8-flash'] (quota gratuit de 20 requêtes par jour, lent). */
 const PC_ECHELLE = gmEchelle(PC_MODELES_PRINCIPAUX, PC_REFLEXION, PC_MODELE_SECOURS, PC_REFLEXION_SECOURS, true);
 const PC_ETAT = { rates: new Set(), pauses: {} };
+/* v387 : RÉFLEXION LÉGÈRE (« low ») pour les échanges simples de Prof. (1) Salutations seules (« salut », « bonjour », « comment ça va »…). (2) Interrogation sur le cours :
+   « interroge-moi », « teste-moi », « pose-moi des questions », « question d'examen », et les tours d'une série lancée par pastille (pcMode === 'quiz' : réponses, « Question
+   suivante », « Indice », « Je ne sais pas »). TOUT LE RESTE reste en « high » (PC_REFLEXION). Détection LOCALE sur le texte du message : aucun appel de plus, donc aucun retard
+   (et « low » répond plus vite que « high »). Même modèle ; seul le niveau de réflexion change. Échelle et mémoire des crans refusés séparées de l'échelle « high », mais les PAUSES de
+   quota (comptées par modèle) sont partagées. Dans le doute = « high » : photo ou document, note de l'appli (nouvel essai), lot de cartes (actionsFirst / forcer), message long (> 500 car.),
+   ou verbe d'action (créer, ajouter, modifier, supprimer, lancer, réviser, résumer…). « Arrêter et faire le bilan » repasse en « high » (pcMode vidé avant l'envoi). Pour tout couper :
+   PC_LEGER_ACTIF = false. La valeur choisie est notée dans « Copier le diagnostic » (champ « reflexion »). */
+const PC_LEGER_ACTIF = true, PC_REFLEXION_LEGERE = 'low';
+const PC_ECHELLE_LEGERE = gmEchelle(PC_MODELES_PRINCIPAUX, PC_REFLEXION_LEGERE, PC_MODELE_SECOURS, PC_REFLEXION_LEGERE, true);
+const PC_ETAT_LEGER = { rates: new Set(), pauses: PC_ETAT.pauses };   /* pauses partagées (quota par modèle), crans refusés propres à « low » */
+function pcNormTxt(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+const PC_RE_SALUT = /^(?:(?:salut|bonjour|bonsoir|coucou|hello|hey|hi|yo|slt|bjr)(?: prof)?)?(?: ?(?:comment (?:ca va|vas tu|tu vas|allez vous)|ca va(?: bien)?|tu vas bien|ca roule))?(?: et toi| et vous)?$/;
+const PC_RE_INTERRO = /\b(?:interrog(?:e|es|er|ez)|teste(?:r|s|z)? moi|me tester|questionne(?:r|s|z)? moi|me questionner|(?:pose|poses|poser|posez) moi (?:des |une |quelques |plusieurs |\d+ )?questions?|me poser (?:des |une |quelques |plusieurs |\d+ )?questions?|question d examen)\b/;
+const PC_VERBES_ACTION = 'cree|creer|creez|ajoute|ajouter|ajoutez|supprime|supprimer|efface|effacer|modifie|modifier|change|changer|renomme|renommer|archive|archiver|deplace|deplacer|fusionne|fusionner|corrige|corriger|traduis|traduire|echange|echanger|mets|mettre|lance|lancer|demarre|demarrer|ouvre|ouvrir|revise|reviser|resume|resumer|synthese|fiche|planning|plan|doublons?|verifie|verifier';
+const PC_RE_ACTION = new RegExp('\\b(?:' + PC_VERBES_ACTION + ')\\b');   /* verbe d'action n'importe où dans une demande d'interrogation */
+const PC_RE_ACTION_DEBUT = new RegExp('^(?:' + PC_VERBES_ACTION + ')\\b');   /* en série : seulement si le message COMMENCE par un verbe d'action (une réponse peut contenir « plan », « change »…) */
+function pcReflexionLegere(texte, photo, rappel, opts){
+  try{
+    if(!PC_LEGER_ACTIF || photo || rappel) return false;
+    const o = opts || {};
+    if(o.actionsFirst || o.forcer) return false;
+    const n = pcNormTxt(texte);
+    if(!n || n.length > 500) return false;
+    if(PC_RE_SALUT.test(n)) return true;
+    if(PC_RE_INTERRO.test(n)) return !PC_RE_ACTION.test(n);
+    if(pcMode === 'quiz') return !PC_RE_ACTION_DEBUT.test(n.replace(/^(?:(?:peux tu|tu peux|pourrais tu|pouvez vous|s il te plait|stp|please) )+/, ''));
+  }catch(e){}
+  return false;
+}
 async function pcAppelGemini(key, systeme, contents, opts){
   const o = opts || {};
   const appel = (e, ms) => {
@@ -7682,6 +7718,7 @@ async function pcAppelGemini(key, systeme, contents, opts){
       annul: o.annul, timeoutMs: ms   /* v378 ; v381 : délai par cran */
     });
   };
+  if(o.leger) return gmAppelEchelle(PC_ECHELLE_LEGERE, PC_ETAT_LEGER, PC_MODELE_SECOURS, appel);   /* v387 : échanges simples en « low » */
   return gmAppelEchelle(PC_ECHELLE, PC_ETAT, PC_MODELE_SECOURS, appel);   /* v376 : échelle partagée */
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
@@ -7701,8 +7738,9 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){  
   let response;
   try{
     const sysTxt = pcSysteme(matiere, cartes);
-    pcMesureNote(sysTxt, cartes, lstM);   /* v351 : tailles réelles de ce qui part à Gemini */
-    response = await pcAppelGemini(key, sysTxt, contents, opts);   /* v320 */
+    const leger = pcReflexionLegere(texte, photo, rappel, opts);   /* v387 : « low » pour salutations et interrogation, « high » pour le reste */
+    pcMesureNote(sysTxt, cartes, lstM, leger);   /* v351 : tailles réelles de ce qui part à Gemini */
+    response = await pcAppelGemini(key, sysTxt, contents, leger ? Object.assign({}, opts || {}, { leger: true }) : opts);   /* v320 */
   }catch(err){ if(gmErrAnnule(err)) throw { pcAnnule: true }; throw { pcMsg: messageErreurReseau(err, true) }; }   /* v378 : annulé = pas de message */
   if(!response.ok) throw { pcMsg: messageErreurGemini(response.status, true) };
   let data; try{ data = await response.json(); }catch(e){ throw { pcMsg: 'Réponse du serveur illisible, réessaie.' }; }
@@ -7726,9 +7764,9 @@ const PC_ROUTEUR_ACTIF = true, PC_ROUTEUR_MODELE = 'gemini-3.1-flash-lite', PC_R
 let pcRouteurPause = 0, pcFichesCache = null, pcDernieresMats = [];
 let pcForce = null, pcAff = null, pcAffAuto = null;   /* v352 : pcForce = matière imposée par un appui sur une pastille, pour LE message suivant seulement ; pcAff = ce qui est surligné (ce que Prof a compris) */
 function pcMesuresLire(){ try{ const j = JSON.parse(localStorage.getItem('coach-mesure') || '[]'); return Array.isArray(j) ? j : []; }catch(e){ return []; } }
-function pcMesureNote(sysTxt, cartes, lstM){
+function pcMesureNote(sysTxt, cartes, lstM, leger){
   try{
-    const e = { quand: new Date().toISOString(), matieres: lstM && lstM.length ? lstM.join(' + ') : 'Toutes', caracteres_consigne: String(sysTxt).length, caracteres_cartes: cartes.lignes.join('\n').length, cartes_envoyees: cartes.envoyees, cartes_total: cartes.total };
+    const e = { quand: new Date().toISOString(), matieres: lstM && lstM.length ? lstM.join(' + ') : 'Toutes', caracteres_consigne: String(sysTxt).length, caracteres_cartes: cartes.lignes.join('\n').length, cartes_envoyees: cartes.envoyees, cartes_total: cartes.total, reflexion: leger ? PC_REFLEXION_LEGERE : PC_REFLEXION };   /* v387 : niveau voulu (low / high) */
     const j = pcMesuresLire(); j.push(e); localStorage.setItem('coach-mesure', JSON.stringify(j.slice(-8)));
   }catch(err){}
 }
