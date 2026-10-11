@@ -19,6 +19,16 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v214 : v410 (recherche d'image : deuxième chance, requêtes en parallèle, mémoire courte, nouvel essai si Wikimedia / Gemini saturé) : index.html change, donc nouvelle version du cache.
+
+   v213 : v409 (Prof : « Annuler » reste 30 min même en quittant Prof, recherche d'images annulable et expliquée) : index.html change, donc nouvelle version du cache.
+
+   v212 : v408 (recherche d'image : le champ « Image par IA » et Prof utilisent le même moteur ; l'IA choisit en regardant des miniatures ; Wikipédia ajouté aux sources) : index.html change, donc nouvelle version du cache.
+
+   v211 : v407 (synthèse : le bouton « Enregistrer comme modèle » reprend sa place au-dessus de « Générer la synthèse » ; feuille du choix de matière : bouton « Créer une nouvelle synthèse » vers l'onglet Ajouter) : index.html change, donc nouvelle version du cache.
+
+   v210 : v406 (« Supprimer toutes mes données » : le champ de confirmation devient un champ ppCE, plus de barre clés / cartes / adresses au-dessus du clavier) : index.html change, donc nouvelle version du cache.
+
    v203 : v399 (menu d'un message de Prof : « Ajouter à la mémoire », reformulé par 3.1 Flash-Lite) : index.html change, donc nouvelle version du cache.
 
    v202 : v398 (Prof : la conversation en cours peut être supprimée, une conversation vierge la remplace) : index.html change, donc nouvelle version du cache.
@@ -167,7 +177,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v209';
+const SW_VERSION = 'v214';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- v153 (constat 34) : CSP. Les scripts restent inline (onclick=, blocs script), mais les requêtes réseau ne peuvent partir que vers le Worker de synchro et Google (Gemini), et les images ne peuvent venir que de l'app, de data: ou de blob:. Si SYNC_WORKER_URL change, mettre à jour connect-src. -->
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; connect-src 'self' https://flashcard-sync-kv.cmpsloic.workers.dev https://generativelanguage.googleapis.com https://commons.wikimedia.org https://upload.wikimedia.org; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; connect-src 'self' https://flashcard-sync-kv.cmpsloic.workers.dev https://generativelanguage.googleapis.com https://commons.wikimedia.org https://en.wikipedia.org https://upload.wikimedia.org; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Memoria</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0c0c12">
@@ -264,6 +264,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Recherche des images...':'Searching for images...',
     'Copier':'Copy','Télécharger':'Download','Image téléchargée':'Image downloaded','Impossible de télécharger l’image':'Could not download the image','Rappel':'Reminder','Relance':'Follow-up','Aide':'Help','Signaler un bug':'Report a bug','Ouvre ton mail, déjà prérempli':'Opens your mail app, prefilled','Me contacter':'Contact me','Après 2 h':'After 2 h','Autorise-les dans les réglages du téléphone.':'Allow them in your phone settings.','1. Touche « Obtenir ma clé » · 2. « Créer une clé API » · 3. Colle-la ici.':'1. Tap “Get my key” · 2. “Create API key” · 3. Paste it here.','1. Touche ici · 2. « Créer une clé API » · 3. Colle-la ci-dessous.':'1. Tap here · 2. “Create API key” · 3. Paste it below.','Obtenir ma clé':'Get my key','Si des cartes sont à réviser.':'If cards are due.',"Revoir l'introduction":'Replay the intro'
   };
+  Object.assign(D,{'Créer une nouvelle synthèse':'Create a new summary','Depuis un cours, une photo ou un document':'From a course, a photo or a document'});   /* v407 */
   Object.assign(D,{'Mémoire':'Memory','Garder':'Keep','Supprimer cette ligne ?':'Delete this line?','Ex. Physique':'E.g. Physics','ex. espagnol':'e.g. Spanish','Suggestions précédentes':'Previous suggestions','Suggestions suivantes':'Next suggestions','Supprimer cette ligne':'Delete this line'});   /* v228 */
   Object.assign(D,{ /* lot 2 (v135) : accueil, Réviser, Planning, Ajouter/IA, Parcourir, Stats, Synthèse */
     'Renommer la matière':'Rename subject','Nouveau nom':'New name','Renommer':'Rename','Supprimer tout':'Delete all','Une de tes photos :':'One of your photos:','Une autre image…':'Another image…','Fermer':'Close',
@@ -477,7 +478,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Image de la question':'Question image','Image de la réponse':'Answer image','IA':'AI','Galerie':'Gallery','Une photo de ton appareil':'A photo from your device',"Décris l'image que tu veux":'Describe the image you want',
     'Image par IA':'AI image','Ce que tu veux voir':'What you want to see','Ex. le traité de Rome, une cellule en mitose…':'E.g. the Treaty of Rome, a cell in mitosis…',
     'Chercher l’image':'Find the image','Recherche…':'Searching…','Recherche des images…':'Searching for images…','Ajuster':'Adjust','Régénérer':'Regenerate','Je cherche une image…':'Looking for an image…',"Code d'ami":"Friend's code",'Arrêter':'Stop','Arrêter la réponse':'Stop the response','Arrêter la recherche':'Stop the search','Arrêter la recherche d’images':'Stop the image search','Recherche d’images arrêtée':'Image search stopped','Nouvelle tentative…':'Retrying…',
-    'Aucune image trouvée. Essaie avec d’autres mots.':'No image found. Try other words.','Image trouvée sur Wikimedia Commons':'Image from Wikimedia Commons',
+    'Aucune image trouvée. Essaie avec d’autres mots.':'No image found. Try other words.','Image trouvée sur Wikimedia Commons':'Image from Wikimedia Commons','Pas sûr que ce soit la bonne : vérifie avant de valider':'Not sure this is the right one: check before confirming',
     'Écris ce que tu veux voir':'Write what you want to see','Plus d’autres images : on reprend au début':'No more images: starting over' });
   RULES.push(
     f(/^Conversations passées \((\d+)\)$/,function(n){ return 'Past conversations ('+n+')'; }),
@@ -4288,8 +4289,20 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #synth-overlay .pp-sb,#sb-overlay .pp-sb,#synth-overlay textarea{scrollbar-width:none;-ms-overflow-style:none}
 #synth-overlay .pp-sb::-webkit-scrollbar,#sb-overlay .pp-sb::-webkit-scrollbar,#synth-overlay textarea::-webkit-scrollbar{display:none;width:0;height:0}
 /* ancien contenu posé par-dessus pendant le changement d'écran : il s'efface, le nouveau arrive (la fenêtre et son fond sombre ne bougent pas) */
-.pp-ghost{position:absolute;inset:0;display:flex;flex-direction:column;padding:inherit;pointer-events:none;z-index:5;overflow:hidden}
+.pp-fantome{position:absolute;inset:0;display:flex;flex-direction:column;padding:inherit;pointer-events:none;z-index:5;overflow:hidden}   /* v407 : renommé (était .pp-ghost, même nom que le bouton « fantôme » : « Enregistrer comme modèle » se collait en haut de la page et ne répondait plus au toucher) */
 .pp-nofx .pp-view>*,.pp-nofx .pp-lect .pp-rend>*,.pp-nofx .pp-view.pp-lect>.pp-lectb{animation:none!important}
+/* v407 : bouton « Créer une nouvelle synthèse » (feuille du choix de matière) + pulsation du bouton « Synthèse » d'Ajouter à l'arrivée */
+.sb-newwrap{margin:2px 0 14px;padding-top:14px;border-top:1.5px solid var(--line)}
+.pp-row.sb-new{border-color:color-mix(in srgb,var(--blue) 55%,var(--line));background:color-mix(in srgb,var(--blue) 12%,var(--panel))}
+.pp-row.sb-new .pp-ri{background:color-mix(in srgb,var(--blue) 24%,transparent);color:var(--blue)}
+.pp-row.sb-new:active{transform:scale(.98)}
+@keyframes ppSynPulse{
+  0%{scale:1;box-shadow:0 3px 0 var(--sc),0 0 0 0 color-mix(in srgb,var(--blue) 60%,transparent)}
+  40%{scale:1.07;box-shadow:0 3px 0 var(--sc),0 0 0 8px color-mix(in srgb,var(--blue) 26%,transparent)}
+  100%{scale:1;box-shadow:0 3px 0 var(--sc),0 0 0 18px color-mix(in srgb,var(--blue) 0%,transparent)}
+}
+.pp-alt button.pp-alt-syn.pp-pulse{animation:ppSynPulse 1.1s cubic-bezier(.22,1,.36,1) 2}
+@media (prefers-reduced-motion:reduce){.pp-alt button.pp-alt-syn.pp-pulse{animation:none}}
 </style>
 <style id="v395-style">
 /* v395 : « Répartition des paliers » lisible (légende en lignes avec pastille de couleur, nombre et %) ; mention « archivée » dans « Par matière » */
@@ -4977,12 +4990,12 @@ function ppImgPoser(ctx, cote, url, fermer){
 function ppImgRetirer(ctx, cote){ ppImgPoser(ctx, cote, '', true); }
 function ppImgDeBanque(ctx, cote, k){ const url = iaImgBanque[k]; if(url) ppImgPoser(ctx, cote, url, true); }
 /* ===== v277 : bouton « Image » d'une carte (écrire une carte, fiche) = petit menu Galerie / IA dans la 2e feuille (#pp-psheet).
-   IA : l'utilisateur décrit l'image voulue, l'IA en tire un mot-clé, l'image vient de Wikimedia Commons ; Valider la pose, Régénérer en propose une autre.
+   IA : l'utilisateur décrit l'image voulue ; v408 : l'IA écrit des requêtes, on récupère des candidats (Wikimedia Commons + image principale des articles Wikipédia) et l'IA choisit en regardant les miniatures ; Valider la pose, Régénérer montre la suivante du classement.
    Fermeture : glissé vers le bas, voile ou bouton retour, comme les autres feuilles. ===== */
-let ppImgIA = null;   // { ctx, cote, desc, mot, passer, url, etat: 'vide' | 'cherche' | 'ok' | 'rien', n }
+let ppImgIA = null;   // { ctx, cote, desc, liste (v408 : [{ c, sur }] classée), pos, sur, url, etat: 'vide' | 'cherche' | 'ok' | 'rien', n }
 function ppImgMenu(ctx, cote){
   ppEnsureSheets();
-  ppImgIA = { ctx, cote, desc: '', mot: '', passer: 0, url: '', etat: 'vide', n: 0 };
+  ppImgIA = { ctx, cote, desc: '', liste: null, pos: 0, sur: true, url: '', etat: 'vide', n: 0 };
   const e = document.getElementById('pp-psheet'); e.scrollTop = 0; e.style.translate = ''; e.style.transition = '';
   e.innerHTML = `<div class="pp-grab"></div><div class="pp-sbh"><div><h2>${ppImgMenuTitre(ctx, cote)}</h2></div></div>
   <div class="pp-opts"><button class="pp-row" type="button" onclick="ppImgMenuGalerie('${ctx}','${cote}')"><i class="pp-ri">${PP_IMG_IC}</i><div><b>Galerie</b><span>Une photo de ton appareil</span></div></button><button class="pp-row" type="button" onclick="ppImgIAOuvrir()"><i class="pp-ri">${PP_IC.spark}</i><div><b>IA</b><span>Décris l'image que tu veux</span></div></button>${ppImgMenuBanque(ctx, cote)}</div>`;
@@ -5006,7 +5019,7 @@ function ppImgIAOuvrir(){
 function ppImgIADessiner(){
   const st = ppImgIA, p = document.getElementById('pp-iap'), b = document.getElementById('pp-iab');
   if(!st || !p || !b) return;
-  if(st.etat === 'ok'){ p.hidden = false; p.className = 'pp-iaprev'; p.innerHTML = `<img src="${st.url}" alt=""><small>Image trouvée sur Wikimedia Commons</small>`; }
+  if(st.etat === 'ok'){ p.hidden = false; p.className = 'pp-iaprev'; p.innerHTML = `<img src="${st.url}" alt=""><small>${st.sur === false ? 'Pas sûr que ce soit la bonne : vérifie avant de valider' : 'Image trouvée sur Wikimedia Commons'}</small>`; }   /* v408 */
   else if(st.etat === 'cherche'){ p.hidden = false; p.className = 'pp-iaprev pp-iawait'; p.textContent = 'Je cherche une image…'; }
   else if(st.etat === 'rien'){ p.hidden = false; p.className = 'pp-iaprev pp-iawait'; p.textContent = 'Aucune image trouvée. Essaie avec d’autres mots.'; }
   else { p.hidden = true; p.innerHTML = ''; }
@@ -5016,45 +5029,41 @@ function ppImgIADessiner(){
       ? `<button class="pp-cta busy stop" type="button" onclick="gmAnnuler('imgia')">Recherche…</button>`   /* v378 : pendant la recherche, un appui sur le bouton arrête ; v389 : il affiche seulement « Recherche… » */
       : `<button class="pp-cta" type="button" onclick="ppImgIAChercher(false)">Chercher l’image</button>`);
 }
-/* Transforme la description en mot-clé Wikimedia (2 à 5 mots). Sans clé Gemini ou en cas d'échec : '' (on cherche alors avec le texte tel quel). */
-async function ppImgMotCle(desc, annul){
-  const key = getGeminiKey();
-  if(!key || !/^[\x21-\x7e]+$/.test(key)) return '';
-  try{
-    const rep = await fetchGeminiAvecRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      annul,   /* v378 */
-      body: JSON.stringify({ system_instruction: { parts: [{ text: "Tu transformes la description d'une image voulue en mot-clé de recherche pour Wikimedia Commons : 2 à 5 mots, nom propre ou nom anglais précis (ex. Treaty of Rome signing, Mitosis diagram). Réponds UNIQUEMENT par le mot-clé, sans guillemets ni phrase." }] }, contents: [{ role: 'user', parts: [{ text: desc }] }] })
-    });
-    if(!rep.ok) return '';
-    const data = await rep.json(), cand = data && data.candidates && data.candidates[0];
-    const pr = cand && cand.content && Array.isArray(cand.content.parts) ? cand.content.parts : [];
-    return pcTermeImage(pr.map(x => x.text || '').join('')).replace(/["«»“”]/g, '').trim();
-  }catch(e){ return ''; }
-}
+/* v408 : recherche du champ « Image par IA » = le même moteur que Prof (ppImgPreparerLot). La liste classée est gardée (st.liste) : « Régénérer » montre la suivante, sans nouvel appel IA. */
 async function ppImgIAChercher(regen){
   const st = ppImgIA; if(!st || st.etat === 'cherche') return;
   const inp = document.getElementById('pp-iai'), desc = ((inp && inp.value) || '').replace(/\s+/g, ' ').trim();
   if(!desc){ ppToast('Écris ce que tu veux voir'); if(inp) inp.focus(); return; }
-  const nouveau = !regen || desc !== st.desc || !st.mot, seq = ++st.n;
+  const nouveau = !regen || desc !== st.desc || !st.liste || !st.liste.length, seq = ++st.n;
   const vivant = () => ppImgIA === st && st.n === seq && !!document.getElementById('pp-iap');
   /* v378 : annulation. Annulé = on revient à l'état d'avant (image précédente gardée, texte tapé gardé). */
-  const ctlIA = gmAnnulNouveau('imgia'), avant = { etat: st.etat, passer: st.passer };
-  const sortieAnnul = () => { gmAnnulFin('imgia', ctlIA); if(vivant()){ st.passer = avant.passer; st.etat = (avant.etat === 'ok' && st.url) ? 'ok' : 'vide'; ppImgIADessiner(); } };
+  const ctlIA = gmAnnulNouveau('imgia'), avant = { etat: st.etat };
+  const sortieAnnul = () => { gmAnnulFin('imgia', ctlIA); if(vivant()){ st.etat = (avant.etat === 'ok' && st.url) ? 'ok' : 'vide'; ppImgIADessiner(); } };
+  const stop = () => { if(ctlIA.signal.aborted){ sortieAnnul(); return true; } if(!vivant()){ gmAnnulFin('imgia', ctlIA); return true; } return false; };
   st.etat = 'cherche'; ppImgIADessiner(); if(inp && inp.blur) inp.blur();
-  if(nouveau){ st.passer = 0; const mot = (await ppImgMotCle(desc, ctlIA.signal)) || desc; if(ctlIA.signal.aborted){ sortieAnnul(); return; } if(!vivant()){ gmAnnulFin('imgia', ctlIA); return; } st.desc = desc; st.mot = mot; }
-  else st.passer++;
-  let url = ''; try{ url = await ppImgChercherWikimedia(st.mot, st.passer, ctlIA.signal); }catch(e){}
-  if(ctlIA.signal.aborted){ sortieAnnul(); return; }
-  if(!vivant()){ gmAnnulFin('imgia', ctlIA); return; }
-  if(!url && st.passer > 0){
-    st.passer = 0; try{ url = await ppImgChercherWikimedia(st.mot, 0, ctlIA.signal); }catch(e){}
-    if(ctlIA.signal.aborted){ sortieAnnul(); return; }
-    if(!vivant()){ gmAnnulFin('imgia', ctlIA); return; }
-    if(url) ppToast('Plus d’autres images : on reprend au début');
+  let liste = st.liste, pos = st.pos + 1;
+  if(nouveau){
+    let lot = null; try{ lot = await ppImgPreparerLot([{ terme: desc, cote: 'imageQuestion' }], desc, { annul: ctlIA.signal }); }catch(e){}
+    if(stop()) return;
+    liste = []; pos = 0;
+    if(lot){
+      const sur = !!lot.jug[0];
+      liste = lot.rang[0].map(k => ({ c: lot.cands[0][k], sur })).filter(x => x.c);
+      if(!liste.length) liste = lot.cands[0].slice(0, 3).map(c => ({ c, sur: false }));   /* l'IA n'en trouve aucune de sûre : on montre les 3 premières, avec un avertissement */
+    }
+  }
+  let url = '', ok = null;
+  const essayer = async de => { for(let p = de; p < liste.length; p++){ const u = await ppImgGrande(liste[p].c, ctlIA.signal); if(ctlIA.signal.aborted) return -1; if(u){ url = u; ok = liste[p]; return p; } } return -1; };
+  let p = await essayer(pos);
+  if(stop()) return;
+  if(p < 0 && pos > 0 && liste.length){
+    p = await essayer(0);
+    if(stop()) return;
+    if(p >= 0) ppToast('Plus d’autres images : on reprend au début');
   }
   gmAnnulFin('imgia', ctlIA);
-  st.url = url; st.etat = url ? 'ok' : 'rien'; ppImgIADessiner();
+  st.desc = desc; st.liste = liste; st.pos = p >= 0 ? p : 0;
+  st.url = url; st.sur = ok ? ok.sur : true; st.etat = url ? 'ok' : 'rien'; ppImgIADessiner();
 }
 function ppImgIAValider(){
   const st = ppImgIA; if(!st || !st.url) return;
@@ -6388,6 +6397,21 @@ const COACH_TOPN = 40, COACH_CONTEXTE_MAX = 60000, COACH_MSG_MAX = 100, COACH_HI
 const HIST_MAX = 15, HIST_TITRE_MAX = 60, HIST_BUDGET_CARS = 600000; /* v213 : historique des conversations de Prof (voir PLAN-HISTORIQUE-ET-CARNET-PROF.md) */
 let pcActsAttente = null;   /* v212 : dernier bloc « Actions proposées » pas encore appliqué ni ignoré (gardé pour la reprise) */
 let pcConv = [], pcLangue = '', pcCarte = null, pcPhoto = null, pcLot = null, pcAttente = false, pcMenuMode = '';
+/* v409 : « Annuler » (lot appliqué par Prof, nouvelle conversation) reste 30 min, même si on quitte Prof puis qu'on revient ; il ne disparaît avant que si une autre demande arrive (autre lot appliqué, message envoyé pour la nouvelle conversation). */
+const PC_UNDO_MS = 30 * 60 * 1000;
+const PC_IMG_ATTENTE = n => 'recherche de ' + n + ' image' + (n > 1 ? 's' : '') + ' en cours : cela peut prendre quelques minutes';
+function pcLotExpire(u){
+  if(pcLot && pcLot.u === u){ if(pcLot.btn) pcLot.btn.remove(); pcLot = null; }
+  document.querySelectorAll('.pc-act').forEach(b => { if(b._g && b._g.u === u){ const x = b.querySelector(':scope > .pc-un'); if(x) x.remove(); } });
+}
+/* remplace un morceau du texte « Appliqué » d'un lot (conversation sauvegardée + carte affichée si elle l'est) : sert à la fin de la recherche d'images */
+function pcLotTexte(u, ancien, nouveau){
+  if(!u) return;
+  const m = pcConv.find(x => x && x.g && x.g.u === u);
+  if(m && typeof m.g.r === 'string'){ m.g.r = m.g.r.split(ancien).join(nouveau).slice(0, 600); try{ pcSauve(); }catch(e){} }
+  const box = [...document.querySelectorAll('.pc-act')].find(b => b._g && b._g.u === u);
+  const pp = box && box.querySelector('p'); if(pp) pp.textContent = pp.textContent.split(ancien).join(nouveau);
+}
 const PC_MSG = { 'Résumé rapide': 'Fais-moi un résumé rapide de cette matière, dans le chat (sans ouvrir de fiche de synthèse).', 'Question suivante': 'Question suivante.', 'Indice': 'Donne-moi un indice, sans me donner la réponse.', 'Je ne sais pas': 'Je ne sais pas.', 'Cherche les doublons': 'Cherche les cartes en doublon dans toutes mes matières.', 'Arrêter et faire le bilan': "On arrête. Fais le bilan de la série (score, notions ratées) et propose d'ajouter en cartes celles que j'ai ratées.", 'Plus simple': 'Explique-moi ça plus simplement.', 'Un exemple': 'Donne-moi un exemple concret.', 'Aide-moi à la retenir': 'Donne-moi une astuce courte pour retenir la carte en discussion.', 'Teste-moi sur cette carte': "Teste-moi sur la carte en discussion : pose-moi sa question seule, puis enchaîne sur des notions proches.", 'Mes cartes les plus ratées': 'Prends mes 3 cartes les plus ratées : pour chacune, la confusion probable et une astuce pour retenir.', "Qu'est-ce qui manque ?": "Quelles notions importantes manquent dans mes cartes de cette matière ? Propose les cartes à ajouter.", 'Fiche de synthèse': 'Fais-moi une synthèse de cette matière.', "Je t'explique, corrige-moi": "Je t'explique une notion avec mes mots. Demande-moi laquelle.", 'Explique autrement': 'Explique-moi autrement la carte en discussion (exemples, analogies).', 'Pourquoi je rate celle-là ?': 'Pourquoi est-ce que je rate cette carte ?' };
 
 function pcCharge(){
@@ -8270,6 +8294,10 @@ function pcActionsRestaure(m){
   if(g.e === 'ok' || g.e === 'ko' || g.e === 'undo'){
     const box = document.createElement('div'); box.className = 'pc-act'; box._g = g;
     pcBoxEtat(box, g.e, escapeHtml(g.t || (g.e === 'ok' ? 'Appliqué' : g.e === 'undo' ? 'Annulé' : 'Actions ignorées')), g.r ? '<p>' + escapeHtml(g.r) + '</p>' : '', true);
+    if(g.e === 'ok' && g.u && pcLot && pcLot.u === g.u){   /* v409 : le dernier lot reste annulable après un aller-retour hors de Prof (pendant 30 min) */
+      if(Date.now() < pcLot.fin){ const b = document.createElement('button'); b.type = 'button'; b.className = 'pp-sec pc-un'; b.textContent = 'Annuler'; box.appendChild(b); pcLot.btn = b; b.onclick = () => pcAnnuler(box); }
+      else pcLotExpire(g.u);
+    }
     pcEl('pc-feed').appendChild(box); return;
   }
   const x = (Array.isArray(g.x) ? g.x : []).filter(pcActionValide);
@@ -8367,35 +8395,72 @@ function pcActionsCarte(actions, matiere, suite, rec){
 function pcDemandeImages(){
   try{ return pcConv.filter(m => m && m.r === 'u' && typeof m.t === 'string' && !/^\[Info de l'application/.test(m.t)).slice(-2).map(m => m.t.replace(/\s+/g, ' ').slice(0, 400)).join(' | '); }catch(e){ return ''; }
 }
-async function ppImgIAJson(sys, texte, schema, ms){
+/* v410 : nouvel essai automatique (Wikimedia ou Gemini saturé = 429 / 5xx / coupure réseau) : jusqu'à `essais` tentatives, pause croissante ; un arrêt demandé par l'utilisateur n'est jamais retenté. */
+async function ppFetchRetry(url, ms, annul, essais){
+  const max = essais || 3; let dern = null;
+  for(let n = 0; n < max; n++){
+    if(annul && annul.aborted) throw new DOMException('Aborted', 'AbortError');
+    try{
+      const r = await ppFetchDelai(url, ms, annul);
+      if(r.ok || ![429, 500, 502, 503, 504].includes(r.status)) return r;
+      dern = r;
+    }catch(e){ if((annul && annul.aborted) || n === max - 1) throw e; dern = null; }
+    if(n === max - 1) break;
+    await new Promise(ok => setTimeout(ok, 500 * Math.pow(2, n) + Math.random() * 200));
+  }
+  return dern;
+}
+/* v410 : mémoire courte des recherches Commons / Wikipédia (20 min, 40 entrées) : redemander la même image ne refait ni la recherche ni les miniatures. Un échec n'est jamais gardé. */
+const PP_IMG_CACHE = new Map(), PP_IMG_CACHE_MS = 20 * 60 * 1000, PP_IMG_CACHE_MAX = 40;
+async function ppImgCache(cle, fn){
+  const e = PP_IMG_CACHE.get(cle);
+  if(e && Date.now() - e.t < PP_IMG_CACHE_MS) return e.v;
+  const v = await fn();
+  PP_IMG_CACHE.delete(cle); PP_IMG_CACHE.set(cle, { t: Date.now(), v });
+  while(PP_IMG_CACHE.size > PP_IMG_CACHE_MAX) PP_IMG_CACHE.delete(PP_IMG_CACHE.keys().next().value);
+  return v;
+}
+/* v408 : un seul appel Gemini (3.1 Flash-Lite) ; `parts` = texte et images ; `annul` = signal du bouton « arrêter » (facultatif). */
+async function ppImgIAJsonParts(sys, parts, schema, ms, annul){
   const key = getGeminiKey(); if(!key) return null;
   const ctrl = new AbortController(), minuteur = setTimeout(() => ctrl.abort(), ms || 25000);
+  const surAnnul = () => ctrl.abort();
+  if(annul){ if(annul.aborted) ctrl.abort(); else annul.addEventListener('abort', surAnnul, { once: true }); }
+  const init = { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+    body: JSON.stringify({ system_instruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts }], generationConfig: { responseMimeType: 'application/json', responseSchema: schema } }) };
   try{
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({ system_instruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: [{ text: String(texte).slice(0, 60000) }] }], generationConfig: { responseMimeType: 'application/json', responseSchema: schema } }) });
-    if(!r.ok) return null;
+    let r = null;
+    for(let n = 0; n < 2; n++){   /* v410 : un seul nouvel essai si Gemini est saturé (429 / 5xx) ou si le réseau coupe */
+      try{ r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent', init); }catch(e){ if(ctrl.signal.aborted || n === 1) return null; r = null; }
+      if(r && (r.ok || ![429, 500, 502, 503, 504].includes(r.status))) break;
+      if(n === 1) break;
+      await new Promise(ok => setTimeout(ok, 1500));
+      if(ctrl.signal.aborted) return null;
+    }
+    if(!r || !r.ok) return null;
     const d = await r.json(), tx = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('');
     return JSON.parse(tx);
   }catch(e){ return null; }
-  finally{ clearTimeout(minuteur); }
+  finally{ clearTimeout(minuteur); if(annul) annul.removeEventListener('abort', surAnnul); }
 }
+async function ppImgIAJson(sys, texte, schema, ms, annul){ return ppImgIAJsonParts(sys, [{ text: String(texte).slice(0, 60000) }], schema, ms, annul); }
 const PP_IMG_RESUME = (c) => ((c && pcNet(c.question || '')) || '').slice(0, 100) + ' → ' + ((c && pcNet(c.reponse || '')) || '').slice(0, 100);
-async function ppImgReformuler(jobs, cartes, demande){
-  const sys = "Tu écris des requêtes de recherche pour Wikimedia Commons (recherche plein texte sur les titres et descriptions de fichiers, surtout en anglais). Pour CHAQUE carte, donne 3 requêtes de 3 à 8 mots, de la plus précise à la plus large, qui retrouvent EXACTEMENT l'image que l'utilisateur a demandée. Respecte à la lettre le TYPE d'image demandé (carte vierge ou de localisation → « locator map », « location map », « blank », « highlighted » ; schéma → « diagram » ; photo ; drapeau seulement si on a demandé un drapeau), le sujet exact en anglais, le cadrage voulu (« in Europe », « with neighbouring countries »). N'écris jamais une requête qui ramènerait un drapeau, un blason ou une photo si une carte est demandée. Exemple : demande « une carte vierge du pays, un peu dézoomée pour voir les pays autour », sujet Italy → [\"Italy locator map Europe blank\", \"Italy highlighted European Union map\", \"Italy location map\"]. Réponds en JSON : requetes = liste de { i : numéro de la carte, q : [3 requêtes] }.";
-  const texte = 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') + '\n\nCARTES :\n' + jobs.map((j, i) => '#' + i + ' | côté ' + (j.cote === 'imageReponse' ? 'réponse' : 'question') + ' | carte : ' + PP_IMG_RESUME(cartes[i]) + ' | idée de départ : ' + (j.terme || '')).join('\n');
-  const schema = { type: 'OBJECT', properties: { requetes: { type: 'ARRAY', items: { type: 'OBJECT', properties: { i: { type: 'INTEGER' }, q: { type: 'ARRAY', items: { type: 'STRING' } } }, required: ['i', 'q'] } } }, required: ['requetes'] };
-  const j = await ppImgIAJson(sys, texte, schema, 30000);
+async function ppImgReformuler(jobs, cartes, demande, annul){
+  const sys = "Tu écris des requêtes de recherche pour Wikimedia Commons (recherche plein texte sur les titres et descriptions de fichiers, surtout en anglais). Pour CHAQUE carte, donne 3 requêtes de 3 à 8 mots, de la plus précise à la plus large, qui retrouvent EXACTEMENT l'image que l'utilisateur a demandée. Respecte à la lettre le TYPE d'image demandé (carte vierge ou de localisation → « locator map », « location map », « blank », « highlighted » ; schéma → « diagram » ; photo ; drapeau seulement si on a demandé un drapeau), le sujet exact en anglais, le cadrage voulu (« in Europe », « with neighbouring countries »). N'écris jamais une requête qui ramènerait un drapeau, un blason ou une photo si une carte est demandée. Exemple : demande « une carte vierge du pays, un peu dézoomée pour voir les pays autour », sujet Italy → [\"Italy locator map Europe blank\", \"Italy highlighted European Union map\", \"Italy location map\"]. Donne aussi « sujet » : le sujet principal en anglais, 1 à 4 mots, tel qu'il serait écrit comme titre d'un article Wikipédia (ex. Treaty of Rome, Mitosis, Italy). Réponds en JSON : requetes = liste de { i : numéro de la carte, q : [3 requêtes], sujet : le sujet }.";
+  const texte = 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') + '\n\nCARTES :\n' + jobs.map((j, i) => '#' + i + ' | côté ' + (j.cote === 'imageReponse' ? 'réponse' : 'question') + (cartes[i] ? ' | carte : ' + PP_IMG_RESUME(cartes[i]) : '') + ' | idée de départ : ' + (j.terme || '')).join('\n');
+  const schema = { type: 'OBJECT', properties: { requetes: { type: 'ARRAY', items: { type: 'OBJECT', properties: { i: { type: 'INTEGER' }, q: { type: 'ARRAY', items: { type: 'STRING' } }, sujet: { type: 'STRING' } }, required: ['i', 'q'] } } }, required: ['requetes'] };
+  const j = await ppImgIAJson(sys, texte, schema, 30000, annul);
   if(!j || !Array.isArray(j.requetes)) return null;
-  const res = jobs.map(() => []);
-  j.requetes.forEach(x => { if(x && Number.isInteger(x.i) && x.i >= 0 && x.i < jobs.length && Array.isArray(x.q)) res[x.i] = x.q.map(t => pcTermeImage(t)).filter(Boolean).slice(0, 3); });
+  const res = jobs.map(() => ({ q: [], sujet: '' }));
+  j.requetes.forEach(x => { if(x && Number.isInteger(x.i) && x.i >= 0 && x.i < jobs.length && Array.isArray(x.q)) res[x.i] = { q: x.q.map(t => pcTermeImage(t)).filter(Boolean).slice(0, 3), sujet: typeof x.sujet === 'string' ? pcTermeImage(x.sujet) : '' }; });
   return res;
 }
-/* candidats d'une requête : [{ titre, desc, thumb }] (formats lisibles, assez grands) */
-async function ppImgCandidats(q){
+/* candidats d'une requête : [{ titre, desc, thumb, fichier }] (formats lisibles, assez grands). thumb = 720 px (image finale) ; la miniature de contrôle est chargée à part (ppImgMiniatures). */
+async function ppImgCandidatsReseau(q, annul){
   const url = IMG_WIKI_API + '?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=10&gsrsearch=' + encodeURIComponent(q)
     + '&prop=imageinfo&iiprop=url%7Cmime%7Csize%7Cextmetadata&iiextmetadatafilter=ImageDescription&iiurlwidth=' + IMG_COTE_MAX;
-  const rep = await ppFetchDelai(url, 10000);
-  if(!rep.ok) return [];
+  const rep = await ppFetchRetry(url, 10000, annul);
+  if(!rep || !rep.ok) throw new Error('commons');   /* v410 : un échec n'est pas mis en mémoire */
   const data = await rep.json();
   const pages = data && data.query && data.query.pages ? Object.values(data.query.pages) : [];
   pages.sort((a, b) => (a.index || 0) - (b.index || 0));
@@ -8406,54 +8471,172 @@ async function ppImgCandidats(q){
     if(!/^image\/(jpeg|png|webp|svg\+xml)$/.test(ii.mime || '')) continue;
     if((ii.width || 0) < 200 || (ii.height || 0) < 150) continue;
     const d = ii.extmetadata && ii.extmetadata.ImageDescription && ii.extmetadata.ImageDescription.value ? String(ii.extmetadata.ImageDescription.value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90) : '';
-    out.push({ titre: String(p.title || '').replace(/^File:/, '').replace(/\.[a-z0-9]+$/i, '').slice(0, 110), desc: d, thumb: ii.thumburl });
+    out.push({ titre: String(p.title || '').replace(/^File:/, '').replace(/\.[a-z0-9]+$/i, '').slice(0, 110), desc: d, thumb: ii.thumburl, fichier: String(p.title || '') });
   }
   return out;
 }
-async function ppImgChoisirCandidat(jobs, cartes, cands, demande){
+async function ppImgCandidats(q, annul){ return ppImgCache('c|' + String(q).toLowerCase(), () => ppImgCandidatsReseau(q, annul)); }
+/* v408 : image principale des articles Wikipédia (anglais) du sujet : souvent la meilleure image d'un nom propre. On ne garde que les fichiers hébergés sur Commons (libres). */
+async function ppImgCandidatsWikiReseau(s, annul){
+  const url = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=0&gsrlimit=3&gsrsearch=' + encodeURIComponent(s)
+    + '&prop=pageimages&piprop=name%7Cthumbnail&pithumbsize=' + IMG_COTE_MAX;
+  const rep = await ppFetchRetry(url, 10000, annul);
+  if(!rep || !rep.ok) throw new Error('wikipedia');
+  const data = await rep.json();
+  const pages = data && data.query && data.query.pages ? Object.values(data.query.pages) : [];
+  pages.sort((a, b) => (a.index || 0) - (b.index || 0));
+  const out = [];
+  for(const p of pages){
+    const th = p.thumbnail && p.thumbnail.source, nom = typeof p.pageimage === 'string' ? p.pageimage : '';
+    if(!th || !nom || !/^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\//.test(th)) continue;
+    if(!/\.(jpe?g|png|webp|svg)$/i.test(nom)) continue;
+    if((p.thumbnail.width || 0) < 200 || (p.thumbnail.height || 0) < 150) continue;
+    out.push({ titre: nom.replace(/_/g, ' ').replace(/\.[a-z0-9]+$/i, '').slice(0, 110), desc: 'image principale de l’article Wikipédia « ' + String(p.title || '').slice(0, 60) + ' »', thumb: th, fichier: 'File:' + nom });
+  }
+  return out;
+}
+async function ppImgCandidatsWiki(sujet, annul){
+  const s = String(sujet || '').trim(); if(!s) return [];
+  return ppImgCache('w|' + s.toLowerCase(), () => ppImgCandidatsWikiReseau(s, annul));
+}
+/* v408 : miniatures de contrôle (320 px) des candidats : UN appel à l'API Commons par lot de 40, puis téléchargements en parallèle. Pose c.mini = { mime, data } (base64) ; sans miniature, le candidat est jugé sur son titre. */
+const PP_IMG_MINI = 320;
+function ppImgCleFichier(c){ return String((c && (c.fichier || c.titre)) || '').replace(/^File:/i, '').replace(/_/g, ' ').trim().toLowerCase(); }
+function ppImgB64(blob){ return new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => ko(r.error); r.readAsDataURL(blob); }); }
+async function ppImgMiniatures(liste, annul){
+  const avec = liste.filter((c, i, t) => c && c.fichier && !c.mini && t.indexOf(c) === i);   /* v410 : déjà en mémoire = pas retéléchargée */
+  for(let d = 0; d < avec.length; d += 40){
+    if(annul && annul.aborted) return;
+    const lot = avec.slice(d, d + 40);
+    let pages = [];
+    try{
+      const url = IMG_WIKI_API + '?action=query&format=json&origin=*&prop=imageinfo&iiprop=url&iiurlwidth=' + PP_IMG_MINI + '&titles=' + encodeURIComponent(lot.map(c => c.fichier).join('|'));
+      const rep = await ppFetchRetry(url, 10000, annul);
+      if(!rep || !rep.ok) continue;
+      const data = await rep.json();
+      pages = data && data.query && data.query.pages ? Object.values(data.query.pages) : [];
+    }catch(e){ continue; }
+    const parCle = {};
+    pages.forEach(p => { const ii = p.imageinfo && p.imageinfo[0]; if(ii && ii.thumburl && /^https:\/\/upload\.wikimedia\.org\//.test(ii.thumburl)) parCle[ppImgCleFichier({ fichier: p.title })] = ii.thumburl; });
+    await ppImgPool(lot.length, async n => {
+      const c = lot[n], u = parCle[ppImgCleFichier(c)]; if(!u) return;
+      const r = await ppFetchRetry(u, 8000, annul, 2); if(!r || !r.ok) return;
+      const b = await r.blob(), mime = (b.type || '').toLowerCase();
+      if(b.size > 700000 || !/^image\/(jpeg|png|webp)$/.test(mime)) return;
+      c.mini = { mime, data: await ppImgB64(b) };
+    }, 6);
+  }
+}
+async function ppImgPool(n, fn, max){
+  let suiv = 0;
+  await Promise.all(Array.from({ length: Math.min(max || 4, n) }, async () => { while(suiv < n){ const i = suiv++; try{ await fn(i); }catch(e){} } }));
+}
+async function ppImgChoisirCandidat(jobs, cartes, cands, demande, annul){
   const sys = "Tu choisis, pour chaque carte de révision, l'image de Wikimedia Commons qui correspond EXACTEMENT à ce que l'utilisateur a demandé (type d'image, sujet, cadrage). Tu ne vois que les titres et descriptions des candidats : appuie-toi dessus. Si aucun candidat ne correspond clairement (mauvais pays, drapeau ou blason alors qu'on veut une carte, photo alors qu'on veut un schéma, carte avec trop de détails alors qu'on veut une carte vierge…), réponds k = -1 : mieux vaut aucune image qu'une mauvaise. Réponds en JSON : choix = liste de { i : numéro de la carte, k : numéro du candidat retenu ou -1 }.";
-  const texte = 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') + '\n\n' + jobs.map((j, i) => '#' + i + ' | carte : ' + PP_IMG_RESUME(cartes[i]) + '\n' + (cands[i].length ? cands[i].map((c, k) => '  ' + k + ') ' + c.titre + (c.desc ? ' — ' + c.desc : '')).join('\n') : '  (aucun candidat)')).join('\n');
+  const texte = 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') + '\n\n' + jobs.map((j, i) => '#' + i + (cartes[i] ? ' | carte : ' + PP_IMG_RESUME(cartes[i]) : '') + '\n' + (cands[i].length ? cands[i].map((c, k) => '  ' + k + ') ' + c.titre + (c.desc ? ' — ' + c.desc : '')).join('\n') : '  (aucun candidat)')).join('\n');
   const schema = { type: 'OBJECT', properties: { choix: { type: 'ARRAY', items: { type: 'OBJECT', properties: { i: { type: 'INTEGER' }, k: { type: 'INTEGER' } }, required: ['i', 'k'] } } }, required: ['choix'] };
-  const j = await ppImgIAJson(sys, texte, schema, 40000);
+  const j = await ppImgIAJson(sys, texte, schema, 40000, annul);
   if(!j || !Array.isArray(j.choix)) return null;
   const res = jobs.map(() => 0);   /* carte oubliée par l'IA : le premier candidat, comme avant */
   j.choix.forEach(x => { if(x && Number.isInteger(x.i) && x.i >= 0 && x.i < jobs.length && Number.isInteger(x.k)) res[x.i] = x.k; });
   return res;
 }
+/* v408 : le choix se fait en REGARDANT les miniatures (avec les titres). Renvoie, par demande, le classement des candidats qui conviennent (meilleur d'abord ; liste vide = aucun ne convient), ou null si l'appel échoue (repli : choix par titres). Une seule requête pour toutes les demandes. */
+async function ppImgChoisirVisuelLot(jobs, cartes, cands, demande, annul){
+  if(!cands.some(l => l.some(c => c.mini))) return null;
+  const sys = "Tu choisis, pour chaque demande d'image de révision, les images de Wikimedia Commons qui correspondent EXACTEMENT à ce que l'utilisateur a demandé (type d'image, sujet, cadrage). Tu vois chaque candidat (miniature) avec son titre : REGARDE l'image, ne te fie pas seulement au titre. Écarte les candidats qui ne conviennent pas : mauvais sujet ou mauvais pays, drapeau ou blason alors qu'on veut une carte, photo alors qu'on veut un schéma, carte surchargée alors qu'on veut une carte vierge, image floue, illisible ou presque vide. Réponds en JSON : choix = liste de { i : numéro de la demande, classement : numéros des candidats qui conviennent, du meilleur au moins bon (liste vide si aucun ne convient : mieux vaut aucune image qu'une mauvaise) }.";
+  const parts = [{ text: 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') }];
+  jobs.forEach((j, i) => {
+    parts.push({ text: '\n\n### Demande #' + i + (cartes[i] ? ' | carte : ' + PP_IMG_RESUME(cartes[i]) : '') + (cands[i].length ? '' : '\n(aucun candidat)') });
+    cands[i].forEach((c, k) => {
+      parts.push({ text: '\n' + k + ') ' + c.titre + (c.desc ? ' — ' + c.desc : '') + (c.mini ? ' [image ci-dessous]' : ' [miniature indisponible]') });
+      if(c.mini) parts.push({ inline_data: { mime_type: c.mini.mime, data: c.mini.data } });
+    });
+  });
+  const schema = { type: 'OBJECT', properties: { choix: { type: 'ARRAY', items: { type: 'OBJECT', properties: { i: { type: 'INTEGER' }, classement: { type: 'ARRAY', items: { type: 'INTEGER' } } }, required: ['i', 'classement'] } } }, required: ['choix'] };
+  const j = await ppImgIAJsonParts(sys, parts, schema, 50000, annul);
+  if(!j || !Array.isArray(j.choix)) return null;
+  const res = jobs.map(() => null);   /* null = l'IA n'a rien dit pour cette demande */
+  j.choix.forEach(x => {
+    if(x && Number.isInteger(x.i) && x.i >= 0 && x.i < jobs.length && Array.isArray(x.classement))
+      res[x.i] = x.classement.filter((k, n, t) => Number.isInteger(k) && k >= 0 && k < cands[x.i].length && t.indexOf(k) === n);
+  });
+  return res;
+}
+/* v408 : plusieurs cartes à la fois (cas habituel) : les demandes sont jugées par groupes de 6 (≈ 36 miniatures par appel), 3 groupes en parallèle, chacun avec son propre délai.
+   Renvoie un tableau (une entrée par demande) ; null = pas jugée (appel échoué ou sans miniature) : le secours par titres s'en charge. */
+async function ppImgChoisirVisuel(jobs, cartes, cands, demande, annul){
+  const T = 6, res = jobs.map(() => null), debuts = [];
+  for(let d = 0; d < jobs.length; d += T) debuts.push(d);
+  await ppImgPool(debuts.length, async g => {
+    const d = debuts[g], f = Math.min(d + T, jobs.length);
+    const r = await ppImgChoisirVisuelLot(jobs.slice(d, f), cartes.slice(d, f), cands.slice(d, f), demande, annul);
+    if(r) r.forEach((x, n) => { res[d + n] = x; });
+  }, 3);
+  return res;
+}
+/* v408 : télécharge l'image finale d'un candidat (720 px, réduite comme une photo). '' si impossible. */
+async function ppImgGrande(c, annul, opt){
+  try{
+    const img = await ppFetchRetry(c.thumb, 12000, annul, 2);
+    if(!img || !img.ok) return '';
+    const blob = await img.blob();
+    if(blob.size > 8 * 1024 * 1024) return '';
+    return await ppImgReduire(blob, opt);
+  }catch(e){ return ''; }
+}
+/* v408 : tout le travail de recherche, sans télécharger l'image finale : requêtes + sujet (1 appel) ; candidats Commons + image principale des articles Wikipédia ; miniatures ; choix en regardant les miniatures (1 appel).
+   Renvoie { cands, rang, jug } : rang[i] = numéros de candidats, du meilleur au moins bon ; jug[i] = vrai si l'IA a jugé (sinon : ordre brut de Wikimedia, sans garantie).
+   jobs[i] = { terme, cote, id? (carte existante) | carte? } ; opt.annul = signal d'arrêt. */
+async function ppImgPreparerLot(jobs, demande, opt){
+  const annul = opt && opt.annul;
+  const cartes = jobs.map(j => j.carte || (j.id ? (CARDS.find(k => k.id === j.id) || null) : null));
+  const reqs = await ppImgReformuler(jobs, cartes, demande, annul);
+  const qs = jobs.map((j, i) => [...new Set([...((reqs && reqs[i] && reqs[i].q) || []), pcTermeImage(j.terme)].filter(Boolean))]);
+  const sujets = jobs.map((j, i) => (reqs && reqs[i] && reqs[i].sujet) || '');
+  const cap = jobs.length > 3 ? 6 : 10;   /* candidats par demande (dont 2 au plus venus de Wikipédia) */
+  const cands = jobs.map(() => []);
+  await ppImgPool(jobs.length, async i => {
+    const wiki = ppImgCandidatsWiki(sujets[i], annul).catch(() => []);
+    const vus = new Set(), liste = [];
+    const reps = await Promise.all(qs[i].map(q => ppImgCandidats(q, annul).catch(() => [])));   /* v410 : les requêtes d'une carte partent ensemble ; l'ordre (précise d'abord) est gardé */
+    for(const l of reps) for(const c of l){ const cle = ppImgCleFichier(c); if(!vus.has(cle)){ vus.add(cle); liste.push(c); } }
+    cands[i] = liste.slice(0, cap - 2);
+    let n = 0;
+    for(const c of await wiki){ const cle = ppImgCleFichier(c); if(!vus.has(cle) && n < 2){ vus.add(cle); cands[i].push(c); n++; } }
+  });
+  if(annul && annul.aborted) return { cands, rang: cands.map(() => []), jug: cands.map(() => false) };
+  if(cands.every(l => !l.length)) return { cands, rang: cands.map(() => []), jug: cands.map(() => true) };
+  try{ await ppImgMiniatures(cands.flat(), annul); }catch(e){}
+  let rang = await ppImgChoisirVisuel(jobs, cartes, cands, demande, annul);
+  const non = rang.map((r, i) => r === null ? i : -1).filter(i => i >= 0);
+  if(non.length && !(annul && annul.aborted)){   /* secours : choix sur les titres seulement, pour les demandes que le tri visuel n'a pas jugées */
+    const choix = await ppImgChoisirCandidat(non.map(i => jobs[i]), non.map(i => cartes[i]), non.map(i => cands[i]), demande, annul);
+    if(choix) non.forEach((i, n) => { const k = choix[n]; rang[i] = (k >= 0 && cands[i][k]) ? [k] : []; });
+  }
+  const jug = rang.map(r => r !== null);   /* sinon (IA muette : quota, réseau) : ordre brut de Wikimedia */
+  rang = rang.map((r, i) => r === null ? cands[i].map((_, k) => k) : r);
+  return { cands, rang, jug };
+}
 async function ppImgTrouverLot(jobs, demande, opt){
   const urls = new Array(jobs.length).fill('');
-  const cartes = jobs.map(j => CARDS.find(k => k.id === j.id));
-  const reqs = await ppImgReformuler(jobs, cartes, demande);
-  const qs = jobs.map((j, i) => [...new Set([...((reqs && reqs[i]) || []), pcTermeImage(j.terme)].filter(Boolean))]);
-  const cands = jobs.map(() => []);
-  let suiv = 0;
-  const pool = async (fn) => { suiv = 0; await Promise.all(Array.from({ length: Math.min(4, jobs.length) }, async () => { while(suiv < jobs.length){ const i = suiv++; try{ await fn(i); }catch(e){} } })); };
-  await pool(async i => {
-    const vus = new Set();
-    for(const q of qs[i]){
-      let l = []; try{ l = await ppImgCandidats(q); }catch(e){}
-      for(const c of l) if(!vus.has(c.titre)){ vus.add(c.titre); cands[i].push(c); }
-      if(cands[i].length >= 8) break;
+  const lot = await ppImgPreparerLot(jobs, demande, opt);
+  await ppImgPool(jobs.length, async i => {
+    for(const k of lot.rang[i].slice(0, 3)){   /* v410 : si le meilleur ne se télécharge pas, on prend le suivant du classement (3 au plus) */
+      if(opt && opt.annul && opt.annul.aborted) return;
+      const c = lot.cands[i][k]; if(!c) continue;
+      const u = await ppImgGrande(c, opt && opt.annul, opt);
+      if(u){ urls[i] = u; return; }
     }
-    cands[i] = cands[i].slice(0, 8);
-  });
-  const choix = await ppImgChoisirCandidat(jobs, cartes, cands, demande);
-  await pool(async i => {
-    const k = choix ? choix[i] : 0, c = cands[i][k];
-    if(!c) return;
-    const img = await ppFetchDelai(c.thumb, 12000);
-    if(!img.ok) return;
-    const blob = await img.blob();
-    if(blob.size > 8 * 1024 * 1024) return;
-    urls[i] = await ppImgReduire(blob, opt);
   });
   return urls;
 }
 /* v263 : cherche sur Wikimedia les images demandées (cartes créées ou existantes) et les pose ; mémorise l'état d'avant pour « Annuler ». */
-async function pcImagesApres(jobs, anciennes){
+async function pcImagesApres(jobs, anciennes, signal, uLot){
   let ok = 0, ratees = 0, pleines = 0;
   /* v400 : requêtes reformulées par l'IA + choix du bon candidat ; en lot (plus de 3 images), images allégées pour que TOUTES tiennent dans le stockage (avant : ~5 sur 27) */
-  const urls = await ppImgTrouverLot(jobs, pcDemandeImages(), jobs.length > 3 ? { cote: 520, vises: 32000 } : null);
+  const urls = await ppImgTrouverLot(jobs, pcDemandeImages(), jobs.length > 3 ? { cote: 520, vises: 32000, annul: signal } : { annul: signal });
+  if(signal && signal.aborted) return;   /* v409 : « Annuler » pendant la recherche : rien n'est posé */
   jobs.forEach((j, i) => {
     const c = CARDS.find(k => k.id === j.id), url = urls[i];
     if(!c || !url){ ratees++; return; }
@@ -8467,7 +8650,9 @@ async function pcImagesApres(jobs, anciennes){
     ok++;
   });
   if(ok){ try{ pcRefresh(); if(activeTab === 'browse') renderBrowse(); }catch(e){} envoyerVersSync(); }
-  ppToast(ok ? (ok + ' image' + (ok > 1 ? 's' : '') + ' ajoutée' + (ok > 1 ? 's' : '')) + (ratees ? ' · ' + ratees + ' introuvable' + (ratees > 1 ? 's' : '') : '') : (pleines ? 'Stockage plein : image non ajoutée' : 'Aucune image trouvée'));
+  const bilan = ok ? (ok + ' image' + (ok > 1 ? 's' : '') + ' ajoutée' + (ok > 1 ? 's' : '')) + (ratees ? ' · ' + ratees + ' introuvable' + (ratees > 1 ? 's' : '') : '') + (pleines ? ' · ' + pleines + ' non ajoutée' + (pleines > 1 ? 's' : '') + ' (stockage plein)' : '') : (pleines ? 'stockage plein : image non ajoutée' : 'aucune image trouvée');
+  pcLotTexte(uLot, PC_IMG_ATTENTE(jobs.length), bilan);   /* v409 : le résultat remplace « recherche en cours » dans la carte Appliqué (visible aussi en revenant sur Prof) */
+  ppToast(bilan.charAt(0).toUpperCase() + bilan.slice(1));
 }
 /* v263 : image demandée par Prof dans sa réponse, affichée sous la bulle.
    v277 : le mot-clé est gardé avec le message (m.i) : en rouvrant la conversation, l'image est cherchée de nouveau (elle n'est pas stockée, trop lourde).
@@ -8494,6 +8679,7 @@ function pcAppliquer(choix, box, toutes){
   const lot = { creees: [], modif: [], suppr: [], matieres: [], defaire: [] };   /* v236 : defaire = retours en arrière des actions sur les matières et la pause */
   let ignorees = 0, synth = null, echec = false, rechargeLangue = '', seanceAct = null;
   lot.resume = decrit;   /* v241 : repris par « Annuler » pour prévenir Prof */
+  lot.u = 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); lot.fin = Date.now() + PC_UNDO_MS;   /* v409 */
   for(const a of choix.filter(x => x.type === 'modifier')){
     const c = CARDS.find(k => k.id === a.id);
     if(!c || (c.question || '').trim() !== a.avant.question.trim() || (c.reponse || '').trim() !== a.avant.reponse.trim()){ ignorees++; continue; } /* carte changée depuis l'affichage */
@@ -8688,13 +8874,15 @@ function pcAppliquer(choix, box, toutes){
   if(echec) p.push('ajouts annulés : stockage plein');
   notes.forEach(n => p.push(n));
   if(touche && pcLot && pcLot.btn) pcLot.btn.remove(); /* « Annuler » ne défait que le dernier lot */
-  if(imgJobs.length){ const anciennes = []; lot.defaire.push(() => { for(const o of anciennes){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; k.imageQuestion = o.iq; k.imageReponse = o.ir; k.derniereModification = new Date().toISOString(); ppImgEnregistrer(o.id, o.iq, o.ir); saveLocalOverlay(o.id, { derniereModification: k.derniereModification }); } try{ pcRefresh(); renderBrowse(); }catch(e){} }); pcImagesApres(imgJobs, anciennes); p.push(imgJobs.length + ' image' + (imgJobs.length > 1 ? 's' : '') + ' en recherche…'); }
+  if(imgJobs.length){ const anciennes = [], ctlImg = new AbortController(); lot.defaire.push(() => { ctlImg.abort(); for(const o of anciennes){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; k.imageQuestion = o.iq; k.imageReponse = o.ir; k.derniereModification = new Date().toISOString(); ppImgEnregistrer(o.id, o.iq, o.ir); saveLocalOverlay(o.id, { derniereModification: k.derniereModification }); } try{ pcRefresh(); renderBrowse(); }catch(e){} }); pcImagesApres(imgJobs, anciennes, ctlImg.signal, lot.u); p.push(PC_IMG_ATTENTE(imgJobs.length)); }
   const aUndo = lot.creees.length || lot.modif.length || lot.suppr.length || lot.matieres.length || lot.defaire.length;
   pcNote("[Info de l'application : l'utilisateur a APPLIQUÉ ce que tu proposais : " + decrit + '.' + (decoche.length ? ' Il a DÉCOCHÉ, donc NON appliqué : ' + pcDecritListe(decoche) + '.' : '') + (ignorees ? ' ' + ignorees + ' action(s) non appliquée(s) car la carte avait changé entre-temps.' : '') + (echec ? ' Les ajouts ont échoué (stockage plein).' : '') + ']');
   pcBoxEtat(box, 'ok', 'Appliqué', `<p>${p.join(' · ') || (synth ? 'Synthèse ouverte' : 'Aucun changement')}</p>` + (aUndo ? '<button type="button" class="pp-sec pc-un">Annuler</button>' : ''));
   if(aUndo){
     const b = box.querySelector('.pc-un'); pcLot = { ...lot, btn: b };
     b.onclick = () => pcAnnuler(box);
+    if(box._g){ box._g.u = lot.u; try{ pcSauve(); }catch(e){} }   /* v409 : repéré à la réouverture de Prof */
+    setTimeout(() => pcLotExpire(lot.u), PC_UNDO_MS + 50);
   }
   if(seanceAct && !synth) pcLancerSeance(seanceAct, seanceAct.mode || 'reviser');   /* v272 */
   if(box._suite && !echec && !decoche.length && !ignorees && pcSuiteN < 40){   /* v316 : lot appliqué en entier : Prof prépare le suivant tout seul */
@@ -8745,7 +8933,9 @@ function pcFusionDefaire(src, f){
   clearEmptyMatiereIfHasCards(src);
 }
 function pcAnnuler(box){
-  const lot = pcLot; if(!lot) return; pcLot = null;
+  const lot = pcLot; if(!lot) return;
+  if(lot.fin && Date.now() > lot.fin){ pcLotExpire(lot.u); ppToast('Trop tard pour annuler'); return; }
+  pcLot = null;
   for(const f of [...(lot.defaire || [])].reverse()){ try{ f(); }catch(e){} }   /* v236 : d'abord les actions faites en dernier (matières, pause) */
   const dm = new Date().toISOString(); /* un annulé est une vraie action : horodatage neuf, pour que la synchro propage le retour en arrière */
   for(const id of lot.creees) pcSupprCarte(id);
@@ -9188,7 +9378,7 @@ function pcFit(){
    sort de sous le bouton pendant 5 s (il rouvre la conversation rangée par pcHistReprendre) ; il disparaît dès qu'on écrit.
    Changement (nouvelle, reprise, annulation) : grand écran = la fenêtre s'enfonce sur son ombre orange, le contenu change pendant qu'elle est basse, elle remonte ;
    téléphone = le contenu s'efface puis revient, bulle après bulle (classe .sink sur #pc-layer). */
-let pcSwapping = false, pcUndoT = 0, pcUndoFn = null, pcPendH = '', pcPendN = -1, pcSuggMoved = false, pcVpOrig = null, pcBase = 0;
+let pcSwapping = false, pcUndoT = 0, pcUndoFin = 0, pcUndoFn = null, pcPendH = '', pcPendN = -1, pcSuggMoved = false, pcVpOrig = null, pcBase = 0;
 const pcSideVus = new Set();
 function pcHote(){ return ppWide() ? (pcEl('pc-win') || pcEl('pc-layer')) : pcEl('pc-layer'); }   /* grand écran : les écrans par-dessus (carnet, historique, menu, avis) vivent DANS la fenêtre de discussion */
 function pcSwap(fn){
@@ -9205,7 +9395,9 @@ function pcSoft(){   /* les bulles réapparaissent en douceur, l'une après l'au
   [...f.children].forEach((el, i) => { if(el.classList.contains('pc-b')) el.style.animation = 'pcsoft .6s var(--pce) ' + (80 + Math.min(i, 8) * 60) + 'ms backwards'; });
 }
 function pcUndoHide(){ clearTimeout(pcUndoT); pcUndoFn = null; const u = pcEl('pc-undo'); if(u){ u.classList.remove('on'); u.tabIndex = -1; } }
-function pcUndoShow(fn){ clearTimeout(pcUndoT); pcUndoFn = fn; const u = pcEl('pc-undo'); if(!u) return; u.tabIndex = 0; u.classList.add('on'); pcUndoT = setTimeout(pcUndoHide, 5000); }
+function pcUndoShow(fn){ clearTimeout(pcUndoT); pcUndoFn = fn; pcUndoFin = Date.now() + PC_UNDO_MS; pcUndoT = setTimeout(pcUndoHide, PC_UNDO_MS); const u = pcEl('pc-undo'); if(!u) return; u.tabIndex = 0; u.classList.add('on'); }   /* v409 : 30 min au lieu de 5 s */
+/* v409 : à la réouverture de Prof, « Annuler » (nouvelle conversation) revient s'il n'a pas expiré et qu'aucun message n'a été écrit depuis */
+function pcUndoRestaure(){ const u = pcEl('pc-undo'); if(pcUndoFn && Date.now() < pcUndoFin){ if(u){ u.tabIndex = 0; u.classList.add('on'); } } else pcUndoHide(); }
 function pcNouvelle(){
   const nb = pcEl('pc-new'); nb.classList.remove('go'); void nb.offsetWidth; nb.classList.add('go');
   if(pcSwapping) return;
@@ -9292,7 +9484,7 @@ function ppCoachOuvrir(ctx){
   ctx = (ctx && typeof ctx === 'object' && typeof ctx.preventDefault !== 'function') ? ctx : null;
   pcEnsure(); if(pcOuvert) return; pcOuvert = true;
   clearTimeout(pcFermT); pcScrollY = window.scrollY; pcLastH = pcLastT = -1;
-  pcViewportKb(true); pcBase = Math.max(window.innerHeight, (window.visualViewport ? window.visualViewport.height : 0)); pcUndoHide();
+  pcViewportKb(true); pcBase = Math.max(window.innerHeight, (window.visualViewport ? window.visualViewport.height : 0)); pcUndoRestaure();
   const l = pcEl('pc-layer'), mats = getMatieres();
   pcListe = [...mats, PC_TOUTES];
   const mem = ppLireJSON('coach-matiere', null, v => typeof v === 'string');
@@ -9305,7 +9497,7 @@ function ppCoachOuvrir(ctx){
   pcForce = null; pcAff = null; pcAffAuto = null; if(PC_ROUTEUR_ACTIF && ctx && (ctx.matiere || ctx.carteId)){ pcForce = { mats: [pcMat] }; pcAff = [pcMat]; }   /* v352 : « Discuter de la carte / de cette matière » : matière imposée au 1er message, routeur sauté */
   const dern = [...pcConv].reverse().find(m => m.r && m.m);
   pcDerniere = dern ? dern.m : pcMat;
-  pcUtilises = new Set(); pcMode = ''; pcPhoto = null; pcAttente = false; pcLot = null; pcPjLots = null;
+  pcUtilises = new Set(); pcMode = ''; pcPhoto = null; pcAttente = false; pcPjLots = null;   /* v409 : pcLot est gardé (« Annuler » du dernier lot) */
   pcEl('pc-feed').innerHTML = ''; pcEl('pc-input').value = pcBrouillonLire(); pcPhotoMaj();
   pcRendreConv();
   if(pcCarte){ const c = CARDS.find(k => k.id === pcCarte); pcSep('Carte : ' + pcNet(c.question || '🖼 Image').slice(0, 60)); }
@@ -9333,7 +9525,7 @@ function pcBrouillonLire(){
   return t || '';
 }
 function ppCoachFermer(){
-  if(!pcOuvert) return; pcBrouillonSauve(); pcRepVide(true); pcOuvert = false; pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcUndoHide(); pcInstantane();
+  if(!pcOuvert) return; pcBrouillonSauve(); pcRepVide(true); pcOuvert = false; pcMenu(''); pcHistFerme(); pcCarnetFerme(); pcInstantane();   /* v409 : « Annuler » (nouvelle conversation) reste armé */
   const l = pcEl('pc-layer'); pcPlus(false); pcEl('pc-input').blur();
   clearTimeout(pcPretT); l.classList.remove('ready'); void l.offsetWidth;
   l.style.top = '0'; l.style.height = '100%';
@@ -13381,7 +13573,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v405';
+const PP_APP_VERSION = 'v410';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -15378,7 +15570,25 @@ function sbNouvelle(){
   const nb = {}; CARDS.forEach(c => { if((c.question || c.imageQuestion) && (c.reponse || c.imageReponse)){ const m = c.matiere || 'Sans matière'; nb[m] = (nb[m] || 0) + 1; } });
   const ms = Object.keys(nb).sort((a, b) => a.localeCompare(b, 'fr'));
   if(!ms.length){ ppToast("Aucune carte : crée d'abord des cartes"); return; }
-  ppSheet(`<div class="pp-grab"></div><h2>Synthèse de quelle matière ?</h2><div class="pp-opts">${ms.map(m => `<button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${escapeJsAttr(m)}', true)"><i class="pp-ri">${PP_IC.file}</i><div><b>${escapeHtml(m)}</b><span>${nb[m]} carte${nb[m] > 1 ? 's' : ''}</span></div></button>`).join('')}</div>`);
+  ppSheet(`<div class="pp-grab"></div><h2>Synthèse de quelle matière ?</h2><div class="pp-opts">${ms.map(m => `<button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${escapeJsAttr(m)}', true)"><i class="pp-ri">${PP_IC.file}</i><div><b>${escapeHtml(m)}</b><span>${nb[m]} carte${nb[m] > 1 ? 's' : ''}</span></div></button>`).join('')}</div>
+  <div class="pp-opts sb-newwrap"><button class="pp-row sb-new" onclick="sbVersAjouter()"><i class="pp-ri">${PP_IC.plus}</i><div><b>Créer une nouvelle synthèse</b><span>Depuis un cours, une photo ou un document</span></div><i class="pp-chev">${PP_IC.chev}</i></button></div>`);   /* v407 */
+}
+/* v407 : « Créer une nouvelle synthèse » : la feuille se ferme, la liste des synthèses glisse vers le bas, l'onglet Ajouter arrive par-dessous
+   (même entrée douce que les autres onglets), puis le bouton « Synthèse » pulse deux fois en bleu pour montrer où toucher. */
+function sbVersAjouter(){
+  const reduit = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  ppSheetClose();
+  try{ closeStreakModal(); }catch(e){}
+  setTimeout(() => {
+    try{ switchTab('add'); }catch(e){ console.error(e); return; }
+    if(reduit) return;
+    setTimeout(() => {
+      const b = document.querySelector('#tab-add .pp-alt-syn'); if(!b) return;
+      try{ const r = b.getBoundingClientRect(); if(r.top < 90 || r.bottom > innerHeight - 120) b.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(e){}
+      b.classList.remove('pp-pulse'); void b.offsetWidth; b.classList.add('pp-pulse');
+      setTimeout(() => b.classList.remove('pp-pulse'), 2600);
+    }, 380);
+  }, reduit ? 0 : 200);
 }
 function sbFermerListe(){ closeStreakModal(); }
 function sbRendreListe(same, dessous){
@@ -18579,9 +18789,10 @@ function ppEffacerOuvrir(){
   ppSheet(`<div class="pp-grab"></div><h2>Supprimer toutes tes données ?</h2>
   <p class="pp-warn" style="--wc:var(--pink)">Cartes, matières, progression, conversations avec Prof, clé Gemini : tout est effacé de cet appareil et de tous tes appareils synchronisés, qui reviennent à l'introduction. Impossible à annuler.</p>
   <p class="pp-hint">Pour confirmer, tape « memoria » :</p>
-  <input type="text" id="pp-eff-in" class="pp-fld" placeholder="memoria" oninput="ppEffacerMaj()" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
+  ${ppCEHtml({ id: 'pp-eff-in', cls: 'pp-q', ph: 'memoria', max: 20, enter: 'done', cap: 'none', attrs: 'oninput="ppEffacerMaj()"' })}
   <p class="pp-warn pp-warn-b" id="pp-eff-msg" style="display:none"></p>
   <div class="pp-keyrow" style="margin-top:12px"><button class="pp-sec" style="flex:1" onclick="ppSheetClose()">Annuler</button><button class="pp-sec pp-eff-go" id="pp-eff-go" style="flex:1" disabled onclick="ppEffacerGo()">Supprimer</button></div>`);
+  ppCEScan(document.getElementById('pp-sheet'));   /* v406 : champ sans barre d'autofill (comme « Nouvelle matière ») */
 }
 function ppEffacerMaj(){
   const i = document.getElementById('pp-eff-in'), b = document.getElementById('pp-eff-go');
@@ -19192,14 +19403,14 @@ function ppFormatAide(){
    le nouveau glisse depuis le côté (dir 1 = on avance, -1 = on recule, 0 = simple fondu). Uniquement opacity + transform (compositeur). */
 let ppSynDir = 0;
 function ppPageSwap(cur, html, id, dir){
-  cur.querySelectorAll(':scope > .pp-ghost').forEach(g => g.remove());
+  cur.querySelectorAll(':scope > .pp-fantome').forEach(g => g.remove());
   const vieux = Array.from(cur.childNodes);
   const ys = vieux.map(n => (n.nodeType === 1 && n.classList.contains('pp-sb')) ? n.scrollTop : 0);
   cur.innerHTML = html;
   cur.id = id; cur.style.animation = 'none'; cur.style.pointerEvents = '';
   cur._fermer = (id === 'synth-overlay') ? tryFermerSynthese : closeStreakModal;
   const fantome = document.createElement('div');
-  fantome.className = 'pp-ghost'; fantome.setAttribute('aria-hidden', 'true');
+  fantome.className = 'pp-fantome'; fantome.setAttribute('aria-hidden', 'true');
   vieux.forEach(n => { if(n.nodeType === 1){ n.removeAttribute('id'); n.querySelectorAll('[id]').forEach(e => e.removeAttribute('id')); } fantome.appendChild(n); });
   const neufs = Array.from(cur.children);
   /* v395 : la zone « pp-view » du nouvel écran est posée « figée » (pp-still) AVANT de retirer pp-nofx plus bas. Sans ça, retirer pp-nofx (qui coupait les animations
