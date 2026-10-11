@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" spellcheck="false">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -6333,7 +6333,7 @@ function pcEnsure(){
     <div id="pc-pills" class="pc-stg" style="--i:1"></div>
     <div id="pc-feed"></div>
     <div class="pc-suggw pc-stg" style="--i:3"><button class="pp-back pc-arr l" id="pc-al" type="button" aria-label="Suggestions précédentes">${ppSvg('<path d="M15 6l-6 6 6 6"/>', 18)}</button><div id="pc-sugg"></div><button class="pp-back pc-arr r" id="pc-ar" type="button" aria-label="Suggestions suivantes">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</button></div>
-    <div id="pc-reply" style="display:none"></div><div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: true, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><span class="pc-ic up">${PC_SVG_ENVOI}</span><span class="pc-ic sq">${GM_SVG_STOP.replace(/width="18" height="18"/, 'width="20" height="20"')}</span></button></div></div></div>`;
+    <div id="pc-reply" style="display:none"></div><div id="pc-photo-prev" style="display:none"></div><input type="file" id="pc-file" accept="image/*" hidden><input type="file" id="pc-doc" accept="${ACCEPT_DOCS}" hidden><div class="pc-input pc-stg" style="--i:4"><div class="pc-tools" id="pc-tools"><button class="pc-sq" id="pc-photo" aria-label="Photo"><span class="pc-ic-m">${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</span><span class="pc-ic-d">${PC_CAM_IC}</span></button><button class="pc-sq" id="pc-docbtn" aria-label="Document">${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</button><button class="pc-sq pc-plusb" id="pc-plus" type="button" aria-label="Ajouter une pièce jointe" aria-expanded="false" tabindex="-1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button><div class="pc-plusm" id="pc-plusm"><button class="pc-pi" id="pc-pi-gal" type="button" style="--k:1"><i>${PP_IC.photo.replace('width="22" height="22"', 'width="20" height="20"')}</i>Galerie</button><button class="pc-pi" id="pc-pi-doc" type="button" style="--k:0"><i>${PP_IC.pdf.replace('width="22" height="22"', 'width="20" height="20"')}</i>Fichier</button></div></div>${ppCEHtml({ id: 'pc-input', ph: 'Pose ta question…', enter: 'send', cap: 'sentences', spell: false, attrs: 'data-multi="1"' })}<div id="pc-ghost" aria-hidden="true" data-notr></div><button class="pc-send" id="pc-send" aria-label="Envoyer"><span class="pc-ic up">${PC_SVG_ENVOI}</span><span class="pc-ic sq">${GM_SVG_STOP.replace(/width="18" height="18"/, 'width="20" height="20"')}</span></button></div></div></div>`;
   document.body.appendChild(l);
   ppCEScan(l);   /* v228 : le champ de saisie est un champ ppCE (pas de barre d'autofill) */
   const inp = pcEl('pc-input'), sendBtn = pcEl('pc-send');
@@ -6844,7 +6844,7 @@ function pcCarnetOuvrir(){
   if(!pcOuvert) return;
   pcCarnetFerme(); pcHistFerme();
   const h = document.createElement('div'); h.id = 'pc-carnet'; h.className = 'pc-hist';
-  h.innerHTML = `<div class="pc-bar"><button class="pp-back" id="pcn-back" type="button" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><span>${ppWide() ? 'Mémoire' : 'Ce que Prof retient'}</span></div></div><div id="pcn-corps" class="pch-corps"></div><div id="pcn-pied" class="pch-pied"><p id="pcn-info"></p>${ppCEHtml({ id: 'pcn-in', ph: 'ex. préfère des exemples concrets', max: CARNET_LIGNE_MAX, enter: 'done', cap: 'sentences', spell: true })}<button id="pcn-add" class="pcn-add" type="button">Ajouter</button></div>`;
+  h.innerHTML = `<div class="pc-bar"><button class="pp-back" id="pcn-back" type="button" aria-label="Retour">${PP_IC.back}</button><div class="pc-title"><span>${ppWide() ? 'Mémoire' : 'Ce que Prof retient'}</span></div></div><div id="pcn-corps" class="pch-corps"></div><div id="pcn-pied" class="pch-pied"><p id="pcn-info"></p>${ppCEHtml({ id: 'pcn-in', ph: 'ex. préfère des exemples concrets', max: CARNET_LIGNE_MAX, enter: 'done', cap: 'sentences', spell: false })}<button id="pcn-add" class="pcn-add" type="button">Ajouter</button></div>`;
   ['touchstart', 'mousedown'].forEach(k => h.addEventListener(k, e => e.stopPropagation(), { passive: true })); /* le glissé de fermeture de Prof ne doit pas s'activer ici */
   pcHote().appendChild(h);
   ppCEScan(h); pcPendN = -1; pcUndoHide();
@@ -13858,7 +13858,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v415';
+const PP_APP_VERSION = 'v416';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
