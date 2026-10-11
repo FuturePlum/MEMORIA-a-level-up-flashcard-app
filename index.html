@@ -223,7 +223,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   if(lire()!=='en') return;
   document.documentElement.setAttribute('lang','en');
   var D=window.FC_EN={'De quelle matière parles-tu ?':'Which subject are you talking about?','Réviser et Tout réviser comptent pour ta maîtrise ; S’entraîner ne compte que pour les cartes difficiles.':'Study and Study all count toward your mastery; Practice only counts toward tough cards.','Tout réviser':'Study all','S’entraîner':'Practice','S’entraîner · difficiles':'Practice · hard ones','Attention : la matière ET toutes ses cartes seront supprimées (récupérables 30 jours).':'Warning: the subject AND all its cards will be deleted (recoverable for 30 days).','Chargement…':'Loading…','Limite du jour atteinte, réessaie demain.':'Daily limit reached, try again tomorrow.','Chargement impossible pour l’instant. Réessaie plus tard.':'Couldn’t load right now. Try again later.','Cette conversation n’a pas encore été envoyée depuis l’autre appareil. Ouvre Memoria là-bas avec du réseau.':'This conversation hasn’t been sent from the other device yet. Open Memoria there with a connection.','Retenir · carnet':'Remember · notebook','Ce que Prof retient':'What Prof remembers','ex. préfère des exemples concrets':'e.g. prefers concrete examples','Des notes courtes que Prof lit avant chaque réponse, pour s’adapter à ta façon de réviser.':'Short notes Prof reads before every answer, to fit the way you study.','Supprimer cette ligne':'Delete this line','Carnet plein : supprime une ligne pour en ajouter':'Notebook full: delete a line to add one','Cette ligne existe déjà':'This line already exists','En cours':'In progress','Commencer une nouvelle conversation ? L’actuelle sera rangée dans « Conversations passées ».':'Start a new conversation? The current one will be saved in “Past conversations”.','Nouvelle':'New','Conversations passées':'Past conversations','Aucune conversation rangée pour l’instant.':'No saved conversation yet.','Cette conversation n’est pas disponible sur cet appareil.':'This conversation is not available on this device.','Supprimer cette conversation ?':'Delete this conversation?',
-    'Tes cartes sont envoyées à Google (Gemini) pour répondre.':'Your cards are sent to Google (Gemini) to answer.','Compris':'Got it','Nouvelle conversation':'New conversation','Tout voir':'See all','Gérer':'Manage','Aucune note pour l’instant.':'No notes yet.','Pratiquer une langue':'Practice a language','Effacer cette conversation ?':'Clear this conversation?','Effacer':'Clear','Quelle langue ?':'Which language?','Actions proposées':'Suggested actions','Réessayer':'Try again','Copier le diagnostic':'Copy diagnostics','Appliquer':'Apply','Ignorer':'Dismiss','+ Ajouter en carte':'+ Add as card','Il me faut ta clé Gemini':'I need your Gemini key','Ouvrir les Réglages':'Open Settings','Avant de commencer':'Before you start','Photo prête':'Photo ready',"Je t'explique":'I explain it to you','Explique autrement':'Explain differently','Pourquoi je rate celle-là ?':'Why do I keep missing this one?',
+    'Tes cartes sont envoyées à Google (Gemini) pour répondre.':'Your cards are sent to Google (Gemini) to answer.','Compris':'Got it','Nouvelle conversation':'New conversation','Tout voir':'See all','Gérer':'Manage','Aucune note pour l’instant.':'No notes yet.','Pratiquer une langue':'Practice a language','Effacer cette conversation ?':'Clear this conversation?','Effacer':'Clear','Quelle langue ?':'Which language?','Actions proposées':'Suggested actions','Réessayer':'Try again','Copier le diagnostic':'Copy diagnostics','Tu peux copier le diagnostic et me l\'envoyer dans Réglages → Aide → Signaler un bug.':'You can copy the diagnostics and send them to me in Settings → Help → Report a bug.','Appliquer':'Apply','Ignorer':'Dismiss','+ Ajouter en carte':'+ Add as card','Il me faut ta clé Gemini':'I need your Gemini key','Ouvrir les Réglages':'Open Settings','Avant de commencer':'Before you start','Photo prête':'Photo ready',"Je t'explique":'I explain it to you','Explique autrement':'Explain differently','Pourquoi je rate celle-là ?':'Why do I keep missing this one?',
     'Pose ta question…':'Ask a question…','Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t\'interroger.':'Hi! I know your cards. Ask me a question or ask me to quiz you.','Interroge-moi':'Quiz me','Résume la matière':'Summarize the subject','Vérifie mes cartes':'Check my cards','Question d\'examen':'Exam question','Mon bilan de la semaine':'My weekly review','Plan avant le contrôle':'Plan before the test','Toutes':'All','Photo':'Photo','Envoyer':'Send','Photo : pas encore branchée':'Photo: not connected yet','Je ne suis pas encore relié à l\'IA : l\'écran est prêt, les réponses arrivent à l\'étape suivante.':'I\'m not connected to the AI yet: the screen is ready, answers come in the next step.',
     'Réviser':'Study','Prendre la photo':'Take photo','Caméra indisponible : choisis un fichier.':'Camera unavailable: pick a file.','Planning':'Planning','Ajouter':'Add','Parcourir':'Browse',
     'Réglages':'Settings','Mises à jour':'Updates','Dernière mise à jour':'Latest update','Nouveau':'New','Versions précédentes':'Earlier versions','Retour':'Back','Langue':'Language','Apparence':'Appearance','Sombre':'Dark','Clair':'Light','Auto':'Auto',
@@ -4820,9 +4820,10 @@ function ppBlobDepuisBase64(b64, mime){
   return new Blob([u], { type: mime });
 }
 /* Réduit une image (File/Blob) en data URL JPEG légère. Lève une erreur si le navigateur ne sait pas la lire. */
-async function ppImgReduire(blob){
+async function ppImgReduire(blob, opt){   /* v400 : opt = { cote, vises } pour alléger les images posées en lot */
   const bmp = await createImageBitmap(blob, { imageOrientation: 'from-image' });
-  let cote = IMG_COTE_MAX, q = 0.72, url = '';
+  let cote = (opt && opt.cote) || IMG_COTE_MAX, q = 0.72, url = '';
+  const visesCars = (opt && opt.vises) || IMG_CARS_VISES;
   try{
     for(let i = 0; i < 4; i++){
       const ech = Math.min(1, cote / Math.max(bmp.width, bmp.height));
@@ -4841,7 +4842,7 @@ async function ppImgReduire(blob){
       cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high'; cx.drawImage(src, 0, 0, w, h);
       if(tmp){ tmp.width = tmp.height = 0; }
       url = cv.toDataURL('image/jpeg', q); cv.width = cv.height = 0;
-      if(url.length <= IMG_CARS_VISES) break;
+      if(url.length <= visesCars) break;
       cote = Math.round(cote * 0.8); q = Math.max(0.5, q - 0.08);
     }
   }finally{ if(bmp.close) bmp.close(); }
@@ -5126,7 +5127,7 @@ async function ppImgResoudre(cartes, garderRecherche){
    Elle écrit alors un mot-clé (`rechercheImage`) et le côté voulu (`rechercheCote`). L'app cherche sur Wikimedia
    Commons (API publique, sans clé), télécharge la miniature de la première image utilisable et la réduit comme une
    photo (ppImgReduire). L'image arrive dans l'aperçu : l'utilisateur la garde, la change ou la retire. */
-const PROMPT_RECHERCHE_IMAGES = `Recherche d'images : par défaut, N'AJOUTE AUCUNE image et ne prends JAMAIS l'initiative d'en chercher. Ajoute le champ facultatif "rechercheImage" à une carte SEULEMENT si le texte de l'utilisateur demande explicitement une image, une illustration, une carte géographique, un schéma ou une photo pour ce sujet, et seulement pour les cartes concernées par cette demande. "rechercheImage" doit être PRÉCIS : 3 à 8 mots-clés (pas une phrase) qui combinent le sujet exact, le type d'image voulu (schéma, carte, photo, coupe, diagramme…), un détail qui distingue ce qu'on veut des sujets proches (époque, organe, région, vue, « légendé »…) et, si cela aide, un ou deux mots en anglais. Forme : "<sujet précis> <type d'image> <détail distinctif>". Ajoute aussi "rechercheCote" : "question" si l'image doit s'afficher avec la question, ou "reponse" si elle doit s'afficher avec la réponse. Maximum 6 cartes avec "rechercheImage" par réponse. Si une image jointe montre déjà ce qu'il faut, utilise-la (imageQuestion / imageReponse) au lieu de ce champ. Exemple de forme : { "question": "<question>", "reponse": "<réponse>", "rechercheImage": "<mot-clé 1> <mot-clé 2> <mot-clé 3> <mot-clé 4>", "rechercheCote": "question" }.`;
+const PROMPT_RECHERCHE_IMAGES = `Recherche d'images : par défaut, N'AJOUTE AUCUNE image et ne prends JAMAIS l'initiative d'en chercher. Ajoute le champ facultatif "rechercheImage" à une carte SEULEMENT si le texte de l'utilisateur demande explicitement une image, une illustration, une carte géographique, un schéma ou une photo pour ce sujet, et seulement pour les cartes concernées par cette demande. "rechercheImage" doit être PRÉCIS : 3 à 8 mots-clés (pas une phrase) qui combinent le sujet exact, le type d'image voulu (schéma, carte, photo, coupe, diagramme…), un détail qui distingue ce qu'on veut des sujets proches (époque, organe, région, vue, « légendé »…) et, si cela aide, un ou deux mots en anglais. Forme : "<sujet précis> <type d'image> <détail distinctif>". Ajoute aussi "rechercheCote" : "question" si l'image doit s'afficher avec la question, ou "reponse" si elle doit s'afficher avec la réponse : respecte EXACTEMENT le côté que l'utilisateur a demandé. Maximum 6 cartes avec "rechercheImage" par réponse. Si une image jointe montre déjà ce qu'il faut, utilise-la (imageQuestion / imageReponse) au lieu de ce champ. Exemple de forme : { "question": "<question>", "reponse": "<réponse>", "rechercheImage": "<mot-clé 1> <mot-clé 2> <mot-clé 3> <mot-clé 4>", "rechercheCote": "question" }.`;
 const IMG_RECHERCHE_MAX = 6;
 const IMG_WIKI_API = 'https://commons.wikimedia.org/w/api.php';
 async function ppFetchDelai(url, ms, annul){
@@ -7459,7 +7460,7 @@ CARTES
 - "supprimer" {"id":"…"} : retire une carte.
 - "pause" {"id":"…","pausee":true} (false = la reprendre) : une action par carte, 20 au maximum.
 - "deplacer" {"ids":["id1","id2"],"dans":"matière"} : déplace des cartes précises (100 ids au maximum) vers une matière qui existe, ou que tu crées dans la même réponse. Une seule action par matière d'arrivée ; ne déplace que les cartes demandées.
-SUR TOUTE UNE MATIÈRE EN UNE SEULE ACTION, sans réécrire les cartes, quel que soit leur nombre, sans avoir besoin de les voir : {"matiere":"nom exact"} ou {"ids":["id1","id2"]} (300 ids au maximum). Une action par matière. Si la matière n'est pas précisée, prends celle sélectionnée en haut de l'écran, sinon demande.
+SUR TOUTE UNE MATIÈRE EN UNE SEULE ACTION, sans réécrire les cartes, quel que soit leur nombre, sans avoir besoin de les voir : {"matiere":"nom exact"} ou {"ids":["id1","id2"]} (300 ids au maximum). Une action par matière. Si la matière n'est pas précisée, prends celle sélectionnée en haut de l'écran, sinon demande. Plusieurs matières dans la MÊME réponse, y compris en sens opposés, sont possibles : « inverser » avec "inversible":true pour A ET avec false pour B ; « ecrite » true pour A, false pour B ; « archiver » true pour A, false pour B : fais une action par matière (ou une par sens), ne te limite pas à la première.
 - "echanger" {"matiere":"…"} : ÉCHANGE question et réponse de toutes les cartes (texte ET images). Sert à « mets le français en question et l'anglais en réponse », « écris l'anglais à la place du français et inversement ». Jamais "modifier" carte par carte pour ça. ATTENTION : deux fois sur les mêmes cartes les remet dans l'ordre d'origine ; si certaines sont déjà dans le bon sens (lis les lignes de cartes), utilise "ids" avec seulement les autres.
 - "inverser" {"matiere":"…","inversible":true} (false = sens normal) : chaque carte est aussi posée dans l'autre sens ; le TEXTE ne change pas (c'est un réglage d'interrogation ; échanger question et réponse = "echanger"). Les cartes « à écrire » sont ignorées.
 - "ecrite" {"matiere":"…","ecrite":true} (false = remettre en lecture) : rend les cartes À ÉCRIRE (l'utilisateur tape sa réponse avant de la voir). Les cartes sans réponse en texte sont ignorées ; activer retire aussi leur sens inversé.
@@ -7468,8 +7469,8 @@ MATIÈRES
 - "controle" {"matiere":"…","date":"AAAA-MM-JJ"} : met ou change la date de contrôle ("date":"" la retire).
 - "renommer" {"matiere":"ancien nom","nom":"nouveau nom"} ; "fusionner" {"matiere":"celle qui disparaît","dans":"celle qui reste"} (ses cartes passent dans l'autre) ; "archiver" {"matiere":"…","archive":true} (false = désarchiver).
 - "supprimer_matiere" {"matiere":"…"} : supprime la matière ET toutes ses cartes (récupérables 30 jours avec "restaurer", et « Annuler » juste après) ; seulement si c'est demandé clairement, et dis-le en une phrase.
-- "restaurer" {"matiere":"nom exact tel qu'écrit dans CORBEILLE"} (matière supprimée avec ses cartes) ou {"ids":["…"]} (cartes précises) : CORBEILLE = ce qui a été supprimé depuis moins de 30 jours (« annule la suppression », « récupère… »). Si CORBEILLE est vide, dis qu'il n'y a rien à récupérer.
-PLANNING (tu lis « prochaine » sur chaque carte et DONNÉES PLAN ; ces actions changent des DATES, pas des paliers ; les cartes en pause et les matières archivées ne sont pas touchées ; si des cartes passent après la date de contrôle, dis-le)
+- "restaurer" (plusieurs matières : une action par matière) {"matiere":"nom exact tel qu'écrit dans CORBEILLE"} (matière supprimée avec ses cartes) ou {"ids":["…"]} (cartes précises) : CORBEILLE = ce qui a été supprimé depuis moins de 30 jours (« annule la suppression », « récupère… »). Si CORBEILLE est vide, dis qu'il n'y a rien à récupérer.
+PLANNING (tu peux proposer PLUSIEURS actions de planning dans la même réponse : une par matière, ou en sens opposés, ex. « decaler » de +1 pour A et de −1 pour B ; une carte n'est touchée que par une seule action du même type ; tu lis « prochaine » sur chaque carte et DONNÉES PLAN ; ces actions changent des DATES, pas des paliers ; les cartes en pause et les matières archivées ne sont pas touchées ; si des cartes passent après la date de contrôle, dis-le)
 - "decaler" {"de":"AAAA-MM-JJ","jours":1,"matiere":""} : décale de N jours (1 à 30 ; négatif pour avancer, sans passer avant aujourd'hui) TOUTES les cartes dont la prochaine révision tombe ce jour-là ou après (celles de "matiere" si elle est donnée, sinon toutes). « Ajoute un jour de pause le 12 » = "decaler" de le 12, 1 jour.
 - "replanifier" {"date":"AAAA-MM-JJ","ids":["…"]} : met des cartes PRÉCISES (300 au maximum) à CE jour ; sert aussi à AJOUTER des cartes à un jour. Variante sans ids : {"date":"…","matiere":"nom exact","nombre":10,"choix":"proches"} avec "choix" = "proches" (les plus proches dans le temps, avancées), "ratees" ou "nouvelles" ; l'appli choisit les cartes.
 - "etaler" {"debut":"AAAA-MM-JJ","fin":"AAAA-MM-JJ","matiere":"nom exact"} (ou "ids":[…]) : répartit les cartes (celles de la matière dues jusqu'à "fin", ou les ids) de façon égale entre ces deux jours inclus (90 jours maximum).
@@ -7479,8 +7480,9 @@ AUTRES
 - "synthese" {"matiere":"…","precisions":"…"} : fiche de synthèse. Après « Appliquer », l'appli ouvre l'écran de synthèse et la génère toute seule ; l'utilisateur l'ajuste puis la télécharge (Word, PDF) là-bas : dis-le en une phrase. Règles des "precisions" : voir STYLE DES SYNTHÈSES.
 - "retenir" {"texte":"…"} : note dans son carnet, seulement s'il te le demande (« retiens que… ») ou à la fin d'un bilan de série si la même confusion est revenue plusieurs fois. Note courte (120 caractères maximum) sur sa façon de réviser, à la 2e personne ou à la forme neutre (ex. « Confond X et Y »), sans guillemets ni date. Une seule par réponse.
 - "image_carte" : voir IMAGES.
+- "retirer_image" {"matiere":"nom exact","cote":"question"|"reponse"|"les_deux"} (ou {"ids":[…]} au lieu de "matiere") : RETIRE les images des cartes, en UNE SEULE action pour toute la matière, sans l'écrire carte par carte. « retire toutes les images » = "cote":"les_deux". N'utilise JAMAIS "image_carte" pour retirer une image.
 
-IMAGES : par défaut N'AJOUTE AUCUNE image ; seulement si l'utilisateur en demande une, ou si elle est vraiment indispensable pour comprendre (carte géographique, schéma, anatomie…). Dans le chat : champ "image" = mot-clé précis de 2 à 5 mots (nom propre ou nom anglais, ex. « Treaty of Rome signing ») ; l'appli cherche sur Wikimedia Commons et affiche la première image sous ton message ; une seule par réponse, sinon "image":"". Tu ne la vois pas : n'affirme jamais ce qu'elle montre, dis seulement que tu en as cherché une. Sur une carte : dans "creer", ajoute "rechercheImage" (mot-clé) et "rechercheCote":"question" ou "reponse" ; pour une carte existante, action "image_carte" {"id":"…","terme":"mot-clé","cote":"question"|"reponse"} : UNE action par carte, 40 au maximum par réponse. Tu PEUX mettre des images sur les cartes (« ajoute une image aux cartes », « mets une image sur chaque pays ») : ne dis jamais le contraire ni que c'est à faire à la main. S'il dit « toutes les cartes », « tous les pays » ou nomme la matière, propose une action pour CHAQUE carte de la matière listée, sans en oublier (pour un pays : son nom anglais + « location », ex. « Italy location Europe ») ; au-delà de 40, traite les 40 premières et dis combien il en reste. Tu ne peux pas créer ni dessiner d'image toi-même.
+IMAGES : par défaut N'AJOUTE AUCUNE image ; seulement si l'utilisateur en demande une, ou si elle est vraiment indispensable pour comprendre (carte géographique, schéma, anatomie…). Dans le chat : champ "image" = mot-clé précis de 2 à 5 mots (nom propre ou nom anglais, ex. « Treaty of Rome signing ») ; l'appli cherche sur Wikimedia Commons et affiche la première image sous ton message ; une seule par réponse, sinon "image":"". Tu ne la vois pas : n'affirme jamais ce qu'elle montre, dis seulement que tu en as cherché une. Sur une carte : dans "creer", ajoute "rechercheImage" (mot-clé) et "rechercheCote":"question" ou "reponse" ; pour une carte existante, action "image_carte" {"id":"…","terme":"mot-clé","cote":"question"|"reponse"} : UNE action par carte, 40 au maximum par réponse. "cote" = EXACTEMENT le côté que l'utilisateur a nommé (« en réponse », « sur la réponse » → "reponse" ; « en question » → "question") : ne mets jamais "question" par habitude ; s'il ne précise pas, "question". Même règle pour "rechercheCote". Tu PEUX mettre des images sur les cartes (« ajoute une image aux cartes », « mets une image sur chaque pays ») : ne dis jamais le contraire ni que c'est à faire à la main. S'il dit « toutes les cartes », « tous les pays » ou nomme la matière, propose une action pour CHAQUE carte de la matière listée, sans en oublier (le "terme" décrit EXACTEMENT l'image demandée : sujet en anglais + type d'image + cadrage, ex. « Italy blank locator map Europe » pour une carte vierge un peu dézoomée, « Italy flag » seulement si on demande un drapeau ; ne remplace jamais le type d'image demandé par un autre ; l'appli affine ensuite la recherche) ; au-delà de 40, traite les 40 premières et dis combien il en reste. Tu ne peux pas créer ni dessiner d'image toi-même.
 
 LOTS ET COURS COLLÉ : un cours collé ou un document joint avec une demande de cartes se découpe en cartes courtes (actions "creer", selon CARTES QUE TU CRÉES) ; s'il touche plusieurs matières, répartis les cartes ("matiere" exacte) et propose "matiere" pour celles qui n'existent pas. Si la demande dépasse les limites (60 "creer" ou 3 "matiere" par réponse ; ex. 24 matières à créer, long document à découper), ne la mets JAMAIS en entier : traite SEULEMENT le lot 1, commence "reponse" par « Lot 1 sur N » et mets "suite":true. Un lot = ses actions COMPLÈTES (l'action "matiere" du groupe + UNE action "creer" par carte du groupe), jamais une phrase qui annonce un bouton. Après « Appliquer », l'appli t'envoie toute seule « Lot suivant » (avec le document de départ de nouveau joint s'il y en avait un) : prépare le lot suivant en reprenant exactement où le précédent s'est arrêté (relis les « Info de l'application »), commence par « Lot k sur N », garde "suite":true tant qu'il reste des lots, "suite":false au dernier et dans toute réponse normale. Ne redemande JAMAIS le document ni de confirmation entre deux lots.
 
@@ -7608,14 +7610,29 @@ function pcValideActions(arr, matiere){
       if(res.filter(x => x.type === 'pause').length >= 20 || res.some(x => x.type === 'pause' && x.id === c.id)) continue;
       res.push({ type: 'pause', id: c.id, matiere: c.matiere || 'Sans matière', question: pcNet(c.question || '🖼 Image').slice(0, 120), pausee: a.pausee });
     } else if(a.type === 'ecrite'){   /* v260 : rendre des cartes « à écrire » en bloc (une matière entière ou des ids) */
-      if(typeof a.ecrite !== 'boolean' || res.some(x => x.type === 'ecrite')) continue;
+      if(typeof a.ecrite !== 'boolean') continue;   /* v401 : plusieurs matières / sens opposés possibles (une action par sens) */
       let src = [];
       const mE = typeof a.matiere === 'string' ? mm(a.matiere) : '';
       if(mE) src = CARDS.filter(k => (k.matiere || 'Sans matière') === mE);
       else if(Array.isArray(a.ids)) src = a.ids.slice(0, 300).map(id => CARDS.find(k => k.id === id)).filter(Boolean);
-      const cs = src.filter(k => ppEcritePossible(k) && ((k.ecrite === true) !== a.ecrite || (a.ecrite && k.inversible === true)));
+      const dejaEc = new Set(res.filter(x => x.type === 'ecrite').flatMap(x => x.ids));
+      const cs = src.filter(k => ppEcritePossible(k) && !dejaEc.has(k.id) && ((k.ecrite === true) !== a.ecrite || (a.ecrite && k.inversible === true)));
       if(!cs.length) continue;
-      res.push({ type: 'ecrite', ecrite: a.ecrite, ids: cs.map(k => k.id).slice(0, 300), de: [...new Set(cs.map(k => k.matiere || 'Sans matière'))].slice(0, 4), ex: cs.slice(0, 4).map(k => pcNet(k.question || '🖼 Image').slice(0, 40)) });
+      const prevEc = res.find(x => x.type === 'ecrite' && x.ecrite === a.ecrite);
+      if(prevEc){ prevEc.ids = [...prevEc.ids, ...cs.map(k => k.id)].slice(0, 2000); prevEc.de = [...new Set([...prevEc.de, ...cs.map(k => k.matiere || 'Sans matière')])].slice(0, 12); continue; }
+      res.push({ type: 'ecrite', ecrite: a.ecrite, ids: cs.map(k => k.id).slice(0, 2000), de: [...new Set(cs.map(k => k.matiere || 'Sans matière'))].slice(0, 12), ex: cs.slice(0, 4).map(k => pcNet(k.question || '🖼 Image').slice(0, 40)) });
+    } else if(a.type === 'retirer_image'){   /* v400 : retirer les images en bloc (une matière ou des ids) */
+      const coteR = a.cote === 'question' ? 'question' : a.cote === 'reponse' ? 'reponse' : 'les_deux';
+      let srcR = [];
+      const mR = typeof a.matiere === 'string' ? mm(a.matiere) : '';
+      if(mR) srcR = CARDS.filter(k => (k.matiere || 'Sans matière') === mR);
+      else if(Array.isArray(a.ids)) srcR = a.ids.slice(0, 2000).map(id => CARDS.find(k => k.id === id)).filter(Boolean);
+      const csR = srcR.filter(k => ((coteR !== 'reponse') && k.imageQuestion && String(k.question || '').trim()) || ((coteR !== 'question') && k.imageReponse && String(k.reponse || '').trim()));
+      if(!csR.length) continue;
+      const deuxR = [...new Set(csR.map(k => k.matiere || 'Sans matière'))];
+      const prevR = res.find(x => x.type === 'retirer_image' && x.cote === coteR);
+      if(prevR){ prevR.ids = [...new Set([...prevR.ids, ...csR.map(k => k.id)])].slice(0, 2000); prevR.de = [...new Set([...prevR.de, ...deuxR])].slice(0, 12); continue; }
+      res.push({ type: 'retirer_image', cote: coteR, ids: csR.map(k => k.id).slice(0, 2000), de: deuxR.slice(0, 12), ex: csR.slice(0, 4).map(k => pcNet(k.question || '🖼 Image').slice(0, 40)) });
     } else if(a.type === 'echanger'){   /* v329 : question ⇄ réponse en bloc (une ou plusieurs matières, ou des ids) */
       let src = [];
       const mX = typeof a.matiere === 'string' ? mm(a.matiere) : '';
@@ -7637,7 +7654,8 @@ function pcValideActions(arr, matiere){
       const mI = typeof a.matiere === 'string' ? mm(a.matiere) : '';
       if(mI) src = CARDS.filter(k => (k.matiere || 'Sans matière') === mI);
       else if(Array.isArray(a.ids)) src = a.ids.slice(0, 2000).map(id => CARDS.find(k => k.id === id)).filter(Boolean);
-      const cs = src.filter(k => !k.ecrite && (!!k.inversible) !== inv);
+      const dejaIv = new Set(res.filter(x => x.type === 'inverser').flatMap(x => x.ids));   /* v401 : une carte n'est dans qu'un seul sens */
+      const cs = src.filter(k => !k.ecrite && !dejaIv.has(k.id) && (!!k.inversible) !== inv);
       if(!cs.length) continue;
       const deux = [...new Set(cs.map(k => k.matiere || 'Sans matière'))];
       const prev = res.find(x => x.type === 'inverser' && x.inversible === inv);
@@ -7646,7 +7664,6 @@ function pcValideActions(arr, matiere){
         prev.de = [...new Set([...prev.de, ...deux])].slice(0, 12);
         continue;
       }
-      if(res.some(x => x.type === 'inverser')) continue;
       res.push({ type: 'inverser', inversible: inv, ids: cs.map(k => k.id).slice(0, 2000), de: deux.slice(0, 12), ex: cs.slice(0, 4).map(k => pcNet(k.question || '🖼 Image').slice(0, 40)) });
     } else if(a.type === 'image_carte'){   /* v263 : une image Wikimedia sur une carte existante */
       const c = CARDS.find(k => k.id === a.id), t = pcTermeImage(a.terme), cote = a.cote === 'reponse' ? 'reponse' : 'question';
@@ -7664,12 +7681,17 @@ function pcValideActions(arr, matiere){
     } else if(a.type === 'decaler'){   /* v272 */
       const de = pcDateValide(a.de), j = Math.round(+a.jours);
       const bm = (typeof a.matiere === 'string') ? a.matiere.trim() : '', mD = bm ? mm(bm) : '';
-      if(!de || !j || Math.abs(j) > 30 || (bm && !mD) || res.some(x => x.type === 'decaler')) continue;
-      const cs = pcCartesPlanifiables().filter(c => (!mD || (c.matiere || 'Sans matière') === mD) && pcDateEff(c) >= de);
+      if(!de || !j || Math.abs(j) > 30 || (bm && !mD) || res.filter(x => x.type === 'decaler').length >= 8) continue;   /* v401 : plusieurs décalages */
+      /* v402 : les décalages s'appliquent l'un après l'autre ; « de » est lu sur les dates APRÈS les décalages précédents de la même réponse
+         (ex. pause mardi puis jeudi : les cartes du mercredi, déjà passées au jeudi, sont bien repoussées par la 2e). */
+      const t0D = todayStr(), prevD = res.filter(x => x.type === 'decaler').map(x => ({ s: new Set(x.ids), j: x.jours }));
+      const dateVirt = c => { let d = pcDateEff(c); for(const x of prevD) if(x.s.has(c.id)){ d = addDays(d, x.j); if(d < t0D) d = t0D; } return d; };
+      const cs = pcCartesPlanifiables().filter(c => (!mD || (c.matiere || 'Sans matière') === mD) && dateVirt(c) >= de);
       if(!cs.length) continue;
       res.push({ type: 'decaler', de, jours: j, matiere: mD, ids: cs.slice(0, 1500).map(c => c.id), nb: cs.length });
     } else if(a.type === 'replanifier'){   /* v272 */
-      const date = pcDateValide(a.date); if(!date || res.some(x => x.type === 'replanifier')) continue;
+      const date = pcDateValide(a.date); if(!date || res.filter(x => x.type === 'replanifier').length >= 8) continue;   /* v401 : plusieurs dates possibles */
+      const dejaR = new Set(res.filter(x => x.type === 'replanifier').flatMap(x => x.ids));
       const bm = (typeof a.matiere === 'string') ? a.matiere.trim() : '', mR = bm ? mm(bm) : '';
       const ok = pcCartesPlanifiables(); let cs = [];
       if(Array.isArray(a.ids) && a.ids.length) cs = a.ids.slice(0, 300).map(id => ok.find(k => k.id === id)).filter(Boolean);
@@ -7681,17 +7703,18 @@ function pcValideActions(arr, matiere){
         else pool = pool.filter(k => pcDateEff(k) > date).sort((x, y) => pcDateEff(x).localeCompare(pcDateEff(y)));
         cs = pool.slice(0, n);
       }
-      const vus = new Set(); cs = cs.filter(k => !vus.has(k.id) && vus.add(k.id) && pcDateEff(k) !== date);
+      const vus = new Set(); cs = cs.filter(k => !dejaR.has(k.id) && !vus.has(k.id) && vus.add(k.id) && pcDateEff(k) !== date);
       if(!cs.length) continue;
       res.push({ type: 'replanifier', date, ids: cs.map(k => k.id), de: [...new Set(cs.map(k => k.matiere || 'Sans matière'))].slice(0, 4), ex: cs.slice(0, 4).map(k => pcNet(k.question || '🖼 Image').slice(0, 40)) });
     } else if(a.type === 'etaler'){   /* v272 */
-      const d1 = pcDateValide(a.debut), d2 = pcDateValide(a.fin); if(!d1 || !d2 || d2 < d1 || res.some(x => x.type === 'etaler')) continue;
+      const d1 = pcDateValide(a.debut), d2 = pcDateValide(a.fin); if(!d1 || !d2 || d2 < d1 || res.filter(x => x.type === 'etaler').length >= 8) continue;   /* v401 : plusieurs étalements (une matière chacun) */
       if(Math.round((new Date(d2 + 'T00:00:00') - new Date(d1 + 'T00:00:00')) / 86400000) > 90) continue;
       const bm = (typeof a.matiere === 'string') ? a.matiere.trim() : '', mE = bm ? mm(bm) : '';
       const ok = pcCartesPlanifiables(); let cs = [];
       if(Array.isArray(a.ids) && a.ids.length) cs = a.ids.slice(0, 300).map(id => ok.find(k => k.id === id)).filter(Boolean);
       else if(mE) cs = ok.filter(k => (k.matiere || 'Sans matière') === mE && pcDateEff(k) <= d2);
-      const vus = new Set(); cs = cs.filter(k => !vus.has(k.id) && vus.add(k.id));
+      const dejaE = new Set(res.filter(x => x.type === 'etaler').flatMap(x => x.ids));
+      const vus = new Set(); cs = cs.filter(k => !dejaE.has(k.id) && !vus.has(k.id) && vus.add(k.id));
       if(cs.length < 2) continue;
       res.push({ type: 'etaler', debut: d1, fin: d2, ids: cs.slice(0, 1500).map(k => k.id), nb: cs.length, de: [...new Set(cs.map(k => k.matiere || 'Sans matière'))].slice(0, 4) });
     } else if(a.type === 'reglage'){   /* v272 */
@@ -7707,14 +7730,16 @@ function pcValideActions(arr, matiere){
       if(!ok || res.some(x => x.type === 'reglage' && x.cle === cle)) continue;
       res.push({ type: 'reglage', cle, valeur: v, avant });
     } else if(a.type === 'restaurer'){   /* v272 */
-      if(res.some(x => x.type === 'restaurer')) continue;
+      if(res.filter(x => x.type === 'restaurer').length >= 10) continue;   /* v401 : plusieurs matières possibles (une action chacune) */
       const b = pcCorbeilleLire(), nom = typeof a.matiere === 'string' ? a.matiere.trim() : '';
       if(nom){
-        const e = b.m.find(x => x.nom.toLowerCase() === nom.toLowerCase()); if(!e) continue;
+        const e = b.m.find(x => x.nom.toLowerCase() === nom.toLowerCase()); if(!e || res.some(x => x.type === 'restaurer' && x.matiere === e.nom)) continue;
         res.push({ type: 'restaurer', matiere: e.nom, ids: [], nb: e.cartes.length, ex: e.cartes.slice(0, 4).map(c => pcNet(c.question || '🖼 Image').slice(0, 40)) });
       } else if(Array.isArray(a.ids)){
         const set = new Set(a.ids.filter(x => typeof x === 'string').slice(0, 200));
-        const L = b.c.filter(x => set.has(x.k.id) && !CARDS.some(k => k.id === x.k.id)); if(!L.length) continue;
+        const prevRs = res.find(x => x.type === 'restaurer' && !x.matiere);
+        const L = b.c.filter(x => set.has(x.k.id) && !CARDS.some(k => k.id === x.k.id) && !(prevRs && prevRs.ids.includes(x.k.id))); if(!L.length) continue;
+        if(prevRs){ prevRs.ids = [...prevRs.ids, ...L.map(x => x.k.id)]; prevRs.nb = prevRs.ids.length; continue; }
         res.push({ type: 'restaurer', matiere: '', ids: L.map(x => x.k.id), nb: L.length, ex: L.slice(0, 4).map(x => pcNet(x.k.question || '🖼 Image').slice(0, 40)) });
       }
     } else if(a.type === 'retenir'){
@@ -7749,20 +7774,20 @@ function pcParse(raw, matiere){
 /* v320 : FORMAT DE SORTIE IMPOSÉ à Gemini (schéma JSON) : « actions » est toujours présent, chaque action a ses champs obligatoires.
    Si l'API refuse la configuration (erreur 400), on rejoue l'appel avec l'ancienne configuration (JSON libre) et on s'en souvient jusqu'au rechargement : rien ne peut se casser.
    `actionsFirst` : « actions » est écrit AVANT « reponse » (le texte décrit alors des actions déjà décidées : fini le « Appuie sur Appliquer » sans actions) ; `forcer` : au moins UNE action (nouveaux essais). */
-const PC_TYPES_AUTRES = ['supprimer', 'synthese', 'renommer', 'fusionner', 'archiver', 'supprimer_matiere', 'deplacer', 'pause', 'ecrite', 'inverser', 'echanger', 'seance', 'decaler', 'replanifier', 'etaler', 'restaurer'];   /* v324 : « controle », « reglage », « retenir » et « image_carte » ont leur propre variante (avant : champs mélangés, l'IA écrivait la date d'un contrôle dans « valeur ») */
+const PC_TYPES_AUTRES = ['supprimer', 'synthese', 'renommer', 'fusionner', 'archiver', 'supprimer_matiere', 'deplacer', 'pause', 'ecrite', 'inverser', 'echanger', 'retirer_image', 'seance', 'decaler', 'replanifier', 'etaler', 'restaurer'];   /* v324 : « controle », « reglage », « retenir » et « image_carte » ont leur propre variante (avant : champs mélangés, l'IA écrivait la date d'un contrôle dans « valeur ») */
 let pcCfgKO = false;
 function pcSchema(actionsFirst, forcer){
   const S = { type: 'STRING' }, B = { type: 'BOOLEAN' }, I = { type: 'INTEGER' };
   const un = t => ({ type: 'STRING', format: 'enum', enum: [t] });
   const variantes = [
-    { type: 'OBJECT', properties: { type: un('creer'), matiere: S, question: S, reponse: S, inversible: B, ecrite: B, rechercheImage: S, rechercheCote: S }, required: ['type', 'matiere', 'question', 'reponse'] },
+    { type: 'OBJECT', properties: { type: un('creer'), matiere: S, question: S, reponse: S, inversible: B, ecrite: B, rechercheImage: S, rechercheCote: { type: 'STRING', format: 'enum', enum: ['question', 'reponse'] } }, required: ['type', 'matiere', 'question', 'reponse'] },
     { type: 'OBJECT', properties: { type: un('modifier'), id: S, question: S, reponse: S }, required: ['type', 'id'] },
     { type: 'OBJECT', properties: { type: un('matiere'), nom: S, date_controle: S }, required: ['type', 'nom'] },
     { type: 'OBJECT', properties: { type: un('controle'), matiere: S, date: S }, required: ['type', 'matiere', 'date'] },
     { type: 'OBJECT', properties: { type: un('reglage'), cle: S, valeur: S }, required: ['type', 'cle', 'valeur'] },
     { type: 'OBJECT', properties: { type: un('retenir'), texte: S }, required: ['type', 'texte'] },
-    { type: 'OBJECT', properties: { type: un('image_carte'), id: S, terme: S, cote: S }, required: ['type', 'id', 'terme', 'cote'] },
-    { type: 'OBJECT', properties: { type: { type: 'STRING', format: 'enum', enum: PC_TYPES_AUTRES }, id: S, ids: { type: 'ARRAY', items: S }, matiere: S, nom: S, dans: S, precisions: S, date: S, de: S, debut: S, fin: S, jours: I, nombre: I, choix: S, archive: B, pausee: B, inversible: B, ecrite: B, difficiles: B, mode: S }, required: ['type'] }
+    { type: 'OBJECT', properties: { type: un('image_carte'), id: S, terme: S, cote: { type: 'STRING', format: 'enum', enum: ['question', 'reponse'] } }, required: ['type', 'id', 'terme', 'cote'] },
+    { type: 'OBJECT', properties: { type: { type: 'STRING', format: 'enum', enum: PC_TYPES_AUTRES }, id: S, ids: { type: 'ARRAY', items: S }, matiere: S, nom: S, dans: S, precisions: S, date: S, de: S, debut: S, fin: S, jours: I, nombre: I, choix: S, archive: B, pausee: B, inversible: B, ecrite: B, difficiles: B, mode: S, cote: S }, required: ['type'] }
   ];
   const actions = { type: 'ARRAY', items: { anyOf: variantes } };
   if(forcer) actions.minItems = '1';
@@ -8107,7 +8132,7 @@ async function pcEnvoyer(t, label, auto){
     const bulleA = pcAjoute('a', r.texte, { hors: r.hors, carte: r.ajoutable === true && !r.actions.length && pcMode !== 'quiz' });
     if(r.image) pcImageChat(bulleA, r.image);   /* v230 : le bouton seulement pour une notion nouvelle (pas pendant une série, pas quand des cartes sont déjà proposées) */
     if(r.info){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = r.info; pcEl('pc-feed').appendChild(s); }
-    if(r.sansBouton){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = matiere ? "Aucune modification n'a pu être préparée. Redemande en précisant les cartes (ou « modifie-les »)." : "Aucune modification n'a pu être préparée. Choisis la matière en haut de l'écran, puis redemande.";
+    if(r.sansBouton){ const s = document.createElement('div'); s.className = 'pc-sep pc-info-n'; s.textContent = "Tu peux copier le diagnostic et me l'envoyer dans Réglages → Aide → Signaler un bug.";   /* v403 */
       const sp = document.createElement('small'); sp.style.cssText = 'display:block;opacity:.7;font-weight:500;margin-top:4px'; sp.textContent = r.illisible ? 'Détail : réponse illisible' : (r.nbBrut ? 'Détail : ' + r.nbBrut + ' action' + (r.nbBrut > 1 ? 's' : '') + ' reçue' + (r.nbBrut > 1 ? 's' : '') + ', toutes refusées' : 'Détail : aucune action reçue'); s.appendChild(sp);   /* v321 : on voit tout de suite ce que l'IA a renvoyé */
       const bD = document.createElement('button'); bD.type = 'button'; bD.className = 'pp-sec pc-retry'; bD.textContent = 'Copier le diagnostic'; bD.onclick = () => pcJournalCopier();
       const bR = document.createElement('button'); bR.type = 'button'; bR.className = 'pp-sec pc-retry'; bR.textContent = 'Réessayer';   /* v320 : jamais bloqué */
@@ -8157,6 +8182,7 @@ function pcDecritAction(a){
     case 'deplacer': return (a.ids ? a.ids.length : 0) + ' carte(s) déplacée(s)' + (a.de && a.de.length ? ' de ' + a.de.map(q).join(', ') : '') + ' vers ' + q(a.dans);
     case 'pause': return 'carte ' + (a.pausee ? 'mise en pause' : 'reprise') + ' (' + q(a.question) + ')';
     case 'image_carte': return 'image cherchée pour la carte (' + q(a.question) + ', côté ' + a.cote + ') : ' + q(a.terme);
+    case 'retirer_image': return (a.ids ? a.ids.length : 0) + ' carte(s) : image' + (a.ids && a.ids.length > 1 ? 's' : '') + ' retirée' + (a.ids && a.ids.length > 1 ? 's' : '') + ' (' + (a.cote === 'question' ? 'question' : a.cote === 'reponse' ? 'réponse' : 'question et réponse') + ')';
     case 'echanger': return (a.ids ? a.ids.length : 0) + ' carte(s) : question et réponse échangées' + (a.de && a.de.length ? ' (' + a.de.map(q).join(', ') + ')' : '');
     case 'inverser': return (a.ids ? a.ids.length : 0) + ' carte(s) ' + (a.inversible ? 'passée(s) en sens inversé' : 'remise(s) en sens normal') + (a.de && a.de.length ? ' (' + a.de.map(q).join(', ') + ')' : '');
     case 'ecrite': return (a.ids ? a.ids.length : 0) + ' carte(s) ' + (a.ecrite ? 'passée(s) en réponse à écrire' : 'remise(s) en lecture') + (a.de && a.de.length ? ' (' + a.de.map(q).join(', ') + ')' : '');
@@ -8260,6 +8286,7 @@ function pcActionsCarte(actions, matiere, suite, rec){
     if(a.type === 'deplacer') return `<i class="pc-t">Déplacer · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''}</i><b>${a.de.map(escapeHtml).join(', ')} → ${escapeHtml(a.dans)}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;   /* v244 */
     if(a.type === 'pause') return `<i class="pc-t">${a.pausee ? 'Mettre en pause' : 'Reprendre'}</i><b>${escapeHtml(a.question)}</b>`;
     if(a.type === 'inverser') return `<i class="pc-t">${a.inversible ? 'Sens inversé' : 'Sens normal'} · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''}</i><b>${a.de.map(escapeHtml).join(', ')}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;
+    if(a.type === 'retirer_image') return `<i class="pc-t">Retirer les images · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''} · ${a.cote === 'question' ? 'question' : a.cote === 'reponse' ? 'réponse' : 'question et réponse'}</i><b>${a.de.map(escapeHtml).join(', ')}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;
     if(a.type === 'echanger') return `<i class="pc-t">Question ⇄ réponse · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''}</i><b>${a.de.map(escapeHtml).join(', ')}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;
     if(a.type === 'ecrite') return `<i class="pc-t">${a.ecrite ? 'Réponse à écrire' : 'Remettre en lecture'} · ${a.ids.length} carte${a.ids.length > 1 ? 's' : ''}</i><b>${a.de.map(escapeHtml).join(', ')}</b><span>${a.ex.map(escapeHtml).join(', ')}${a.ids.length > a.ex.length ? '…' : ''}</span>`;
     if(a.type === 'seance'){
@@ -8318,12 +8345,101 @@ function pcActionsCarte(actions, matiere, suite, rec){
   };
   pcBas();
 }
+
+/* ================= v400 : recherche d'images de Prof, plus précise =================
+   1) une IA réécrit la demande en 3 requêtes précises par carte ; 2) on récupère les candidats de Wikimedia Commons ;
+   3) une IA choisit le bon (ou aucun : mieux vaut pas d'image qu'un drapeau quand on veut une carte) ; 4) seule l'image choisie est téléchargée.
+   Si l'IA ne répond pas (quota, réseau), on retombe sur l'ancien comportement (mot-clé de Prof, premier résultat). */
+function pcDemandeImages(){
+  try{ return pcConv.filter(m => m && m.r === 'u' && typeof m.t === 'string' && !/^\[Info de l'application/.test(m.t)).slice(-2).map(m => m.t.replace(/\s+/g, ' ').slice(0, 400)).join(' | '); }catch(e){ return ''; }
+}
+async function ppImgIAJson(sys, texte, schema, ms){
+  const key = getGeminiKey(); if(!key) return null;
+  const ctrl = new AbortController(), minuteur = setTimeout(() => ctrl.abort(), ms || 25000);
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: sys }] }, contents: [{ role: 'user', parts: [{ text: String(texte).slice(0, 60000) }] }], generationConfig: { responseMimeType: 'application/json', responseSchema: schema } }) });
+    if(!r.ok) return null;
+    const d = await r.json(), tx = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('');
+    return JSON.parse(tx);
+  }catch(e){ return null; }
+  finally{ clearTimeout(minuteur); }
+}
+const PP_IMG_RESUME = (c) => ((c && pcNet(c.question || '')) || '').slice(0, 100) + ' → ' + ((c && pcNet(c.reponse || '')) || '').slice(0, 100);
+async function ppImgReformuler(jobs, cartes, demande){
+  const sys = "Tu écris des requêtes de recherche pour Wikimedia Commons (recherche plein texte sur les titres et descriptions de fichiers, surtout en anglais). Pour CHAQUE carte, donne 3 requêtes de 3 à 8 mots, de la plus précise à la plus large, qui retrouvent EXACTEMENT l'image que l'utilisateur a demandée. Respecte à la lettre le TYPE d'image demandé (carte vierge ou de localisation → « locator map », « location map », « blank », « highlighted » ; schéma → « diagram » ; photo ; drapeau seulement si on a demandé un drapeau), le sujet exact en anglais, le cadrage voulu (« in Europe », « with neighbouring countries »). N'écris jamais une requête qui ramènerait un drapeau, un blason ou une photo si une carte est demandée. Exemple : demande « une carte vierge du pays, un peu dézoomée pour voir les pays autour », sujet Italy → [\"Italy locator map Europe blank\", \"Italy highlighted European Union map\", \"Italy location map\"]. Réponds en JSON : requetes = liste de { i : numéro de la carte, q : [3 requêtes] }.";
+  const texte = 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') + '\n\nCARTES :\n' + jobs.map((j, i) => '#' + i + ' | côté ' + (j.cote === 'imageReponse' ? 'réponse' : 'question') + ' | carte : ' + PP_IMG_RESUME(cartes[i]) + ' | idée de départ : ' + (j.terme || '')).join('\n');
+  const schema = { type: 'OBJECT', properties: { requetes: { type: 'ARRAY', items: { type: 'OBJECT', properties: { i: { type: 'INTEGER' }, q: { type: 'ARRAY', items: { type: 'STRING' } } }, required: ['i', 'q'] } } }, required: ['requetes'] };
+  const j = await ppImgIAJson(sys, texte, schema, 30000);
+  if(!j || !Array.isArray(j.requetes)) return null;
+  const res = jobs.map(() => []);
+  j.requetes.forEach(x => { if(x && Number.isInteger(x.i) && x.i >= 0 && x.i < jobs.length && Array.isArray(x.q)) res[x.i] = x.q.map(t => pcTermeImage(t)).filter(Boolean).slice(0, 3); });
+  return res;
+}
+/* candidats d'une requête : [{ titre, desc, thumb }] (formats lisibles, assez grands) */
+async function ppImgCandidats(q){
+  const url = IMG_WIKI_API + '?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=10&gsrsearch=' + encodeURIComponent(q)
+    + '&prop=imageinfo&iiprop=url%7Cmime%7Csize%7Cextmetadata&iiextmetadatafilter=ImageDescription&iiurlwidth=' + IMG_COTE_MAX;
+  const rep = await ppFetchDelai(url, 10000);
+  if(!rep.ok) return [];
+  const data = await rep.json();
+  const pages = data && data.query && data.query.pages ? Object.values(data.query.pages) : [];
+  pages.sort((a, b) => (a.index || 0) - (b.index || 0));
+  const out = [];
+  for(const p of pages){
+    const ii = p.imageinfo && p.imageinfo[0];
+    if(!ii || !ii.thumburl || !/^https:\/\/upload\.wikimedia\.org\//.test(ii.thumburl)) continue;
+    if(!/^image\/(jpeg|png|webp|svg\+xml)$/.test(ii.mime || '')) continue;
+    if((ii.width || 0) < 200 || (ii.height || 0) < 150) continue;
+    const d = ii.extmetadata && ii.extmetadata.ImageDescription && ii.extmetadata.ImageDescription.value ? String(ii.extmetadata.ImageDescription.value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90) : '';
+    out.push({ titre: String(p.title || '').replace(/^File:/, '').replace(/\.[a-z0-9]+$/i, '').slice(0, 110), desc: d, thumb: ii.thumburl });
+  }
+  return out;
+}
+async function ppImgChoisirCandidat(jobs, cartes, cands, demande){
+  const sys = "Tu choisis, pour chaque carte de révision, l'image de Wikimedia Commons qui correspond EXACTEMENT à ce que l'utilisateur a demandé (type d'image, sujet, cadrage). Tu ne vois que les titres et descriptions des candidats : appuie-toi dessus. Si aucun candidat ne correspond clairement (mauvais pays, drapeau ou blason alors qu'on veut une carte, photo alors qu'on veut un schéma, carte avec trop de détails alors qu'on veut une carte vierge…), réponds k = -1 : mieux vaut aucune image qu'une mauvaise. Réponds en JSON : choix = liste de { i : numéro de la carte, k : numéro du candidat retenu ou -1 }.";
+  const texte = 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') + '\n\n' + jobs.map((j, i) => '#' + i + ' | carte : ' + PP_IMG_RESUME(cartes[i]) + '\n' + (cands[i].length ? cands[i].map((c, k) => '  ' + k + ') ' + c.titre + (c.desc ? ' — ' + c.desc : '')).join('\n') : '  (aucun candidat)')).join('\n');
+  const schema = { type: 'OBJECT', properties: { choix: { type: 'ARRAY', items: { type: 'OBJECT', properties: { i: { type: 'INTEGER' }, k: { type: 'INTEGER' } }, required: ['i', 'k'] } } }, required: ['choix'] };
+  const j = await ppImgIAJson(sys, texte, schema, 40000);
+  if(!j || !Array.isArray(j.choix)) return null;
+  const res = jobs.map(() => 0);   /* carte oubliée par l'IA : le premier candidat, comme avant */
+  j.choix.forEach(x => { if(x && Number.isInteger(x.i) && x.i >= 0 && x.i < jobs.length && Number.isInteger(x.k)) res[x.i] = x.k; });
+  return res;
+}
+async function ppImgTrouverLot(jobs, demande, opt){
+  const urls = new Array(jobs.length).fill('');
+  const cartes = jobs.map(j => CARDS.find(k => k.id === j.id));
+  const reqs = await ppImgReformuler(jobs, cartes, demande);
+  const qs = jobs.map((j, i) => [...new Set([...((reqs && reqs[i]) || []), pcTermeImage(j.terme)].filter(Boolean))]);
+  const cands = jobs.map(() => []);
+  let suiv = 0;
+  const pool = async (fn) => { suiv = 0; await Promise.all(Array.from({ length: Math.min(4, jobs.length) }, async () => { while(suiv < jobs.length){ const i = suiv++; try{ await fn(i); }catch(e){} } })); };
+  await pool(async i => {
+    const vus = new Set();
+    for(const q of qs[i]){
+      let l = []; try{ l = await ppImgCandidats(q); }catch(e){}
+      for(const c of l) if(!vus.has(c.titre)){ vus.add(c.titre); cands[i].push(c); }
+      if(cands[i].length >= 8) break;
+    }
+    cands[i] = cands[i].slice(0, 8);
+  });
+  const choix = await ppImgChoisirCandidat(jobs, cartes, cands, demande);
+  await pool(async i => {
+    const k = choix ? choix[i] : 0, c = cands[i][k];
+    if(!c) return;
+    const img = await ppFetchDelai(c.thumb, 12000);
+    if(!img.ok) return;
+    const blob = await img.blob();
+    if(blob.size > 8 * 1024 * 1024) return;
+    urls[i] = await ppImgReduire(blob, opt);
+  });
+  return urls;
+}
 /* v263 : cherche sur Wikimedia les images demandées (cartes créées ou existantes) et les pose ; mémorise l'état d'avant pour « Annuler ». */
 async function pcImagesApres(jobs, anciennes){
   let ok = 0, ratees = 0, pleines = 0;
-  const urls = new Array(jobs.length).fill('');   /* v298 : 5 recherches en parallèle au plus (jusqu'à 40 images d'un coup) */
-  let suiv = 0;
-  await Promise.all(Array.from({ length: Math.min(5, jobs.length) }, async () => { while(suiv < jobs.length){ const i = suiv++; try{ urls[i] = await ppImgChercherWikimedia(jobs[i].terme); }catch(e){ urls[i] = ''; } } }));
+  /* v400 : requêtes reformulées par l'IA + choix du bon candidat ; en lot (plus de 3 images), images allégées pour que TOUTES tiennent dans le stockage (avant : ~5 sur 27) */
+  const urls = await ppImgTrouverLot(jobs, pcDemandeImages(), jobs.length > 3 ? { cote: 520, vises: 32000 } : null);
   jobs.forEach((j, i) => {
     const c = CARDS.find(k => k.id === j.id), url = urls[i];
     if(!c || !url){ ratees++; return; }
@@ -8401,6 +8517,20 @@ function pcAppliquer(choix, box, toutes){
       const dm = maintenant(); c.pausee = a.pausee; c.derniereModification = dm; saveLocalOverlay(c.id, { pausee: a.pausee, derniereModification: dm });
       if(a.pausee) nPause++; else nReprise++;
       lot.defaire.push(() => { const k = CARDS.find(x => x.id === a.id); if(!k) return; const d2 = new Date().toISOString(); k.pausee = !a.pausee; k.derniereModification = d2; saveLocalOverlay(k.id, { pausee: !a.pausee, derniereModification: d2 }); });
+    } else if(a.type === 'retirer_image'){   /* v400 : retirer les images, annulable */
+      const csI = a.ids.map(id => CARDS.find(k => k.id === id)).filter(k => k && ((a.cote !== 'reponse' && k.imageQuestion) || (a.cote !== 'question' && k.imageReponse)));
+      if(!csI.length){ ignorees++; continue; }
+      const avantI = csI.map(k => ({ id: k.id, iq: k.imageQuestion || '', ir: k.imageReponse || '' }));
+      for(const k of csI){
+        if(a.cote !== 'reponse' && String(k.question || '').trim()) k.imageQuestion = null;
+        if(a.cote !== 'question' && String(k.reponse || '').trim()) k.imageReponse = null;
+        k.derniereModification = maintenant();
+        ppImgEnregistrer(k.id, k.imageQuestion || '', k.imageReponse || '');
+        saveLocalOverlay(k.id, { derniereModification: k.derniereModification });
+      }
+      lot.defaire.push(() => { for(const o of avantI){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; k.imageQuestion = o.iq || null; k.imageReponse = o.ir || null; k.derniereModification = new Date().toISOString(); ppImgEnregistrer(o.id, o.iq, o.ir); saveLocalOverlay(o.id, { derniereModification: k.derniereModification }); } try{ pcRefresh(); renderBrowse(); }catch(e){} });
+      matNotes.push('images retirées de ' + csI.length + ' carte' + (csI.length > 1 ? 's' : ''));
+      matChange = true;
     } else if(a.type === 'echanger'){   /* v329 : question ⇄ réponse (texte + images), une seule écriture pour toutes les cartes */
       const csE = a.ids.map(id => CARDS.find(k => k.id === id)).filter(k => k && (String(k.question || '').trim() || k.imageQuestion) && (String(k.reponse || '').trim() || k.imageReponse));
       if(!csE.length){ ignorees++; continue; }
@@ -9253,6 +9383,7 @@ function pcActionValide(a){
   if(a.type === 'supprimer_matiere') return s(a.matiere);
   if(a.type === 'deplacer') return s(a.dans) && Array.isArray(a.ids) && a.ids.length > 0 && a.ids.every(s) && Array.isArray(a.de) && a.de.every(s) && Array.isArray(a.ex) && a.ex.every(s);
   if(a.type === 'pause') return s(a.id) && typeof a.pausee === 'boolean';
+  if(a.type === 'retirer_image') return Array.isArray(a.ids) && a.ids.length > 0 && a.ids.every(s) && Array.isArray(a.de) && a.de.every(s) && Array.isArray(a.ex) && a.ex.every(s) && (a.cote === 'question' || a.cote === 'reponse' || a.cote === 'les_deux');
   if(a.type === 'echanger') return Array.isArray(a.ids) && a.ids.length > 0 && a.ids.every(s) && Array.isArray(a.de) && a.de.every(s) && Array.isArray(a.ex) && a.ex.every(s);
   if(a.type === 'inverser') return typeof a.inversible === 'boolean' && Array.isArray(a.ids) && a.ids.length > 0 && a.ids.every(s) && Array.isArray(a.de) && a.de.every(s) && Array.isArray(a.ex) && a.ex.every(s);
   if(a.type === 'seance') return s(a.matiere) && typeof a.difficiles === 'boolean' && s(a.mode);
@@ -13236,7 +13367,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v399';
+const PP_APP_VERSION = 'v403';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -14864,7 +14995,7 @@ function ouvrirSyntheseDepuisAjout(){
 
 /* v119 : synthèse d'une matière depuis Parcourir (menu ⋯). Le « cours » = les cartes de la matière (question / réponse) ;
    on peut ajouter des fichiers en plus, ou pas (bloc facultatif de l'écran Précisions : s.fichiers). */
-function ouvrirSyntheseDepuisParcourir(m){
+function ouvrirSyntheseDepuisParcourir(m, depuisListe){
   const cartes = CARDS.filter(c => (c.matiere || 'Sans matière') === m && (c.question || c.imageQuestion) && (c.reponse || c.imageReponse));
   if(!cartes.length){ ppToast('Aucune carte dans cette matière'); return; }
   if(!getGeminiKey()){ ppToast("Ajoute ta clé Gemini dans Réglages d'abord"); return; }
@@ -14872,7 +15003,7 @@ function ouvrirSyntheseDepuisParcourir(m){
   const marque = (url, cote) => { if(!url || images.length >= SYN_IMG_MAX) return ''; const n = synImgPush(images, url); return n ? ` [illustration de la ${cote} : img:${n}]` : ''; };
   const cours = `(Contenu des cartes de révision de la matière « ${m} », sous forme question / réponse. Regroupe-les par thèmes logiques pour rédiger la synthèse.)\n\n`
     + cartes.map(c => `Q : ${c.question || '(voir illustration)'}${marque(c.imageQuestion, 'question')}\nR : ${c.reponse || '(voir illustration)'}${marque(c.imageReponse, 'réponse')}`).join('\n\n');
-  ouvrirSynthese({ source:'parcourir', matiere:m, cours, fichiers:[], nbCartes:cartes.length, images });
+  ouvrirSynthese({ source:'parcourir', matiere:m, cours, fichiers:[], nbCartes:cartes.length, images, ...(depuisListe ? { depuisBiblio: true } : {}) });
 }
 /* fichiers facultatifs ajoutés AVANT de générer (source « parcourir ») : ils rejoignent s.fichiers */
 async function handleFichiersSynthSource(event){
@@ -15217,7 +15348,7 @@ document.addEventListener('visibilitychange', () => { if(document.visibilityStat
 
 /* --- Carte « Synthèses » dans Parcourir + liste --- */
 function sbCarteHtml(requete){
-  if(requete || browsePauseSeul || browseArchSeul) return '';
+  if(requete) return '';   /* v400 : reste affichée avec les filtres « En pause » et « Archivées » (seule la recherche la masque) */
   const n = sbIndexLire().length;
   return `<button type="button" class="sb-card" onclick="sbOuvrirListe()"><i class="sb-ico">${PP_IC.file}</i><span class="sb-tx"><b>Synthèses</b><span>${n ? 'Tes fiches enregistrées' : 'Génère ta première synthèse'}</span></span>${n ? `<em class="sb-n">${n}</em>` : ''}<i class="sb-chev">${ppSvg('<path d="M9 6l6 6-6 6"/>', 18)}</i></button>`;
 }
@@ -15228,13 +15359,20 @@ function sbRafraichir(){
   }catch(e){}
 }
 function sbOuvrirListe(){ sbRendreListe(false); }
+/* v400 : « Créer une synthèse » depuis la liste : on choisit la matière (celles qui ont des cartes), puis l'écran de création s'ouvre */
+function sbNouvelle(){
+  const nb = {}; CARDS.forEach(c => { if((c.question || c.imageQuestion) && (c.reponse || c.imageReponse)){ const m = c.matiere || 'Sans matière'; nb[m] = (nb[m] || 0) + 1; } });
+  const ms = Object.keys(nb).sort((a, b) => a.localeCompare(b, 'fr'));
+  if(!ms.length){ ppToast("Aucune carte : crée d'abord des cartes"); return; }
+  ppSheet(`<div class="pp-grab"></div><h2>Synthèse de quelle matière ?</h2><div class="pp-opts">${ms.map(m => `<button class="pp-row" onclick="ppSheetClose();ouvrirSyntheseDepuisParcourir('${escapeJsAttr(m)}', true)"><i class="pp-ri">${PP_IC.file}</i><div><b>${escapeHtml(m)}</b><span>${nb[m]} carte${nb[m] > 1 ? 's' : ''}</span></div></button>`).join('')}</div>`);
+}
 function sbFermerListe(){ closeStreakModal(); }
 function sbRendreListe(same, dessous){
   const liste = sbIndexLire().sort((a, b) => sbTs(b.modifieLe) - sbTs(a.modifieLe));
   const head = `<div class="pp-sh"><button class="pp-back" aria-label="Retour" onclick="sbFermerListe()">${PP_IC.back}</button><div><small>Parcourir</small><h2>Synthèses</h2></div></div>`;
   let corps;
   if(!liste.length){
-    corps = `<div class="sb-empty"><i class="sb-ico">${PP_IC.file}</i><b>Aucune synthèse pour l'instant</b><p>Génère une synthèse, puis touche « Enregistrer » : elle apparaîtra ici.</p></div>`;
+    corps = `<div class="sb-empty"><i class="sb-ico">${PP_IC.file}</i><b>Aucune synthèse pour l'instant</b><p>Crée-en une à partir des cartes d'une matière, puis touche « Enregistrer » : elle apparaîtra ici.</p></div>`;
   }else{
     const parM = {};
     liste.forEach(e => { (parM[e.matiere || ''] = parM[e.matiere || ''] || []).push(e); });
@@ -15249,6 +15387,8 @@ function sbRendreListe(same, dessous){
       return `<div class="sb-grp" style="--c:${col}"><div class="sb-gh"><i></i><span>${ppEsc(m || 'Sans matière')}</span><small>${parM[m].length}</small></div>${items}</div>`;
     }).join('');
   }
+  const btnNv = `<button type="button" class="pp-cta" style="margin:0 0 14px" onclick="sbNouvelle()">Créer une synthèse</button>`;   /* v400 */
+  corps = btnNv + corps;
   if(dessous){   /* v390 : posée DERRIÈRE la page actuelle (la synthèse qui se ferme), sans animation d'arrivée */
     const r0 = document.getElementById('modal-root');
     if(r0 && r0.querySelector(':scope > .pp-page')){
