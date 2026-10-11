@@ -8488,10 +8488,10 @@ async function ppImgCandidatsWikiReseau(s, annul){
   const out = [];
   for(const p of pages){
     const th = p.thumbnail && p.thumbnail.source, nom = typeof p.pageimage === 'string' ? p.pageimage : '';
-    if(!th || !nom || !/^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\//.test(th)) continue;
+    if(!th || !nom || !/^https:\/\/upload\.wikimedia\.org\/wikipedia\/(commons|en)\//.test(th)) continue;   /* v412 : fichiers non libres admis */
     if(!/\.(jpe?g|png|webp|svg)$/i.test(nom)) continue;
     if((p.thumbnail.width || 0) < 200 || (p.thumbnail.height || 0) < 150) continue;
-    out.push({ titre: nom.replace(/_/g, ' ').replace(/\.[a-z0-9]+$/i, '').slice(0, 110), desc: 'image principale de l’article Wikipédia « ' + String(p.title || '').slice(0, 60) + ' »', thumb: th, fichier: 'File:' + nom });
+    out.push({ titre: nom.replace(/_/g, ' ').replace(/\.[a-z0-9]+$/i, '').slice(0, 110), desc: 'image principale de l’article Wikipédia « ' + String(p.title || '').slice(0, 60) + ' »', thumb: th, fichier: 'File:' + nom, depot: 'en' });
   }
   return out;
 }
@@ -8499,32 +8499,151 @@ async function ppImgCandidatsWiki(sujet, annul){
   const s = String(sujet || '').trim(); if(!s) return [];
   return ppImgCache('w|' + s.toLowerCase(), () => ppImgCandidatsWikiReseau(s, annul));
 }
+/* v411 : cartes de localisation. Pour une carte de pays (ou de lieu), la recherche libre de Commons ramène surtout du bruit (cartes de régions, cartes historiques, rien du tout si les mots sont trop nombreux) :
+   on lit plutôt la LISTE DES IMAGES de l'article Wikipédia (anglais) du sujet, où se trouvent ses cartes de localisation, puis on ne garde que les fichiers qui ressemblent à une carte (les plus « localisation » d'abord).
+   Seuls les fichiers hébergés sur Commons sont gardés (libres). Aucun nouveau domaine : en.wikipedia.org et commons.wikimedia.org sont déjà dans la CSP. */
+const PP_IMG_RE_DEMANDE_CARTE = /\b(map|maps|locator|location|carte|cartes|atlas)\b/i;
+const PP_IMG_RE_CARTE_OK = /map|locat|orthographic|projection|(^|[^a-z])eu([^a-z]|$)|europe/i;
+const PP_IMG_RE_CARTE_NON = /flag|arms|seal|emblem|logo|icon|symbol|portal|ambox|padlock|stub|question[ _]book|wiki(quote|source|media|data|news|books|versity|voyage)|commons-|disambig|edit-|folder|nuvola|crystal|speaker|increase|decrease|steady|pencil|k[öo]ppen|climate|population|density|ethnic|language|religio|gdp|elevation|topograph|relief|physical|histor|battle|empire|province|region|county|district|administrative|division|dialect|election|referendum|road|rail|motorway|airport|transport|satellite|night/i;
+function ppImgScoreCarte(t){
+  let sc = 0;
+  if(/locat|locator|orthographic/i.test(t)) sc += 3;
+  if(/(^|[^a-z])eu([^a-z]|$)|european[ _]union|europe/i.test(t)) sc += 2;
+  if(/map/i.test(t)) sc += 1;
+  if(/blank|simple|plain/i.test(t)) sc += 1;
+  return sc;
+}
+/* sujet de repli quand l'IA n'en a pas donné : le terme de Prof sans les mots de type d'image (« Italy blank locator map Europe » → « Italy ») */
+function ppImgSujetDepuisTerme(t){
+  const vide = new Set(['blank','locator','location','map','maps','highlighted','neighbouring','neighboring','countries','country','in','of','the','a','an','with','and','europe','european','union','eu','simple','political','outline','borders','border','zoomed','out','carte','vierge','de','du','des','la','le','les','pays','diagram','diagrams','schematic','photo','picture','image','images','schema','schéma','portrait','drawing']);
+  return String(t || '').split(/\s+/).filter(w => w && !vide.has(w.toLowerCase())).slice(0, 3).join(' ');
+}
+/* v412 : l'article Wikipédia du sujet sert pour TOUTES les demandes (plus seulement les cartes), fichiers NON libres de l'article compris (usage perso : les droits ne comptent pas).
+   1) liste des images de l'article (1 appel, mise en mémoire) ; 2) on garde les noms de fichiers qui correspondent à la demande (cartes : `PP_IMG_RE_CARTE_OK` ; autres : mots-clés de la demande) ;
+   3) vignettes demandées à l'API de Wikipédia (elle connaît aussi les fichiers hébergés sur Wikipédia même, pas seulement ceux de Commons). Les candidats portent depot:'en'. */
+const PP_IMG_RE_JUNK = /icon|symbol|portal|ambox|padlock|stub|question[ _]book|wiki(quote|source|media|data|news|books|versity|voyage)|commons-|disambig|edit-|folder|nuvola|crystal|speaker|increase|decrease|steady|pencil|signature|stamp|button|banner|sprite|ooui|merge|split[ _]section|loudspeaker|gnome|tango|system-|help-|lock-|red[ _]x|checkmark|rating/i;
+const PP_IMG_RE_HERALD = /flag|arms|seal|emblem|logo/i;
+const PP_IMG_RE_DEMANDE_HERALD = /flag|drapeau|blason|arms|coat|seal|emblem|embl[eè]me|logo/i;
+const PP_IMG_RE_TYPE = /diagram|schem|anatomy|structure|cycle|process|chart|graph|timeline|labell?ed|portrait|painting|illustration|cross[ -]section/i;
+function ppImgMotsCles(texte){
+  const vide = new Set(['image','images','photo','photos','picture','pictures','diagram','diagrams','schema','schematic','map','maps','blank','locator','location','the','and','with','for','from','of','in','on','de','du','des','la','le','les','un','une','et','en','avec','sur','pour','labeled','labelled','simple','high','quality','view','illustration','drawing']);
+  return [...new Set(String(texte || '').toLowerCase().replace(/[^a-zà-ÿ0-9]+/g, ' ').split(' ').filter(w => w.length >= 3 && !vide.has(w)))].slice(0, 12);
+}
+async function ppImgListeArticleReseau(sujet, annul){
+  const u1 = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=images&imlimit=500&titles=' + encodeURIComponent(sujet);
+  const r1 = await ppFetchRetry(u1, 10000, annul);
+  if(!r1 || !r1.ok) throw new Error('wikipedia');
+  const d1 = await r1.json();
+  const pg = d1 && d1.query && d1.query.pages ? Object.values(d1.query.pages) : [];
+  const titres = [];
+  pg.forEach(p => (p.images || []).forEach(im => { if(im && typeof im.title === 'string') titres.push(im.title); }));
+  return [...new Set(titres)];
+}
+function ppImgListeArticle(sujet, annul){ return ppImgCache('l|' + String(sujet).toLowerCase(), () => ppImgListeArticleReseau(sujet, annul)); }
+/* noms retenus (6 au plus), le plus pertinent d'abord */
+function ppImgChoisirTitres(titres, estCarte, mots, herald){
+  const lisibles = titres.filter(t => /\.(svg|png|jpe?g|webp)$/i.test(t) && !PP_IMG_RE_JUNK.test(t) && (herald || !PP_IMG_RE_HERALD.test(t)));
+  if(estCarte){
+    return lisibles.filter(t => PP_IMG_RE_CARTE_OK.test(t) && !PP_IMG_RE_CARTE_NON.test(t))
+      .map((t, n) => ({ t, n, sc: ppImgScoreCarte(t) })).filter(x => x.sc >= 1)
+      .sort((a, b) => b.sc - a.sc || a.n - b.n).slice(0, 6).map(x => x.t);
+  }
+  return lisibles.map((t, n) => {
+    const nom = t.replace(/^File:/i, '').replace(/_/g, ' ').toLowerCase();
+    const hits = mots.filter(w => nom.includes(w)).length;
+    return { t, n, hits, sc: hits * 3 + (PP_IMG_RE_TYPE.test(nom) ? 1 : 0) };
+  }).filter(x => mots.length ? x.hits >= 1 : x.sc >= 1).sort((a, b) => b.sc - a.sc || a.n - b.n).slice(0, 6).map(x => x.t);
+}
+async function ppImgInfosTitresReseau(titres, sujet, annul){
+  const u2 = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=imageinfo&iiprop=url%7Cmime%7Csize%7Cextmetadata&iiextmetadatafilter=ImageDescription&iiurlwidth=' + IMG_COTE_MAX + '&titles=' + encodeURIComponent(titres.join('|'));
+  const r2 = await ppFetchRetry(u2, 10000, annul);
+  if(!r2 || !r2.ok) throw new Error('wikipedia');
+  const d2 = await r2.json();
+  const pages = d2 && d2.query && d2.query.pages ? Object.values(d2.query.pages) : [];
+  const ordre = {}; titres.forEach((t, n) => { ordre[ppImgCleFichier({ fichier: t })] = n; });
+  pages.sort((a, b) => (ordre[ppImgCleFichier({ fichier: a.title })] ?? 99) - (ordre[ppImgCleFichier({ fichier: b.title })] ?? 99));
+  const out = [];
+  for(const p of pages){
+    const ii = p.imageinfo && p.imageinfo[0];
+    if(!ii || !ii.thumburl || !/^https:\/\/upload\.wikimedia\.org\//.test(ii.thumburl)) continue;
+    if(!/^image\/(jpeg|png|webp|svg\+xml)$/.test(ii.mime || '')) continue;
+    if((ii.width || 0) < 200 || (ii.height || 0) < 150) continue;
+    const d = ii.extmetadata && ii.extmetadata.ImageDescription && ii.extmetadata.ImageDescription.value ? String(ii.extmetadata.ImageDescription.value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 70) : '';
+    out.push({ titre: String(p.title || '').replace(/^File:/, '').replace(/\.[a-z0-9]+$/i, '').slice(0, 110), desc: 'image de l’article Wikipédia « ' + String(sujet).slice(0, 60) + ' »' + (d ? ' — ' + d : ''), thumb: ii.thumburl, fichier: String(p.title || ''), depot: 'en' });
+  }
+  return out;
+}
+async function ppImgCandidatsArticle(sujet, estCarte, texteDemande, annul){
+  const s0 = String(sujet || '').trim(); if(!s0) return [];
+  const titres = await ppImgListeArticle(s0, annul);
+  const gardes = ppImgChoisirTitres(titres, estCarte, ppImgMotsCles(texteDemande), PP_IMG_RE_DEMANDE_HERALD.test(texteDemande));
+  if(!gardes.length) return [];
+  return ppImgCache('i|' + gardes.join('|').toLowerCase(), () => ppImgInfosTitresReseau(gardes, s0, annul));
+}
+/* v412 : DERNIER RECOURS, la recherche d'images sur le web (Openverse depuis la v413, Brave avant) par le Worker : route /img (liste) et /imgp (octets des vignettes, avec CORS).
+   Utilisée seulement pour les demandes où Commons + Wikipédia n'ont rien donné de bon. Aucune écriture KV côté Worker. Sans les secrets OPENVERSE_CLIENT_ID / OPENVERSE_CLIENT_SECRET, le Worker répond 501 :
+   on le note pour la session et tout continue comme avant. Rythme : 1 requête par seconde (Openverse avec compte : 100 par minute, 10 000 par jour). */
+const PP_WEB = { etat: 'inconnu', echecs: 0, derniere: 0 };   /* etat : inconnu | ok | absente | refusee | sanscode */
+function ppWebIndispo(){ return PP_WEB.etat === 'absente' || PP_WEB.etat === 'refusee' || PP_WEB.etat === 'sanscode'; }
+function ppImgProxy(u){ return SYNC_WORKER_URL + '/imgp?code=' + encodeURIComponent(syncCodePerso() || '') + '&u=' + encodeURIComponent(u); }   /* v413 : le Worker vérifie le code (il ajoute le jeton Openverse) */
+async function ppImgCandidatsWeb(q, annul){
+  if(ppWebIndispo()) return [];
+  const code = syncCodePerso();
+  if(!code){ PP_WEB.etat = 'sanscode'; return []; }
+  const attente = 1100 - (Date.now() - PP_WEB.derniere);
+  if(attente > 0) await new Promise(ok => setTimeout(ok, attente));
+  PP_WEB.derniere = Date.now();
+  let rep = null;
+  try{ rep = await ppFetchDelai(SYNC_WORKER_URL + '/img?code=' + encodeURIComponent(code) + '&q=' + encodeURIComponent(q), 15000, annul); }
+  catch(e){ if(annul && annul.aborted) throw e; if(++PP_WEB.echecs >= 3) PP_WEB.etat = 'refusee'; return []; }
+  if(rep.status === 501){ PP_WEB.etat = 'absente'; return []; }
+  if(rep.status === 403 || rep.status === 502){ PP_WEB.etat = 'refusee'; return []; }
+  if(!rep.ok){ if(++PP_WEB.echecs >= 3) PP_WEB.etat = 'refusee'; return []; }
+  let d = null; try{ d = await rep.json(); }catch(e){ return []; }
+  PP_WEB.etat = 'ok'; PP_WEB.echecs = 0;
+  return ((d && d.items) || []).filter(x => x && typeof x.u === 'string' && x.u.startsWith('https://api.openverse.org/v1/images/'))
+    .map(x => ({ titre: String(x.t || '').slice(0, 110), desc: 'image du web' + (x.s ? ' (' + String(x.s).slice(0, 40) + ')' : ''), thumb: ppImgProxy(x.u), fichier: '', web: true }));
+}
+async function ppImgMiniaturesWeb(liste, annul){
+  const avec = liste.filter((c, i, t) => c && c.web && !c.mini && t.indexOf(c) === i);
+  await ppImgPool(avec.length, async n => {
+    if(annul && annul.aborted) return;
+    const c = avec[n], r = await ppFetchRetry(c.thumb, 8000, annul, 2); if(!r || !r.ok) return;
+    const b = await r.blob(), mime = (b.type || '').toLowerCase();
+    if(b.size > 700000 || !/^image\/(jpeg|png|webp)$/.test(mime)) return;
+    c.mini = { mime, data: await ppImgB64(b) };
+  }, 6);
+}
 /* v408 : miniatures de contrôle (320 px) des candidats : UN appel à l'API Commons par lot de 40, puis téléchargements en parallèle. Pose c.mini = { mime, data } (base64) ; sans miniature, le candidat est jugé sur son titre. */
 const PP_IMG_MINI = 320;
 function ppImgCleFichier(c){ return String((c && (c.fichier || c.titre)) || '').replace(/^File:/i, '').replace(/_/g, ' ').trim().toLowerCase(); }
 function ppImgB64(blob){ return new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => ko(r.error); r.readAsDataURL(blob); }); }
 async function ppImgMiniatures(liste, annul){
-  const avec = liste.filter((c, i, t) => c && c.fichier && !c.mini && t.indexOf(c) === i);   /* v410 : déjà en mémoire = pas retéléchargée */
-  for(let d = 0; d < avec.length; d += 40){
-    if(annul && annul.aborted) return;
-    const lot = avec.slice(d, d + 40);
-    let pages = [];
-    try{
-      const url = IMG_WIKI_API + '?action=query&format=json&origin=*&prop=imageinfo&iiprop=url&iiurlwidth=' + PP_IMG_MINI + '&titles=' + encodeURIComponent(lot.map(c => c.fichier).join('|'));
-      const rep = await ppFetchRetry(url, 10000, annul);
-      if(!rep || !rep.ok) continue;
-      const data = await rep.json();
-      pages = data && data.query && data.query.pages ? Object.values(data.query.pages) : [];
-    }catch(e){ continue; }
-    const parCle = {};
-    pages.forEach(p => { const ii = p.imageinfo && p.imageinfo[0]; if(ii && ii.thumburl && /^https:\/\/upload\.wikimedia\.org\//.test(ii.thumburl)) parCle[ppImgCleFichier({ fichier: p.title })] = ii.thumburl; });
-    await ppImgPool(lot.length, async n => {
-      const c = lot[n], u = parCle[ppImgCleFichier(c)]; if(!u) return;
-      const r = await ppFetchRetry(u, 8000, annul, 2); if(!r || !r.ok) return;
-      const b = await r.blob(), mime = (b.type || '').toLowerCase();
-      if(b.size > 700000 || !/^image\/(jpeg|png|webp)$/.test(mime)) return;
-      c.mini = { mime, data: await ppImgB64(b) };
-    }, 6);
+  const tous = liste.filter((c, i, t) => c && c.fichier && !c.mini && t.indexOf(c) === i);   /* v410 : déjà en mémoire = pas retéléchargée */
+  for(const depot of ['commons', 'en']){   /* v412 : les fichiers de l'article Wikipédia (depot 'en') se demandent à l'API de Wikipédia */
+    const avec = tous.filter(c => (c.depot === 'en') === (depot === 'en'));
+    const api = depot === 'en' ? 'https://en.wikipedia.org/w/api.php' : IMG_WIKI_API;
+    for(let d = 0; d < avec.length; d += 40){
+      if(annul && annul.aborted) return;
+      const lot = avec.slice(d, d + 40);
+      let pages = [];
+      try{
+        const url = api + '?action=query&format=json&origin=*&prop=imageinfo&iiprop=url&iiurlwidth=' + PP_IMG_MINI + '&titles=' + encodeURIComponent(lot.map(c => c.fichier).join('|'));
+        const rep = await ppFetchRetry(url, 10000, annul);
+        if(!rep || !rep.ok) continue;
+        const data = await rep.json();
+        pages = data && data.query && data.query.pages ? Object.values(data.query.pages) : [];
+      }catch(e){ continue; }
+      const parCle = {};
+      pages.forEach(p => { const ii = p.imageinfo && p.imageinfo[0]; if(ii && ii.thumburl && /^https:\/\/upload\.wikimedia\.org\//.test(ii.thumburl)) parCle[ppImgCleFichier({ fichier: p.title })] = ii.thumburl; });
+      await ppImgPool(lot.length, async n => {
+        const c = lot[n], u = parCle[ppImgCleFichier(c)]; if(!u) return;
+        const r = await ppFetchRetry(u, 8000, annul, 2); if(!r || !r.ok) return;
+        const b = await r.blob(), mime = (b.type || '').toLowerCase();
+        if(b.size > 700000 || !/^image\/(jpeg|png|webp)$/.test(mime)) return;
+        c.mini = { mime, data: await ppImgB64(b) };
+      }, 6);
+    }
   }
 }
 async function ppImgPool(n, fn, max){
@@ -8532,7 +8651,7 @@ async function ppImgPool(n, fn, max){
   await Promise.all(Array.from({ length: Math.min(max || 4, n) }, async () => { while(suiv < n){ const i = suiv++; try{ await fn(i); }catch(e){} } }));
 }
 async function ppImgChoisirCandidat(jobs, cartes, cands, demande, annul){
-  const sys = "Tu choisis, pour chaque carte de révision, l'image de Wikimedia Commons qui correspond EXACTEMENT à ce que l'utilisateur a demandé (type d'image, sujet, cadrage). Tu ne vois que les titres et descriptions des candidats : appuie-toi dessus. Si aucun candidat ne correspond clairement (mauvais pays, drapeau ou blason alors qu'on veut une carte, photo alors qu'on veut un schéma, carte avec trop de détails alors qu'on veut une carte vierge…), réponds k = -1 : mieux vaut aucune image qu'une mauvaise. Réponds en JSON : choix = liste de { i : numéro de la carte, k : numéro du candidat retenu ou -1 }.";
+  const sys = "Tu choisis, pour chaque carte de révision, l'image de Wikimedia Commons qui correspond EXACTEMENT à ce que l'utilisateur a demandé (type d'image, sujet, cadrage). Tu ne vois que les titres et descriptions des candidats : appuie-toi dessus. Si aucun candidat ne correspond clairement (mauvais pays, drapeau ou blason alors qu'on veut une carte, photo alors qu'on veut un schéma, carte avec trop de détails alors qu'on veut une carte vierge…), réponds k = -1 : mieux vaut aucune image qu'une mauvaise. Pour une carte de pays ou de lieu, une carte de localisation simple du BON pays convient même si le cadrage n'est pas parfait. Réponds en JSON : choix = liste de { i : numéro de la carte, k : numéro du candidat retenu ou -1 }.";
   const texte = 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') + '\n\n' + jobs.map((j, i) => '#' + i + (cartes[i] ? ' | carte : ' + PP_IMG_RESUME(cartes[i]) : '') + '\n' + (cands[i].length ? cands[i].map((c, k) => '  ' + k + ') ' + c.titre + (c.desc ? ' — ' + c.desc : '')).join('\n') : '  (aucun candidat)')).join('\n');
   const schema = { type: 'OBJECT', properties: { choix: { type: 'ARRAY', items: { type: 'OBJECT', properties: { i: { type: 'INTEGER' }, k: { type: 'INTEGER' } }, required: ['i', 'k'] } } }, required: ['choix'] };
   const j = await ppImgIAJson(sys, texte, schema, 40000, annul);
@@ -8544,7 +8663,7 @@ async function ppImgChoisirCandidat(jobs, cartes, cands, demande, annul){
 /* v408 : le choix se fait en REGARDANT les miniatures (avec les titres). Renvoie, par demande, le classement des candidats qui conviennent (meilleur d'abord ; liste vide = aucun ne convient), ou null si l'appel échoue (repli : choix par titres). Une seule requête pour toutes les demandes. */
 async function ppImgChoisirVisuelLot(jobs, cartes, cands, demande, annul){
   if(!cands.some(l => l.some(c => c.mini))) return null;
-  const sys = "Tu choisis, pour chaque demande d'image de révision, les images de Wikimedia Commons qui correspondent EXACTEMENT à ce que l'utilisateur a demandé (type d'image, sujet, cadrage). Tu vois chaque candidat (miniature) avec son titre : REGARDE l'image, ne te fie pas seulement au titre. Écarte les candidats qui ne conviennent pas : mauvais sujet ou mauvais pays, drapeau ou blason alors qu'on veut une carte, photo alors qu'on veut un schéma, carte surchargée alors qu'on veut une carte vierge, image floue, illisible ou presque vide. Réponds en JSON : choix = liste de { i : numéro de la demande, classement : numéros des candidats qui conviennent, du meilleur au moins bon (liste vide si aucun ne convient : mieux vaut aucune image qu'une mauvaise) }.";
+  const sys = "Tu choisis, pour chaque demande d'image de révision, les images de Wikimedia Commons qui correspondent EXACTEMENT à ce que l'utilisateur a demandé (type d'image, sujet, cadrage). Tu vois chaque candidat (miniature) avec son titre : REGARDE l'image, ne te fie pas seulement au titre. Écarte les candidats qui ne conviennent pas : mauvais sujet ou mauvais pays, drapeau ou blason alors qu'on veut une carte, photo alors qu'on veut un schéma, carte surchargée alors qu'on veut une carte vierge, image floue, illisible ou presque vide. Cas des cartes de pays ou de lieu : une carte de localisation simple où le BON pays est mis en évidence (couleur unie, fond uni, frontières visibles, pays voisins visibles même grisés, Union européenne colorée) convient, même si le cadrage n'est pas parfait ; n'écarte que le mauvais pays, le relief, la photo satellite, les cartes chargées de textes ou celles où l'on ne voit pas du tout les pays autour ; si aucune ne convient parfaitement, classe quand même les plus proches du bon pays plutôt que de ne rien classer. Réponds en JSON : choix = liste de { i : numéro de la demande, classement : numéros des candidats qui conviennent, du meilleur au moins bon (liste vide si aucun ne convient : mieux vaut aucune image qu'une mauvaise) }.";
   const parts = [{ text: 'DEMANDE DE L\'UTILISATEUR : ' + (demande || '(non précisée)') }];
   jobs.forEach((j, i) => {
     parts.push({ text: '\n\n### Demande #' + i + (cartes[i] ? ' | carte : ' + PP_IMG_RESUME(cartes[i]) : '') + (cands[i].length ? '' : '\n(aucun candidat)') });
@@ -8594,16 +8713,28 @@ async function ppImgPreparerLot(jobs, demande, opt){
   const reqs = await ppImgReformuler(jobs, cartes, demande, annul);
   const qs = jobs.map((j, i) => [...new Set([...((reqs && reqs[i] && reqs[i].q) || []), pcTermeImage(j.terme)].filter(Boolean))]);
   const sujets = jobs.map((j, i) => (reqs && reqs[i] && reqs[i].sujet) || '');
-  const cap = jobs.length > 3 ? 6 : 10;   /* candidats par demande (dont 2 au plus venus de Wikipédia) */
+  const cap = jobs.length > 3 ? 8 : 10;   /* candidats par demande (v412 : 8 en lot, avant 6) */
   const cands = jobs.map(() => []);
   await ppImgPool(jobs.length, async i => {
-    const wiki = ppImgCandidatsWiki(sujets[i], annul).catch(() => []);
-    const vus = new Set(), liste = [];
+    /* v411 : demande de CARTE (pays, lieu) → on lit d'abord l'article Wikipédia du sujet (ses cartes de localisation), en plus de la recherche Commons ; pas de « image principale » (drapeau, photo) */
+    const estCarte = PP_IMG_RE_DEMANDE_CARTE.test(String(jobs[i].terme || '') + ' ' + qs[i].join(' '));
+    const depuis = ppImgSujetDepuisTerme(jobs[i].terme), sujetBase = sujets[i] || depuis;
+    const sujetsPage = estCarte ? [...new Set([sujets[i], depuis].filter(Boolean))].slice(0, 2) : [sujets[i] || depuis].filter(Boolean);   /* v412 : 2 articles seulement pour les cartes */
+    const wiki = estCarte ? Promise.resolve([]) : ppImgCandidatsWiki(sujets[i], annul).catch(() => []);
+    const texteD = [jobs[i].terme, ...qs[i], sujets[i]].join(' ');   /* v412 : mots-clés pour choisir parmi les images de l'article */
+    const pages = Promise.all(sujetsPage.map(t => ppImgCandidatsArticle(t, estCarte, texteD, annul).catch(() => []))).then(l => l.flat());
+    const base = [], vus = new Set();
+    const ajouter = (c, max) => { const cle = ppImgCleFichier(c); if(vus.has(cle) || base.length >= max) return; vus.add(cle); base.push(c); };
     const reps = await Promise.all(qs[i].map(q => ppImgCandidats(q, annul).catch(() => [])));   /* v410 : les requêtes d'une carte partent ensemble ; l'ordre (précise d'abord) est gardé */
-    for(const l of reps) for(const c of l){ const cle = ppImgCleFichier(c); if(!vus.has(cle)){ vus.add(cle); liste.push(c); } }
-    cands[i] = liste.slice(0, cap - 2);
-    let n = 0;
-    for(const c of await wiki){ const cle = ppImgCleFichier(c); if(!vus.has(cle) && n < 2){ vus.add(cle); cands[i].push(c); n++; } }
+    const pg = await pages;
+    pg.slice(0, 3).forEach(c => ajouter(c, cap));
+    for(const l of reps) for(const c of l) ajouter(c, estCarte ? cap : cap - 2);
+    if(estCarte && sujetBase && base.length < 3){   /* v411 : peu de candidats → requêtes courtes (la recherche Commons exige TOUS les mots) */
+      const plus = await Promise.all([sujetBase + ' location map', sujetBase + ' locator map'].filter(q => !qs[i].includes(q)).map(q => ppImgCandidats(q, annul).catch(() => [])));
+      for(const l of plus) for(const c of l) ajouter(c, cap);
+    }
+    if(!estCarte) for(const c of (await wiki).slice(0, 2)) ajouter(c, cap);
+    cands[i] = base;
   });
   if(annul && annul.aborted) return { cands, rang: cands.map(() => []), jug: cands.map(() => false) };
   if(cands.every(l => !l.length)) return { cands, rang: cands.map(() => []), jug: cands.map(() => true) };
@@ -8616,10 +8747,34 @@ async function ppImgPreparerLot(jobs, demande, opt){
   }
   const jug = rang.map(r => r !== null);   /* sinon (IA muette : quota, réseau) : ordre brut de Wikimedia */
   rang = rang.map((r, i) => r === null ? cands[i].map((_, k) => k) : r);
-  return { cands, rang, jug };
+  /* v412 : dernier recours pour les demandes sans image acceptable : recherche web (Openverse, par le Worker), puis nouveau tri visuel sur ces seules demandes */
+  const web = { essais: 0, etat: PP_WEB.etat };
+  const manque = rang.map((r, i) => r.length ? -1 : i).filter(i => i >= 0);
+  if(manque.length && !ppWebIndispo() && !(annul && annul.aborted)){
+    const listes = [];
+    for(const i of manque){
+      if(ppWebIndispo() || (annul && annul.aborted)) break;
+      let l = [];
+      for(const q of qs[i].slice(0, 2)){
+        web.essais++;
+        try{ l = await ppImgCandidatsWeb(q, annul); }catch(e){ break; }
+        if(l.length >= 3 || ppWebIndispo()) break;
+      }
+      listes.push({ i, l: l.slice(0, 6) });
+    }
+    const utiles = listes.filter(x => x.l.length);
+    if(utiles.length && !(annul && annul.aborted)){
+      try{ await ppImgMiniaturesWeb(utiles.flatMap(x => x.l), annul); }catch(e){}
+      const sous = await ppImgChoisirVisuel(utiles.map(x => jobs[x.i]), utiles.map(x => cartes[x.i]), utiles.map(x => x.l), demande, annul);
+      utiles.forEach((x, n) => { cands[x.i] = x.l; rang[x.i] = sous[n] === null ? x.l.map((_, k) => k) : sous[n]; jug[x.i] = sous[n] !== null; });
+    }
+  }
+  web.etat = PP_WEB.etat;
+  return { cands, rang, jug, web };
 }
 async function ppImgTrouverLot(jobs, demande, opt){
   const urls = new Array(jobs.length).fill('');
+  const diag = { sans: 0, ecart: 0, dl: 0 }; urls.diag = diag;   /* v411 : pourquoi une image manque (affiché dans le bilan) */
   const lot = await ppImgPreparerLot(jobs, demande, opt);
   await ppImgPool(jobs.length, async i => {
     for(const k of lot.rang[i].slice(0, 3)){   /* v410 : si le meilleur ne se télécharge pas, on prend le suivant du classement (3 au plus) */
@@ -8629,6 +8784,8 @@ async function ppImgTrouverLot(jobs, demande, opt){
       if(u){ urls[i] = u; return; }
     }
   });
+  diag.web = lot.web || null;
+  jobs.forEach((j, i) => { if(urls[i]) return; if(!lot.cands[i].length) diag.sans++; else if(!lot.rang[i].length) diag.ecart++; else diag.dl++; });
   return urls;
 }
 /* v263 : cherche sur Wikimedia les images demandées (cartes créées ou existantes) et les pose ; mémorise l'état d'avant pour « Annuler ». */
@@ -8650,7 +8807,9 @@ async function pcImagesApres(jobs, anciennes, signal, uLot){
     ok++;
   });
   if(ok){ try{ pcRefresh(); if(activeTab === 'browse') renderBrowse(); }catch(e){} envoyerVersSync(); }
-  const bilan = ok ? (ok + ' image' + (ok > 1 ? 's' : '') + ' ajoutée' + (ok > 1 ? 's' : '')) + (ratees ? ' · ' + ratees + ' introuvable' + (ratees > 1 ? 's' : '') : '') + (pleines ? ' · ' + pleines + ' non ajoutée' + (pleines > 1 ? 's' : '') + ' (stockage plein)' : '') : (pleines ? 'stockage plein : image non ajoutée' : 'aucune image trouvée');
+  const dg = urls.diag;   /* v411 : on dit pourquoi, pour savoir quoi corriger */
+  const det = (dg && ratees) ? ' (' + [dg.sans ? dg.sans + ' sans résultat sur Wikimedia' : '', dg.ecart ? dg.ecart + ' écartée' + (dg.ecart > 1 ? 's' : '') + ' par l’IA : aucune image assez proche' : '', dg.dl ? dg.dl + ' non téléchargée' + (dg.dl > 1 ? 's' : '') : '', (dg.web && dg.web.etat === 'absente') ? 'recherche web non activée (clés Openverse absentes du Worker)' : (dg.web && dg.web.etat === 'refusee') ? 'recherche web refusée : clé ou quota' : (dg.web && dg.web.etat === 'sanscode') ? 'recherche web : code de synchro nécessaire' : ''].filter(Boolean).join(', ') + ')' : '';
+  const bilan = ok ? (ok + ' image' + (ok > 1 ? 's' : '') + ' ajoutée' + (ok > 1 ? 's' : '')) + (ratees ? ' · ' + ratees + ' introuvable' + (ratees > 1 ? 's' : '') + det : '') + (pleines ? ' · ' + pleines + ' non ajoutée' + (pleines > 1 ? 's' : '') + ' (stockage plein)' : '') : (pleines ? 'stockage plein : image non ajoutée' : 'aucune image trouvée' + det);
   pcLotTexte(uLot, PC_IMG_ATTENTE(jobs.length), bilan);   /* v409 : le résultat remplace « recherche en cours » dans la carte Appliqué (visible aussi en revenant sur Prof) */
   ppToast(bilan.charAt(0).toUpperCase() + bilan.slice(1));
 }
@@ -13573,7 +13732,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v410';
+const PP_APP_VERSION = 'v413';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){

@@ -19,6 +19,12 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v217 : v413 (recherche d'images sur le web = Openverse à la place de Brave, via le Worker) : index.html change, donc nouvelle version du cache.
+
+   v216 : v412 (recherche d'image pour tous les sujets : article Wikipédia (fichiers non libres admis), recherche web en dernier recours) : index.html change, donc nouvelle version du cache.
+
+   v215 : v411 (recherche d'image : cartes de pays lues dans l'article Wikipédia, requêtes courtes de secours, juge moins strict sur les cartes, bilan qui explique les échecs) : index.html change, donc nouvelle version du cache.
+
    v214 : v410 (recherche d'image : deuxième chance, requêtes en parallèle, mémoire courte, nouvel essai si Wikimedia / Gemini saturé) : index.html change, donc nouvelle version du cache.
 
    v213 : v409 (Prof : « Annuler » reste 30 min même en quittant Prof, recherche d'images annulable et expliquée) : index.html change, donc nouvelle version du cache.
@@ -177,7 +183,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v214';
+const SW_VERSION = 'v217';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
