@@ -1986,9 +1986,9 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 #pp-zoom .pz-bg{position:absolute;inset:0;background:rgba(6,6,12,.95);opacity:0;transition:opacity .28s ease;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 #pp-zoom .pz-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;touch-action:none}
 #pp-zoom .pz-img{display:block;max-width:calc(100% - 24px);max-height:calc(100% - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));object-fit:contain;border-radius:24px;will-change:transform;touch-action:none;-webkit-user-drag:none;box-shadow:0 18px 60px rgba(0,0,0,.55);background:#fff;cursor:zoom-in}
-#pp-zoom .pz-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;width:46px;height:46px;padding:0;border-radius:50%;border:1.5px solid var(--line);background:rgba(20,20,32,.85);color:var(--cream);display:grid;place-items:center;opacity:0;transition:opacity .25s,transform .15s;cursor:pointer}
+#pp-zoom .pz-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;width:46px;height:46px;padding:0;border-radius:50%;border:1.5px solid rgba(245,240,230,.28);background:rgba(20,20,32,.85);color:#f5f0e6;display:grid;place-items:center;opacity:0;transition:opacity .25s,transform .15s;cursor:pointer}
 #pp-zoom .pz-x:active{transform:scale(.92)}
-#pp-zoom .pz-dl{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;border:1.5px solid var(--line);background:rgba(20,20,32,.88);color:var(--cream);font:inherit;font-size:15px;font-weight:800;opacity:0;transition:opacity .25s,transform .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#pp-zoom .pz-dl{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;border:1.5px solid rgba(245,240,230,.28);background:rgba(20,20,32,.88);color:#f5f0e6;font:inherit;font-size:15px;font-weight:800;opacity:0;transition:opacity .25s,transform .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #pp-zoom .pz-dl:active{transform:translateX(-50%) scale(.95)}
 .synth-fig{margin:12px 0;text-align:left}
 .synth-fig img{display:block;max-width:100%;max-height:340px;object-fit:contain;border-radius:26px;border:2px solid rgba(128,120,105,.28);box-shadow:0 8px 22px rgba(0,0,0,.22);cursor:zoom-in;background:#fff;-webkit-touch-callout:none}
@@ -2005,7 +2005,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-iaprev small{display:block;padding:6px 10px 8px;font-size:11px;color:var(--muted);text-align:center}
 .pp-iawait{padding:28px 16px;color:var(--muted);font-size:14px;font-weight:700;text-align:center}
 .pp-imgth{width:36px;height:36px;border-radius:13px;object-fit:cover;display:block}
-.pp-imgx{width:26px;height:26px;border-radius:50%;border:0;background:#2a2a3a;color:var(--cream);font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+.pp-imgx{width:26px;height:26px;border-radius:50%;border:0;background:#2a2a3a;color:#f5f0e6;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
 .pp-imgpanel{margin:0 0 12px;padding:10px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel)}
 .pp-imgcap{margin:0 0 8px;font-size:12.5px;font-weight:700;color:var(--muted)}
 .pp-imgbank{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
@@ -8770,14 +8770,32 @@ function ppImgVariantes(u, opt){
 }
 /* v408 : télécharge l'image finale d'un candidat (720 px, réduite comme une photo). '' si impossible.
    v415 : plusieurs adresses, délai plus large, et la cause de l'échec est gardée dans c.echec (affichée dans le bilan). */
+/* v417 : Wikimedia répond « trop de demandes » (429) quand on lui demande trop de miniatures d'un coup : les téléchargements finals partent un par un,
+   avec un écart minimum (0,6 s) qui double après chaque 429 (4 s au plus) et se resserre après chaque réussite. */
+const PP_DL = { dernier: 0, pas: 600 };
+async function ppImgAttendreTour(u){
+  if(!/^https:\/\/upload\.wikimedia\.org\//.test(u || '')) return;
+  const maintenant = Date.now(), debut = Math.max(maintenant, PP_DL.dernier + PP_DL.pas);
+  PP_DL.dernier = debut;
+  if(debut > maintenant) await new Promise(ok => setTimeout(ok, debut - maintenant));
+}
 async function ppImgGrande(c, annul, opt){
-  let cause = '';
+  let cause = '', code = 0;
   for(const u of ppImgVariantes(c.thumb, opt)){
     if(annul && annul.aborted) return '';
     try{
-      const img = await ppFetchRetry(u, 15000, annul, 2);
-      if(!img){ cause = 'serveur saturé'; continue; }
-      if(!img.ok){ cause = (img.status === 429 || img.status >= 500) ? 'serveur saturé' : 'image refusée'; continue; }
+      let img = null;
+      for(let n = 0; n < 3; n++){   /* v417 : saturé (429 / 5xx) : on patiente puis on réessaie, 3 fois au plus */
+        if(annul && annul.aborted) return '';
+        await ppImgAttendreTour(u);
+        img = await ppFetchDelai(u, 15000, annul);
+        if(img.ok){ PP_DL.pas = Math.max(600, Math.round(PP_DL.pas * 0.8)); break; }
+        if(![429, 500, 502, 503, 504].includes(img.status)) break;
+        code = img.status;
+        if(img.status === 429) PP_DL.pas = Math.min(4000, PP_DL.pas * 2);
+        if(n < 2) await new Promise(ok => setTimeout(ok, 1500 * Math.pow(2, n) + Math.random() * 400));
+      }
+      if(!img.ok){ code = img.status; cause = (img.status === 429 || img.status >= 500) ? 'serveur saturé (' + img.status + ')' : 'image refusée (' + img.status + ')'; continue; }
       const blob = await img.blob();
       if(blob.size > 8 * 1024 * 1024){ cause = 'image trop lourde'; continue; }
       const r = await ppImgReduire(blob, opt);
@@ -8785,7 +8803,7 @@ async function ppImgGrande(c, annul, opt){
       cause = 'image illisible';
     }catch(e){
       if(annul && annul.aborted) return '';
-      cause = (e && e.name === 'AbortError') ? 'trop lent' : (e instanceof TypeError ? 'réseau' : 'image illisible');
+      cause = (e && e.name === 'AbortError') ? 'trop lent' : (e instanceof TypeError ? 'réseau bloqué' : 'image illisible');
     }
   }
   c.echec = cause || 'inconnu';
@@ -8886,11 +8904,13 @@ async function ppImgTrouverLot(jobs, demande, opt){
       const u = await ppImgGrande(c, annul, opt);
       if(u){ urls[i] = u; return; }
     }
-  }, 3);   /* v415 : 3 téléchargements à la fois (4 avant) : Wikimedia répondait « trop de demandes » */
+  }, 2);   /* v415 : 3 téléchargements à la fois (4 avant) ; v417 : 2, et une file d'attente polie pour Wikimedia (ppImgAttendreTour) */
   await telecharger(jobs.map((_, i) => i));
   const web = lot.web || { essais: 0, cartes: 0, avecResultats: 0, etat: PP_WEB.etat };
+  const noter = i => { const c = lot.cands[i][lot.rang[i][0]]; if(!c) return; const lib = (c.web ? 'web' : 'Wikimedia') + ' ' + (c.echec || 'inconnu'); diag.causes[lib] = (diag.causes[lib] || 0) + 1; };   /* v417 : quoi a raté, et chez qui */
   /* v415 : une image choisie mais impossible à télécharger (Wikimedia saturé, trop lent…) passait pour « introuvable » SANS essayer la recherche web : on l'essaie maintenant */
   const rates = jobs.map((_, i) => (!urls[i] && lot.rang[i].length && !(lot.cands[i][0] && lot.cands[i][0].web)) ? i : -1).filter(i => i >= 0);
+  rates.forEach(noter);
   if(rates.length && lot.qs && !arret() && !ppWebIndispo()){
     await ppImgRecoursWeb(rates, jobs, lot.cartes, lot.qs, lot.sujets, lot.cands, lot.rang, lot.jug, demande, annul, web);
     await telecharger(rates.filter(i => lot.cands[i][0] && lot.cands[i][0].web));
@@ -8902,8 +8922,7 @@ async function ppImgTrouverLot(jobs, demande, opt){
     else if(!lot.rang[i].length) diag.ecart++;
     else{
       diag.dl++;
-      const c = lot.cands[i][lot.rang[i][0]], cause = (c && c.echec) || 'inconnu';
-      diag.causes[cause] = (diag.causes[cause] || 0) + 1;
+      if(lot.cands[i][0] && lot.cands[i][0].web) noter(i);   /* les échecs Wikimedia ont déjà été notés plus haut */
     }
   });
   return urls;
@@ -8928,7 +8947,7 @@ async function pcImagesApres(jobs, anciennes, signal, uLot){
   });
   if(ok){ try{ pcRefresh(); if(activeTab === 'browse') renderBrowse(); }catch(e){} envoyerVersSync(); }
   const dg = urls.diag;   /* v411 : on dit pourquoi, pour savoir quoi corriger */
-  const det = (dg && ratees) ? ' (' + [dg.sans ? dg.sans + ' sans résultat' : '', dg.ecart ? dg.ecart + ' écartée' + (dg.ecart > 1 ? 's' : '') + ' par l’IA : aucune image assez proche' : '', dg.dl ? dg.dl + ' non téléchargée' + (dg.dl > 1 ? 's' : '') + ' (' + Object.keys(dg.causes || {}).map(k => k + ' : ' + dg.causes[k]).join(', ') + ')' : '', (dg.web && dg.web.cartes) ? 'recherche web essayée pour ' + dg.web.cartes + ', résultats pour ' + dg.web.avecResultats : '', (dg.web && dg.web.etat === 'absente') ? 'recherche web non activée (clés Openverse absentes du Worker)' : (dg.web && dg.web.etat === 'refusee') ? 'recherche web refusée : clé ou quota' : (dg.web && dg.web.etat === 'sanscode') ? 'recherche web : code de synchro nécessaire' : ''].filter(Boolean).join(', ') + ')' : '';
+  const det = (dg && ratees) ? ' (' + [dg.sans ? dg.sans + ' sans résultat' : '', dg.ecart ? dg.ecart + ' écartée' + (dg.ecart > 1 ? 's' : '') + ' par l’IA : aucune image assez proche' : '', dg.dl ? dg.dl + ' non téléchargée' + (dg.dl > 1 ? 's' : '') : '', Object.keys(dg.causes || {}).length ? 'essais ratés : ' + Object.keys(dg.causes).map(k => k + ' ×' + dg.causes[k]).join(', ') : '', (dg.web && dg.web.cartes) ? 'recherche web essayée pour ' + dg.web.cartes + ', résultats pour ' + dg.web.avecResultats : '', (dg.web && dg.web.etat === 'absente') ? 'recherche web non activée (clés Openverse absentes du Worker)' : (dg.web && dg.web.etat === 'refusee') ? 'recherche web refusée : clé ou quota' : (dg.web && dg.web.etat === 'sanscode') ? 'recherche web : code de synchro nécessaire' : ''].filter(Boolean).join(', ') + ')' : '';
   const bilan = ok ? (ok + ' image' + (ok > 1 ? 's' : '') + ' ajoutée' + (ok > 1 ? 's' : '')) + (ratees ? ' · ' + ratees + ' introuvable' + (ratees > 1 ? 's' : '') + det : '') + (pleines ? ' · ' + pleines + ' non ajoutée' + (pleines > 1 ? 's' : '') + ' (stockage plein)' : '') : (pleines ? 'stockage plein : image non ajoutée' : 'aucune image trouvée' + det);
   pcLotTexte(uLot, PC_IMG_ATTENTE(jobs.length), bilan);   /* v409 : le résultat remplace « recherche en cours » dans la carte Appliqué (visible aussi en revenant sur Prof) */
   ppToast(bilan.charAt(0).toUpperCase() + bilan.slice(1));
@@ -13858,7 +13877,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v416';
+const PP_APP_VERSION = 'v417';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
