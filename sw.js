@@ -19,6 +19,10 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v219 : v415 (image retirée sur un appareil = retirée sur l'autre ; images de Prof : téléchargements plus solides + recherche web aussi quand un téléchargement échoue ; visionneuse sans texte d'aide ; image d'une fiche = visionneuse) : index.html change, donc nouvelle version du cache.
+
+   v218 : v414 (Prof : trois niveaux de réflexion low / medium / high choisis avec l'intention du routeur, routeur sauté pour salutations et quiz, garde-fou « réponse illisible ») : index.html change, donc nouvelle version du cache.
+
    v217 : v413 (recherche d'images sur le web = Openverse à la place de Brave, via le Worker) : index.html change, donc nouvelle version du cache.
 
    v216 : v412 (recherche d'image pour tous les sujets : article Wikipédia (fichiers non libres admis), recherche web en dernier recours) : index.html change, donc nouvelle version du cache.
@@ -183,7 +187,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v217';
+const SW_VERSION = 'v219';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

@@ -395,7 +395,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Permission de notification refusée.':'Notification permission denied.','Ça passe, le jour même du contrôle.':"It works, on the day of the test itself.",'La date de contrôle est déjà passée.':'The test date has already passed.',
     'Aucun jour de révision planifié à venir.':'No upcoming review days planned.','Colle un cours à Claude pour ajouter des cartes.':'Paste a course into Claude to add cards.','Tes précisions seront réutilisables en un tap.':'Your details will be reusable in one tap.',
     'Serveur indisponible, réessaie':'Server unavailable, try again','Réponse du serveur illisible, réessaie.':'Unreadable server response, try again.','Molette ou + / − pour zoomer · Échap pour fermer':'Wheel or + / − to zoom · Esc to close',
-    'Pince ou double toucher · glisse vers le bas pour fermer':'Pinch or double-tap · swipe down to close','Colle ton cours ou joins une photo de tes notes…':'Paste your course or attach a photo of your notes…',
+    'Colle ton cours ou joins une photo de tes notes…':'Paste your course or attach a photo of your notes…',
     'Un document modifiable, prêt à ouvrir dans Word.':'An editable document, ready to open in Word.','Reste ouvert pour enchaîner sur la carte suivante':'Stays open to move on to the next card',
     'Rien à réviser dans cette matière pour le moment.':'Nothing to review in this subject for now.','Trop répétitif : évite de répéter la même séquence.':'Too repetitive: avoid repeating the same sequence.',
     'Trop répétitif : utilise plus de caractères différents.':'Too repetitive: use more different characters.','Évite les suites de lettres ou de chiffres (abcde, 12345…).':'Avoid runs of letters or digits (abcde, 12345…).',
@@ -1635,7 +1635,7 @@ body{
 }
 :root:root:root[data-theme="light"] #vie-ambiance{ mix-blend-mode:multiply }
 :root:root:root[data-theme="light"] :where(.cc-toast,.pp-toast){ color:#f1f0fb }
-:root:root:root[data-theme="light"] :where(#pp-zoom .pz-x,#pp-zoom .pz-dl,#pp-zoom .pz-tip){ color:#f5f0e6 }
+:root:root:root[data-theme="light"] :where(#pp-zoom .pz-x,#pp-zoom .pz-dl){ color:#f5f0e6 }
 html{ background:var(--bg); }
 body{
     background:
@@ -1990,7 +1990,6 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 #pp-zoom .pz-x:active{transform:scale(.92)}
 #pp-zoom .pz-dl{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;border:1.5px solid var(--line);background:rgba(20,20,32,.88);color:var(--cream);font:inherit;font-size:15px;font-weight:800;opacity:0;transition:opacity .25s,transform .15s;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #pp-zoom .pz-dl:active{transform:translateX(-50%) scale(.95)}
-#pp-zoom .pz-tip{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);transform:translateX(-50%);max-width:92%;padding:8px 14px;border-radius:999px;background:rgba(20,20,32,.88);border:1.5px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:700;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none}
 .synth-fig{margin:12px 0;text-align:left}
 .synth-fig img{display:block;max-width:100%;max-height:340px;object-fit:contain;border-radius:26px;border:2px solid rgba(128,120,105,.28);box-shadow:0 8px 22px rgba(0,0,0,.22);cursor:zoom-in;background:#fff;-webkit-touch-callout:none}
 .synth-fig figcaption{font-size:.8rem;color:var(--muted);margin-top:6px;font-style:italic}
@@ -4897,6 +4896,15 @@ function ppImgEnregistrer(id, iq, ir){
   if(ci){ Object.assign(ci, patch); saveImportedCards(imp); ppOverlayRetirerImages(id); }
   else saveLocalOverlay(id, patch);
 }
+/* v415 : une image retirée VOLONTAIREMENT est notée sur la carte (imgQRetiree / imgRRetiree) et envoyée à la synchro : l'autre appareil la retire aussi.
+   Sans ça, la règle « une carte reçue sans image ne retire jamais l'image d'ici » (v308) gardait l'image sur l'autre appareil, et elle revenait même sur celui où on l'avait retirée.
+   avantQ / avantR = l'image qu'il y avait avant le changement (vide ou non). Le repère reste tant qu'aucune image n'est remise. */
+function ppImgNoterRetraits(k, avantQ, avantR){
+  if(!k) return;
+  const q = !k.imageQuestion && (!!avantQ || k.imgQRetiree === true), r = !k.imageReponse && (!!avantR || k.imgRRetiree === true);
+  k.imgQRetiree = q; k.imgRRetiree = r;
+  saveLocalOverlay(k.id, { imgQRetiree: q, imgRRetiree: r });
+}
 function ppOverlayRetirerImages(id){
   try{
     const ov = ppLireJSON('cartes-overlay', {}, ppEstObjet);
@@ -5230,9 +5238,8 @@ function ppZoomOuvrir(src, depuis){
   ov.id = 'pp-zoom';
   ov.innerHTML = '<div class="pz-bg"></div><div class="pz-stage"><img class="pz-img" alt="" draggable="false"></div>'
     + '<button type="button" class="pz-x" aria-label="Fermer"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
-    + '<button type="button" class="pz-dl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Télécharger</span></button>'
-    + '<div class="pz-tip">' + (fin ? 'Molette ou + / − pour zoomer · Échap pour fermer' : 'Pince ou double toucher · glisse vers le bas pour fermer') + '</div>';
-  const bg = ov.querySelector('.pz-bg'), im = ov.querySelector('.pz-img'), bx = ov.querySelector('.pz-x'), dl = ov.querySelector('.pz-dl'), tip = ov.querySelector('.pz-tip');
+    + '<button type="button" class="pz-dl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Télécharger</span></button>';
+  const bg = ov.querySelector('.pz-bg'), im = ov.querySelector('.pz-img'), bx = ov.querySelector('.pz-x'), dl = ov.querySelector('.pz-dl');
   const Z = ppZ = { s:1, tx:0, ty:0, ferme:false };
   const SMAX = 6;
   const pts = new Map();
@@ -5264,7 +5271,7 @@ function ppZoomOuvrir(src, depuis){
     const r = (depuis && depuis.isConnected) ? depuis.getBoundingClientRect() : null;
     const visible = !!r && r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
     bg.style.transition = 'opacity .28s ease'; bg.style.opacity = '0';
-    bx.style.opacity = '0'; dl.style.opacity = '0'; tip.style.opacity = '0';
+    bx.style.opacity = '0'; dl.style.opacity = '0';
     if(visible && !reduit && im.offsetWidth){
       const dx = r.left + r.width / 2 - cx(), dy = r.top + r.height / 2 - cy();
       im.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)';
@@ -5328,7 +5335,7 @@ function ppZoomOuvrir(src, depuis){
       Z.tx = dx * 0.35; Z.ty = dy;
       const p = Math.min(1, Math.abs(dy) / 320);
       bg.style.transition = 'none'; bg.style.opacity = String(1 - p * 0.85);
-      bx.style.opacity = String(1 - p); dl.style.opacity = String(1 - p); tip.style.opacity = '0';
+      bx.style.opacity = String(1 - p); dl.style.opacity = String(1 - p);
       im.style.transition = 'none';
       im.style.transform = 'translate(' + Z.tx + 'px,' + Z.ty + 'px) scale(' + (1 - p * 0.12) + ')';
     }
@@ -5412,12 +5419,11 @@ function ppZoomOuvrir(src, depuis){
     void im.offsetWidth;
     requestAnimationFrame(() => {
       if(Z.ferme) return;
-      bg.style.opacity = '1'; bx.style.opacity = '1'; dl.style.opacity = '1'; tip.style.opacity = '1';
+      bg.style.opacity = '1'; bx.style.opacity = '1'; dl.style.opacity = '1';
       im.style.opacity = '1';
       im.style.transition = 'transform .4s cubic-bezier(.2,.9,.25,1), opacity .25s ease';
       im.style.transform = 'translate(0px,0px) scale(1)';
     });
-    setTimeout(() => { tip.style.opacity = '0'; }, 3400);
   };
   (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(lance);
 }
@@ -5426,13 +5432,13 @@ function ppZoomOuvrir(src, depuis){
 document.addEventListener('click', e => {
   const t = e.target;
   if(ppZ || !t || !t.closest) return;
-  const im = t.closest('img.pp-qimg, img.pp-aimg, .synth-fig img');
+  const im = t.closest('img.pp-qimg, img.pp-aimg, img.pp-imgth, .synth-fig img');
   if(!im) return;
   e.stopPropagation(); e.preventDefault();
   ppZoomOuvrir(im.currentSrc || im.src, im);
 }, true);
 document.addEventListener('contextmenu', e => {
-  if(e.target && e.target.closest && e.target.closest('img.pp-qimg, img.pp-aimg, .synth-fig img')) e.preventDefault();
+  if(e.target && e.target.closest && e.target.closest('img.pp-qimg, img.pp-aimg, img.pp-imgth, .synth-fig img')) e.preventDefault();
 });
 
 let queue = [];
@@ -7920,9 +7926,9 @@ const PC_LEGER_ACTIF = true, PC_REFLEXION_LEGERE = 'low';
 const PC_ECHELLE_LEGERE = gmEchelle(PC_MODELES_PRINCIPAUX, PC_REFLEXION_LEGERE, PC_MODELE_SECOURS, PC_REFLEXION_LEGERE, true);
 const PC_ETAT_LEGER = { rates: new Set(), pauses: PC_ETAT.pauses };   /* pauses partagées (quota par modèle), crans refusés propres à « low » */
 function pcNormTxt(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
-const PC_RE_SALUT = /^(?:(?:salut|bonjour|bonsoir|coucou|hello|hey|hi|yo|slt|bjr)(?: prof)?)?(?: ?(?:comment (?:ca va|vas tu|tu vas|allez vous)|ca va(?: bien)?|tu vas bien|ca roule))?(?: et toi| et vous)?$/;
-const PC_RE_INTERRO = /\b(?:interrog(?:e|es|er|ez)|teste(?:r|s|z)? moi|me tester|questionne(?:r|s|z)? moi|me questionner|(?:pose|poses|poser|posez) moi (?:des |une |quelques |plusieurs |\d+ )?questions?|me poser (?:des |une |quelques |plusieurs |\d+ )?questions?|question d examen)\b/;
-const PC_VERBES_ACTION = 'cree|creer|creez|ajoute|ajouter|ajoutez|supprime|supprimer|efface|effacer|modifie|modifier|change|changer|renomme|renommer|archive|archiver|deplace|deplacer|fusionne|fusionner|corrige|corriger|traduis|traduire|echange|echanger|mets|mettre|lance|lancer|demarre|demarrer|ouvre|ouvrir|revise|reviser|resume|resumer|synthese|fiche|planning|plan|doublons?|verifie|verifier';
+const PC_RE_SALUT = /^(?:(?:salut|bonjour|bonsoir|coucou|hello|hey|hi|yo|slt|bjr|howdy|hiya|good (?:morning|afternoon|evening))(?: prof)?)?(?: ?(?:comment (?:ca va|vas tu|tu vas|allez vous)|ca va(?: bien)?|tu vas bien|ca roule|how are you(?: doing)?|how s it going|how is it going|what s up|sup))?(?: et toi| et vous| and you)?$/;
+const PC_RE_INTERRO = /\b(?:interrog(?:e|es|er|ez)|teste(?:r|s|z)? moi|me tester|questionne(?:r|s|z)? moi|me questionner|(?:pose|poses|poser|posez) moi (?:des |une |quelques |plusieurs |\d+ )?questions?|me poser (?:des |une |quelques |plusieurs |\d+ )?questions?|question d examen|quiz me|test me|question me|ask me (?:a |an |some |a few |several |\d+ )?questions?|exam question|test my knowledge)\b/;
+const PC_VERBES_ACTION = 'cree|creer|creez|ajoute|ajouter|ajoutez|supprime|supprimer|efface|effacer|modifie|modifier|change|changer|renomme|renommer|archive|archiver|deplace|deplacer|fusionne|fusionner|corrige|corriger|traduis|traduire|echange|echanger|mets|mettre|lance|lancer|demarre|demarrer|ouvre|ouvrir|revise|reviser|resume|resumer|synthese|fiche|planning|plan|doublons?|verifie|verifier|create|add|delete|remove|edit|modify|rename|move|merge|fix|correct|translate|swap|put|launch|start|open|review|summarize|summarise|summary|schedule|duplicates?|check|generate|make|write';
 const PC_RE_ACTION = new RegExp('\\b(?:' + PC_VERBES_ACTION + ')\\b');   /* verbe d'action n'importe où dans une demande d'interrogation */
 const PC_RE_ACTION_DEBUT = new RegExp('^(?:' + PC_VERBES_ACTION + ')\\b');   /* en série : seulement si le message COMMENCE par un verbe d'action (une réponse peut contenir « plan », « change »…) */
 function pcReflexionLegere(texte, photo, rappel, opts){
@@ -7938,6 +7944,38 @@ function pcReflexionLegere(texte, photo, rappel, opts){
   }catch(e){}
   return false;
 }
+/* v414 : TROIS NIVEAUX de réflexion pour Prof : « low » (salutations, interrogation, toute petite question de définition), « medium » (question d'explication simple) et « high » (tout le reste : créer,
+   modifier, supprimer, planning, photo ou document, lot de cartes, message long, doute). « medium » : (1) le routeur de matière (qui tourne déjà, aucun appel de plus) a compris une LECTURE avec une
+   certitude HAUTE ; (2) ou bien le routeur n'a pas servi (une seule matière, source « pastille ») et le message est une question courte sans verbe d'action. Routeur en échec ou incertain = « high », comme
+   avant. Message de plus de PC_MOYEN_MAX_CAR caractères, photo, note de l'appli, lot, verbe d'action n'importe où = « high ». Si Google refuse « medium » (erreur 400 / 404), l'échelle essaie « low »
+   puis sans réglage, et s'en souvient jusqu'au rechargement. Garde-fou : une réponse illisible en « low » / « medium » est redemandée UNE fois en « high » (pcEnvoyer) ; les nouveaux essais « bouton promis sans
+   action » étaient déjà en « high » (forcer). Pour tout couper : PC_MOYEN_ACTIF = false (le niveau « low » de la v387 reste régi par PC_LEGER_ACTIF). */
+const PC_MOYEN_ACTIF = true, PC_REFLEXION_MOYENNE = 'medium', PC_MOYEN_MAX_CAR = 300, PC_COURTE_MAX_CAR = 50;
+const PC_ECHELLE_MOYENNE = (() => {
+  const e = [];
+  PC_MODELES_PRINCIPAUX.forEach(m => { e.push({ m, t: PC_REFLEXION_MOYENNE, s: true }); e.push({ m, t: PC_REFLEXION_LEGERE, s: true }); e.push({ m, t: '', s: true }); });
+  e.push({ m: PC_MODELE_SECOURS, t: PC_REFLEXION_MOYENNE, s: true }); e.push({ m: PC_MODELE_SECOURS, t: PC_REFLEXION_LEGERE, s: true }); e.push({ m: PC_MODELE_SECOURS, t: '', s: true }); e.push({ m: PC_MODELE_SECOURS, t: '', s: false });
+  return e;
+})();
+const PC_ETAT_MOYEN = { rates: new Set(), pauses: PC_ETAT.pauses };   /* pauses de quota partagées, crans refusés propres à « medium » */
+const PC_RE_QUESTION = /^(?:(?:peux tu|tu peux|pourrais tu|pouvez vous|s il te plait|stp|please|can you|could you) )*(?:c est quoi|qu est ce (?:que|qu)|quel|quelle|quels|quelles|quoi|comment|pourquoi|explique|expliques|expliquer|expliquez|difference|definition|que signifie|ca veut dire|qui est|qui etait|quand|combien|parle moi de|what|why|how|explain|define|who|when|where|which|meaning|tell me about)\b/;
+const PC_RE_COURTE = /^(?:c est quoi|qu est ce que c est|what is|what s|definition de|define)\b/;
+function pcNiveau(texte, photo, rappel, opts){
+  try{
+    const o = opts || {};
+    if(o.haut || o.forcer || o.actionsFirst || photo || rappel) return 'high';
+    if(pcReflexionLegere(texte, photo, rappel, opts)) return 'low';
+    if(!PC_MOYEN_ACTIF) return 'high';
+    const n = pcNormTxt(texte);
+    if(!n || n.length > PC_MOYEN_MAX_CAR || PC_RE_ACTION.test(n)) return 'high';
+    let lecture = false;
+    if(o.intention) lecture = (o.intention === 'lecture' && o.certitude === 'haute');
+    else if(o.source === 'pastille') lecture = PC_RE_QUESTION.test(n) || /\?\s*$/.test(String(texte || ''));
+    if(!lecture) return 'high';
+    return (n.length <= PC_COURTE_MAX_CAR && PC_RE_COURTE.test(n)) ? 'low' : 'medium';
+  }catch(e){}
+  return 'high';
+}
 async function pcAppelGemini(key, systeme, contents, opts){
   const o = opts || {};
   const appel = (e, ms) => {
@@ -7950,7 +7988,8 @@ async function pcAppelGemini(key, systeme, contents, opts){
       annul: o.annul, timeoutMs: ms   /* v378 ; v381 : délai par cran */
     });
   };
-  if(o.leger) return gmAppelEchelle(PC_ECHELLE_LEGERE, PC_ETAT_LEGER, PC_MODELE_SECOURS, appel);   /* v387 : échanges simples en « low » */
+  if(o.niveau === 'medium') return gmAppelEchelle(PC_ECHELLE_MOYENNE, PC_ETAT_MOYEN, PC_MODELE_SECOURS, appel);   /* v414 */
+  if(o.leger || o.niveau === 'low') return gmAppelEchelle(PC_ECHELLE_LEGERE, PC_ETAT_LEGER, PC_MODELE_SECOURS, appel);   /* v387 : échanges simples en « low » */
   return gmAppelEchelle(PC_ECHELLE, PC_ETAT, PC_MODELE_SECOURS, appel);   /* v376 : échelle partagée */
 }
 /* >>> Point d'entrée de l'assistant. Renvoie une promesse { texte, hors, actions, info } ou lève { pcMsg } (message prêt à afficher). */
@@ -7967,12 +8006,13 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){  
   if(hist.length && hist[hist.length - 1].role === 'user'){ const dn = hist.pop(); parts[0].text = dn.parts[0].text + '\n' + parts[0].text; }   /* v241 : une note en fin d'historique se joint au message envoyé (pas deux tours « user » de suite) */
   if(rappel) parts[0].text += '\n\n' + rappel;
   const contents = hist.concat([{ role: 'user', parts }]);
-  let response;
+  let response, niveau = 'high';
   try{
     const sysTxt = pcSysteme(matiere, cartes);
-    const leger = pcReflexionLegere(texte, photo, rappel, opts);   /* v387 : « low » pour salutations et interrogation, « high » pour le reste */
-    pcMesureNote(sysTxt, cartes, lstM, leger);   /* v351 : tailles réelles de ce qui part à Gemini */
-    response = await pcAppelGemini(key, sysTxt, contents, leger ? Object.assign({}, opts || {}, { leger: true }) : opts);   /* v320 */
+    niveau = pcNiveau(texte, photo, rappel, opts);   /* v414 : low / medium / high */
+    const leger = niveau === 'low';   /* v387 : « low » pour salutations et interrogation, « high » pour le reste */
+    pcMesureNote(sysTxt, cartes, lstM, niveau);   /* v351 : tailles réelles de ce qui part à Gemini */
+    response = await pcAppelGemini(key, sysTxt, contents, niveau === 'high' ? opts : Object.assign({}, opts || {}, { niveau }));   /* v320 */
   }catch(err){ if(gmErrAnnule(err)) throw { pcAnnule: true }; throw { pcMsg: messageErreurReseau(err, true) }; }   /* v378 : annulé = pas de message */
   if(!response.ok) throw { pcMsg: messageErreurGemini(response.status, true) };
   let data; try{ data = await response.json(); }catch(e){ throw { pcMsg: 'Réponse du serveur illisible, réessaie.' }; }
@@ -7983,6 +8023,7 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){  
     throw { pcMsg: (motif && motif !== 'STOP') ? "L'IA a bloqué ou refusé cette demande (contenu filtré). Reformule un peu et réessaie." : "L'IA n'a rien renvoyé, réessaie." };
   }
   const r = pcParse(pr.map(p => p.text || '').join(''), uneM);   /* v351 : matière par défaut des « creer » = seulement s'il n'y en a qu'une */
+  r.niveau = niveau;   /* v414 : pour le garde-fou « illisible » (pcEnvoyer) */
   r.info = cartes.envoyees < cartes.total ? `${cartes.envoyees} cartes sur ${cartes.total} envoyées` : '';
   return r;
 }
@@ -7993,12 +8034,13 @@ async function ppCoachRepondre(texte, matiere, photo, rappel, citation, opts){  
    - Routage : décidé UNE fois par envoi dans pcEnvoyer (pcRoutageDecide) et jamais écrit dans pcMat / pcDerniere (sinon la règle v214 « changer de matière = nouvelle conversation » couperait la conversation).
    - pcRouteur() est séparé de pcAppelGemini : état propre, délai court, aucun nouvel essai ; échec, délai ou 429 = repli local (pcRouteLocal), jamais de blocage. */
 const PC_ROUTEUR_ACTIF = true, PC_ROUTEUR_MODELE = 'gemini-3.1-flash-lite', PC_ROUTEUR_DELAI_MS = 6000, PC_ROUTEUR_PAUSE_MS = 300000;   /* v385 : le routeur (1 appel de plus à chaque message de Prof) passe sur 3.1 Flash-Lite pour ne pas manger le quota de 3.5 Flash-Lite, qui sert à Prof ; sans réglage de réflexion (délai de 6 s) */
-let pcRouteurPause = 0, pcFichesCache = null, pcDernieresMats = [];
+let pcRouteurPause = 0, pcFichesCache = null, pcDernieresMats = [], pcDernierRoutage;   /* v414 : pcDernierRoutage = matières du dernier routage (null = Toutes ; undefined = aucun) */
+const PC_ROUTEUR_SAUT_ACTIF = true;   /* v414 : false = le routeur tourne à chaque message, comme avant */
 let pcForce = null, pcAff = null, pcAffAuto = null;   /* v352 : pcForce = matière imposée par un appui sur une pastille, pour LE message suivant seulement ; pcAff = ce qui est surligné (ce que Prof a compris) */
 function pcMesuresLire(){ try{ const j = JSON.parse(localStorage.getItem('coach-mesure') || '[]'); return Array.isArray(j) ? j : []; }catch(e){ return []; } }
-function pcMesureNote(sysTxt, cartes, lstM, leger){
+function pcMesureNote(sysTxt, cartes, lstM, niveau){
   try{
-    const e = { quand: new Date().toISOString(), matieres: lstM && lstM.length ? lstM.join(' + ') : 'Toutes', caracteres_consigne: String(sysTxt).length, caracteres_cartes: cartes.lignes.join('\n').length, cartes_envoyees: cartes.envoyees, cartes_total: cartes.total, reflexion: leger ? PC_REFLEXION_LEGERE : PC_REFLEXION };   /* v387 : niveau voulu (low / high) */
+    const e = { quand: new Date().toISOString(), matieres: lstM && lstM.length ? lstM.join(' + ') : 'Toutes', caracteres_consigne: String(sysTxt).length, caracteres_cartes: cartes.lignes.join('\n').length, cartes_envoyees: cartes.envoyees, cartes_total: cartes.total, reflexion: niveau === 'low' ? PC_REFLEXION_LEGERE : (niveau === 'medium' ? PC_REFLEXION_MOYENNE : PC_REFLEXION) };   /* v387 : niveau voulu (low / high) */
     const j = pcMesuresLire(); j.push(e); localStorage.setItem('coach-mesure', JSON.stringify(j.slice(-8)));
   }catch(err){}
 }
@@ -8048,12 +8090,30 @@ async function pcRouteur(texte, opts){
   }catch(e){ return null; }
   finally{ clearTimeout(minuteur); }
 }
+/* v414 : le routeur ne sert à rien pour une salutation seule, ni pour la réponse à une question de quiz en cours (même sujet que le message précédent) : on évite un appel en série (jusqu'à 6 s). Il tourne quand même
+   si le message mentionne une autre matière, demande une interrogation ou une action, vient avec un document ou cite un message. Salutation = aucune carte utile : dernière matière si la conversation est en cours, sinon réglage de la pastille. */
+function pcRouteurInutile(texte, opts){
+  try{
+    const o = opts || {};
+    if(!PC_ROUTEUR_SAUT_ACTIF || pcPhoto || o.rep || o.auto) return null;
+    const n = pcNormTxt(texte); if(!n) return null;
+    const enCours = pcConv.length > 1 && pcDernierRoutage !== undefined;
+    if(n.length <= 40 && PC_RE_SALUT.test(n)) return { mats: enCours ? pcDernierRoutage : undefined };
+    if(pcMode === 'quiz' && enCours && !PC_RE_INTERRO.test(n) && !PC_RE_ACTION_DEBUT.test(n.replace(/^(?:(?:peux tu|tu peux|pourrais tu|pouvez vous|s il te plait|stp|please) )+/, ''))){
+      const garde = pcDernierRoutage || [];
+      const autre = getMatieres().some(m => !garde.includes(m) && (k => k.length >= 3 && (' ' + n + ' ').includes(' ' + k + ' '))(pcNormTxt(m)));
+      if(!autre) return { mats: pcDernierRoutage };
+    }
+  }catch(e){}
+  return null;
+}
 /* >>> Renvoie { mats: [noms] | null (« Toutes »), source } ou { demander: true, choix: [noms] } (question de matière, SANS appel du gros modèle). Routeur désactivé : exactement la matière de la pastille, comme avant. */
 async function pcRoutageDecide(texte, matierePastille, opts){
   const base = { mats: matierePastille ? [matierePastille] : null, source: 'pastille' };
   if(!PC_ROUTEUR_ACTIF) return base;
   const fin = res => {
     if(res.mats && res.mats.length) pcDernieresMats = [...new Set([...res.mats, ...pcDernieresMats])].slice(0, 2);
+    pcDernierRoutage = (res.mats && res.mats.length) ? res.mats.slice() : null;   /* v414 */
     pcAffAuto = (res.mats && res.mats.length) ? res.mats.slice() : [PC_TOUTES];
     if(res.source !== 'manuel') pcAff = pcAffAuto;   /* la pastille montre ce que Prof a compris */
     else pcAff = [];   /* v366 : la correction a servi pour CE message : plus rien n'est « choisi » (le message suivant est de nouveau compris tout seul) */
@@ -8065,10 +8125,12 @@ async function pcRoutageDecide(texte, matierePastille, opts){
   if(pcForce){ const f = pcForce; pcForce = null; if(f.doux){ if(f.mats && f.mats.length) base.mats = f.mats.slice(); } else return fin({ mats: f.mats, source: 'manuel' }); }   /* correction par pastille ou « Discuter de… » : routeur sauté */
   const mats = getMatieres();
   if(mats.length < 2 || !getGeminiKey() || /doublon/i.test(String(texte || ''))) return fin(base);
+  const saut = pcRouteurInutile(texte, opts);   /* v414 */
+  if(saut) return fin({ mats: saut.mats === undefined ? base.mats : saut.mats, source: 'reutilise' });
   const pj = pcPhoto ? pcPjType(pcPhoto) : '';
   const rt = await pcRouteur(texte, { pj });
   const derniers = pcDernieresMats.filter(m => mats.includes(m));
-  if(rt && rt.toutes) return fin({ mats: null, source: 'routeur' });
+  if(rt && rt.toutes) return fin({ mats: null, source: 'routeur', intention: rt.intention, certitude: rt.certitude });
   if(rt && rt.mats.length){
     const action = ['creation', 'modification', 'suppression', 'planning'].includes(rt.intention);
     if(action && (rt.certitude === 'basse' || (rt.certitude === 'moyenne' && rt.intention === 'suppression') || (pj && rt.intention === 'creation' && rt.certitude !== 'haute'))){
@@ -8076,7 +8138,7 @@ async function pcRoutageDecide(texte, matierePastille, opts){
       return { demander: true, choix: cand.length ? cand : mats.slice(0, 4), source: 'question' };
     }
     if(!action && rt.certitude !== 'haute') return fin({ mats: [...new Set([...rt.mats, ...derniers, ...(rt.certitude === 'basse' ? (pcRouteLocal(texte) || []) : [])])], source: 'routeur' });
-    return fin({ mats: rt.mats, source: 'routeur' });
+    return fin({ mats: rt.mats, source: 'routeur', intention: rt.intention, certitude: rt.certitude });
   }
   return fin({ mats: pcRouteLocal(texte) || base.mats, source: 'local' });   /* échec, délai ou 429 : repli local, jamais de blocage */
 }
@@ -8145,7 +8207,10 @@ async function pcEnvoyer(t, label, auto){
     if(routage.demander) throw { pcDemande: routage.choix };   /* v352 : action ambiguë ou lourde : on demande la matière, le gros modèle n'est PAS appelé */
     if(!auto) pcRoutageLot = routage;
     const matCartes = routage.mats;
-    let r = await ppCoachRepondre(t, matCartes, photo, noteLot, rep, { actionsFirst: !!auto, annul: ctlProf.signal }), essaisFaits = 0;
+    let r = await ppCoachRepondre(t, matCartes, photo, noteLot, rep, { actionsFirst: !!auto, annul: ctlProf.signal, intention: routage.intention, certitude: routage.certitude, source: routage.source }), essaisFaits = 0;
+    if(r && r.illisible && r.niveau && r.niveau !== 'high'){   /* v414 : réponse illisible en « low » / « medium » : UNE nouvelle tentative en « high » */
+      try{ const rh = await ppCoachRepondre(t, matCartes, photo, noteLot, rep, { actionsFirst: !!auto, annul: ctlProf.signal, haut: true }); if(rh) r = rh; }catch(e){ if(e && e.pcAnnule) throw e; }
+    }
     for(let essai = 0; essai < 2 && r.sansBouton; essai++){ essaisFaits++;   /* v298 : Prof annonce « Appliquer » mais aucune action valide : nouveaux essais automatiques (v310 : jusqu'à 2), sans rien afficher */
       try{
         const avant = String(r.texte || '').replace(/\\s+/g, ' ').slice(0, 300);   /* v320 : l'IA revoit ce qu'elle avait écrit, et la sortie est cette fois contrainte (actions d'abord, au moins une) */
@@ -8694,19 +8759,69 @@ async function ppImgChoisirVisuel(jobs, cartes, cands, demande, annul){
   }, 3);
   return res;
 }
-/* v408 : télécharge l'image finale d'un candidat (720 px, réduite comme une photo). '' si impossible. */
+/* v415 : adresses à essayer pour télécharger l'image finale d'un candidat Wikimedia. Wikimedia sature (429) ou met très longtemps à dessiner
+   une taille « inhabituelle » (surtout les cartes en SVG) : en lot (images allégées à 520 px) on demande d'abord la taille standard de 500 px, puis l'adresse d'origine ;
+   hors lot, l'inverse. Les autres adresses (Openverse, par le Worker) n'ont qu'une seule version. */
+function ppImgVariantes(u, opt){
+  const m = /^(https:\/\/upload\.wikimedia\.org\/.+\/thumb\/.+\/)(\d+)px-([^\/]+)$/.exec(u || '');
+  if(!m || !(parseInt(m[2], 10) > 500)) return [u];
+  const v500 = m[1] + '500px-' + m[3];
+  return (opt && opt.cote && opt.cote <= 600) ? [v500, u] : [u, v500];
+}
+/* v408 : télécharge l'image finale d'un candidat (720 px, réduite comme une photo). '' si impossible.
+   v415 : plusieurs adresses, délai plus large, et la cause de l'échec est gardée dans c.echec (affichée dans le bilan). */
 async function ppImgGrande(c, annul, opt){
-  try{
-    const img = await ppFetchRetry(c.thumb, 12000, annul, 2);
-    if(!img || !img.ok) return '';
-    const blob = await img.blob();
-    if(blob.size > 8 * 1024 * 1024) return '';
-    return await ppImgReduire(blob, opt);
-  }catch(e){ return ''; }
+  let cause = '';
+  for(const u of ppImgVariantes(c.thumb, opt)){
+    if(annul && annul.aborted) return '';
+    try{
+      const img = await ppFetchRetry(u, 15000, annul, 2);
+      if(!img){ cause = 'serveur saturé'; continue; }
+      if(!img.ok){ cause = (img.status === 429 || img.status >= 500) ? 'serveur saturé' : 'image refusée'; continue; }
+      const blob = await img.blob();
+      if(blob.size > 8 * 1024 * 1024){ cause = 'image trop lourde'; continue; }
+      const r = await ppImgReduire(blob, opt);
+      if(r) return r;
+      cause = 'image illisible';
+    }catch(e){
+      if(annul && annul.aborted) return '';
+      cause = (e && e.name === 'AbortError') ? 'trop lent' : (e instanceof TypeError ? 'réseau' : 'image illisible');
+    }
+  }
+  c.echec = cause || 'inconnu';
+  return '';
 }
 /* v408 : tout le travail de recherche, sans télécharger l'image finale : requêtes + sujet (1 appel) ; candidats Commons + image principale des articles Wikipédia ; miniatures ; choix en regardant les miniatures (1 appel).
    Renvoie { cands, rang, jug } : rang[i] = numéros de candidats, du meilleur au moins bon ; jug[i] = vrai si l'IA a jugé (sinon : ordre brut de Wikimedia, sans garantie).
    jobs[i] = { terme, cote, id? (carte existante) | carte? } ; opt.annul = signal d'arrêt. */
+/* v415 : recours à la recherche web (Openverse) pour les demandes dont AUCUNE image de Wikimedia n'a pu être choisie ou téléchargée.
+   Modifie cands / rang / jug en place pour les numéros de `idx` ; web = { essais, cartes, avecResultats, etat } sert au bilan. */
+async function ppImgRecoursWeb(idx, jobs, cartes, qs, sujets, cands, rang, jug, demande, annul, web){
+  if(!idx.length || ppWebIndispo() || (annul && annul.aborted)) return;
+  const listes = [];
+  for(const i of idx){
+    if(ppWebIndispo() || (annul && annul.aborted)) break;
+    const terme = String(jobs[i].terme || '');
+    const carte = PP_IMG_RE_DEMANDE_CARTE.test(terme + ' ' + qs[i].join(' '));
+    const sujet = (sujets && sujets[i]) || ppImgSujetDepuisTerme(terme);
+    const requetes = [...new Set([...qs[i].slice(0, 2), sujet ? sujet + (carte ? ' map' : '') : ''].filter(Boolean))];   /* v415 : + une requête courte (Openverse cherche des mots, pas des titres Commons) */
+    let l = [];
+    web.cartes++;
+    for(const q of requetes){
+      web.essais++;
+      try{ l = await ppImgCandidatsWeb(q, annul); }catch(e){ break; }
+      if(l.length >= 3 || ppWebIndispo()) break;
+    }
+    listes.push({ i, l: l.slice(0, 6) });
+  }
+  const utiles = listes.filter(x => x.l.length);
+  web.avecResultats += utiles.length;
+  if(utiles.length && !(annul && annul.aborted)){
+    try{ await ppImgMiniaturesWeb(utiles.flatMap(x => x.l), annul); }catch(e){}
+    const sous = await ppImgChoisirVisuel(utiles.map(x => jobs[x.i]), utiles.map(x => cartes[x.i]), utiles.map(x => x.l), demande, annul);
+    utiles.forEach((x, n) => { cands[x.i] = x.l; rang[x.i] = sous[n] === null ? x.l.map((_, k) => k) : sous[n]; jug[x.i] = sous[n] !== null; });
+  }
+}
 async function ppImgPreparerLot(jobs, demande, opt){
   const annul = opt && opt.annul;
   const cartes = jobs.map(j => j.carte || (j.id ? (CARDS.find(k => k.id === j.id) || null) : null));
@@ -8737,55 +8852,60 @@ async function ppImgPreparerLot(jobs, demande, opt){
     cands[i] = base;
   });
   if(annul && annul.aborted) return { cands, rang: cands.map(() => []), jug: cands.map(() => false) };
-  if(cands.every(l => !l.length)) return { cands, rang: cands.map(() => []), jug: cands.map(() => true) };
-  try{ await ppImgMiniatures(cands.flat(), annul); }catch(e){}
-  let rang = await ppImgChoisirVisuel(jobs, cartes, cands, demande, annul);
-  const non = rang.map((r, i) => r === null ? i : -1).filter(i => i >= 0);
-  if(non.length && !(annul && annul.aborted)){   /* secours : choix sur les titres seulement, pour les demandes que le tri visuel n'a pas jugées */
-    const choix = await ppImgChoisirCandidat(non.map(i => jobs[i]), non.map(i => cartes[i]), non.map(i => cands[i]), demande, annul);
-    if(choix) non.forEach((i, n) => { const k = choix[n]; rang[i] = (k >= 0 && cands[i][k]) ? [k] : []; });
+  let rang, jug;
+  if(cands.every(l => !l.length)){   /* v415 : rien sur Wikimedia pour toutes les demandes : on ne s'arrête plus là, la recherche web reste à tenter */
+    rang = cands.map(() => []); jug = cands.map(() => true);
+  } else {
+    try{ await ppImgMiniatures(cands.flat(), annul); }catch(e){}
+    rang = await ppImgChoisirVisuel(jobs, cartes, cands, demande, annul);
+    const non = rang.map((r, i) => r === null ? i : -1).filter(i => i >= 0);
+    if(non.length && !(annul && annul.aborted)){   /* secours : choix sur les titres seulement, pour les demandes que le tri visuel n'a pas jugées */
+      const choix = await ppImgChoisirCandidat(non.map(i => jobs[i]), non.map(i => cartes[i]), non.map(i => cands[i]), demande, annul);
+      if(choix) non.forEach((i, n) => { const k = choix[n]; rang[i] = (k >= 0 && cands[i][k]) ? [k] : []; });
+    }
+    jug = rang.map(r => r !== null);   /* sinon (IA muette : quota, réseau) : ordre brut de Wikimedia */
+    rang = rang.map((r, i) => r === null ? cands[i].map((_, k) => k) : r);
   }
-  const jug = rang.map(r => r !== null);   /* sinon (IA muette : quota, réseau) : ordre brut de Wikimedia */
-  rang = rang.map((r, i) => r === null ? cands[i].map((_, k) => k) : r);
   /* v412 : dernier recours pour les demandes sans image acceptable : recherche web (Openverse, par le Worker), puis nouveau tri visuel sur ces seules demandes */
-  const web = { essais: 0, etat: PP_WEB.etat };
+  const web = { essais: 0, cartes: 0, avecResultats: 0, etat: PP_WEB.etat };
   const manque = rang.map((r, i) => r.length ? -1 : i).filter(i => i >= 0);
-  if(manque.length && !ppWebIndispo() && !(annul && annul.aborted)){
-    const listes = [];
-    for(const i of manque){
-      if(ppWebIndispo() || (annul && annul.aborted)) break;
-      let l = [];
-      for(const q of qs[i].slice(0, 2)){
-        web.essais++;
-        try{ l = await ppImgCandidatsWeb(q, annul); }catch(e){ break; }
-        if(l.length >= 3 || ppWebIndispo()) break;
-      }
-      listes.push({ i, l: l.slice(0, 6) });
-    }
-    const utiles = listes.filter(x => x.l.length);
-    if(utiles.length && !(annul && annul.aborted)){
-      try{ await ppImgMiniaturesWeb(utiles.flatMap(x => x.l), annul); }catch(e){}
-      const sous = await ppImgChoisirVisuel(utiles.map(x => jobs[x.i]), utiles.map(x => cartes[x.i]), utiles.map(x => x.l), demande, annul);
-      utiles.forEach((x, n) => { cands[x.i] = x.l; rang[x.i] = sous[n] === null ? x.l.map((_, k) => k) : sous[n]; jug[x.i] = sous[n] !== null; });
-    }
-  }
+  await ppImgRecoursWeb(manque, jobs, cartes, qs, sujets, cands, rang, jug, demande, annul, web);
   web.etat = PP_WEB.etat;
-  return { cands, rang, jug, web };
+  return { cands, rang, jug, web, qs, sujets, cartes };
 }
 async function ppImgTrouverLot(jobs, demande, opt){
   const urls = new Array(jobs.length).fill('');
-  const diag = { sans: 0, ecart: 0, dl: 0 }; urls.diag = diag;   /* v411 : pourquoi une image manque (affiché dans le bilan) */
+  const diag = { sans: 0, ecart: 0, dl: 0, causes: {} }; urls.diag = diag;   /* v411 : pourquoi une image manque (affiché dans le bilan) */
   const lot = await ppImgPreparerLot(jobs, demande, opt);
-  await ppImgPool(jobs.length, async i => {
+  const annul = opt && opt.annul, arret = () => !!(annul && annul.aborted);
+  const telecharger = idx => ppImgPool(idx.length, async n => {
+    const i = idx[n];
     for(const k of lot.rang[i].slice(0, 3)){   /* v410 : si le meilleur ne se télécharge pas, on prend le suivant du classement (3 au plus) */
-      if(opt && opt.annul && opt.annul.aborted) return;
+      if(arret()) return;
       const c = lot.cands[i][k]; if(!c) continue;
-      const u = await ppImgGrande(c, opt && opt.annul, opt);
+      const u = await ppImgGrande(c, annul, opt);
       if(u){ urls[i] = u; return; }
     }
+  }, 3);   /* v415 : 3 téléchargements à la fois (4 avant) : Wikimedia répondait « trop de demandes » */
+  await telecharger(jobs.map((_, i) => i));
+  const web = lot.web || { essais: 0, cartes: 0, avecResultats: 0, etat: PP_WEB.etat };
+  /* v415 : une image choisie mais impossible à télécharger (Wikimedia saturé, trop lent…) passait pour « introuvable » SANS essayer la recherche web : on l'essaie maintenant */
+  const rates = jobs.map((_, i) => (!urls[i] && lot.rang[i].length && !(lot.cands[i][0] && lot.cands[i][0].web)) ? i : -1).filter(i => i >= 0);
+  if(rates.length && lot.qs && !arret() && !ppWebIndispo()){
+    await ppImgRecoursWeb(rates, jobs, lot.cartes, lot.qs, lot.sujets, lot.cands, lot.rang, lot.jug, demande, annul, web);
+    await telecharger(rates.filter(i => lot.cands[i][0] && lot.cands[i][0].web));
+  }
+  web.etat = PP_WEB.etat; diag.web = web;
+  jobs.forEach((j, i) => {
+    if(urls[i]) return;
+    if(!lot.cands[i].length) diag.sans++;
+    else if(!lot.rang[i].length) diag.ecart++;
+    else{
+      diag.dl++;
+      const c = lot.cands[i][lot.rang[i][0]], cause = (c && c.echec) || 'inconnu';
+      diag.causes[cause] = (diag.causes[cause] || 0) + 1;
+    }
   });
-  diag.web = lot.web || null;
-  jobs.forEach((j, i) => { if(urls[i]) return; if(!lot.cands[i].length) diag.sans++; else if(!lot.rang[i].length) diag.ecart++; else diag.dl++; });
   return urls;
 }
 /* v263 : cherche sur Wikimedia les images demandées (cartes créées ou existantes) et les pose ; mémorise l'état d'avant pour « Annuler ». */
@@ -8808,7 +8928,7 @@ async function pcImagesApres(jobs, anciennes, signal, uLot){
   });
   if(ok){ try{ pcRefresh(); if(activeTab === 'browse') renderBrowse(); }catch(e){} envoyerVersSync(); }
   const dg = urls.diag;   /* v411 : on dit pourquoi, pour savoir quoi corriger */
-  const det = (dg && ratees) ? ' (' + [dg.sans ? dg.sans + ' sans résultat sur Wikimedia' : '', dg.ecart ? dg.ecart + ' écartée' + (dg.ecart > 1 ? 's' : '') + ' par l’IA : aucune image assez proche' : '', dg.dl ? dg.dl + ' non téléchargée' + (dg.dl > 1 ? 's' : '') : '', (dg.web && dg.web.etat === 'absente') ? 'recherche web non activée (clés Openverse absentes du Worker)' : (dg.web && dg.web.etat === 'refusee') ? 'recherche web refusée : clé ou quota' : (dg.web && dg.web.etat === 'sanscode') ? 'recherche web : code de synchro nécessaire' : ''].filter(Boolean).join(', ') + ')' : '';
+  const det = (dg && ratees) ? ' (' + [dg.sans ? dg.sans + ' sans résultat' : '', dg.ecart ? dg.ecart + ' écartée' + (dg.ecart > 1 ? 's' : '') + ' par l’IA : aucune image assez proche' : '', dg.dl ? dg.dl + ' non téléchargée' + (dg.dl > 1 ? 's' : '') + ' (' + Object.keys(dg.causes || {}).map(k => k + ' : ' + dg.causes[k]).join(', ') + ')' : '', (dg.web && dg.web.cartes) ? 'recherche web essayée pour ' + dg.web.cartes + ', résultats pour ' + dg.web.avecResultats : '', (dg.web && dg.web.etat === 'absente') ? 'recherche web non activée (clés Openverse absentes du Worker)' : (dg.web && dg.web.etat === 'refusee') ? 'recherche web refusée : clé ou quota' : (dg.web && dg.web.etat === 'sanscode') ? 'recherche web : code de synchro nécessaire' : ''].filter(Boolean).join(', ') + ')' : '';
   const bilan = ok ? (ok + ' image' + (ok > 1 ? 's' : '') + ' ajoutée' + (ok > 1 ? 's' : '')) + (ratees ? ' · ' + ratees + ' introuvable' + (ratees > 1 ? 's' : '') + det : '') + (pleines ? ' · ' + pleines + ' non ajoutée' + (pleines > 1 ? 's' : '') + ' (stockage plein)' : '') : (pleines ? 'stockage plein : image non ajoutée' : 'aucune image trouvée' + det);
   pcLotTexte(uLot, PC_IMG_ATTENTE(jobs.length), bilan);   /* v409 : le résultat remplace « recherche en cours » dans la carte Appliqué (visible aussi en revenant sur Prof) */
   ppToast(bilan.charAt(0).toUpperCase() + bilan.slice(1));
@@ -8881,13 +9001,15 @@ function pcAppliquer(choix, box, toutes){
       if(!csI.length){ ignorees++; continue; }
       const avantI = csI.map(k => ({ id: k.id, iq: k.imageQuestion || '', ir: k.imageReponse || '' }));
       for(const k of csI){
+        const avQ = k.imageQuestion, avR = k.imageReponse;
         if(a.cote !== 'reponse' && String(k.question || '').trim()) k.imageQuestion = null;
         if(a.cote !== 'question' && String(k.reponse || '').trim()) k.imageReponse = null;
         k.derniereModification = maintenant();
         ppImgEnregistrer(k.id, k.imageQuestion || '', k.imageReponse || '');
         saveLocalOverlay(k.id, { derniereModification: k.derniereModification });
+        ppImgNoterRetraits(k, avQ, avR);   /* v415 */
       }
-      lot.defaire.push(() => { for(const o of avantI){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; k.imageQuestion = o.iq || null; k.imageReponse = o.ir || null; k.derniereModification = new Date().toISOString(); ppImgEnregistrer(o.id, o.iq, o.ir); saveLocalOverlay(o.id, { derniereModification: k.derniereModification }); } try{ pcRefresh(); renderBrowse(); }catch(e){} });
+      lot.defaire.push(() => { for(const o of avantI){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; const avQ = k.imageQuestion, avR = k.imageReponse; k.imageQuestion = o.iq || null; k.imageReponse = o.ir || null; k.derniereModification = new Date().toISOString(); ppImgEnregistrer(o.id, o.iq, o.ir); saveLocalOverlay(o.id, { derniereModification: k.derniereModification }); ppImgNoterRetraits(k, avQ, avR); } try{ pcRefresh(); renderBrowse(); }catch(e){} });
       matNotes.push('images retirées de ' + csI.length + ' carte' + (csI.length > 1 ? 's' : ''));
       matChange = true;
     } else if(a.type === 'echanger'){   /* v329 : question ⇄ réponse (texte + images), une seule écriture pour toutes les cartes */
@@ -8897,8 +9019,10 @@ function pcAppliquer(choix, box, toutes){
         const imp = loadImportedCards(), parId = new Map(imp.map(c => [c.id, c])), ov = ppLireJSON('cartes-overlay', {}, ppEstObjet); let chImp = false;
         for(const o of liste){
           const k = CARDS.find(x => x.id === o.id); if(!k) continue;
+          const avQ = k.imageQuestion, avR = k.imageReponse;   /* v415 */
           k.question = o.question; k.reponse = o.reponse; k.imageQuestion = o.imageQuestion; k.imageReponse = o.imageReponse; k.derniereModification = dm;
-          const o2 = { ...(ppEstObjet(ov[o.id]) ? ov[o.id] : {}), question: o.question, reponse: o.reponse, derniereModification: dm };
+          k.imgQRetiree = !k.imageQuestion && (!!avQ || k.imgQRetiree === true); k.imgRRetiree = !k.imageReponse && (!!avR || k.imgRRetiree === true);
+          const o2 = { ...(ppEstObjet(ov[o.id]) ? ov[o.id] : {}), question: o.question, reponse: o.reponse, derniereModification: dm, imgQRetiree: k.imgQRetiree, imgRRetiree: k.imgRRetiree };
           const ci = parId.get(o.id);
           if(ci){ ci.imageQuestion = o.imageQuestion; ci.imageReponse = o.imageReponse; chImp = true; delete o2.imageQuestion; delete o2.imageReponse; }   /* une seule copie des images (comme ppImgEnregistrer) */
           else { o2.imageQuestion = o.imageQuestion; o2.imageReponse = o.imageReponse; }
@@ -9033,7 +9157,7 @@ function pcAppliquer(choix, box, toutes){
   if(echec) p.push('ajouts annulés : stockage plein');
   notes.forEach(n => p.push(n));
   if(touche && pcLot && pcLot.btn) pcLot.btn.remove(); /* « Annuler » ne défait que le dernier lot */
-  if(imgJobs.length){ const anciennes = [], ctlImg = new AbortController(); lot.defaire.push(() => { ctlImg.abort(); for(const o of anciennes){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; k.imageQuestion = o.iq; k.imageReponse = o.ir; k.derniereModification = new Date().toISOString(); ppImgEnregistrer(o.id, o.iq, o.ir); saveLocalOverlay(o.id, { derniereModification: k.derniereModification }); } try{ pcRefresh(); renderBrowse(); }catch(e){} }); pcImagesApres(imgJobs, anciennes, ctlImg.signal, lot.u); p.push(PC_IMG_ATTENTE(imgJobs.length)); }
+  if(imgJobs.length){ const anciennes = [], ctlImg = new AbortController(); lot.defaire.push(() => { ctlImg.abort(); for(const o of anciennes){ const k = CARDS.find(x => x.id === o.id); if(!k) continue; const avQ = k.imageQuestion, avR = k.imageReponse; k.imageQuestion = o.iq; k.imageReponse = o.ir; k.derniereModification = new Date().toISOString(); ppImgEnregistrer(o.id, o.iq, o.ir); saveLocalOverlay(o.id, { derniereModification: k.derniereModification }); ppImgNoterRetraits(k, avQ, avR); } try{ pcRefresh(); renderBrowse(); }catch(e){} }); pcImagesApres(imgJobs, anciennes, ctlImg.signal, lot.u); p.push(PC_IMG_ATTENTE(imgJobs.length)); }
   const aUndo = lot.creees.length || lot.modif.length || lot.suppr.length || lot.matieres.length || lot.defaire.length;
   pcNote("[Info de l'application : l'utilisateur a APPLIQUÉ ce que tu proposais : " + decrit + '.' + (decoche.length ? ' Il a DÉCOCHÉ, donc NON appliqué : ' + pcDecritListe(decoche) + '.' : '') + (ignorees ? ' ' + ignorees + ' action(s) non appliquée(s) car la carte avait changé entre-temps.' : '') + (echec ? ' Les ajouts ont échoué (stockage plein).' : '') + ']');
   pcBoxEtat(box, 'ok', 'Appliqué', `<p>${p.join(' · ') || (synth ? 'Synthèse ouverte' : 'Aucun changement')}</p>` + (aUndo ? '<button type="button" class="pp-sec pc-un">Annuler</button>' : ''));
@@ -12340,8 +12464,10 @@ function ppFicheSave(id, auto){
     const derniereModification = new Date().toISOString();
     c.matiere = matiere; c.question = q; c.reponse = a; c.inversible = iv; c.ecrite = ec; c.derniereModification = derniereModification;
     saveLocalOverlay(id, { matiere, question: q, reponse: a, inversible: iv, ecrite: ec, derniereModification });
+    const avantImgQ = c.imageQuestion, avantImgR = c.imageReponse;   /* v415 */
     c.imageQuestion = iq || null; c.imageReponse = ir || null;
     ppImgEnregistrer(id, iq, ir);
+    ppImgNoterRetraits(c, avantImgQ, avantImgR);
   }
   ppImgOuvert = null;
   if(!auto){ ppFiAuto = false; ppSheetClose(); }
@@ -13732,7 +13858,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v413';
+const PP_APP_VERSION = 'v415';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -16869,7 +16995,9 @@ function construireDonneesProgression(options){
     ecrite: c.ecrite === true,
     pausee: c.pausee === true,
     ...(ppImgValide(c.imageQuestion) ? { imageQuestion: c.imageQuestion } : {}),
-    ...(ppImgValide(c.imageReponse) ? { imageReponse: c.imageReponse } : {})
+    ...(ppImgValide(c.imageReponse) ? { imageReponse: c.imageReponse } : {}),
+    ...(c.imgQRetiree === true && !c.imageQuestion ? { imgQRetiree: true } : {}),   /* v415 : image retirée exprès (voir ppImgNoterRetraits) */
+    ...(c.imgRRetiree === true && !c.imageReponse ? { imgRRetiree: true } : {})
   }));
   const datesControle = {};
   const matieresArchivees = [];
@@ -17975,6 +18103,7 @@ function fusionnerDepuisSync(data){
     const facileConsecutif = Number.isFinite(item.facileConsecutif) ? Math.max(0, item.facileConsecutif) : 0;
     const inversible = item.inversible === true, ecrite = item.ecrite === true, pausee = item.pausee === true;
     const imgs = ppImgPatch(item);
+    const retQ = item.imgQRetiree === true && !imgs.imageQuestion, retR = item.imgRRetiree === true && !imgs.imageReponse;   /* v415 : image retirée exprès sur l'autre appareil */
     // Absent (autre appareil pas encore à jour) : on ne touche pas à la facilité locale.
     const faciliteRecue = Number.isFinite(item.facilite) ? facilitePour({ facilite: item.facilite }) : null;
 
@@ -17989,7 +18118,8 @@ function fusionnerDepuisSync(data){
     const localCarte = cardsParId.get(id);
     const patch = {
       matiere, question, reponse, palier, prochaineRevision, derniereRevision,
-      derniereModification: derniereModificationRecue, difficultes, facileConsecutif, inversible, ecrite
+      derniereModification: derniereModificationRecue, difficultes, facileConsecutif, inversible, ecrite,
+      imgQRetiree: retQ, imgRRetiree: retR
     };
     if(faciliteRecue !== null) patch.facilite = faciliteRecue;
     if(typeof item.pausee === 'boolean') patch.pausee = item.pausee;   // absent (autre appareil pas à jour) : on garde la pause locale
@@ -18011,7 +18141,8 @@ function fusionnerDepuisSync(data){
 
     if(tsOf(derniereModificationRecue) > tsOf(localCarte.derniereModification)){
       /* correctif v308 : une carte reçue SANS image (l'autre appareil n'avait pas encore l'image, et l'a juste révisée) ne doit plus effacer l'image d'ici */
-      const imgsM = { imageQuestion: imgs.imageQuestion || (ppImgValide(localCarte.imageQuestion) ? localCarte.imageQuestion : null), imageReponse: imgs.imageReponse || (ppImgValide(localCarte.imageReponse) ? localCarte.imageReponse : null) };
+      /* v415 : sauf si l'autre appareil a retiré l'image exprès (retQ / retR) : alors elle est retirée ici aussi */
+      const imgsM = { imageQuestion: imgs.imageQuestion || ((!retQ && ppImgValide(localCarte.imageQuestion)) ? localCarte.imageQuestion : null), imageReponse: imgs.imageReponse || ((!retR && ppImgValide(localCarte.imageReponse)) ? localCarte.imageReponse : null) };
       Object.assign(localCarte, patch, imgsM);
       const importedCarte = importedParId.get(id);
       if(importedCarte){ Object.assign(importedCarte, patch, imgsM); ppOverlayRetirerImages(id); }
@@ -18021,8 +18152,9 @@ function fusionnerDepuisSync(data){
     } else {
       /* correctif v308 : version locale plus récente ou égale : rien ne change, sauf une image qui manque ici et que l'autre appareil a encore (elle revient) */
       const manque = {};
-      if(imgs.imageQuestion && !localCarte.imageQuestion && ppImgPlace(imgs.imageQuestion, 0)) manque.imageQuestion = imgs.imageQuestion;
-      if(imgs.imageReponse && !localCarte.imageReponse && ppImgPlace(imgs.imageReponse, 0)) manque.imageReponse = imgs.imageReponse;
+      /* v415 : une image qu'on a retirée ici exprès ne revient plus depuis une copie plus ancienne de l'autre appareil */
+      if(imgs.imageQuestion && !localCarte.imageQuestion && localCarte.imgQRetiree !== true && ppImgPlace(imgs.imageQuestion, 0)) manque.imageQuestion = imgs.imageQuestion;
+      if(imgs.imageReponse && !localCarte.imageReponse && localCarte.imgRRetiree !== true && ppImgPlace(imgs.imageReponse, 0)) manque.imageReponse = imgs.imageReponse;
       if(Object.keys(manque).length){
         Object.assign(localCarte, manque);
         const importedCarte = importedParId.get(id);
