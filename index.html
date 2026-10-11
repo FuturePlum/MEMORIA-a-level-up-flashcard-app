@@ -223,7 +223,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   if(lire()!=='en') return;
   document.documentElement.setAttribute('lang','en');
   var D=window.FC_EN={'De quelle matière parles-tu ?':'Which subject are you talking about?','Réviser et Tout réviser comptent pour ta maîtrise ; S’entraîner ne compte que pour les cartes difficiles.':'Study and Study all count toward your mastery; Practice only counts toward tough cards.','Tout réviser':'Study all','S’entraîner':'Practice','S’entraîner · difficiles':'Practice · hard ones','Attention : la matière ET toutes ses cartes seront supprimées (récupérables 30 jours).':'Warning: the subject AND all its cards will be deleted (recoverable for 30 days).','Chargement…':'Loading…','Limite du jour atteinte, réessaie demain.':'Daily limit reached, try again tomorrow.','Chargement impossible pour l’instant. Réessaie plus tard.':'Couldn’t load right now. Try again later.','Cette conversation n’a pas encore été envoyée depuis l’autre appareil. Ouvre Memoria là-bas avec du réseau.':'This conversation hasn’t been sent from the other device yet. Open Memoria there with a connection.','Retenir · carnet':'Remember · notebook','Ce que Prof retient':'What Prof remembers','ex. préfère des exemples concrets':'e.g. prefers concrete examples','Des notes courtes que Prof lit avant chaque réponse, pour s’adapter à ta façon de réviser.':'Short notes Prof reads before every answer, to fit the way you study.','Supprimer cette ligne':'Delete this line','Carnet plein : supprime une ligne pour en ajouter':'Notebook full: delete a line to add one','Cette ligne existe déjà':'This line already exists','En cours':'In progress','Commencer une nouvelle conversation ? L’actuelle sera rangée dans « Conversations passées ».':'Start a new conversation? The current one will be saved in “Past conversations”.','Nouvelle':'New','Conversations passées':'Past conversations','Aucune conversation rangée pour l’instant.':'No saved conversation yet.','Cette conversation n’est pas disponible sur cet appareil.':'This conversation is not available on this device.','Supprimer cette conversation ?':'Delete this conversation?',
-    'Tes cartes sont envoyées à Google (Gemini) pour répondre.':'Your cards are sent to Google (Gemini) to answer.','Compris':'Got it','Nouvelle conversation':'New conversation','Tout voir':'See all','Gérer':'Manage','Aucune note pour l’instant.':'No notes yet.','Pratiquer une langue':'Practice a language','Effacer cette conversation ?':'Clear this conversation?','Effacer':'Clear','Quelle langue ?':'Which language?','Actions proposées':'Suggested actions','Réessayer':'Try again','Copier le diagnostic':'Copy diagnostics','Tu peux copier le diagnostic et me l\'envoyer dans Réglages → Aide → Signaler un bug.':'You can copy the diagnostics and send them to me in Settings → Help → Report a bug.','Appliquer':'Apply','Ignorer':'Dismiss','+ Ajouter en carte':'+ Add as card','Il me faut ta clé Gemini':'I need your Gemini key','Ouvrir les Réglages':'Open Settings','Avant de commencer':'Before you start','Photo prête':'Photo ready',"Je t'explique":'I explain it to you','Explique autrement':'Explain differently','Pourquoi je rate celle-là ?':'Why do I keep missing this one?',
+    'Tes cartes sont envoyées à Google (Gemini) pour répondre.':'Your cards are sent to Google (Gemini) to answer.','Compris':'Got it','Nouvelle conversation':'New conversation','Tout voir':'See all','Gérer':'Manage','Aucune note pour l’instant.':'No notes yet.','Pratiquer une langue':'Practice a language','Effacer cette conversation ?':'Clear this conversation?','Effacer':'Clear','Quelle langue ?':'Which language?','Actions proposées':'Suggested actions','Réessayer':'Try again','Copier le diagnostic':'Copy diagnostics','Données':'Data','Supprimer toutes mes données':'Delete all my data','Sur cet appareil et sur tous tes appareils synchronisés':'On this device and on all your synced devices','Supprimer toutes tes données ?':'Delete all your data?',"Cartes, matières, progression, conversations avec Prof, clé Gemini : tout est effacé de cet appareil et de tous tes appareils synchronisés, qui reviennent à l'introduction. Impossible à annuler.":'Cards, subjects, progress, chats with Prof, Gemini key: everything is erased from this device and all your synced devices, which go back to the introduction. This cannot be undone.','Pour confirmer, tape « memoria » :':'To confirm, type “memoria”:','Suppression…':'Deleting…',"Pas de connexion : rien n'a été supprimé. Réessaie en ligne.":'No connection: nothing was deleted. Try again online.',"Le serveur n'a pas pu tout supprimer : rien n'a été supprimé sur cet appareil. Réessaie dans un moment.":'The server could not delete everything: nothing was deleted on this device. Try again in a moment.','Tu peux copier le diagnostic et me l\'envoyer dans Réglages → Aide → Signaler un bug.':'You can copy the diagnostics and send them to me in Settings → Help → Report a bug.','Appliquer':'Apply','Ignorer':'Dismiss','+ Ajouter en carte':'+ Add as card','Il me faut ta clé Gemini':'I need your Gemini key','Ouvrir les Réglages':'Open Settings','Avant de commencer':'Before you start','Photo prête':'Photo ready',"Je t'explique":'I explain it to you','Explique autrement':'Explain differently','Pourquoi je rate celle-là ?':'Why do I keep missing this one?',
     'Pose ta question…':'Ask a question…','Salut ! Je connais tes cartes. Pose-moi une question ou demande-moi de t\'interroger.':'Hi! I know your cards. Ask me a question or ask me to quiz you.','Interroge-moi':'Quiz me','Résume la matière':'Summarize the subject','Vérifie mes cartes':'Check my cards','Question d\'examen':'Exam question','Mon bilan de la semaine':'My weekly review','Plan avant le contrôle':'Plan before the test','Toutes':'All','Photo':'Photo','Envoyer':'Send','Photo : pas encore branchée':'Photo: not connected yet','Je ne suis pas encore relié à l\'IA : l\'écran est prêt, les réponses arrivent à l\'étape suivante.':'I\'m not connected to the AI yet: the screen is ready, answers come in the next step.',
     'Réviser':'Study','Prendre la photo':'Take photo','Caméra indisponible : choisis un fichier.':'Camera unavailable: pick a file.','Planning':'Planning','Ajouter':'Add','Parcourir':'Browse',
     'Réglages':'Settings','Mises à jour':'Updates','Dernière mise à jour':'Latest update','Nouveau':'New','Versions précédentes':'Earlier versions','Retour':'Back','Langue':'Language','Apparence':'Appearance','Sombre':'Dark','Clair':'Light','Auto':'Auto',
@@ -2336,6 +2336,8 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-warn.ok{--wc:var(--green)}
 .pp-warn.ok::before{content:"✓"}
 .pp-warn.pp-warn-b{margin:14px 0 0}
+.pp-eff-go{color:var(--pink);border-color:var(--pink)}   /* v405 */
+.pp-eff-go:disabled{opacity:.4;color:var(--muted);border-color:var(--line);box-shadow:none;pointer-events:none}
 /* v111 : l'encadré glisse doucement depuis le bouton au lieu de surgir ; il rejoue son entrée même dans un écran « figé » (.pp-still) */
 @keyframes ppWarnIn{0%{opacity:0;transform:translateY(-10px) scale(.97)}60%{opacity:1;transform:translateY(2px) scale(1)}100%{opacity:1;transform:none}}
 .pp-view.pp-still .pp-warn,.pp-sheet.pp-still .pp-warn,.pp-page .pp-still .pp-warn{animation:ppWarnIn .36s var(--pps) both!important}
@@ -3808,6 +3810,18 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 @keyframes fi-spinc{from{transform:rotate(-200deg) scale(.4);opacity:0}}
 /* v359 : lien discret du premier écran (texte dans un léger cadre, pas un vrai bouton) */
 #fci .fi-have{align-self:flex-start;display:inline-flex;align-items:center;gap:9px;max-width:100%;padding:9px 12px 9px 11px;border-radius:14px;border:1.5px solid var(--line);background:rgba(var(--ov),.04);color:var(--muted);font:700 14px/1.2 var(--f);text-align:left;transition:transform .3s var(--sp),border-color .25s,color .25s,background .25s}
+/* v404 : bouton fin « barre du navigateur » (1er écran, Android navigateur) */
+#fci .fi-nb{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:6px 11px 6px 12px;border-radius:99px;border:1.5px solid var(--line);background:rgba(var(--ov),.04);color:var(--muted);font:700 13px/1.2 var(--f);text-align:left;transition:transform .3s var(--sp),border-color .25s,color .25s}
+#fci .fi-nb:active{transform:scale(.97)}
+#fci .fi-nb[aria-expanded=true]{color:var(--ink);border-color:var(--yellow)}
+#fci .fi-nb .fi-chv{flex:none;transition:transform .5s var(--sp)}
+#fci .fi-nb[aria-expanded=true] .fi-chv{transform:rotate(180deg)}
+#fci .fi-nvp{margin-top:-14px;border-radius:16px;border:1.5px solid transparent;transition:border-color .3s,background .3s,margin .4s var(--sp)}
+#fci .fi-nvp.fi-open{margin-top:0;border-color:var(--yellow);background:rgba(255,217,61,.07)}
+#fci .fi-nvp .fi-chx{padding-top:12px}
+#fci .fi-nvp .fi-chx p{display:flex;gap:9px;align-items:flex-start}
+#fci .fi-nvp .fi-chx p b{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--yellow);color:#1a1405;font-size:12px;font-weight:800}
+@media (max-height:720px){#fci .fi-sl.fi-nvo .fi-fan{display:none}}
 #fci .fi-have svg:first-child{flex:none;color:var(--yellow)}
 #fci .fi-have .fi-hv{flex:none;opacity:.7;transition:transform .35s var(--sp)}
 #fci .fi-have:hover{color:var(--ink);border-color:var(--yellow)}
@@ -13367,7 +13381,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v403';
+const PP_APP_VERSION = 'v405';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18529,6 +18543,11 @@ async function recupererDepuisSync(){
     if(!res.ok) throw await syncErreurHttp(res);
     const texteDistant = await res.text();
     const data = JSON.parse(texteDistant);
+    if(ppEstObjet(data) && typeof data.efface === 'number'){   /* v405 : « Supprimer toutes mes données » lancé depuis un autre appareil */
+      if(data.efface > ppEffaceVu()){ ppEffacerLocal(data.efface); return true; }
+      syncEtat.derniereErreur = null; syncEtat.codeRefuse = false;   // marqueur déjà pris en compte : comme « rien de stocké », le prochain envoi remet de vraies données
+      return true;
+    }
     fusionnerDepuisSync(data);
     syncMarquerSiIdentique(texteDistant);
     syncEtat.derniereSynchro = new Date().toISOString();
@@ -18543,6 +18562,82 @@ async function recupererDepuisSync(){
     if(minuterie) clearTimeout(minuterie);
     syncEtat.enCours = false;
   }
+}
+
+
+/* v405 : « Supprimer toutes mes données » (Réglages, tout en bas). Il faut taper « memoria » pour dégriser « Supprimer ».
+   Serveur d'abord (si la synchro est active) : corps des conversations de Prof et des synthèses effacés, puis le document de synchro
+   remplacé par un marqueur {"efface": date}. Si une étape échoue : on s'arrête, RIEN n'est supprimé sur cet appareil.
+   Les autres appareils lisent le marqueur à leur prochaine lecture de synchro (recupererDepuisSync) et font la même chose en local.
+   Local : tout le localStorage et le sessionStorage sont vidés (sauf PP_EFFACE_CLE, la date du dernier effacement pris en compte, qui évite de
+   re-supprimer au même marqueur), l'abonnement aux rappels est retiré, puis la page se recharge : l'introduction revient toute seule. */
+const PP_EFFACE_CLE = 'sync-efface-vu';
+let ppEffacerEnCours = false;
+function ppEffaceVu(){ try{ return Number(localStorage.getItem(PP_EFFACE_CLE)) || 0; }catch(e){ return 0; } }
+function ppEffacerOuvrir(){
+  ppEffacerEnCours = false;
+  ppSheet(`<div class="pp-grab"></div><h2>Supprimer toutes tes données ?</h2>
+  <p class="pp-warn" style="--wc:var(--pink)">Cartes, matières, progression, conversations avec Prof, clé Gemini : tout est effacé de cet appareil et de tous tes appareils synchronisés, qui reviennent à l'introduction. Impossible à annuler.</p>
+  <p class="pp-hint">Pour confirmer, tape « memoria » :</p>
+  <input type="text" id="pp-eff-in" class="pp-fld" placeholder="memoria" oninput="ppEffacerMaj()" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done">
+  <p class="pp-warn pp-warn-b" id="pp-eff-msg" style="display:none"></p>
+  <div class="pp-keyrow" style="margin-top:12px"><button class="pp-sec" style="flex:1" onclick="ppSheetClose()">Annuler</button><button class="pp-sec pp-eff-go" id="pp-eff-go" style="flex:1" disabled onclick="ppEffacerGo()">Supprimer</button></div>`);
+}
+function ppEffacerMaj(){
+  const i = document.getElementById('pp-eff-in'), b = document.getElementById('pp-eff-go');
+  if(i && b && !ppEffacerEnCours) b.disabled = String(i.value).trim().toLowerCase() !== 'memoria';
+}
+async function ppEffacerServeur(ts){
+  const base = SYNC_WORKER_URL, code = encodeURIComponent(syncCodePerso());
+  const requete = (url, opts) => {
+    const ctl = new AbortController(), t = setTimeout(() => { try{ ctl.abort(); }catch(e){} }, SYNC_DELAI_MS);
+    return fetch(url, Object.assign({ signal: ctl.signal }, opts)).finally(() => clearTimeout(t));
+  };
+  const conv = new Set(), synth = new Set();
+  try{ pcHistLire().forEach(e => conv.add(e.id)); }catch(e){}
+  try{ sbIndexLire().forEach(e => { if(e && typeof e.id === 'string') synth.add(e.id); }); }catch(e){}
+  const r = await requete(`${base}/sync?code=${code}`, { method: 'GET' });
+  if(r.ok){
+    try{
+      const d = JSON.parse(await r.text());
+      if(d && Array.isArray(d.historiqueProf)) d.historiqueProf.forEach(e => { if(e && typeof e.id === 'string') conv.add(e.id); });
+      if(d && Array.isArray(d.syntheses)) d.syntheses.forEach(e => { if(e && typeof e.id === 'string') synth.add(e.id); });
+    }catch(e){}
+  }else if(r.status !== 404) throw new Error('lecture ' + r.status);
+  const jobs = [];
+  conv.forEach(id => { if(/^[a-z0-9]{6,40}$/.test(id)) jobs.push(`${base}/conv?code=${code}&id=${encodeURIComponent(id)}&suppr=1`); });
+  synth.forEach(id => { if(/^[a-z0-9]{6,40}$/.test(id)) jobs.push(`${base}/synth?code=${code}&id=${encodeURIComponent(id)}&suppr=1`); });
+  for(let i = 0; i < jobs.length; i += 4){
+    const lot = await Promise.all(jobs.slice(i, i + 4).map(u => requete(u, { method: 'POST', body: '' })));
+    if(lot.some(x => !x.ok)) throw new Error('suppression ' + (lot.find(x => !x.ok) || {}).status);
+  }
+  const m = await requete(`${base}/sync?code=${code}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ efface: ts }) });
+  if(!m.ok) throw new Error('marqueur ' + m.status);
+}
+async function ppEffacerGo(){
+  if(ppEffacerEnCours) return;
+  const inp = document.getElementById('pp-eff-in'), go = document.getElementById('pp-eff-go'), msg = document.getElementById('pp-eff-msg');
+  if(!inp || !go || String(inp.value).trim().toLowerCase() !== 'memoria') return;
+  ppEffacerEnCours = true; go.disabled = true; inp.disabled = true; go.textContent = 'Suppression…';
+  if(msg) msg.style.display = 'none';
+  const echec = t => { ppEffacerEnCours = false; inp.disabled = false; go.textContent = 'Supprimer'; ppEffacerMaj(); if(msg){ msg.textContent = t; msg.style.display = ''; } };
+  const ts = Date.now();
+  if(syncActif()){
+    if(navigator.onLine === false){ echec("Pas de connexion : rien n'a été supprimé. Réessaie en ligne."); return; }
+    try{ await ppEffacerServeur(ts); }
+    catch(e){ echec("Le serveur n'a pas pu tout supprimer : rien n'a été supprimé sur cet appareil. Réessaie dans un moment."); return; }
+  }
+  await ppEffacerLocal(ts);
+}
+async function ppEffacerLocal(ts){
+  try{ window.__ppEfface = true; }catch(e){}
+  try{ if(pushActif()) await Promise.race([pushDesactiver(), new Promise(r => setTimeout(r, 4000))]); }catch(e){}   // rappels : retiré du serveur et du navigateur (avant de vider le stockage : il lit l'identifiant de l'appareil)
+  try{ await caches.delete('memoria-etat'); }catch(e){}
+  try{ localStorage.clear(); }catch(e){}
+  try{ sessionStorage.clear(); }catch(e){}
+  try{ localStorage.setItem(PP_EFFACE_CLE, String(ts)); }catch(e){}
+  try{ Storage.prototype.setItem = function(){}; }catch(e){}   // plus aucune écriture avant le rechargement (les écouteurs de sortie réécriraient l'état gardé en mémoire)
+  location.reload();
 }
 
 function syncDerniereSynchroTs(){
@@ -19315,6 +19410,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v405', t:["Supprimer toutes mes données", "Delete all my data"], p:[
+    ["Tout en bas des Réglages, un bouton efface tout ce qui est lié à toi, sur cet appareil et sur tous tes appareils synchronisés, puis ramène à l'introduction. Il faut taper « memoria » pour confirmer.", "At the very bottom of Settings, a button erases everything linked to you, on this device and on all your synced devices, then takes you back to the introduction. You have to type “memoria” to confirm."]] },
+  { v:'v404', t:["Aide si la barre du navigateur reste visible", "Help if the browser bar stays visible"], p:[
+    ["Sur Android, le premier écran de l'introduction propose un petit bouton « Tu vois encore la barre du navigateur ? » : il explique comment installer Memoria puis retirer l'ancienne version.", "On Android, the first intro screen has a small “Still seeing the browser bar?” button: it explains how to install Memoria and then remove the old version."]] },
   { v:'v399', t:["Ajouter un message à la mémoire de Prof", "Add a message to Prof's memory"], p:[
     ["Dans le menu d'un message (appui long sur téléphone, clic sur ordinateur), le bouton « Ajouter à la mémoire » note l'essentiel dans « Ce que Prof retient ». L'IA le reformule d'abord en une ligne claire et précise.", "In a message's menu (long press on phone, click on computer), the “Add to memory” button saves the essentials in “What Prof remembers”. The AI first rewrites it as one clear, precise line."]] },
   { v:'v398', t:["Supprimer la conversation en cours", "Delete the current conversation"], p:[
@@ -19508,7 +19607,8 @@ function ppSetHtml(){
   <button class="pp-li" onclick="document.getElementById('import-file-input').click()"><i class="pp-ico">${PP_IC.ul}</i><span>Importer une progression</span></button>
   <button class="pp-li" onclick="ppExportSheet('html')"><i class="pp-ico">${PP_IC.code}</i><span>Exporter l'app à jour<small>Fichier HTML complet</small></span></button></div>
   <input type="file" id="import-file-input" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="handleImportFile(event)">
-  ${settingsImportMsg ? `<p class="pp-warn ${settingsImportMsg.type === 'ok' ? 'ok' : ''}" style="margin-top:10px">${ppEsc(settingsImportMsg.text)}</p>` : ''}</div></div>`;
+  ${settingsImportMsg ? `<p class="pp-warn ${settingsImportMsg.type === 'ok' ? 'ok' : ''}" style="margin-top:10px">${ppEsc(settingsImportMsg.text)}</p>` : ''}
+  <h4>Données</h4><div class="pp-set"><button class="pp-li" style="color:var(--pink)" onclick="ppEffacerOuvrir()"><i class="pp-ico" style="color:var(--pink)">${PP_IC.trash}</i><span>Supprimer toutes mes données<small>Sur cet appareil et sur tous tes appareils synchronisés</small></span></button></div></div></div>`;   /* v405 */
 }
 /* v113 : Réglages — rappel que l'app existe aussi en site web, avec son adresse. L'adresse est lue sur la page
    elle-même (window.location.origin) : toujours la bonne, même si le domaine change. Rien n'est affiché si la page
@@ -20740,7 +20840,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
   var SEEN='fc-intro-vue', N=7, INST='', dip=null, onBip=null;   /* v358 : INST = '' | 'ios' | 'and' | 'gen' (écran « Installer l'app », en plus : N passe à 8) */
   var S={
    fr:{chb:'Chromebook scolaire ?',chb1:'Ouvre « Google AI Studio API Keys » sur ton téléphone, copie la clé et envoie-la-toi.',chb2:'Ou fais la manip sur ton téléphone avec la synchro activée : la clé arrive toute seule ici.',chbo:'ou',
-    have:'Déjà configuré sur un autre appareil ?',ovS:'Synchro',ovH:'Retrouve ta progression.',ovP:'Entre le code de synchro de ton autre appareil.',ovPh:'Ton code de synchro',ovGo:'Retrouver mes cartes',ovBusy:'Recherche…',ovBad:'Code invalide : 10 caractères minimum, lettres sans accent, chiffres, - et _.',ovE404:'Aucun appareil n’utilise ce code. Vérifie chaque caractère : une seule faute suffit.',ovNet:'Pas de connexion. Réessaie.',ovSrv:'Serveur indisponible. Réessaie dans un instant.',ovFull:'Stockage plein : code non enregistré.',ovN:function(n){ return n+(n===1?' carte retrouvée':' cartes retrouvées'); },
+    have:'Déjà configuré sur un autre appareil ?',nvT:"Tu vois encore la barre du navigateur ?",nv1:"Touche le menu du navigateur (les 3 points en haut à droite), puis « Installer l’application ».",nv2:"Ouvre la Memoria installée : il n’y a plus de barre au-dessus.",nv3:"Désinstalle cette version-ci : appui long sur son ancienne icône, puis « Désinstaller » (ou « Supprimer »).",ovS:'Synchro',ovH:'Retrouve ta progression.',ovP:'Entre le code de synchro de ton autre appareil.',ovPh:'Ton code de synchro',ovGo:'Retrouver mes cartes',ovBusy:'Recherche…',ovBad:'Code invalide : 10 caractères minimum, lettres sans accent, chiffres, - et _.',ovE404:'Aucun appareil n’utilise ce code. Vérifie chaque caractère : une seule faute suffit.',ovNet:'Pas de connexion. Réessaie.',ovSrv:'Serveur indisponible. Réessaie dans un instant.',ovFull:'Stockage plein : code non enregistré.',ovN:function(n){ return n+(n===1?' carte retrouvée':' cartes retrouvées'); },
     lets:"C'est parti",fin:'Go réviser',ctl:'Contrôle dans ',next:'Suivant',cont:'Terminé !',contNo:'Continuer sans clé',add:'Ajouter mes cartes',home:"Aller à l'accueil",skip:'Passer',back:'Retour',
     wel:'Bienvenue',h0:'Retiens tout, sans y penser.',s0:"Quelques cartes par jour. L'app s'occupe du reste.",
     mas:'Maîtrise',h1:'Chaque carte gagne en maîtrise.',q1:"Capitale de l'Australie ?",miss:'Pas su',hard:'Difficile',easy:'Facile',s1:'Plus tu réussis, plus la carte revient tard.',
@@ -20760,7 +20860,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
           and:[['Touche les trois petits points','En haut à droite de Chrome.'],['Touche « Installer l’application »','Ou « Ajouter à l’écran d’accueil ».'],['Touche « Installer »','Memoria apparaît avec tes autres apps.']],
           gen:[['Ouvre le menu du navigateur','Les petits points ou les trois traits.'],['Touche « Installer l’application »','Ou « Ajouter à l’écran d’accueil ».'],['Confirme','Memoria apparaît avec tes autres apps.']]}}},
    en:{chb:'School Chromebook?',chb1:'Open “Google AI Studio API Keys” on your phone, copy the key and send it to yourself.',chb2:'Or do it on your phone with sync turned on: the key shows up here by itself.',chbo:'or',
-    have:'Already set up on another device?',ovS:'Sync',ovH:'Get your progress back.',ovP:'Enter the sync code from your other device.',ovPh:'Your sync code',ovGo:'Get my cards back',ovBusy:'Looking…',ovBad:'Invalid code: 10 characters minimum, letters without accents, digits, - and _.',ovE404:'No device uses this code. Check every character: a single typo is enough.',ovNet:'No connection. Try again.',ovSrv:'Server unavailable. Try again in a moment.',ovFull:'Storage full: code not saved.',ovN:function(n){ return n+(n===1?' card found':' cards found'); },
+    have:'Already set up on another device?',nvT:"Still seeing the browser bar?",nv1:"Tap the browser menu (the 3 dots at the top right), then “Install app”.",nv2:"Open the installed Memoria: there is no bar above it any more.",nv3:"Uninstall this version: long-press its old icon, then “Uninstall” (or “Remove”).",ovS:'Sync',ovH:'Get your progress back.',ovP:'Enter the sync code from your other device.',ovPh:'Your sync code',ovGo:'Get my cards back',ovBusy:'Looking…',ovBad:'Invalid code: 10 characters minimum, letters without accents, digits, - and _.',ovE404:'No device uses this code. Check every character: a single typo is enough.',ovNet:'No connection. Try again.',ovSrv:'Server unavailable. Try again in a moment.',ovFull:'Storage full: code not saved.',ovN:function(n){ return n+(n===1?' card found':' cards found'); },
     lets:"Let's go",fin:'Start studying',ctl:'Test in ',next:'Next',cont:'Done!',contNo:'Continue without a key',add:'Add my cards',home:'Go to home',skip:'Skip',back:'Back',
     wel:'Welcome',h0:'Remember everything, effortlessly.',s0:'A few cards a day. The app handles the rest.',
     mas:'Mastery',h1:'Every card builds mastery.',q1:'Capital of Australia?',miss:'Missed',hard:'Hard',easy:'Easy',s1:'The more you get right, the later a card comes back.',
@@ -20845,6 +20945,12 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     };
     return '<svg viewBox="0 0 24 24" aria-hidden="true">'+P[k]+'</svg>';
   }
+  /* v404 : petit bouton repliable du 1er écran, seulement sur Android dans le navigateur (barre d'adresse encore visible) : explique comment installer puis retirer l'ancienne version. Aucun lien vers les réglages Android : impossible depuis une page web. */
+  function htmlNav(){
+    var m=instMode(); if((m!=='and'&&m!=='gen')||!/Mobile/.test(navigator.userAgent||'')) return '';   /* v405 : téléphone Android seulement (pas les tablettes) */
+    return '<button type="button" class="fi-nb fi-rv" data-i="nvh" aria-expanded="false"><span>'+T.nvT+'</span><svg class="fi-chv" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>'
+      +'<div class="fi-nvp"><div class="fi-chd" data-i="nvb"><div><div class="fi-chx"><p><b>1</b>'+T.nv1+'</p><p><b>2</b>'+T.nv2+'</p><p><b>3</b>'+T.nv3+'</p></div></div></div></div>';
+  }
   function htmlInst(){
     var X=T.ins, ik={ios:['share','plus','ok'],and:['dots','dl','ok'],gen:['dots','dl','ok']}[INST];
     return '<section class="fi-sl fi-inst" data-i="in"><span class="fi-stk fi-rv">'+X.stk+'</span><h1 class="fi-rv">'+X.h+'</h1><p class="fi-sub fi-rv">'+X.sub[INST]+'</p>'
@@ -20866,7 +20972,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     +'<div class="fi-ln" data-i="ln" data-l="'+lc+'" role="group" aria-label="Langue / Language"><span class="fi-ln-t" aria-hidden="true"></span><button type="button" class="fi-ln-b" data-l="fr" lang="fr" aria-label="Français" aria-pressed="'+(lc==='fr')+'">FR</button><button type="button" class="fi-ln-b" data-l="en" lang="en" aria-label="English" aria-pressed="'+(lc==='en')+'">EN</button></div>'
     +'<div class="fi-top"><button class="fi-bk fi-hide" data-i="bk" aria-label="'+T.back+'">'+bk+'</button><div class="fi-pills" data-i="pl"></div><button class="fi-sk" data-i="sk">'+T.skip+'</button></div>'
     +'<div class="fi-body">'
-    +'<section class="fi-sl"><div class="fi-fan fi-rv"><i></i><i></i><i>'+chk+'</i></div><span class="fi-stk fi-rv">'+T.wel+'</span><h1 class="fi-rv">'+T.h0+'</h1><p class="fi-sub fi-rv">'+T.s0+'</p>'+(rejoue?'':'<button type="button" class="fi-have fi-rv" data-i="have"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4.5L20 15"/><path d="M20 20v-5h-5"/></svg><span>'+T.have+'</span><svg class="fi-hv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>')+'</section>'
+    +'<section class="fi-sl"><div class="fi-fan fi-rv"><i></i><i></i><i>'+chk+'</i></div><span class="fi-stk fi-rv">'+T.wel+'</span><h1 class="fi-rv">'+T.h0+'</h1><p class="fi-sub fi-rv">'+T.s0+'</p>'+(rejoue?'':'<button type="button" class="fi-have fi-rv" data-i="have"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4.5L20 15"/><path d="M20 20v-5h-5"/></svg><span>'+T.have+'</span><svg class="fi-hv" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>')+htmlNav()+'</section>'
     +'<section class="fi-sl"><span class="fi-stk fi-rv">'+T.mas+'</span><h1 class="fi-rv">'+T.h1+'</h1><div class="fi-box fi-rv fi-mb" data-i="mb"><div class="fi-sc"><div class="fi-cd" data-i="cd"></div></div>'
       +'<div class="fi-ans" data-i="an" aria-hidden="true"><div class="fi-bt fi-a1">'+ic('x')+T.miss+'</div><div class="fi-bt fi-a2">'+ic('wave')+T.hard+'</div><div class="fi-bt fi-a3">'+ic('ok')+T.easy+'</div></div>'
       +'<div class="fi-fds" data-i="fds">'+[T.f1,T.f2,T.f3].map(function(t,k){ return '<div class="fi-fo fi-f'+(k+1)+'" data-i="fo'+k+'"><i class="fi-ft"></i><b class="fi-n">0</b><span>'+t+'</span></div>'; }).join('')+'</div></div><p class="fi-sub fi-rv">'+T.s1+'</p></section>'
@@ -21348,6 +21454,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       if(!res.ok){ ovFail(T.ovSrv,t0); return; }
       return res.text().then(function(txt){
         var data; try{ data=JSON.parse(txt); }catch(e){ ovFail(T.ovSrv,t0); return; }
+        if(data && typeof data.efface==='number'){ ovFail(T.ovE404,t0); return; }   /* v405 : données supprimées par l'utilisateur */
         ovGo(data,txt,t0);
       });
     }).catch(function(){ clearTimeout(to); ovFail(T.ovNet,t0); });
@@ -21404,6 +21511,8 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
     function aide(o){ s2.classList.toggle('fi-show',o); hp.setAttribute('aria-expanded',o?'true':'false'); hpt.textContent=o?T.hide:T.how; if(o) setTimeout(function(){ if(!closing) s2.scrollIntoView({block:'nearest',behavior:'smooth'}); },380); }
     hp.onclick=function(){ aide(!s2.classList.contains('fi-show')); vib(8); };
     var cbh=q('[data-i=cbh]'), cbb=q('[data-i=cbb]');   /* v358 : note Chromebook repliable */
+    var nvh=q('[data-i=nvh]'), nvb=q('[data-i=nvb]');   /* v404 : bouton « barre du navigateur » */
+    if(nvh&&nvb) nvh.onclick=function(){ var o=!nvb.classList.contains('fi-show'); nvb.classList.toggle('fi-show',o); nvh.setAttribute('aria-expanded',o?'true':'false'); nvh.nextElementSibling.classList.toggle('fi-open',o); var sl=nvh.closest('.fi-sl'); if(sl) sl.classList.toggle('fi-nvo',o); vib(8); };
     if(cbh&&cbb) cbh.onclick=function(){ var o=!cbb.classList.contains('fi-show'); cbb.classList.toggle('fi-show',o); cbh.setAttribute('aria-expanded',o?'true':'false'); cbh.parentNode.classList.toggle('fi-open',o); vib(8); if(o) setTimeout(function(){ if(!closing) cbb.scrollIntoView({block:'nearest',behavior:'smooth'}); },300); };
     function voir(){ if(document.activeElement===ky && !closing) q('[data-i=s3]').scrollIntoView({block:'end',behavior:'smooth'}); }
     ky.addEventListener('focus',function(){ setTimeout(voir,120); setTimeout(voir,450); });
