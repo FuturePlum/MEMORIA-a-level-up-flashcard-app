@@ -20,6 +20,7 @@
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
    v221 : v417 (boutons de la visionneuse et croix de l'image lisibles en mode clair ; images de Prof : file d'attente polie pour Wikimedia, nouveaux essais plus patients, bilan qui dit quoi a raté et chez qui) : index.html change, donc nouvelle version du cache.
+   v222 : v418 (carte qui glisse au-dessus de tout en séance ; Prof : « déplacer » accepte la matière d'arrivée même mal placée ; images Wikimedia en tailles standard ; demande automatique de notifications à la première ouverture ; prompt des cartes ; Modifier avec l'IA : fichiers et images ; prompt des cartes en consigne système) : index.html change, donc nouvelle version du cache.
 
    v220 : v416 (plus de correcteur orthographique : plus de mots soulignés en rouge ni de petit menu « Ajouter au dictionnaire » qui baissait le clavier) : index.html change, donc nouvelle version du cache.
 
@@ -191,7 +192,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v221';
+const SW_VERSION = 'v222';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
