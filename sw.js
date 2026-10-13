@@ -192,7 +192,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v222';
+const SW_VERSION = 'v224';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
@@ -214,24 +214,41 @@ self.addEventListener('activate', (event) => {
 /* Réseau d'abord (toujours la dernière version déployée), et on garde une copie
    des fichiers du site pour le mode hors ligne. Avant, le cache n'était jamais
    rempli : hors connexion, l'app ne s'ouvrait pas du tout, sans aucune erreur
-   visible. Ne touche pas aux requêtes vers d'autres domaines (Gemini, synchro). */
+   visible. Ne touche pas aux requêtes vers d'autres domaines (Gemini, synchro).
+   v419 : DÉLAI. Avant, « réseau d'abord » attendait le réseau SANS limite : avec une mauvaise connexion (page de 1,7 Mo qui arrive au compte-gouttes),
+   le faux splash restait figé à l'écran pendant des minutes, voire des heures, alors qu'une copie de l'app était déjà sur l'appareil. Maintenant :
+   si une copie existe et que le réseau n'a pas fini d'envoyer le fichier en DELAI_RESEAU_MS, on ouvre la copie tout de suite ; le téléchargement continue
+   en arrière-plan et met la copie à jour pour la prochaine ouverture. Sans copie (toute première ouverture), on attend le réseau comme avant. */
+const DELAI_RESEAU_MS = 4000;
+
+async function chercherReseau(req, preload){
+  let res = null;
+  if(req.mode === 'navigate' && preload){ try{ res = await preload; }catch(e){ res = null; } }
+  if(!res) res = await fetch(req);
+  if(!res || res.status !== 200 || res.redirected || res.type !== 'basic') return res;
+  /* le corps est lu en entier ICI : un réseau qui répond vite mais envoie lentement compte aussi comme « lent » */
+  const corps = await res.blob();
+  const entetes = new Headers(res.headers);
+  entetes.delete('content-encoding'); entetes.delete('content-length');
+  try{ const c = await caches.open(CACHE_NOM); await c.put(req, new Response(corps, { status: 200, statusText: res.statusText, headers: entetes })); }catch(e){}
+  return new Response(corps, { status: 200, statusText: res.statusText, headers: entetes });
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if(req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  /* v69 : pour l'ouverture de la page, la demande réseau est déjà partie (navigation preload) pendant que ce service worker démarrait. */
+  const reseau = chercherReseau(req, event.preloadResponse);
+  event.waitUntil(reseau.catch(() => {}));   /* le téléchargement finit de mettre la copie à jour même si on a déjà répondu avec l'ancienne */
   event.respondWith((async () => {
+    let local = null;
+    try{ local = (await caches.match(req)) || (req.mode === 'navigate' ? await caches.match('./index.html') : null); }catch(e){ local = null; }
     try{
-      /* v69 : pour l'ouverture de la page, la demande réseau est déjà partie (navigation preload) pendant que ce service worker démarrait. */
-      let res = null;
-      if(req.mode === 'navigate' && event.preloadResponse){ try{ res = await event.preloadResponse; }catch(e){ res = null; } }
-      if(!res) res = await fetch(req);
-      if(res && res.status === 200){
-        const copie = res.clone();
-        caches.open(CACHE_NOM).then((c) => c.put(req, copie)).catch(() => {});
-      }
-      return res;
+      if(!local) return await reseau;
+      const rep = await Promise.race([reseau, new Promise((ok) => setTimeout(() => ok(null), DELAI_RESEAU_MS))]);
+      return rep || local;
     }catch(e){
-      const r = await caches.match(req);
-      return r || (req.mode === 'navigate' ? await caches.match('./index.html') : null) || Response.error();
+      return local || Response.error();
     }
   })());
 });

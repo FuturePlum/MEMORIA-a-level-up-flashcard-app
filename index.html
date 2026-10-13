@@ -423,6 +423,15 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     "Colle d'abord un texte, ou ajoute une photo ou un document.":'Paste some text first, or add a photo or a document.',
     'Galerie':'Gallery','Fichier':'File','Ajouter une pièce jointe':'Add an attachment','Photo prête':'Photo ready','Document prêt':'Document ready','Texte collé prêt':'Pasted text ready','Retirer la photo':'Remove the photo','Retirer la pièce jointe':'Remove the attachment','Document':'Document','Texte trop long (100 000 caractères maximum).':'Text too long (100,000 characters maximum).','Fichier illisible':'Unreadable file'
   });
+  /* v419 : statistiques ludiques (rang de maîtrise, % du jour, temps par séance) */
+  var RANGS_EN={'Novice':'Novice','Apprenti':'Apprentice','Initié':'Initiate','Adepte':'Adept','Expert':'Expert','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend'};
+  Object.assign(D,{'Maîtrise':'Mastery','Novice':'Novice','Apprenti':'Apprentice','Initié':'Initiate','Adepte':'Adept','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
+  RULES.push(
+    f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
+    f(/^Encore (\d+) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
+    f(/^Encore (\d+) cartes? à maîtriser pour le prestige (\d+)$/,function(n,p){ return c(n,'card')+' left to master for prestige '+p; }),
+    f(/^(\d+) faites? · (\d+) restantes?$/,function(n,m){ return n+' done · '+m+' left'; })
+  );
   Object.assign(D,{ 'Désarchiver':'Unarchive','Archiver':'Archive','La sort des révisions, sans rien supprimer':'Takes it out of your reviews, without deleting anything',
     'pas de connexion':'no connection','réponse illisible du serveur':'unreadable server response','erreur inconnue':'unknown error' });
   RULES.push(
@@ -4320,6 +4329,57 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-tr.z>i{background:transparent;box-shadow:inset 0 0 0 2px var(--c)}
 .pp-archtag{font-style:normal;font-size:11px;font-weight:800;color:var(--muted);border:1.5px solid var(--line);border-radius:8px;padding:1px 6px}
 </style>
+<style id="v419-style">
+/* v419 : statistiques ludiques — carte « Maîtrise » (rang), pourcentage du jour, paliers compacts, temps par séance */
+.pp-sgM,.pp-sgT{margin-bottom:10px}
+.pp-mst,.pp-today{padding:14px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line);height:100%}
+.pp-mst{border-color:var(--c);box-shadow:0 3px 0 var(--c)}
+.pp-mtop{display:flex;align-items:center;gap:12px}
+.pp-mbadge{width:60px;height:60px;flex:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.pp-minfo{flex:1;min-width:0}
+.pp-minfo small{display:block;color:var(--muted);font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.pp-minfo b{display:block;font-size:22px;line-height:1.15;font-weight:800;color:var(--cream)}
+.pp-minfo em{display:inline-block;margin-top:3px;font-style:normal;font-size:11.5px;font-weight:800;color:var(--c);border:1.5px solid var(--c);border-radius:8px;padding:0 6px}
+.pp-mpct{text-align:right;flex:none}
+.pp-mpct b{display:block;font-size:24px;line-height:1;font-weight:800;color:var(--c)}
+.pp-mpct span{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}
+.pp-mpips{display:flex;gap:5px;margin:12px 0 8px}
+.pp-mpips i{flex:1;height:6px;border-radius:4px;background:var(--c-s1)}
+.pp-mpips i.on{background:var(--c)}
+.pp-mbar{height:10px;border-radius:6px;background:var(--c-s1);overflow:hidden}
+.pp-mbar u{display:block;height:100%;border-radius:6px;background:var(--c,var(--orange));transform-origin:left;animation:ppgrow .8s .2s ease-out both}
+.pp-today small{display:block;color:var(--muted);font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.pp-today{--c:var(--orange)}
+.pp-tbig b{display:block;font-size:34px;line-height:1.1;font-weight:800;margin:4px 0 8px;color:var(--cream)}
+.pp-today span{display:block;margin-top:6px;color:var(--muted);font-size:12.5px}
+.pp-tiers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pp-pt{min-width:0;text-align:center;padding:8px 2px 7px;border-radius:13px;background:var(--panel);border:1.5px solid var(--line);border-top:3px solid var(--c)}
+.pp-pt p{margin:0;display:flex;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden}
+.pp-pt p i{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none}
+.pp-pt p span{text-transform:capitalize;overflow:hidden}
+.pp-pt b{display:block;font-size:20px;line-height:1.2;font-weight:800;margin-top:3px;color:var(--cream)}
+.pp-pt em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--muted)}
+.pp-pt.z{opacity:.5}
+.pp-seg-r{height:10px;margin-bottom:9px}
+.pp-seg-r i{min-width:5px}
+.pp-sr{display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.pp-sr:last-of-type{border-bottom:0}
+.pp-sr .d{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:6px;text-transform:capitalize;min-width:0}
+.pp-sr b{font-weight:800;font-size:14px}
+.pp-sr .bb{height:8px;border-radius:5px;background:var(--c-s1);overflow:hidden}
+.pp-sr .bb u{display:block;height:100%;border-radius:5px;background:var(--blue);transform-origin:left;animation:ppgrow .8s .2s ease-out both}
+.pp-sr small{color:var(--muted);font-size:12px;text-align:right;min-width:52px}
+@media (min-width:900px) and (min-height:480px){
+  #pp-stats-page .pp-sgM{ grid-column:1; grid-row:1; }
+  #pp-stats-page .pp-sgT{ grid-column:2; grid-row:1; }
+  #pp-stats-page .pp-stats{ grid-row:2; }
+  #pp-stats-page .pp-sgA{ grid-row:3; }
+  #pp-stats-page .pp-sgC{ grid-column:1; grid-row:4; }
+  #pp-stats-page .pp-sgB{ grid-column:2; grid-row:3 / span 2; }
+  #pp-stats-page .pp-sgS{ grid-column:1 / -1; grid-row:5; }
+}
+</style>
+
 </head>
 <body>
 <div id="boot-splash" aria-hidden="true">
@@ -4469,9 +4529,9 @@ function cartesNonPausees(){
   for(const c of CARDS){ if(c.pausee === true) return CARDS.filter(k => k.pausee !== true); }
   return CARDS;
 }
-/* v395 : STATISTIQUES = TOUTES les cartes, y compris celles en pause et celles d'une matière archivée (demande de l'utilisateur : une carte mise de côté
-   reste une carte qu'il a apprise). Avant (v336) elles étaient exclues des compteurs « nouvelles / paliers / maîtrisées ». Les cartes gardent leur palier. */
-function cartesPourStats(){ return CARDS; }
+/* v419 : STATISTIQUES = cartes ACTIVES seulement (ni en pause, ni d'une matière archivée), comme avant la v395 (demande de l'utilisateur : ce qui est mis de côté
+   ne doit pas gonfler le total ni baisser le pourcentage). Les cartes gardent leur palier : elles reviennent dans les statistiques dès qu'on les réactive. */
+function cartesPourStats(){ return cartesPourPlafonds(); }
 /* v337 : cartes qui prennent des PLACES dans les plafonds de planning (par jour, par matière et au total) : ni cartes en pause, ni cartes d'une
    matière archivée (avant, une grosse matière archivée occupait des places de jours et bloquait une matière urgente). v395 : cette règle n'est
    plus celle des statistiques (qui comptent tout) : elle vit ici, seule. */
@@ -11559,14 +11619,32 @@ function journalCarteDuJour(id, today){
 }
 
 /* Fonction pure : { sansEffet, e1, raison } pour une réponse. sansEffet = la carte ne change pas (ni palier, ni date, ni facilité). */
-function jugementDuJour(c, niveau, estRappel, j, today){
+/* v420 : DÉLAI DE REMONTÉE. Avant : une carte réussie ne comptait qu'une fois par jour calendaire (la 2e réussite du même jour ne changeait rien, même 15 h plus tard).
+   Maintenant : si la dernière réponse comptée date de 12 h ou plus (DELAI_REMONTEE_H), une nouvelle réussite compte de nouveau, même le même jour. L'heure de la dernière
+   réponse comptée = `derniereModification` (déjà synchronisée, exportée et restaurée par « Annuler » ; posée à « maintenant » à chaque réponse comptée). Elle bouge aussi quand
+   on modifie la carte : la règle ne peut donc que LEVER le blocage plus tard que l'ancienne, jamais le poser en plus. Limite connue : le passage de minuit (23 h 50 puis
+   0 h 10) reste compté deux fois, car un blocage « jour précédent » aurait besoin d'une heure dédiée (une modification de la carte la déclencherait à tort).
+   Après une remontée le même jour, l'intervalle est plafonné à 3 × le temps réellement écoulé (en jours fractionnaires, voir plafonnerJoursParEcart).
+   DELAI_REMONTEE_ACTIF = false : retour exact à la v419. */
+const DELAI_REMONTEE_ACTIF = true;
+const DELAI_REMONTEE_H = 12;
+function remonteeRetablie(c, maintenantMs){
+  if(!DELAI_REMONTEE_ACTIF) return false;
+  const t = Date.parse((c && c.derniereModification) || '');
+  return Number.isFinite(t) && maintenantMs - t >= DELAI_REMONTEE_H * 3600000;
+}
+function jugementDuJour(c, niveau, estRappel, j, today, maintenantMs){
+  if(!Number.isFinite(maintenantMs)) maintenantMs = Date.now();
   if(estRappel && niveau === 'vert') return { sansEffet:true, e1:false, raison:'rappel' };
   if(!R1_ACTIF) return { sansEffet:false, e1:false, raison:'' };
   if(niveau === 'orange') return j.aEchec ? { sansEffet:true, e1:false, raison:'echec-deja-compte' } : { sansEffet:false, e1:false, raison:'' };
   if(niveau === 'rouge') return j.aRouge ? { sansEffet:true, e1:false, raison:'rouge-deja-compte' } : { sansEffet:false, e1:false, raison:'' };
   // vert
   if(E1_ACTIF && !(c.palier || 0) && !j.plein && !j.ancienne && j.aEchec && !j.aVert) return { sansEffet:false, e1:true, raison:'e1' };
-  if(c.derniereRevision === today) return { sansEffet:true, e1:false, raison:'deja-repondue' };
+  if(c.derniereRevision === today){
+    if(remonteeRetablie(c, maintenantMs)) return { sansEffet:false, e1:false, raison:'remontee' };   // v420 : dernière réponse comptée il y a 12 h ou plus
+    return { sansEffet:true, e1:false, raison:'deja-repondue' };
+  }
   if(GARDE_ESPACEMENT_ACTIF && c.derniereRevision && c.derniereRevision < today && c.prochaineRevision && c.prochaineRevision > today){
     const prevu = ecartJours(c.derniereRevision, c.prochaineRevision);
     const ecoule = ecartJours(c.derniereRevision, today);
@@ -11594,10 +11672,11 @@ const PLAFOND_INTERVALLE_FACTEUR = 3;
 const ECHEC_TOUJOURS_DEMAIN = true;
 
 /* Fonction pure : nombre de jours (après réussite) plafonné par l'écart réel depuis la dernière révision d'avant cette réponse. */
-function plafonnerJoursParEcart(jours, derniereRevisionAvant, today){
+function plafonnerJoursParEcart(jours, derniereRevisionAvant, today, ecartFraction){
   if(!PLAFOND_INTERVALLE_ACTIF || !derniereRevisionAvant) return jours;
-  const ecart = ecartJours(derniereRevisionAvant, today);
-  if(!(ecart >= 1)) return jours;
+  let ecart = ecartJours(derniereRevisionAvant, today);
+  if(!(ecart >= 1) && ecartFraction > 0) ecart = ecartFraction;   /* v420 : remontée le même jour : l'écart est compté en jours fractionnaires (13 h = 0,54 j → au plus 2 jours) */
+  if(!(ecart >= 1) && !(ecartFraction > 0)) return jours;
   return Math.max(1, Math.min(jours, Math.round(PLAFOND_INTERVALLE_FACTEUR * ecart)));
 }
 
@@ -11802,7 +11881,7 @@ function answer(niveau, opts){
   // comprimés par un contrôle proche, on ne l'allonge jamais (seulement raccourci).
   let coefFacilite = facilitePour(c);
   if(intervals !== INTERVALS && coefFacilite > 1) coefFacilite = 1;
-  const joursPalier = plafonnerJoursParEcart(Math.max(1, Math.round(intervals[palier] * coefFacilite)), prevDerniereRevision, jourJuge);   // v363 : jamais plus de 3 × le temps réellement écoulé
+  const joursPalier = plafonnerJoursParEcart(Math.max(1, Math.round(intervals[palier] * coefFacilite)), prevDerniereRevision, jourJuge, jug.raison === 'remontee' ? (Date.now() - Date.parse(c.derniereModification || '')) / 86400000 : 0);   // v363 : jamais plus de 3 × le temps réellement écoulé (v420 : en jours fractionnaires après une remontée le même jour)
   /* "Difficile" et "Pas su" : on veut revoir la carte plus tard dans CETTE
      session (via réinsertion ci-dessous) ET qu'elle redevienne due dès demain
      si elle n'est pas revue aujourd'hui — pas dans 7/14/30 jours comme le
@@ -13894,7 +13973,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v418';
+const PP_APP_VERSION = 'v420';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -15074,9 +15153,7 @@ function renderEditionIA(){
   if(e.etape === 'consigne'){
     const dis = e.enCours ? ' disabled' : '';
     ppSheet(`<div class="pp-grab"></div><h2 style="font-size:22px;line-height:1.15">Modifier « ${escapeHtml(e.matiere)} » avec l'IA</h2><p class="pp-hint">${e.base.length} carte${e.base.length > 1 ? 's' : ''} dans cette matière. Tu vérifies chaque changement avant de l'appliquer.</p>${msgHtml}
-    <textarea class="pp-tall" id="ia-edit-consigne" oninput="iaEdit.consigne = this.value" placeholder="Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur…">${escapeHtml(e.consigne)}</textarea>
-    <div id="ia-edit-zone">${renderZoneEditionIA()}</div>
-    <div class="pp-duo" style="margin:10px 0 0"><button class="pp-sec" type="button" onclick="document.getElementById('ia-edit-doc-in').click()"${dis}>${PP_IC.pdf}Fichier</button><button class="pp-sec" type="button" onclick="ppImgMenu('edit','q')"${dis}>${PP_IMG_IC}Image</button></div>
+    <div class="pp-cmp" style="margin:0 0 12px"><textarea class="pp-tall" id="ia-edit-consigne" oninput="iaEdit.consigne = this.value" placeholder="Ex. raccourcis les réponses, supprime les doublons, ajoute 5 cartes sur…">${escapeHtml(e.consigne)}</textarea><div id="ia-edit-zone">${renderZoneEditionIA()}</div><div class="pp-cmpb"><button class="pp-ibt" type="button" aria-label="Fichier" onclick="document.getElementById('ia-edit-doc-in').click()"${dis}>${PP_IC.pdf}</button><button class="pp-ibt" type="button" aria-label="Image" onclick="ppImgMenu('edit','q')"${dis}>${PP_IC.photo}</button></div></div>
     <input type="file" id="ia-edit-doc-in" accept="${ACCEPT_DOCS}" multiple style="display:none" onchange="handleFichiersEditionIA(event)"><input type="file" id="ia-edit-img-in" accept="image/*" multiple style="display:none" onchange="handleFichiersEditionIA(event)">
     <div class="pp-duo"><button class="pp-sec" onclick="fermerEditionIA()"${dis}>Annuler</button><button class="pp-cta${e.enCours ? ' busy stop' : ''}" id="ia-edit-envoyer" onclick="envoyerEditionIA()">${e.enCours ? 'Génération en cours…' : "Envoyer à l'IA"}</button></div>`);
     if(!e.enCours) ppFocusChamp('ia-edit-consigne');   /* v280 : le clavier se déploie tout de suite */
@@ -19952,21 +20029,62 @@ function ppStatsHtml(){
   const cl = ['var(--c-dash)', 'var(--pink)', 'var(--amber)', 'var(--yellow)', 'var(--green)'];
   const nm = ['nouvelles', 'palier 1', 'palier 2', 'palier 3', 'maîtrisées'];
   const totPal = pal.reduce((a, v) => a + v, 0);
-  /* v395 : un palier à 0 n'a PLUS de morceau dans la barre (avant : une largeur minimale .15 laissait une fine ligne de sa couleur, ex. « palier 3 : 0 » en jaune) ;
-     la légende liste quand même les 5 paliers (pastille pleine = il y en a, pastille vide + ligne estompée = 0), avec le nombre et le pourcentage. */
+  /* v419 : « Répartition des paliers » compacte : une barre fine + 5 petites tuiles (nombre et %) sur UNE ligne (avant : barre épaisse + 5 lignes de légende). Un palier à 0 n'a pas de morceau dans la barre (v395). */
   const barre = totPal ? pal.map((v, i) => v ? `<i style="flex:${v};background:${cl[i]}"></i>` : '').join('') : '<i style="flex:1;background:var(--c-s1)"></i>';
-  const legende = pal.map((v, i) => `<div class="pp-tr${v ? '' : ' z'}" style="--c:${cl[i]}"><i></i><span>${nm[i]}</span><b>${v}</b><em>${totPal ? Math.round(v / totPal * 100) : 0} %</em></div>`).join('');
+  const tuiles = pal.map((v, i) => `<div class="pp-pt${v ? '' : ' z'}" style="--c:${cl[i]}"><p><i></i><span>${nm[i]}</span></p><b>${v}</b><em>${totPal ? Math.round(v / totPal * 100) : 0} %</em></div>`).join('');
+  /* v419 : maîtrise = rang (calculé, rien n'est stocké) */
+  const rg = ppRangMaitrise(mas);
+  const pips = PP_RANGS.map((x, i) => `<i class="${i <= rg.i ? 'on' : ''}" style="--c:${x.c}"></i>`).join('');
+  const indice = rg.dernier ? `Encore ${rg.reste} carte${rg.reste > 1 ? 's' : ''} à maîtriser pour le prestige ${rg.prestige + 1}` : `Encore ${rg.reste} carte${rg.reste > 1 ? 's' : ''} à maîtriser pour devenir ${rg.suivantNom}`;
+  const hero = `<div class="pp-sgM"><div class="pp-mst" style="--c:${rg.r.c}">
+    <div class="pp-mtop"><svg class="pp-mbadge" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4 56 18v28L32 60 8 46V18z" fill="var(--c)" fill-opacity=".16" stroke="var(--c)" stroke-width="3" stroke-linejoin="round"/><text x="32" y="41" text-anchor="middle" font-size="26" font-weight="800" fill="var(--c)">${rg.i + 1}</text></svg>
+    <div class="pp-minfo"><small>Maîtrise</small><b>${rg.r.n}</b>${rg.prestige > 0 ? `<em>Prestige ${rg.prestige}</em>` : ''}</div>
+    <div class="pp-mpct"><b>${cs.length ? Math.round(mas / cs.length * 100) : 0} %</b><span>${mas} maîtrisée${mas > 1 ? 's' : ''} sur ${cs.length}</span></div></div>
+    <div class="pp-mpips">${pips}</div>
+    <div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>
+    <p class="pp-hint" style="margin:7px 0 0">${indice}</p></div></div>`;
+  /* v419 : pourcentage du jour = cartes déjà révisées aujourd'hui / (déjà révisées + encore à voir). Mêmes définitions que l'accueil (« à réviser » = date de révision atteinte ; « faites » = révisées aujourd'hui). */
+  const faites = cs.filter(c => c.derniereRevision === today).length;
+  const restantes = cs.filter(c => c.derniereRevision !== today && (c.prochaineRevision || today) <= today).length;
+  const totJour = faites + restantes, pctJour = totJour ? Math.round(faites / totJour * 100) : 0;
+  const jour = `<div class="pp-sgT"><div class="pp-today"><small>Aujourd'hui</small>
+    <div class="pp-tbig"><b>${totJour ? pctJour + ' %' : '–'}</b></div>
+    <div class="pp-mbar"><u style="width:${pctJour}%"></u></div>
+    ${totJour ? `<span>de ce que tu devais voir</span><span>${faites} faite${faites > 1 ? 's' : ''} · ${restantes} restante${restantes > 1 ? 's' : ''}</span>` : `<span>Rien à réviser aujourd'hui</span>`}</div></div>`;
+  /* v419 : temps de chaque séance (les 8 dernières, sur cet appareil) */
+  const ses = ppSeancesLire().slice(-8).reverse();
+  const maxMs = Math.max(1, ...ses.map(x => x.ms));
+  const loc = (typeof langueChoisie === 'function' && langueChoisie() === 'en') ? 'en-GB' : 'fr-FR';
+  const sesHtml = ses.length ? ses.map(x => `<div class="pp-sr"><div class="d">${ppEsc(new Date(x.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'short', day:'numeric', month:'short' }))}${x.e ? '<em class="pp-archtag">erreurs</em>' : ''}</div><b>${ppDuree(x.ms)}</b><div class="bb"><u style="width:${Math.max(6, Math.round(x.ms / maxMs * 100))}%"></u></div><small>${x.n} carte${x.n > 1 ? 's' : ''}</small></div>`).join('') : `<p class="pp-hint">Aucune séance enregistrée pour l'instant.</p>`;
+  const seances = `<div class="pp-sgS"><p class="pp-sub2" style="margin-top:16px">Temps par séance</p>${sesHtml}${ses.length ? `<p class="pp-hint" style="margin-top:6px">Temps actif seulement : l'app laissée ouverte ne compte pas.</p>` : ''}</div>`;
   return `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="closeStreakModal()">${PP_IC.back}</button><div><small>Ta progression</small><h2>Statistiques</h2></div></div>
-  <div class="pp-sb pp-view"><div class="pp-stats">
+  <div class="pp-sb pp-view">${hero}${jour}<div class="pp-stats">
     <div class="pp-stat"><i style="background:var(--c-yicon);color:var(--yellow-t)">${ppIc16(PP_IC.fire)}</i><div><b>${streak}</b><span>jour${streak > 1 ? 's' : ''} de suite</span></div></div>
-    <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${ppIc16(PP_IC.ok)}</i><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span></div></div>
     <div class="pp-stat"><i style="background:var(--c-osoft);color:var(--orange-t)">${ppIc16(PP_IC.cards)}</i><div><b>${ex.total}</b><span>révisions au total</span></div></div>
-    <div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${ppIc16(PP_IC.flag)}</i><div><b>${record}</b><span>record de série</span></div></div>${ppStatsSeancesHtml()}</div>
+    <div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${ppIc16(PP_IC.flag)}</i><div><b>${record}</b><span>record de série</span></div></div>
+    <div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${ppIc16(PP_IC.ok)}</i><div><b>${cs.length}</b><span>cartes actives</span></div></div>${ppStatsSeancesHtml()}</div>
   <div class="pp-sgA"><p class="pp-sub2" style="margin-top:8px">30 derniers jours</p><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div>
   <p class="pp-hint" style="margin-top:6px">Plus la case est claire, plus tu as révisé ce jour-là.</p></div>
-  <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}${x.arch ? '<em class="pp-archtag">archivée</em>' : ''}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
   <div class="pp-sgC"><p class="pp-sub2" style="margin-top:16px">Répartition des paliers</p><div class="pp-seg pp-seg-r" aria-hidden="true">${barre}</div>
-  <div class="pp-tiers">${legende}</div></div></div>`;
+  <div class="pp-tiers">${tuiles}</div></div>
+  <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
+  ${seances}</div>`;
+}
+
+/* v419 : RANGS de maîtrise (selon le nombre de cartes maîtrisées, cartes actives seulement). Après le dernier rang : un prestige tous les PP_PRESTIGE_PAS cartes. */
+const PP_RANGS = [
+  { n:'Novice', s:0, c:'var(--c-dash)' }, { n:'Apprenti', s:5, c:'var(--blue)' }, { n:'Initié', s:15, c:'var(--green)' }, { n:'Adepte', s:30, c:'var(--yellow)' },
+  { n:'Expert', s:60, c:'var(--amber)' }, { n:'Maître', s:100, c:'var(--orange)' }, { n:'Grand maître', s:175, c:'var(--pink)' }, { n:'Légende', s:300, c:'var(--cream)' }
+];
+const PP_PRESTIGE_PAS = 150;
+function ppRangMaitrise(mas){
+  let i = 0;
+  for(let k = 0; k < PP_RANGS.length; k++) if(mas >= PP_RANGS[k].s) i = k;
+  const r = PP_RANGS[i], dernier = i === PP_RANGS.length - 1;
+  const prestige = dernier ? Math.floor((mas - r.s) / PP_PRESTIGE_PAS) : 0;
+  const debut = dernier ? r.s + PP_PRESTIGE_PAS * prestige : r.s;
+  const suivant = dernier ? debut + PP_PRESTIGE_PAS : PP_RANGS[i + 1].s;
+  return { i, r, dernier, prestige, reste: suivant - mas, pct: Math.max(0, Math.min(100, Math.round((mas - debut) / (suivant - debut) * 100))), suivantNom: dernier ? null : PP_RANGS[i + 1].n };
 }
 
 /* ================= Réglages (feuille du bas) ================= */
@@ -20029,6 +20147,56 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v420', t:["Une carte peut remonter après 12 h","A card can move up again after 12 h"], p:[
+    ["Avant, une carte réussie ne comptait qu'une fois par jour. Maintenant, si ta dernière réponse comptée date d'au moins 12 h, une nouvelle réussite la fait de nouveau monter, même le même jour.","Before, a card you got right only counted once a day. Now, if your last counted answer is at least 12 h old, a new success makes it move up again, even on the same day."],
+    ["Dans ce cas, la prochaine révision reste proche (au plus 3 × le temps écoulé, soit environ 2 jours après 12 à 13 h), pour rester fidèle à la répétition espacée.","In that case the next review stays close (at most 3 × the elapsed time, about 2 days after 12 to 13 h), to stay true to spaced repetition."]] },
+  { v:'v419', t:["Statistiques ludiques, connexion lente", "Playful statistics, slow connection"], p:[
+    ["Statistiques : la maîtrise devient un vrai rang (Novice, Apprenti… jusqu'à Légende, puis des prestiges), avec une barre qui montre combien de cartes il reste pour le rang suivant.", "Statistics: mastery is now a real rank (Novice, Apprentice… up to Legend, then prestiges), with a bar showing how many cards are left for the next rank."],
+    ["Nouveau pourcentage « Aujourd'hui » : la part de ce que tu devais voir aujourd'hui que tu as déjà révisée.", "New “Today” percentage: the share of what you had to review today that you have already reviewed."],
+    ["Les cartes en pause et celles des matières archivées ne comptent plus dans les statistiques (elles y reviennent dès que tu les réactives).", "Paused cards and cards from archived subjects no longer count in the statistics (they come back as soon as you reactivate them)."],
+    ["« Répartition des paliers » prend beaucoup moins de place : une barre fine et cinq petites tuiles.", "“Level breakdown” takes much less room: a thin bar and five small tiles."],
+    ["« Temps par séance » : la durée de tes dernières séances (sur cet appareil).", "“Time per session”: how long your latest sessions lasted (on this device)."],
+    ["« Modifier avec l'IA » : les boutons Fichier et Image sont maintenant dans la zone de saisie, comme sur l'écran Ajouter.", "“Edit with AI”: the File and Image buttons are now inside the text box, like on the Add screen."],
+    ["Connexion lente : si la page met plus de 4 secondes à arriver, Memoria s'ouvre tout de suite avec la dernière version déjà présente sur l'appareil (la nouvelle se charge en arrière-plan pour la prochaine fois). Fini le faux écran de démarrage qui reste figé.", "Slow connection: if the page takes more than 4 seconds to arrive, Memoria opens right away with the latest version already on your device (the new one loads in the background for next time). No more start screen stuck forever."]] },
+  { v:'v418', t:["Carte au-dessus de tout, notifications, cartes plus logiques", "Card above everything, notifications, more logical cards"], p:[
+    ["En séance, la carte qui glisse (droite, gauche, haut, bas) passe toujours au-dessus de tout : barre du bas, boutons, menus.", "In a session, the card you swipe (right, left, up, down) always goes above everything: bottom bar, buttons, menus."],
+    ["À la toute première ouverture, Memoria propose d'activer les notifications.", "On the very first launch, Memoria offers to turn on notifications."],
+    ["« Modifier avec l'IA » (Parcourir) accepte un fichier ou une image (de la galerie ou créée par l'IA).", "“Edit with AI” (Browse) accepts a file or an image (from your gallery or made by AI)."],
+    ["Quand un thème a plusieurs points, l'IA fait une carte d'ensemble puis une carte par point (sauf s'il n'y en a que 2 ou 3, très courts).", "When a topic has several points, the AI makes one overview card and then one card per point (unless there are only 2 or 3 very short ones)."],
+    ["Prof déplace mieux les cartes d'une matière à l'autre, même quand sa réponse est mal rangée.", "Prof moves cards between subjects more reliably, even when its answer is badly formatted."],
+    ["Bilan de séance : l'écart de réussite s'écrit « +47 % » au lieu de « +47 pts ».", "Session summary: the success gap now reads “+47 %” instead of “+47 pts”."],
+    ["Images Wikimedia : moins de « serveur saturé ».", "Wikimedia images: fewer “server busy” errors."]] },
+  { v:'v417', t:["Boutons lisibles en mode clair, images plus patientes", "Readable buttons in light mode, more patient images"], p:[
+    ["En mode clair, les boutons de la visionneuse d'images (Fermer, Télécharger) et « Retirer l'image » sont de nouveau lisibles.", "In light mode, the image viewer buttons (Close, Download) and “Remove image” are readable again."],
+    ["Quand Wikimedia est saturé, les images sont redemandées plusieurs fois, plus calmement, avant d'abandonner. Le bilan dit d'où vient l'échec.", "When Wikimedia is busy, images are requested again several times, more calmly, before giving up. The summary says where a failure comes from."]] },
+  { v:'v416', t:["Plus de correcteur orthographique", "No more spell checker"], p:[
+    ["Toucher un mot souligné en rouge dans la saisie n'ouvre plus de petit menu et ne baisse plus le clavier : tu peux corriger le mot directement.", "Tapping a word underlined in red in the text box no longer opens a small menu or lowers the keyboard: you can fix the word directly."]] },
+  { v:'v415', t:["Image retirée synchronisée, visionneuse épurée", "Removed image synced, cleaner viewer"], p:[
+    ["Une image retirée sur un appareil est maintenant retirée sur l'autre aussi (avant, elle pouvait revenir).", "An image removed on one device is now removed on the other too (before, it could come back)."],
+    ["Dans la fiche d'une carte, toucher la miniature de l'image ouvre la visionneuse, comme en révision.", "In a card's page, tapping the image thumbnail opens the viewer, like in a session."],
+    ["Le texte d'aide de la visionneuse est retiré.", "The viewer's help text is gone."],
+    ["Les images ajoutées par Prof sont plus souvent trouvées.", "Images added by Prof are found more often."]] },
+  { v:'v414', t:["Prof répond plus vite", "Prof answers faster"], p:[
+    ["Prof adapte son effort à la question : salutation ou petite définition = réponse très rapide, explication = intermédiaire, création ou modification = réflexion complète.", "Prof adapts its effort to the question: greeting or small definition = very fast answer, explanation = in between, creating or editing = full thinking."],
+    ["Le choix de la matière est sauté quand il ne sert à rien (salutation, suite d'un quiz).", "Choosing the subject is skipped when it is useless (greeting, quiz follow-up)."]] },
+  { v:'v413', t:["Images web sans clé à saisir", "Web images, no key to enter"], p:[
+    ["La recherche d'images sur le web ne demande aucune clé à toi ni à tes amis, avec une limite haute qui se renouvelle chaque jour.", "Searching images on the web needs no key from you or your friends, with a high limit that renews every day."]] },
+  { v:'v412', t:["Recherche d'images pour tous les sujets", "Image search for every topic"], p:[
+    ["La recherche d'image s'appuie sur les articles Wikipédia du sujet, pas seulement pour les cartes de pays, puis sur le web en dernier recours.", "Image search now relies on the topic's Wikipedia articles, not only for country maps, then on the web as a last resort."]] },
+  { v:'v411', t:["Images : cartes de pays et de lieux", "Images: country and place maps"], p:[
+    ["Pour une carte de pays ou de lieu, Memoria cherche d'abord les cartes de localisation de l'article Wikipédia.", "For a country or place card, Memoria first looks for the location maps in the Wikipedia article."]] },
+  { v:'v410', t:["Recherche d'images plus fiable", "More reliable image search"], p:[
+    ["Si la meilleure image ne se télécharge pas, la suivante est essayée. Les recherches d'une carte partent en même temps et sont gardées en mémoire 20 minutes.", "If the best image can't be downloaded, the next one is tried. A card's searches run together and are kept in memory for 20 minutes."],
+    ["Une coupure ou un serveur saturé déclenche un nouvel essai automatique.", "A drop or a busy server triggers an automatic retry."]] },
+  { v:'v409', t:["« Annuler » de Prof reste disponible", "Prof's “Undo” stays available"], p:[
+    ["Le bouton « Annuler » après une action de Prof reste 30 minutes, même si tu quittes Prof puis reviens.", "The “Undo” button after a Prof action stays for 30 minutes, even if you leave Prof and come back."],
+    ["La recherche d'images explique ce qu'elle fait et peut être arrêtée.", "The image search explains what it is doing and can be stopped."]] },
+  { v:'v408', t:["Recherche d'image plus précise", "More precise image search"], p:[
+    ["L'IA regarde maintenant les miniatures des images trouvées pour choisir la bonne. « Régénérer » montre la suivante, et une légende te prévient si elle n'est pas sûre.", "The AI now looks at the thumbnails of the images found to pick the right one. “Regenerate” shows the next one, and a caption warns you when it isn't sure."]] },
+  { v:'v407', t:["Créer une nouvelle synthèse", "Create a new summary"], p:[
+    ["Dans « Synthèse de quelle matière ? », un bouton bleu mène directement à la création d'une nouvelle synthèse.", "In “Summary of which subject?”, a blue button takes you straight to creating a new summary."]] },
+  { v:'v406', t:["Suppression de mes données plus propre", "Cleaner data deletion"], p:[
+    ["Le champ où l'on tape « memoria » pour tout supprimer n'affiche plus la barre de suggestions du clavier.", "The field where you type “memoria” to delete everything no longer shows the keyboard's suggestion bar."]] },
   { v:'v405', t:["Supprimer toutes mes données", "Delete all my data"], p:[
     ["Tout en bas des Réglages, un bouton efface tout ce qui est lié à toi, sur cet appareil et sur tous tes appareils synchronisés, puis ramène à l'introduction. Il faut taper « memoria » pour confirmer.", "At the very bottom of Settings, a button erases everything linked to you, on this device and on all your synced devices, then takes you back to the introduction. You have to type “memoria” to confirm."]] },
   { v:'v404', t:["Aide si la barre du navigateur reste visible", "Help if the browser bar stays visible"], p:[
