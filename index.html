@@ -21,6 +21,7 @@
 <meta name="twitter:title" content="Memoria – Flashcards et répétition espacée">
 <meta name="twitter:description" content="Appli de flashcards gratuite : répétition espacée, sans compte, hors ligne, prof IA.">
 <meta name="twitter:image" content="https://memoria-card.pages.dev/icon-512x512-any.png">
+<meta name="google-site-verification" content="PExJKKItAY5yGD7CZtEneAw3iWDT0ouvyjm4JVQBdHY" />
 <!-- v421 : référencement Google. Pour la Search Console (méthode « balise HTML »), coller ici la balise
      <meta name="google-site-verification" content="..."> fournie par Google. -->
 <script type="application/ld+json">
@@ -13993,7 +13994,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v421';
+const PP_APP_VERSION = 'v422';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20167,6 +20168,8 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v422', t:["Vérification Google","Google verification"], p:[
+    ["Ajout de la balise qui prouve à Google que le site est bien le mien. Rien ne change dans l'utilisation.","Added the tag that proves to Google that I own the site. Nothing changes in how you use it."]] },
   { v:'v421', t:["Memoria plus facile à trouver sur Google","Memoria easier to find on Google"], p:[
     ["Ajout d'un titre, d'une description et des informations que Google lit pour présenter et référencer l'app (memoria-card). Rien ne change dans l'utilisation.","Added the title, description and information Google reads to present and index the app (memoria-card). Nothing changes in how you use it."]] },
   { v:'v420', t:["Une carte peut remonter après 12 h","A card can move up again after 12 h"], p:[
