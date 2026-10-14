@@ -5,7 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- v153 (constat 34) : CSP. Les scripts restent inline (onclick=, blocs script), mais les requêtes réseau ne peuvent partir que vers le Worker de synchro et Google (Gemini), et les images ne peuvent venir que de l'app, de data: ou de blob:. Si SYNC_WORKER_URL change, mettre à jour connect-src. -->
 <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; connect-src 'self' https://flashcard-sync-kv.cmpsloic.workers.dev https://generativelanguage.googleapis.com https://commons.wikimedia.org https://en.wikipedia.org https://upload.wikimedia.org; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
-<title>Memoria</title>
+<title>Memoria – Flashcards et répétition espacée | memoria-card</title>
+<meta name="description" content="Memoria (memoria-card) : appli de flashcards gratuite avec répétition espacée, sans compte et hors ligne. Crée tes cartes, révise chaque jour, avec un prof IA. Français et anglais.">
+<link rel="canonical" href="https://memoria-card.pages.dev/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Memoria">
+<meta property="og:title" content="Memoria – Flashcards et répétition espacée">
+<meta property="og:description" content="Appli de flashcards gratuite : répétition espacée, sans compte, hors ligne, prof IA. Français et anglais.">
+<meta property="og:url" content="https://memoria-card.pages.dev/">
+<meta property="og:image" content="https://memoria-card.pages.dev/icon-512x512-any.png">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Memoria – Flashcards et répétition espacée">
+<meta name="twitter:description" content="Appli de flashcards gratuite : répétition espacée, sans compte, hors ligne, prof IA.">
+<meta name="twitter:image" content="https://memoria-card.pages.dev/icon-512x512-any.png">
+<!-- v421 : référencement Google. Pour la Search Console (méthode « balise HTML »), coller ici la balise
+     <meta name="google-site-verification" content="..."> fournie par Google. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Memoria","alternateName":"memoria-card","url":"https://memoria-card.pages.dev/","description":"Application de flashcards avec répétition espacée, sans compte et hors ligne. Flashcards and spaced repetition app.","applicationCategory":"EducationalApplication","operatingSystem":"Android, iOS, Windows, macOS, Linux, ChromeOS","inLanguage":["fr","en"],"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
+</script>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0c0c12">
 <script>
@@ -13973,7 +13993,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v420';
+const PP_APP_VERSION = 'v421';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20147,6 +20167,8 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v421', t:["Memoria plus facile à trouver sur Google","Memoria easier to find on Google"], p:[
+    ["Ajout d'un titre, d'une description et des informations que Google lit pour présenter et référencer l'app (memoria-card). Rien ne change dans l'utilisation.","Added the title, description and information Google reads to present and index the app (memoria-card). Nothing changes in how you use it."]] },
   { v:'v420', t:["Une carte peut remonter après 12 h","A card can move up again after 12 h"], p:[
     ["Avant, une carte réussie ne comptait qu'une fois par jour. Maintenant, si ta dernière réponse comptée date d'au moins 12 h, une nouvelle réussite la fait de nouveau monter, même le même jour.","Before, a card you got right only counted once a day. Now, if your last counted answer is at least 12 h old, a new success makes it move up again, even on the same day."],
     ["Dans ce cas, la prochaine révision reste proche (au plus 3 × le temps écoulé, soit environ 2 jours après 12 à 13 h), pour rester fidèle à la répétition espacée.","In that case the next review stays close (at most 3 × the elapsed time, about 2 days after 12 to 13 h), to stay true to spaced repetition."]] },
