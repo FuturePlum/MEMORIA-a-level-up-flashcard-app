@@ -14235,7 +14235,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v436';
+const PP_APP_VERSION = 'v437';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20793,6 +20793,33 @@ function ppRangDos(o){
     <i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i></div>`;
 }
 /* retournement : la carte pivote jusqu'à la tranche (140 ms), le contenu change, elle finit de pivoter (190 ms) */
+function ppRangMorph(el, versDos, autres, permuter){
+  const r0 = el.getBoundingClientRect(), D = 560, EASE = 'cubic-bezier(.32,.72,0,1)';
+  const fin = () => { el._flip = false; };
+  let ancien = [];
+  try{
+    ancien = [...el.children].map(x => x.animate([{ opacity:1 }, { opacity:0 }], { duration:150, easing:'ease-out', fill:'forwards' }));
+    if(versDos) autres().forEach(x => { try{ ancien.push(x.animate([{ opacity:1 }, { opacity:0 }], { duration:150, easing:'ease-out', fill:'forwards' })); }catch(e){} });
+  }catch(e){}
+  let lance = false;
+  const lancer = () => {
+    if(lance) return; lance = true;
+    try{
+      ancien.forEach(x => { try{ x.cancel(); }catch(e){} });
+      permuter();
+      const r1 = el.getBoundingClientRect();
+      [...el.children].forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:300, delay:D * 0.45, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+      if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:D * 0.5, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+      const g = el.animate([
+        { width:r0.width + 'px', height:r0.height + 'px', translate:(r0.left - r1.left) + 'px ' + (r0.top - r1.top) + 'px' },
+        { width:r1.width + 'px', height:r1.height + 'px', translate:'0px 0px' }
+      ], { duration:D, easing:EASE });
+      g.onfinish = g.oncancel = fin;
+    }catch(e){ fin(); }
+  };
+  if(ancien.length){ ancien[0].onfinish = lancer; }
+  else { try{ permuter(); }catch(e){} fin(); }
+}
 function ppRangFlip(el){
   if(!el || el._flip || el.classList.contains('pp-ranim') || !ppDosHtml) return;
   el._flip = true;
@@ -20805,6 +20832,8 @@ function ppRangFlip(el){
   };
   const reduit = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduit || !el.animate){ permuter(); el._flip = false; return; }
+  /* v437 : sur grand écran (PC / Chromebook) pas de pivot : la carte s'agrandit / rétrécit simplement, en douceur, et son contenu change en fondu */
+  if(window.matchMedia && matchMedia('(min-width:900px) and (min-height:480px)').matches){ ppRangMorph(el, versDos, autres, permuter); return; }
   const P = 'perspective(900px) ';
   try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
   /* v436 : la carte se VOIT s'agrandir (vers le dos) et rétrécir (retour) : on garde sa place et sa taille d'avant, puis on glisse/étire jusqu'à la nouvelle (technique « FLIP »). Les autres blocs s'effacent / reviennent en fondu. */
