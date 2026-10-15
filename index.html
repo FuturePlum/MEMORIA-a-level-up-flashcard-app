@@ -4490,7 +4490,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 #pp-stats-page .pp-mst{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pp-mst .pp-mseas{padding-right:36px}
 .pp-mst>.pp-flipic:not(.pp-rs):not(.pp-emb),.pp-dk>.pp-flipic{position:absolute;right:12px;bottom:12px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--c3);font-style:normal}
-.pp-dk{position:relative;padding-bottom:30px}
+.pp-dk{position:relative;padding-bottom:44px}
 /* v435 : carte de maîtrise retournée = toute la page (téléphone : seule la carte reste ; PC : dos sur 2 colonnes) */
 .pp-sb.pp-dosmode>:not(.pp-sgM){display:none}
 .pp-view.pp-sbstill>*{animation:none!important}   /* v438 : les blocs qui reviennent après le dos ne rejouent pas leur entrée (effet « nouvelle fenêtre ») */
@@ -4519,7 +4519,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-dks span{color:var(--c3)}
 .pp-dkb{display:flex;align-items:flex-end;gap:7px;height:76px}
 .pp-dkb>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%}
-.pp-dkb i{display:block;width:100%;flex:none;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--c3),var(--c));opacity:.5}
+.pp-dkb i{height:calc(3px + var(--bh,38px) * var(--r,0));display:block;width:100%;flex:none;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--c3),var(--c));opacity:.5}
 .pp-dkb .t i{opacity:1;box-shadow:0 0 10px color-mix(in srgb,var(--c) 70%,transparent)}
 .pp-dkb b{font-size:11px;font-weight:800;min-height:13px}
 .pp-dkb em{font-style:normal;font-size:10px;color:var(--muted)}
@@ -4535,6 +4535,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-rb span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pp-rb b{flex:none;font-size:12px;color:var(--pink)}
 .pp-dkv{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.pp-dk .pp-rb{flex:none;flex-direction:row;padding:7px 0;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none;text-align:left}
 .pp-sgT .pp-today small{display:block;color:var(--muted);font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
 .pp-sgT .pp-today{--c:var(--orange)}
 .pp-tbig b{display:block;font-size:34px;line-height:1.1;font-weight:800;margin:4px 0 8px;color:var(--cream)}
@@ -4570,11 +4571,33 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #pp-stats-page .pp-sb.pp-dosmode{ column-count:1; display:flex; flex-direction:column; }
   #pp-stats-page .pp-sb.pp-dosmode>.pp-sgM{ flex:1; display:flex; flex-direction:column; min-height:0; }
   #pp-stats-page .pp-sb.pp-dosmode .pp-mst.pp-dos{ flex:1; display:flex; flex-direction:column; justify-content:center; }
-  #pp-stats-page .pp-sb.pp-dosmode .pp-mst .pp-dk{ flex:1; align-content:center; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-mst .pp-dk{ flex:1; align-content:center; grid-template-rows:auto auto; row-gap:0; }
+  #pp-stats-page .pp-dosmode .pp-dka{ grid-column:1; grid-row:1; }
+  #pp-stats-page .pp-dosmode .pp-dkc{ grid-column:2; grid-row:1 / span 2; }
+  #pp-stats-page .pp-dosmode .pp-dkx{ grid-column:1; grid-row:2; margin-top:8px; }
+  #pp-stats-page .pp-dosmode .pp-dkh>.pp-mbadge{ height:64px; }
+  #pp-stats-page .pp-dosmode .pp-dkh b.pp-rn{ font-size:30px; }
+  #pp-stats-page .pp-dosmode .pp-dkh small, #pp-stats-page .pp-dosmode .pp-dkr span{ font-size:13px; }
+  #pp-stats-page .pp-dosmode .pp-lad{ padding:16px 10px 10px; margin-top:20px; }
+  #pp-stats-page .pp-dosmode .pp-lad .pp-mbadge{ height:36px; }
+  #pp-stats-page .pp-dosmode .pp-lad .cur .pp-mbadge{ height:50px; }
+  #pp-stats-page .pp-dosmode .pp-lad em{ font-size:11.5px; }
+  #pp-stats-page .pp-dosmode .pp-dkt{ gap:12px; margin-top:16px; }
+  #pp-stats-page .pp-dosmode .pp-dkt>div{ padding:18px 8px; border-radius:16px; }
+  #pp-stats-page .pp-dosmode .pp-dkt b{ font-size:28px; }
+  #pp-stats-page .pp-dosmode .pp-dkt span{ font-size:12.5px; margin-top:5px; }
+  #pp-stats-page .pp-dosmode .pp-dks{ margin:26px 0 10px; font-size:12.5px; }
+  #pp-stats-page .pp-dosmode .pp-dkc>.pp-dks:first-child, #pp-stats-page .pp-dosmode .pp-dkx>.pp-dks:first-child{ margin-top:0; }
+  #pp-stats-page .pp-dosmode .pp-dkx>.pp-dks:first-child{ margin-top:26px; }
+  #pp-stats-page .pp-dosmode .pp-dkb{ --bh:120px; height:170px; }
+  #pp-stats-page .pp-dosmode .pp-dkb b{ font-size:13px; } #pp-stats-page .pp-dosmode .pp-dkb em{ font-size:12px; }
+  #pp-stats-page .pp-dosmode .pp-fn{ font-size:15px; padding:9px 0; grid-template-columns:12px 74px 1fr 28px auto; }
+  #pp-stats-page .pp-dosmode .pp-fn s{ height:10px; }
+  #pp-stats-page .pp-dosmode .pp-dk .pp-rb{ font-size:15px; padding:10px 0; } #pp-stats-page .pp-dosmode .pp-dk .pp-rb b{ font-size:13.5px; }
+  #pp-stats-page .pp-dosmode .pp-dkv{ font-size:15px; }
   #pp-stats-page .pp-sb.pp-dosmode .pp-mst{ padding:22px 26px; }
   #pp-stats-page .pp-sb.pp-dosmode .pp-dk{ display:grid; grid-template-columns:1fr 1fr; column-gap:40px; align-items:start; padding-bottom:34px; }
   #pp-stats-page .pp-sb.pp-dosmode .pp-dkc>.pp-dks:first-child{ margin-top:0; }
-  #pp-stats-page .pp-sb.pp-dosmode .pp-dkb{ height:96px; }
   #pp-stats-page .pp-sgB .pp-hb{ break-inside:avoid; }
   #pp-stats-page .pp-sgB>.pp-sub2, #pp-stats-page .pp-sgA>.pp-sub2, #pp-stats-page .pp-sgC>.pp-sub2{ margin-top:8px!important; }
   #pp-stats-page .pp-sgS>.pp-sgSh{ margin-top:8px; }
@@ -14239,7 +14262,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v438';
+const PP_APP_VERSION = 'v439';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20778,7 +20801,7 @@ function ppRangDos(o){
   /* maîtrisées par jour (7 derniers jours) */
   const j7 = []; for(let k = 6; k >= 0; k--){ const d = addDays(today, -k); j7.push({ d, m: ses.filter(x => x.d === d).reduce((a, x) => a + x.m, 0) }); }
   const mx = Math.max(1, ...j7.map(x => x.m));
-  const barres = j7.map(x => `<div${x.d === today ? ' class="t"' : ''}><b>${x.m || ''}</b><i style="height:${3 + Math.round(x.m / mx * 38)}px"></i><em>${ppEsc(new Date(x.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'narrow' }))}</em></div>`).join('');
+  const barres = j7.map(x => `<div${x.d === today ? ' class="t"' : ''}><b>${x.m || ''}</b><i style="--r:${(x.m / mx).toFixed(3)}"></i><em>${ppEsc(new Date(x.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'narrow' }))}</em></div>`).join('');
   /* cartes à voir pour progresser : par palier, combien sont dues aujourd'hui */
   const cl = ['', 'var(--pink)', 'var(--amber)', 'var(--yellow)'];
   const pal = [1, 2, 3].map(l => { const li = cs.filter(c => Math.min(c.palier || 0, MASTERED_PALIER) === l); return { l, n: li.length, due: li.filter(c => c.derniereRevision !== today && (c.prochaineRevision || today) <= today).length }; });
@@ -20793,41 +20816,10 @@ function ppRangDos(o){
     ${tuiles}</div><div class="pp-dkc">
     <p class="pp-dks">Maîtrisées par jour</p><div class="pp-dkb">${barres}</div>
     <p class="pp-dks">À voir pour progresser</p>${entonnoir}
-    <p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}</div>
+    </div><div class="pp-dkx"><p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}</div>
     <i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i></div>`;
 }
 /* retournement : la carte pivote jusqu'à la tranche (140 ms), le contenu change, elle finit de pivoter (190 ms) */
-function ppRangMorph(el, versDos, autres, permuter){
-  const r0 = el.getBoundingClientRect(), D = 620, EASE = 'cubic-bezier(.45,.05,.2,1)';
-  /* v438 : la fenêtre des Statistiques garde EXACTEMENT sa taille pendant tout le dos (sinon elle rétrécissait d'un coup = « nouvelle fenêtre ») ; la carte grandit dedans */
-  const pg = el.closest ? el.closest('.pp-page') : null;
-  if(pg && versDos) pg.style.height = pg.getBoundingClientRect().height + 'px';
-  const fin = () => { el._flip = false; el.style.flex = ''; if(pg && !versDos) pg.style.height = ''; };
-  let ancien = [];
-  try{
-    ancien = [...el.children].map(x => x.animate([{ opacity:1 }, { opacity:0 }], { duration:130, easing:'ease-out', fill:'forwards' }));
-    if(versDos) autres().forEach(x => { try{ ancien.push(x.animate([{ opacity:1 }, { opacity:0 }], { duration:130, easing:'ease-out', fill:'forwards' })); }catch(e){} });
-  }catch(e){}
-  let lance = false;
-  const lancer = () => {
-    if(lance) return; lance = true;
-    try{
-      ancien.forEach(x => { try{ x.cancel(); }catch(e){} });
-      permuter();
-      const r1 = el.getBoundingClientRect();
-      el.style.flex = '0 0 auto';   /* sans ça, le flex de la carte pleine page ignore la hauteur animée (elle sautait à sa taille finale) */
-      [...el.children].forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:D * 0.4, easing:'ease-out', fill:'backwards' }); }catch(e){} });
-      if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:D * 0.5, easing:'ease-out', fill:'backwards' }); }catch(e){} });
-      const g = el.animate([
-        { width:r0.width + 'px', height:r0.height + 'px', translate:(r0.left - r1.left) + 'px ' + (r0.top - r1.top) + 'px' },
-        { width:r1.width + 'px', height:r1.height + 'px', translate:'0px 0px' }
-      ], { duration:D, easing:EASE });
-      g.onfinish = g.oncancel = fin;
-    }catch(e){ fin(); }
-  };
-  if(ancien.length){ ancien[0].onfinish = lancer; }
-  else { try{ permuter(); }catch(e){} fin(); }
-}
 function ppRangFlip(el){
   if(!el || el._flip || el.classList.contains('pp-ranim') || !ppDosHtml) return;
   el._flip = true;
@@ -20841,8 +20833,10 @@ function ppRangFlip(el){
   };
   const reduit = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduit || !el.animate){ permuter(); el._flip = false; return; }
-  /* v437 : sur grand écran (PC / Chromebook) pas de pivot : la carte s'agrandit / rétrécit simplement, en douceur, et son contenu change en fondu */
-  if(window.matchMedia && matchMedia('(min-width:900px) and (min-height:480px)').matches){ ppRangMorph(el, versDos, autres, permuter); return; }
+  /* v439 : même animation sur téléphone et sur PC (pivot + la carte change de taille). Sur grand écran, la fenêtre des Stats garde sa taille pendant tout le dos. */
+  const grand = !!(window.matchMedia && matchMedia('(min-width:900px) and (min-height:480px)').matches);
+  const pg = grand && el.closest ? el.closest('.pp-page') : null;
+  if(pg && versDos) pg.style.height = pg.getBoundingClientRect().height + 'px';
   const P = 'perspective(900px) ';
   try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
   /* v436 : la carte se VOIT s'agrandir (vers le dos) et rétrécir (retour) : on garde sa place et sa taille d'avant, puis on glisse/étire jusqu'à la nouvelle (technique « FLIP »). Les autres blocs s'effacent / reviennent en fondu. */
@@ -20856,6 +20850,7 @@ function ppRangFlip(el){
       permuter();
       fondu.forEach(x => { try{ x.cancel(); }catch(e){} });
       const r1 = el.getBoundingClientRect();
+      if(grand) el.style.flex = '0 0 auto';   /* sans ça, le flex de la carte pleine page ignore la hauteur animée */
       const b = el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
       const g = el.animate([
         { width:r0.width + 'px', height:r0.height + 'px', translate:(r0.left - r1.left) + 'px ' + (r0.top - r1.top) + 'px' },
@@ -20863,7 +20858,7 @@ function ppRangFlip(el){
       ], { duration:420, easing:'cubic-bezier(.22,.9,.3,1)' });
       if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:140, easing:'ease-out', fill:'backwards' }); }catch(e){} });
       let fin = 0;
-      const ok = () => { if(++fin >= 2) el._flip = false; };
+      const ok = () => { if(++fin >= 2){ el._flip = false; el.style.flex = ''; if(pg && !versDos) pg.style.height = ''; } };
       b.onfinish = b.oncancel = ok; g.onfinish = g.oncancel = ok;
     }catch(e){ el._flip = false; }
   };
