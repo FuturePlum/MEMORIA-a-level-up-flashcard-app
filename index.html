@@ -4602,6 +4602,43 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #pp-stats-page .pp-sgB>.pp-sub2, #pp-stats-page .pp-sgA>.pp-sub2, #pp-stats-page .pp-sgC>.pp-sub2{ margin-top:8px!important; }
   #pp-stats-page .pp-sgS>.pp-sgSh{ margin-top:8px; }
 }
+/* v440 : dos de la carte de maîtrise (Chromebook / fenêtre courte) — le contenu était coupé en haut ET en bas : la carte gardait la hauteur de la fenêtre (overflow:hidden)
+   et le contenu y était centré, donc il dépassait des deux côtés sans qu'on puisse défiler. Maintenant : la carte ne descend jamais sous la hauteur de son contenu
+   (la page défile si besoin), le centrage est « sûr » (jamais de débordement par le haut), et les espacements se resserrent sur les fenêtres courtes pour que tout tienne. */
+@media (min-width:900px) and (min-height:480px){
+  #pp-stats-page .pp-sb.pp-dosmode>.pp-sgM{ min-height:min-content; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-mst.pp-dos{ min-height:min-content; justify-content:safe center; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-mst .pp-dk{ flex:none; align-content:safe center; }
+}
+@media (min-width:900px) and (min-height:480px) and (max-height:800px){
+  #pp-stats-page .pp-sb.pp-dosmode .pp-mst{ padding:16px 24px; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-dk{ padding-bottom:30px; }
+  #pp-stats-page .pp-dosmode .pp-lad{ margin-top:12px; padding:12px 10px 8px; }
+  #pp-stats-page .pp-dosmode .pp-dkt{ margin-top:10px; gap:10px; }
+  #pp-stats-page .pp-dosmode .pp-dkt>div{ padding:12px 8px; }
+  #pp-stats-page .pp-dosmode .pp-dkt b{ font-size:24px; }
+  #pp-stats-page .pp-dosmode .pp-dks{ margin:16px 0 6px; }
+  #pp-stats-page .pp-dosmode .pp-dkx>.pp-dks:first-child{ margin-top:16px; }
+  #pp-stats-page .pp-dosmode .pp-dkb{ --bh:84px; height:122px; }
+  #pp-stats-page .pp-dosmode .pp-fn{ padding:6px 0; }
+  #pp-stats-page .pp-dosmode .pp-dk .pp-rb{ padding:7px 0; }
+}
+@media (min-width:900px) and (min-height:480px) and (max-height:640px){
+  #pp-stats-page .pp-sb.pp-dosmode .pp-mst{ padding:12px 22px; }
+  #pp-stats-page .pp-dosmode .pp-dkh>.pp-mbadge{ height:50px; }
+  #pp-stats-page .pp-dosmode .pp-dkh b.pp-rn{ font-size:26px; }
+  #pp-stats-page .pp-dosmode .pp-lad{ margin-top:8px; padding:8px 10px 6px; }
+  #pp-stats-page .pp-dosmode .pp-lad .pp-mbadge{ height:28px; }
+  #pp-stats-page .pp-dosmode .pp-lad .cur .pp-mbadge{ height:38px; }
+  #pp-stats-page .pp-dosmode .pp-dkt{ margin-top:8px; }
+  #pp-stats-page .pp-dosmode .pp-dkt>div{ padding:8px 8px; }
+  #pp-stats-page .pp-dosmode .pp-dkt b{ font-size:22px; }
+  #pp-stats-page .pp-dosmode .pp-dks{ margin:10px 0 4px; }
+  #pp-stats-page .pp-dosmode .pp-dkx>.pp-dks:first-child{ margin-top:10px; }
+  #pp-stats-page .pp-dosmode .pp-dkb{ --bh:60px; height:92px; }
+  #pp-stats-page .pp-dosmode .pp-fn{ padding:4px 0; font-size:14px; }
+  #pp-stats-page .pp-dosmode .pp-dk .pp-rb{ padding:5px 0; }
+}
 </style>
 
 </head>
@@ -14262,7 +14299,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v439';
+const PP_APP_VERSION = 'v440';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
