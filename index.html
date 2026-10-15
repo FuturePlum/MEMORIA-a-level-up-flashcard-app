@@ -450,7 +450,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   });
   /* v419 : statistiques ludiques (rang de maîtrise, % du jour, temps par séance) */
   var RANGS_EN={'Novice':'Novice','Apprenti':'Apprentice','Initié':'Initiate','Adepte':'Adept','Expert':'Expert','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend'};
-  Object.assign(D,{'Maîtrise':'Mastery','Novice':'Novice','Apprenti':'Apprentice','Initié':'Initiate','Adepte':'Adept','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
+  Object.assign(D,{'Maîtrise':'Mastery','Novice':'Novice','Apprenti':'Apprentice','Initié':'Initiate','Adepte':'Adept','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
   RULES.push(
     f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
     f(/^Encore (\d+) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
@@ -4362,7 +4362,8 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-glob{padding:14px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:10px}
 .pp-glob b{display:block;font-size:30px;line-height:1.1;font-weight:800;color:var(--cream)}
 .pp-glob span{display:block;margin-top:3px;font-size:12.5px;font-weight:700;color:var(--cream)}
-.pp-g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pp-g2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pp-g2 b{font-size:26px}
 .pp-glob small{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
 .pp-tr{display:flex;align-items:center;gap:10px;padding:6px 2px;font-size:14.5px;color:var(--cream)}
 .pp-tr>i{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none}
@@ -14073,7 +14074,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v427';
+const PP_APP_VERSION = 'v428';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -17371,6 +17372,7 @@ function ppRestaurerAnnexes(a){
     ppStatSave({
       record: Math.max(loc.record, Math.max(0, Math.floor(+a.statsExtra.record) || 0)),
       total: Math.max(loc.total, Math.max(0, Math.floor(+a.statsExtra.total) || 0)),
+      temps: Math.max(loc.temps, Math.max(0, Math.floor(+a.statsExtra.temps) || 0)),
       passees: (() => { const v = new Set(loc.passees.map(x => x.m)); return loc.passees.concat(ppStatPasseesNettoyer(a.statsExtra.passees).filter(x => !v.has(x.m))).slice(-60); })()
     });
   }
@@ -19789,9 +19791,13 @@ const ppIc16 = s => String(s).replace(/width="\d+"/, 'width="16"').replace(/heig
 function ppStatExtra(){
   try{
     const o = JSON.parse(localStorage.getItem('cartes-stats-extra') || 'null');
-    if(o && typeof o === 'object') return { record: Math.max(0, Math.floor(+o.record) || 0), total: Math.max(0, Math.floor(+o.total) || 0), passees: ppStatPasseesNettoyer(o.passees) };
+    if(o && typeof o === 'object'){
+      /* v428 : temps actif cumulé (ms). Absent des anciennes sauvegardes : on part de la somme des séances déjà enregistrées. */
+      const temps = Number.isFinite(+o.temps) && o.temps !== null ? Math.max(0, Math.floor(+o.temps)) : ppSeancesLire().reduce((a, x) => a + x.ms, 0);
+      return { record: Math.max(0, Math.floor(+o.record) || 0), total: Math.max(0, Math.floor(+o.total) || 0), temps, passees: ppStatPasseesNettoyer(o.passees) };
+    }
   }catch(err){}
-  return { record: 0, total: 0, passees: [] };
+  return { record: 0, total: 0, temps: 0, passees: [] };
 }
 function ppStatSave(o){ ppEcrire('cartes-stats-extra', JSON.stringify(o)); }
 /* v423 : MATIÈRES PASSÉES. Quand une matière est supprimée (souvent après le contrôle), on garde une trace { m: nom, t: cartes, a: maîtrisées, d: jour } pour les statistiques « depuis le début ».
@@ -19849,6 +19855,7 @@ function ppSeanceFin(){
   const e = { d: todayStr(), ms: Math.round(s.ms), n: sessionReviewed, v: sessionMoodCounts.vert || 0, m: sessionMastered, e: studyMode === 'errors' ? 1 : 0 };
   liste.push(e);
   ppEcrire(PP_SEANCES_KEY, JSON.stringify(liste.slice(-60)));
+  { const ex = ppStatExtra(); ex.temps += Math.round(s.ms); ppStatSave(ex); }   // v428 : temps cumulé depuis le début
   s.bilan = { e, prev, aujourdhui: liste.filter(x => x.d === e.d).reduce((a, x) => a + x.n, 0) };
   return s.bilan;
 }
@@ -19885,7 +19892,7 @@ function ppStatsSeancesHtml(){
   const vraies = sem.filter(x => x.ms >= PP_SEANCE_MIN_MS), ms = vraies.length ? vraies.reduce((a, x) => a + x.ms, 0) / vraies.length : 0;
   const clock = ppSvg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 16);
   return `<div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${clock}</i><div><b>${ms ? ppDuree(ms) : '–'}</b><span>par séance en moyenne</span></div></div>
-    <div class="pp-stat"><i style="background:var(--c-osoft);color:var(--orange-t)">${ppIc16(PP_IC.cards)}</i><div><b>${n || '–'}</b><span>carte${n > 1 ? 's' : ''} révisée${n > 1 ? 's' : ''} (7 j)</span></div></div>`;
+    <div class="pp-stat"><i style="background:var(--c-osoft);color:var(--orange-t)">${ppIc16(PP_IC.cards)}</i><div><b>${n || '–'}</b><span>carte${n > 1 ? 's' : ''}<br>révisée${n > 1 ? 's' : ''} (7j)</span></div></div>`;
 }
 /* ---- v160 : aperçu en direct sous les champs de texte (visible seulement s'il y a une mise en forme) + aide ---- */
 /* v265 : l'aperçu n'est plus un cadre sous chaque champ. Un seul bloc flottant (#pp-rvf), collé juste au-dessus du clavier (écran tactile) ou sous le champ
@@ -20190,7 +20197,7 @@ function ppStatsHtml(){
   const masTermines = termines.reduce((a, x) => a + x.mas, 0);
   const masVivantes = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length - archiv.reduce((a, x) => a + x.mas, 0);   /* actives + en pause */
   const masTotal = masVivantes + masTermines;
-  const glob = `<div class="pp-sgG"><div class="pp-glob"><div class="pp-g2"><div><b>${masTotal}</b><span>carte${masTotal > 1 ? 's' : ''} maîtrisée${masTotal > 1 ? 's' : ''}</span></div><div><b>${ex.total}</b><span>révision${ex.total > 1 ? 's' : ''} au total</span></div></div>${termines.length ? `<small>${masTermines} de ces cartes maîtrisées sont dans des matières terminées (archivées ou supprimées).</small>` : ''}</div></div>`;
+  const glob = `<div class="pp-sgG"><div class="pp-glob"><div class="pp-g2"><div><b>${masTotal}</b><span>carte${masTotal > 1 ? 's' : ''} maîtrisée${masTotal > 1 ? 's' : ''}</span></div><div><b>${ex.total}</b><span>révision${ex.total > 1 ? 's' : ''} au total</span></div><div><b>${ex.temps >= 3600000 ? Math.round(ex.temps / 3600000) + ' h' : (ex.temps ? ppDuree(ex.temps) : '–')}</b><span>passées à réviser</span></div></div>${termines.length ? `<small>${masTermines} de ces cartes maîtrisées sont dans des matières terminées (archivées ou supprimées).</small>` : ''}</div></div>`;
   const termine = termines.length ? `<div class="pp-sgE"><p class="pp-sub2" style="margin-top:16px">Matières terminées</p>${termines.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''} · ${x.tag}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}</div>` : '';
   /* v423 : taux de réussite = part de « Facile » sur les 10 dernières séances (hors « Revoir les erreurs »). Même base que le bilan de fin de séance. */
   const sesTaux = ppSeancesLire().filter(x => !x.e).slice(-10);
@@ -20201,13 +20208,14 @@ function ppStatsHtml(){
   return `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="closeStreakModal()">${PP_IC.back}</button><div><small>Ta progression</small><h2>Statistiques</h2></div></div>
   <div class="pp-sb pp-view"><p class="pp-sec2">Où j'en suis</p>${hero}${jour}
   <div class="pp-stats">${tuileTaux}${tuileSerie}${ppStatsSeancesHtml()}</div>
+  <p class="pp-sec2">Récemment</p>
+  ${seances}
+  <div class="pp-sgA"><p class="pp-sub2" style="margin-top:16px">30 derniers jours</p><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div>
+  <p class="pp-hint" style="margin-top:6px">Plus la case est claire, plus tu as révisé ce jour-là.</p></div>
+  <p class="pp-sec2">Depuis le début</p>${glob}
   <div class="pp-sgC"><p class="pp-sub2" style="margin-top:16px">Répartition des paliers</p><p class="pp-hint" style="margin:0 0 8px">Une carte monte d'un palier à chaque bonne réponse. Au palier 4, elle est maîtrisée.</p><div class="pp-seg pp-seg-r" aria-hidden="true">${barre}</div>
   <div class="pp-tiers">${tuiles}</div></div>
   <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
-  ${seances}
-  <p class="pp-sec2">Depuis le début</p>${glob}
-  <div class="pp-sgA"><p class="pp-sub2" style="margin-top:8px">30 derniers jours</p><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div>
-  <p class="pp-hint" style="margin-top:6px">Plus la case est claire, plus tu as révisé ce jour-là.</p></div>
   ${termine}</div>`;
 }
 
