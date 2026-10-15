@@ -19,6 +19,7 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v242 : v438 (PC : la fenêtre des Stats ne change plus de taille pendant le dos, plus de rejeu d'entrée des blocs) : index.html change, donc nouvelle version du cache.
    v241 : v437 (PC : la carte de maîtrise s'agrandit en douceur, sans pivot) : index.html change, donc nouvelle version du cache.
    v240 : v436 (la carte de maîtrise s'agrandit / rétrécit à l'écran en se retournant) : index.html change, donc nouvelle version du cache.
    v239 : v435 (dos de la carte de maîtrise en pleine page) : index.html change, donc nouvelle version du cache.
@@ -204,7 +205,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v241';
+const SW_VERSION = 'v242';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
