@@ -454,6 +454,9 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   RULES.push(
     f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
     f(/^Encore (\d+) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
+    f(/^Saison T(\d) (\d{4})$/,function(q,y){ return 'Season Q'+q+' '+y; }),
+    f(/^Fin de saison dans (\d+) jours?$/,function(n){ return 'Season ends in '+c(n,'day'); }),
+    f(/^Dernier jour de la saison$/,function(){ return 'Last day of the season'; }),
     f(/^Saison T(\d) (\d{4}) · rang (\d)\/(\d)$/,function(q,y,a,b){ return 'Season Q'+q+' '+y+' · rank '+a+'/'+b; }),
     f(/^T(\d) (\d{4})$/,function(q,y){ return 'Q'+q+' '+y; }),
     f(/^Fin de saison dans (\d+) jours? · ton meilleur rang est gardé$/,function(n){ return 'Season ends in '+c(n,'day')+' · your best rank is kept'; }),
@@ -14224,7 +14227,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v433';
+const PP_APP_VERSION = 'v434';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20369,7 +20372,7 @@ function ppStatsHtml(){
   const jour = `<div class="pp-sgT"><div class="pp-today"><small>Aujourd'hui</small>
     <div class="pp-tbig"><b>${totJour ? pctJour + ' %' : '–'}</b></div>
     <div class="pp-mbar"><u style="width:${pctJour}%"></u></div>
-    ${totJour ? `<span>de ce que tu devais voir</span><span>${faites} faite${faites > 1 ? 's' : ''} · ${restantes} restante${restantes > 1 ? 's' : ''}</span>` : `<span>Rien à réviser aujourd'hui</span>`}</div></div>`;
+    ${totJour ? `<span>${faites} faite${faites > 1 ? 's' : ''} · ${restantes} restante${restantes > 1 ? 's' : ''}</span>` : `<span>Rien à réviser aujourd'hui</span>`}</div></div>`;
   /* v419 : temps de chaque séance (les 8 dernières, sur cet appareil) */
   const ses = ppSeancesLire().filter(x => x.ms >= PP_SEANCE_MIN_MS).slice(-8).reverse();
   const maxMs = Math.max(1, ...ses.map(x => x.ms));
@@ -20488,18 +20491,18 @@ function ppRangCarte(o){
   const rg = ppRangMaitrise(o.n), r = rg.r, nx = rg.dernier ? r : PP_RANGS[rg.i + 1];
   const lab = ppSaisonLabel(o.sais.id);
   const mnum = rg.dernier
-    ? `<div class="pp-mnum"><span><b>${o.n}</b></span><span style="color:${r.c}">Légende</span></div>`
-    : `<div class="pp-mnum"><span><b>${o.n}</b> / ${rg.suivant}</span><span style="color:${nx.c}">${nx.n}</span></div>`;
+    ? `<div class="pp-mnum"><span><b>${o.n}</b></span></div>`
+    : `<div class="pp-mnum"><span><b>${o.n}</b> / ${rg.suivant}</span></div>`;
   const but = rg.dernier
     ? `Sommet atteint : tu es Légende ce trimestre.`
     : `Encore <b>${rg.reste}</b> carte${rg.reste > 1 ? 's' : ''} à maîtriser pour devenir <b style="color:${nx.c}">${nx.n}</b>`;
-  const fin = o.jours > 0 ? `Fin de saison dans ${o.jours} jour${o.jours > 1 ? 's' : ''} · ton meilleur rang est gardé` : `Dernier jour de la saison · ton meilleur rang est gardé`;
+  const fin = o.jours > 0 ? `Fin de saison dans ${o.jours} jour${o.jours > 1 ? 's' : ''}` : `Dernier jour de la saison`;
   const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(x => `<span style="${ppRangVars(x.i)}">${ppBadgeRang(x.i)}<em>${ppSaisonLabel(x.id)}</em></span>`).join('')}</div>` : '';
   const calque = o.nouveau ? `<div class="pp-rs" style="--cn:${r.c};--c3n:${r.c3};--co:${PP_RANGS[o.ancienI].c}"></div>` : '';
   return `<div class="pp-sgM"><div class="pp-mst r${rg.i}${o.nouveau ? ' pp-ranim' : ''}" style="${ppRangVars(rg.i)}" role="button" tabindex="0" aria-label="Maîtrise" data-cur="${o.cur}" data-i="${rg.i}" data-o="${o.ancienI || 0}" data-n="${o.n}">
     ${rg.i >= 7 ? ppEmbers(rg.i === PP_RANG_MAX ? 18 : 9) : ''}
     <div class="pp-mtop">${ppBadgeBloc(rg.i)}
-    <div class="pp-minfo"><small>Saison ${lab} · rang ${rg.i + 1}/${PP_RANGS.length}</small><b class="pp-rn">${r.n}</b></div>
+    <div class="pp-minfo"><small>Saison ${lab}</small><b class="pp-rn">${r.n}</b></div>
     ${o.masSem > 0 ? `<div class="pp-mpct"><b>+${o.masSem}</b><span>maîtrisée${o.masSem > 1 ? 's' : ''} cette semaine</span></div>` : ''}</div>
     ${mnum}
     <div class="pp-mrow"><div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
@@ -20866,6 +20869,8 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v434', t:["Carte de maîtrise plus légère","Lighter mastery card"], p:[
+    ["Moins de texte sur la carte de maîtrise et sur « Aujourd'hui » : seulement ce qui t'aide.","Less text on the mastery card and on “Today”: only what helps you."]] },
   { v:'v433', t:["Même rang sur tous tes appareils","Same rank on all your devices"], p:[
     ["Ton rang de maîtrise (Bronze, Argent…) est maintenant synchronisé : téléphone et ordinateur affichent le même.","Your mastery rank (Bronze, Silver…) is now synced: phone and computer show the same one."],
     ["Statistiques sur ordinateur : plus de grands vides entre les blocs.","Statistics on computer: no more big gaps between blocks."]] },
