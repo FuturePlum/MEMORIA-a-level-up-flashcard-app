@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v237 : v433 (rang de maîtrise synchronisé, stats PC sans trous) : index.html change, donc nouvelle version du cache.
+   v236 : v432 (dos de la carte de maîtrise : statistiques de progression) : index.html change, donc nouvelle version du cache.
    v235 : v431 (rangs Bronze → Légende, saison par trimestre, séquence de montée de rang) : index.html change, donc nouvelle version du cache.
    v227 : v423 (stats, planning, langue par défaut, voile réservé à l'app installée).
    v226 : v422 (balise de vérification Google dans index.html ; index.html change, donc nouvelle version).
@@ -198,7 +200,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v235';
+const SW_VERSION = 'v237';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
