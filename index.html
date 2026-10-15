@@ -4491,6 +4491,9 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mst .pp-mseas{padding-right:36px}
 .pp-mst>.pp-flipic:not(.pp-rs):not(.pp-emb),.pp-dk>.pp-flipic{position:absolute;right:12px;bottom:12px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--c3);font-style:normal}
 .pp-dk{position:relative;padding-bottom:30px}
+/* v435 : carte de maîtrise retournée = toute la page (téléphone : seule la carte reste ; PC : dos sur 2 colonnes) */
+.pp-sb.pp-dosmode>:not(.pp-sgM){display:none}
+.pp-sb.pp-dosmode>.pp-sgM{margin-bottom:0}
 .pp-dkh{display:flex;align-items:center;gap:12px}
 .pp-dkh>.pp-mbadge{height:46px;width:auto;flex:none}
 .pp-dkh>.pp-mbadge .gl{display:none}
@@ -4563,6 +4566,11 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #pp-stats-page .pp-sb>.pp-sec2{ break-after:avoid; }
   #pp-stats-page .pp-sb>.pp-stats{ grid-template-columns:1fr 1fr; }
   #pp-stats-page .pp-sb>.pp-sgB{ break-inside:auto; }
+  #pp-stats-page .pp-sb.pp-dosmode{ column-count:1; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-mst{ padding:22px 26px; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-dk{ display:grid; grid-template-columns:1fr 1fr; column-gap:40px; align-items:start; padding-bottom:34px; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-dkc>.pp-dks:first-child{ margin-top:0; }
+  #pp-stats-page .pp-sb.pp-dosmode .pp-dkb{ height:96px; }
   #pp-stats-page .pp-sgB .pp-hb{ break-inside:avoid; }
   #pp-stats-page .pp-sgB>.pp-sub2, #pp-stats-page .pp-sgA>.pp-sub2, #pp-stats-page .pp-sgC>.pp-sub2{ margin-top:8px!important; }
   #pp-stats-page .pp-sgS>.pp-sgSh{ margin-top:8px; }
@@ -14227,7 +14235,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v434';
+const PP_APP_VERSION = 'v436';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20775,13 +20783,13 @@ function ppRangDos(o){
   /* cartes qui résistent (ratées au moins une fois, pas encore maîtrisées) */
   const dures = cs.filter(c => (c.palier || 0) < MASTERED_PALIER && (c.difficultes || 0) > 0).sort((a, b) => (b.difficultes || 0) - (a.difficultes || 0));
   const dh = dures.slice(0, 3).map(c => `<div class="pp-rb"><span>${ppEsc(pcNet(c.question) || '[image]')}</span><b>✕ ${c.difficultes}</b></div>`).join('');
-  return `<div class="pp-dk">
+  return `<div class="pp-dk"><div class="pp-dka">
     <div class="pp-dkh">${ppBadgeRang(rg.i)}<div><small>Maîtrise</small><b class="pp-rn">${r.n}</b></div><div class="pp-dkr"><span>${ppSaisonLabel(o.sais.id)}</span></div></div>
     <div class="pp-lad">${lad}</div>
-    ${tuiles}
+    ${tuiles}</div><div class="pp-dkc">
     <p class="pp-dks">Maîtrisées par jour</p><div class="pp-dkb">${barres}</div>
     <p class="pp-dks">À voir pour progresser</p>${entonnoir}
-    <p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}
+    <p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}</div>
     <i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i></div>`;
 }
 /* retournement : la carte pivote jusqu'à la tranche (140 ms), le contenu change, elle finit de pivoter (190 ms) */
@@ -20789,22 +20797,39 @@ function ppRangFlip(el){
   if(!el || el._flip || el.classList.contains('pp-ranim') || !ppDosHtml) return;
   el._flip = true;
   const versDos = !el.classList.contains('pp-dos');
+  const sb = el.closest ? el.closest('.pp-sb') : null;   /* v435 : au dos, la carte prend toute la place (les autres blocs sont masqués) */
+  const autres = () => sb ? [...sb.children].filter(x => x !== el.parentElement) : [];
   const permuter = () => {
-    if(versDos){ el._face = el.innerHTML; el.innerHTML = ppDosHtml; el.classList.add('pp-dos'); }
-    else { if(el._face) el.innerHTML = el._face; el.classList.remove('pp-dos'); }
+    if(versDos){ el._face = el.innerHTML; el.innerHTML = ppDosHtml; el.classList.add('pp-dos'); if(sb){ sb.classList.add('pp-dosmode'); sb.scrollTop = 0; } }
+    else { if(el._face) el.innerHTML = el._face; el.classList.remove('pp-dos'); if(sb) sb.classList.remove('pp-dosmode'); }
   };
   const reduit = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduit || !el.animate){ permuter(); el._flip = false; return; }
   const P = 'perspective(900px) ';
   try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
+  /* v436 : la carte se VOIT s'agrandir (vers le dos) et rétrécir (retour) : on garde sa place et sa taille d'avant, puis on glisse/étire jusqu'à la nouvelle (technique « FLIP »). Les autres blocs s'effacent / reviennent en fondu. */
+  const r0 = el.getBoundingClientRect();
+  let fondu = [];
+  try{ if(versDos) fondu = autres().map(x => x.animate([{ opacity:1 }, { opacity:0 }], { duration:140, easing:'ease-in', fill:'forwards' })); }catch(e){}
   const a = el.animate([{ transform:P + 'rotateY(0deg)' }, { transform:P + 'rotateY(90deg)' }], { duration:140, easing:'ease-in', fill:'forwards' });
   a.onfinish = () => {
-    try{ permuter(); }catch(e){}
-    const b = el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
-    a.cancel();
-    b.onfinish = b.oncancel = () => { el._flip = false; };
+    try{
+      a.cancel();
+      permuter();
+      fondu.forEach(x => { try{ x.cancel(); }catch(e){} });
+      const r1 = el.getBoundingClientRect();
+      const b = el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
+      const g = el.animate([
+        { width:r0.width + 'px', height:r0.height + 'px', translate:(r0.left - r1.left) + 'px ' + (r0.top - r1.top) + 'px' },
+        { width:r1.width + 'px', height:r1.height + 'px', translate:'0px 0px' }
+      ], { duration:420, easing:'cubic-bezier(.22,.9,.3,1)' });
+      if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:140, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+      let fin = 0;
+      const ok = () => { if(++fin >= 2) el._flip = false; };
+      b.onfinish = b.oncancel = ok; g.onfinish = g.oncancel = ok;
+    }catch(e){ el._flip = false; }
   };
-  a.oncancel = () => { el._flip = false; };
+  a.oncancel = () => { if(el.animate && !el._flip) return; };
 }
 document.addEventListener('click', e => { const el = e.target && e.target.closest ? e.target.closest('#pp-stats-page .pp-mst') : null; if(el) ppRangFlip(el); });
 document.addEventListener('keydown', e => { if((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches && e.target.matches('#pp-stats-page .pp-mst')){ e.preventDefault(); ppRangFlip(e.target); } });
@@ -20869,6 +20894,8 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v435', t:["Le dos de la carte prend toute la place","The back of the card takes the whole page"], p:[
+    ["Quand tu retournes la carte de maîtrise, le reste des statistiques se masque : tu ne vois que ses détails. Sur ordinateur, ils s'affichent sur deux colonnes.","When you flip the mastery card, the rest of the statistics hides: you only see its details. On computer, they show in two columns."]] },
   { v:'v434', t:["Carte de maîtrise plus légère","Lighter mastery card"], p:[
     ["Moins de texte sur la carte de maîtrise et sur « Aujourd'hui » : seulement ce qui t'aide.","Less text on the mastery card and on “Today”: only what helps you."]] },
   { v:'v433', t:["Même rang sur tous tes appareils","Same rank on all your devices"], p:[
