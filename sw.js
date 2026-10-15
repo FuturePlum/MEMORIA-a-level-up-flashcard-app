@@ -19,6 +19,7 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v227 : v423 (stats, planning, langue par défaut, voile réservé à l'app installée).
    v226 : v422 (balise de vérification Google dans index.html ; index.html change, donc nouvelle version).
 
    v225 : v421 (référencement Google : balises dans index.html, robots.txt et sitemap.xml ; index.html change, donc nouvelle version du service worker).
@@ -196,7 +197,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v226';
+const SW_VERSION = 'v231';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
