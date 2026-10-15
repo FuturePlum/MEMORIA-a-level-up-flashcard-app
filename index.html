@@ -449,12 +449,16 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Galerie':'Gallery','Fichier':'File','Ajouter une pièce jointe':'Add an attachment','Photo prête':'Photo ready','Document prêt':'Document ready','Texte collé prêt':'Pasted text ready','Retirer la photo':'Remove the photo','Retirer la pièce jointe':'Remove the attachment','Document':'Document','Texte trop long (100 000 caractères maximum).':'Text too long (100,000 characters maximum).','Fichier illisible':'Unreadable file'
   });
   /* v419 : statistiques ludiques (rang de maîtrise, % du jour, temps par séance) */
-  var RANGS_EN={'Novice':'Novice','Apprenti':'Apprentice','Initié':'Initiate','Adepte':'Adept','Expert':'Expert','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend'};
-  Object.assign(D,{'Maîtrise':'Mastery','Novice':'Novice','Apprenti':'Apprentice','Initié':'Initiate','Adepte':'Adept','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
+  var RANGS_EN={'Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend'};
+  Object.assign(D,{'Maîtrise':'Mastery','Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Vitrine':'Showcase','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Nouveau rang !':'New rank!','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
   RULES.push(
     f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
     f(/^Encore (\d+) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
-    f(/^Encore (\d+) cartes? à maîtriser pour le prestige (\d+)$/,function(n,p){ return c(n,'card')+' left to master for prestige '+p; }),
+    f(/^Saison T(\d) (\d{4}) · rang (\d)\/(\d)$/,function(q,y,a,b){ return 'Season Q'+q+' '+y+' · rank '+a+'/'+b; }),
+    f(/^T(\d) (\d{4})$/,function(q,y){ return 'Q'+q+' '+y; }),
+    f(/^Fin de saison dans (\d+) jours? · ton meilleur rang est gardé$/,function(n){ return 'Season ends in '+c(n,'day')+' · your best rank is kept'; }),
+    f(/^Dernier jour de la saison · ton meilleur rang est gardé$/,function(){ return 'Last day of the season · your best rank is kept'; }),
+    f(/^Sommet atteint : tu es Légende ce trimestre\.$/,function(){ return 'Peak reached: you are Legend this quarter.'; }),
     f(/^(\d+) faites? · (\d+) restantes?$/,function(n,m){ return n+' done · '+m+' left'; })
   );
   Object.assign(D,{ 'Désarchiver':'Unarchive','Archiver':'Archive','La sort des révisions, sans rien supprimer':'Takes it out of your reviews, without deleting anything',
@@ -4380,7 +4384,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mst,.pp-sgT .pp-today{padding:14px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line);height:100%}
 .pp-mst{border-color:var(--c);box-shadow:0 3px 0 var(--c)}
 .pp-mtop{display:flex;align-items:center;gap:12px}
-.pp-mbadge{width:60px;height:60px;flex:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.pp-mbadge{height:70px;flex:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
 .pp-minfo{flex:1;min-width:0}
 .pp-minfo small{display:block;color:var(--muted);font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
 .pp-minfo b{display:block;font-size:22px;line-height:1.15;font-weight:800;color:var(--cream)}
@@ -4388,11 +4392,97 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mpct{text-align:right;flex:none}
 .pp-mpct b{display:block;font-size:24px;line-height:1;font-weight:800;color:var(--c)}
 .pp-mpct span{display:block;margin-top:3px;color:var(--muted);font-size:11.5px}
+.pp-mst{position:relative}
+.pp-mbadge.g1{filter:drop-shadow(0 0 4px color-mix(in srgb,var(--c) 55%,transparent))}
+.pp-mbadge.g2{filter:drop-shadow(0 0 7px color-mix(in srgb,var(--c) 65%,transparent))}
+.pp-mbadge.g3{filter:drop-shadow(0 0 11px color-mix(in srgb,var(--c) 75%,transparent))}
+.pp-mpct b{color:var(--green)}
+.pp-mnum{display:flex;justify-content:space-between;align-items:baseline;margin:12px 0 5px;font-size:13px;font-weight:800;color:var(--muted)}
+.pp-mnum b{font-size:20px;color:var(--cream)}
+.pp-mrow{display:flex;align-items:center;gap:10px}
+.pp-mrow .pp-mbar{flex:1;height:12px}
+.pp-mnext{width:42px;height:40px;flex:none;display:block;filter:grayscale(1) opacity(.45)}
+.pp-mnext .pp-mbadge{width:100%;height:100%;display:block;filter:none}
+.pp-mbadge.leg{animation:ppleg 2.6s ease-in-out infinite}
+@keyframes ppleg{50%{filter:drop-shadow(0 0 17px color-mix(in srgb,var(--c) 85%,transparent))}}
+.pp-mgoal{margin:9px 0 0;font-size:14px;color:var(--cream)}
+.pp-mgoal b{font-weight:800}
 .pp-mpips{display:flex;gap:5px;margin:12px 0 8px}
 .pp-mpips i{flex:1;height:6px;border-radius:4px;background:var(--c-s1)}
 .pp-mpips i.on{background:var(--c)}
 .pp-mbar{height:10px;border-radius:6px;background:var(--c-s1);overflow:hidden}
 .pp-mbar u{display:block;height:100%;border-radius:6px;background:var(--c,var(--orange));transform-origin:left;animation:ppgrow .8s .2s ease-out both}
+/* v431 : RANGS (Bronze → Légende, 9 rangs). Carte « trophée » toujours sombre (même en mode clair) ; plus le rang monte, plus elle est lumineuse. */
+@property --pp-ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+.pp-mst{--panel:#15151d;--cream:#f5f1e8;--muted:#a9a7ba;--c-s1:rgba(255,255,255,.1);--bg:#0c0c12;position:relative;overflow:hidden;color:var(--cream);
+  background:radial-gradient(120% 120% at 0% 0%,color-mix(in srgb,var(--c) 16%,#15151d),#15151d 70%);border-color:var(--c);box-shadow:0 3px 0 var(--c2)}
+.pp-mst>:not(.pp-rs):not(.pp-emb){position:relative}
+.pp-mst.r3{box-shadow:0 3px 0 var(--c2),0 0 16px color-mix(in srgb,var(--c) 26%,transparent)}
+.pp-mst.r4{box-shadow:0 3px 0 var(--c2),0 0 20px color-mix(in srgb,var(--c) 32%,transparent)}
+.pp-mst.r5{box-shadow:0 3px 0 var(--c2),0 0 22px color-mix(in srgb,var(--c) 40%,transparent);animation:ppglow 3s ease-in-out infinite}
+.pp-mst.r6{box-shadow:0 3px 0 var(--c2),0 0 24px color-mix(in srgb,var(--c) 48%,transparent);animation:ppglow 2.5s ease-in-out infinite;background:radial-gradient(120% 120% at 0% 0%,color-mix(in srgb,var(--c) 22%,#15151d),#15101a 72%)}
+.pp-mst.r7{box-shadow:0 3px 0 var(--c2),0 0 26px color-mix(in srgb,var(--c) 52%,transparent);animation:ppglow 2s ease-in-out infinite;background:radial-gradient(120% 120% at 0% 0%,color-mix(in srgb,var(--c) 24%,#15151d),#120c10 72%)}
+@keyframes ppglow{50%{box-shadow:0 3px 0 var(--c2),0 0 36px color-mix(in srgb,var(--c) 66%,transparent)}}
+.pp-mst.r8{border:2px solid transparent;
+  background:linear-gradient(135deg,#231a08,#0d0b08 58%,#1c1307) padding-box,conic-gradient(from var(--pp-ang),#fff6cf,#ffbe1a,#ffffff,#ff9500,#ffe27a,#fff6cf) border-box;
+  box-shadow:0 0 28px rgba(255,190,40,.4),0 0 70px rgba(255,150,0,.18);animation:ppang 4.5s linear infinite,ppglowL 2.6s ease-in-out infinite}
+@keyframes ppang{to{--pp-ang:360deg}}
+@keyframes ppglowL{50%{box-shadow:0 0 42px rgba(255,205,70,.62),0 0 96px rgba(255,150,0,.3)}}
+.pp-mst .pp-mbar{background:rgba(255,255,255,.09)}
+.pp-mst .pp-mrow .pp-mbar u{background:linear-gradient(90deg,var(--c2),var(--c) 72%,var(--c3));box-shadow:0 0 10px color-mix(in srgb,var(--c) 70%,transparent)}
+.pp-mst .pp-minfo b.pp-rn{font-size:24px;background:linear-gradient(180deg,var(--c3),var(--c) 72%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pp-mst.r8 .pp-minfo b.pp-rn{font-size:26px;letter-spacing:.02em;background:linear-gradient(100deg,#fff 0%,#ffe27a 28%,#fff 50%,#ffbe1a 72%,#fff 100%);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ppshim 3.2s linear infinite}
+@keyframes ppshim{to{background-position:-240% 0}}
+.pp-mseas{margin:7px 0 0;font-size:12px;color:var(--muted)}
+.pp-vit{display:flex;align-items:flex-end;gap:12px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.09)}
+.pp-vit small{align-self:center;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pp-vit span{display:flex;flex-direction:column;align-items:center;gap:3px}
+.pp-vit em{font-style:normal;font-size:10px;color:var(--muted)}
+.pp-vit .pp-mbadge{height:30px;width:auto;filter:none;animation:none}
+.pp-vit .gl{display:none}
+.pp-mnext .gl{display:none}
+/* badge : reflet qui balaie (depuis l'Or) + halo et rayons selon le rang */
+.pp-mbadge .gl{opacity:0}
+.pp-mbadge.gl1 .gl{animation:ppgl 6.5s ease-in-out infinite}
+.pp-mbadge.leg .gl{animation-duration:3.2s}
+@keyframes ppgl{0%{transform:translateX(0);opacity:1}28%{transform:translateX(112px);opacity:1}28.1%,100%{transform:translateX(112px);opacity:0}}
+.pp-bw{position:relative;display:inline-flex;flex:none;align-items:center;justify-content:center}
+.pp-bw>.pp-mbadge{position:relative;z-index:1}
+.pp-bw.a3::before,.pp-bw.a5::before,.pp-bw.a7::before{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--c) 42%,transparent),transparent 66%);animation:ppaura 3.2s ease-in-out infinite}
+.pp-bw.a5::before{inset:-22px}
+.pp-bw.a7{margin-left:14px}
+.pp-bw.a7::before{inset:-30px;background:radial-gradient(circle,rgba(255,226,122,.62),rgba(255,160,0,.16) 50%,transparent 70%);animation-duration:2.4s}
+.pp-bw.a7::after{content:"";position:absolute;inset:-56px;border-radius:50%;background:repeating-conic-gradient(from 0deg,transparent 0 6deg,rgba(255,236,160,.5) 7deg 8.5deg,transparent 9.5deg 20deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 66%);mask:radial-gradient(circle,#000 18%,transparent 66%);animation:ppspin 18s linear infinite}
+@keyframes ppaura{50%{transform:scale(1.18);opacity:.7}}
+@keyframes ppspin{to{transform:rotate(360deg)}}
+/* braises (Grand maître, Légende) */
+.pp-emb{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit}
+.pp-emb i{position:absolute;bottom:-8px;left:var(--x);width:var(--s,3px);height:var(--s,3px);border-radius:50%;background:var(--c3);box-shadow:0 0 6px 1px var(--c);opacity:0;animation:ppemb var(--t) linear var(--d) infinite}
+@keyframes ppemb{0%{transform:translate(0,0) scale(1);opacity:0}12%{opacity:.95}100%{transform:translate(var(--dx),-230px) scale(.2);opacity:0}}
+/* séquence de montée de rang (calque dans la carte) */
+.pp-rs{position:absolute;inset:0;z-index:5;border-radius:inherit;overflow:hidden;pointer-events:none;background:#05050a;animation:pprsout .01s 16s both}
+@keyframes pprsout{to{opacity:0;visibility:hidden}}
+.pp-rs>*{position:absolute}
+.pp-rs-bg{inset:0;background:radial-gradient(75% 85% at 50% var(--cy),color-mix(in srgb,var(--cn) 30%,transparent),transparent 72%);opacity:0}
+.pp-rs-rays{left:50%;top:var(--cy);width:680px;height:680px;margin:-340px 0 0 -340px;opacity:0;background:repeating-conic-gradient(from 0deg,transparent 0 5deg,color-mix(in srgb,var(--cn) 58%,transparent) 6deg 8deg,transparent 9deg 18deg);-webkit-mask:radial-gradient(circle,#000 4%,transparent 60%);mask:radial-gradient(circle,#000 4%,transparent 60%)}
+.pp-rs-rays2{background:repeating-conic-gradient(from 7deg,transparent 0 9deg,color-mix(in srgb,var(--c3n) 50%,transparent) 10deg 11.5deg,transparent 12.5deg 27deg)}
+.pp-rs-cv{left:0;top:0}
+.pp-rs-stage{left:50%;top:var(--cy);width:0;height:0}
+.pp-rs-stage>*{position:absolute}
+.pp-rs-b{left:-100px;top:-85px;width:200px;height:170px;display:flex;align-items:center;justify-content:center}
+.pp-rs-b svg{height:128px;width:auto;display:block}
+.pp-rs-b.nw{opacity:0}
+.pp-rs-cr{left:-100px;top:-85px;width:200px;height:170px;overflow:visible}
+.pp-rs-cr path{fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 3px var(--co))}
+.pp-rs-core{left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#fff 0,var(--cn) 28%,transparent 68%);opacity:0;mix-blend-mode:screen}
+.pp-rs-beam{left:-30px;top:-440px;width:60px;height:880px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent);opacity:0;mix-blend-mode:screen}
+.pp-rs-lens{left:-270px;top:-3px;width:540px;height:6px;background:linear-gradient(90deg,transparent,#fff 35%,var(--c3n) 50%,#fff 65%,transparent);opacity:0;mix-blend-mode:screen;filter:blur(.6px)}
+.pp-rs-top{left:0;right:0;top:calc(var(--cy) - 124px);text-align:center;font-size:12px;font-weight:800;letter-spacing:.4em;text-transform:uppercase;color:var(--cn);opacity:0;text-shadow:0 0 12px var(--cn)}
+.pp-rs-name{left:0;right:0;top:calc(var(--cy) + 84px);text-align:center;font-weight:900;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;line-height:1.1}
+.pp-rs-name span{display:inline-block;opacity:0;background:linear-gradient(180deg,var(--c3n),var(--cn));-webkit-background-clip:text;background-clip:text;color:transparent}
+.pp-rs-sub{left:0;right:0;top:calc(var(--cy) + 140px);text-align:center;font-size:12.5px;color:#cfccdc;opacity:0}
+.pp-rs-fl{inset:0;background:radial-gradient(circle at 50% var(--cy),#fff 0,var(--cn) 34%,transparent 80%);opacity:0}
+@media (prefers-reduced-motion:reduce){.pp-mst,.pp-bw::before,.pp-bw::after,.pp-emb i,.pp-mbadge .gl,.pp-minfo b.pp-rn{animation:none!important}}
 .pp-sgT .pp-today small{display:block;color:var(--muted);font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
 .pp-sgT .pp-today{--c:var(--orange)}
 .pp-tbig b{display:block;font-size:34px;line-height:1.1;font-weight:800;margin:4px 0 8px;color:var(--cream)}
@@ -12004,6 +12094,7 @@ function answer(niveau, opts){
   ['cartes-streak', 'lissage-marqueur-retard', 'cartes-stats-extra'].forEach(k => { try{ prevSerie[k] = localStorage.getItem(k); }catch(e){ prevSerie[k] = null; } });
   bumpStreak();
   ppStatBump();
+  if(becameMastered) ppSaisonAjout(1);   // v431 : compteur de la saison (trimestre) ; « Annuler » le remet via le bloc stats-extra sauvegardé plus haut
   ppJournalAjoute(c.id, niveau);   // journal local du bilan de la semaine (synchronisé depuis la v224 ; exporté et restauré depuis la v223)
   if(!sansEffet) saveLocalOverlay(c.id, { palier, prochaineRevision, derniereRevision, derniereModification, difficultes: c.difficultes || 0, facileConsecutif: c.facileConsecutif || 0, facilite: c.facilite });
 
@@ -14074,7 +14165,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v428';
+const PP_APP_VERSION = 'v431';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -17373,7 +17464,8 @@ function ppRestaurerAnnexes(a){
       record: Math.max(loc.record, Math.max(0, Math.floor(+a.statsExtra.record) || 0)),
       total: Math.max(loc.total, Math.max(0, Math.floor(+a.statsExtra.total) || 0)),
       temps: Math.max(loc.temps, Math.max(0, Math.floor(+a.statsExtra.temps) || 0)),
-      passees: (() => { const v = new Set(loc.passees.map(x => x.m)); return loc.passees.concat(ppStatPasseesNettoyer(a.statsExtra.passees).filter(x => !v.has(x.m))).slice(-60); })()
+      passees: (() => { const v = new Set(loc.passees.map(x => x.m)); return loc.passees.concat(ppStatPasseesNettoyer(a.statsExtra.passees).filter(x => !v.has(x.m))).slice(-60); })(),
+      saison: ppSaisonFusion(loc.saison, ppSaisonNettoyer(a.statsExtra.saison))
     });
   }
   if(Array.isArray(a.seances)){
@@ -19794,10 +19886,42 @@ function ppStatExtra(){
     if(o && typeof o === 'object'){
       /* v428 : temps actif cumulé (ms). Absent des anciennes sauvegardes : on part de la somme des séances déjà enregistrées. */
       const temps = Number.isFinite(+o.temps) && o.temps !== null ? Math.max(0, Math.floor(+o.temps)) : ppSeancesLire().reduce((a, x) => a + x.ms, 0);
-      return { record: Math.max(0, Math.floor(+o.record) || 0), total: Math.max(0, Math.floor(+o.total) || 0), temps, passees: ppStatPasseesNettoyer(o.passees) };
+      return { record: Math.max(0, Math.floor(+o.record) || 0), total: Math.max(0, Math.floor(+o.total) || 0), temps, passees: ppStatPasseesNettoyer(o.passees), saison: ppSaisonNettoyer(o.saison) };
     }
   }catch(err){}
-  return { record: 0, total: 0, temps: 0, passees: [] };
+  return { record: 0, total: 0, temps: 0, passees: [], saison: null };
+}
+/* v431 : SAISON (trimestre) du rang de maîtrise. cartes-stats-extra.saison = { id: '2026-T4', n: cartes maîtrisées ce trimestre, v: [{ id, i }] = meilleur rang des trimestres passés (vitrine) }.
+   Compteur : +1 quand une carte devient maîtrisée (annulable : « Annuler » remet tout le bloc stats-extra comme avant). 1re fois : on reprend les maîtrisées des séances du trimestre. */
+const PP_SAISON_RE = /^\d{4}-T[1-4]$/;
+function ppSaisonNettoyer(x){
+  if(!x || typeof x !== 'object' || !PP_SAISON_RE.test(String(x.id))) return null;
+  return { id: x.id, n: Math.max(0, Math.floor(+x.n) || 0), v: (Array.isArray(x.v) ? x.v : []).filter(y => y && PP_SAISON_RE.test(String(y.id)) && Number.isFinite(+y.i)).map(y => ({ id: y.id, i: Math.max(0, Math.min(PP_RANGS.length - 1, Math.floor(+y.i))) })).slice(-8) };
+}
+function ppSaisonFusion(a, b){
+  if(!a) return b; if(!b) return a;
+  const nv = a.id >= b.id ? a : b, an = a.id >= b.id ? b : a;
+  const vit = new Map(); [...an.v, ...nv.v].forEach(y => { const e = vit.get(y.id); if(!e || y.i > e.i) vit.set(y.id, y); });
+  if(a.id !== b.id && an.n > 0 && !vit.has(an.id)) vit.set(an.id, { id: an.id, i: ppRangMaitrise(an.n).i });
+  vit.delete(nv.id);
+  return { id: nv.id, n: a.id === b.id ? Math.max(a.n, b.n) : nv.n, v: [...vit.values()].sort((x, y) => x.id < y.id ? -1 : 1).slice(-8) };
+}
+function ppSaisonLire(ex, persist){
+  ex = ex || ppStatExtra();
+  const id = ppSaisonId();
+  let s = ex.saison, change = false;
+  if(!s){ const deb = ppSaisonDebut(id); s = { id, n: ppSeancesLire().filter(x => x.d >= deb).reduce((a, x) => a + x.m, 0), v: [] }; change = true; }
+  else if(s.id < id){ s = { id, n: 0, v: s.n > 0 ? s.v.concat([{ id: s.id, i: ppRangMaitrise(s.n).i }]).slice(-8) : s.v }; change = true; }
+  if(change && persist){ ex.saison = s; ppStatSave(ex); }
+  return s;
+}
+function ppSaisonAjout(d){
+  const ex = ppStatExtra(), s = ppSaisonLire(ex);
+  s.n = Math.max(0, s.n + d); ex.saison = s; ppStatSave(ex);
+}
+function ppSaisonJoursRestants(id){
+  const t = todayStr().split('-'), fin = new Date(+id.slice(0, 4), +id.slice(6) * 3, 0, 12), auj = new Date(+t[0], +t[1] - 1, +t[2], 12);
+  return Math.max(0, Math.round((fin - auj) / 864e5));
 }
 function ppStatSave(o){ ppEcrire('cartes-stats-extra', JSON.stringify(o)); }
 /* v423 : MATIÈRES PASSÉES. Quand une matière est supprimée (souvent après le contrôle), on garde une trace { m: nom, t: cartes, a: maîtrisées, d: jour } pour les statistiques « depuis le début ».
@@ -20160,17 +20284,24 @@ function ppStatsHtml(){
   /* v419 : « Répartition des paliers » compacte : une barre fine + 5 petites tuiles (nombre et %) sur UNE ligne (avant : barre épaisse + 5 lignes de légende). Un palier à 0 n'a pas de morceau dans la barre (v395). */
   const barre = totPal ? pal.map((v, i) => v ? `<i style="flex:${v};background:${cl[i]}"></i>` : '').join('') : '<i style="flex:1;background:var(--c-s1)"></i>';
   const tuiles = pal.map((v, i) => `<div class="pp-tr${v ? '' : ' z'}" style="--c:${cl[i]}"><i></i><span>${nm[i]}</span><b>${v}</b><em>${totPal ? Math.round(v / totPal * 100) : 0} %</em></div>`).join('');
-  /* v419 : maîtrise = rang (calculé, rien n'est stocké) */
-  const rg = ppRangMaitrise(mas);
-  const pips = PP_RANGS.map((x, i) => `<i class="${i <= rg.i ? 'on' : ''}" style="--c:${x.c}"></i>`).join('');
-  const indice = rg.dernier ? `Encore ${rg.reste} carte${rg.reste > 1 ? 's' : ''} à maîtriser pour le prestige ${rg.prestige + 1}` : `Encore ${rg.reste} carte${rg.reste > 1 ? 's' : ''} à maîtriser pour devenir ${rg.suivantNom}`;
-  const hero = `<div class="pp-sgM"><div class="pp-mst" style="--c:${rg.r.c}">
-    <div class="pp-mtop"><svg class="pp-mbadge" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4 56 18v28L32 60 8 46V18z" fill="var(--c)" fill-opacity=".16" stroke="var(--c)" stroke-width="3" stroke-linejoin="round"/><text x="32" y="41" text-anchor="middle" font-size="26" font-weight="800" fill="var(--c)">${rg.i + 1}</text></svg>
-    <div class="pp-minfo"><small>Maîtrise</small><b>${rg.r.n}</b>${rg.prestige > 0 ? `<em>Prestige ${rg.prestige}</em>` : ''}</div>
-    <div class="pp-mpct"><b>${cs.length ? Math.round(mas / cs.length * 100) : 0} %</b><span>${mas} maîtrisée${mas > 1 ? 's' : ''} sur ${cs.length}</span></div></div>
-    <div class="pp-mpips">${pips}</div>
-    <div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>
-    <p class="pp-hint" style="margin:7px 0 0">${indice}</p></div></div>`;
+  /* v431 : maîtrise = rang de la SAISON (trimestre) : cartes maîtrisées pendant le trimestre ; vitrine = meilleur rang des trimestres passés */
+  const sais = ppSaisonLire(ex, true);
+  const rg = ppRangMaitrise(sais.n);
+  const debutSem = addDays(todayStr(), -6);
+  const masSem = ppSeancesLire().filter(x => x.d >= debutSem).reduce((a, x) => a + x.m, 0);   /* maîtrisées cette semaine (somme des séances) */
+  /* « Nouveau rang ! » : 1re ouverture des Stats après avoir monté DANS LE MÊME trimestre (dernier rang vu gardé sur l'appareil ; rien au tout premier affichage ni au changement de trimestre). */
+  const cur = sais.id + '|' + rg.i;
+  let nouveau = false, ancienI = 0;
+  try{
+    const vu = localStorage.getItem('cartes-rang-vu2');
+    if(vu === null) localStorage.setItem('cartes-rang-vu2', cur);
+    else {
+      const pv = vu.split('|'), vi = +pv[1];
+      if(pv[0] !== sais.id || !(vi >= 0) || rg.i < vi) localStorage.setItem('cartes-rang-vu2', cur);
+      else if(rg.i > vi){ nouveau = true; ancienI = Math.max(0, Math.min(PP_RANGS.length - 1, vi)); setTimeout(() => { try{ localStorage.setItem('cartes-rang-vu2', cur); }catch(e){} }, 12000); }
+    }
+  }catch(err){}
+  const hero = ppRangCarte({ n: sais.n, sais, jours: ppSaisonJoursRestants(sais.id), masSem, nouveau, ancienI, cur });
   /* v419 : pourcentage du jour = cartes déjà révisées aujourd'hui / (déjà révisées + encore à voir). Mêmes définitions que l'accueil (« à réviser » = date de révision atteinte ; « faites » = révisées aujourd'hui). */
   const faites = cs.filter(c => c.derniereRevision === today).length;
   const restantes = cs.filter(c => c.derniereRevision !== today && (c.prochaineRevision || today) <= today).length;
@@ -20219,21 +20350,337 @@ function ppStatsHtml(){
   ${termine}</div>`;
 }
 
-/* v419 : RANGS de maîtrise (selon le nombre de cartes maîtrisées, cartes actives seulement). Après le dernier rang : un prestige tous les PP_PRESTIGE_PAS cartes. */
+/* v431 : RANGS de maîtrise = Bronze · Argent · Or · Platine · Diamant · Champion · Maître · Grand maître · Légende (9 rangs, l'échelle que tout joueur connaît).
+   Le rang se calcule sur les cartes maîtrisées PENDANT LE TRIMESTRE (la « saison »). Au changement de trimestre, le meilleur rang part dans la vitrine et on repart de zéro.
+   c = couleur vive · c2 = ton profond (bas du dégradé métal) · c3 = reflet clair. Plus le rang monte, plus la couleur est intense et la mise en scène lourde. */
 const PP_RANGS = [
-  { n:'Novice', s:0, c:'var(--c-dash)' }, { n:'Apprenti', s:5, c:'var(--blue)' }, { n:'Initié', s:15, c:'var(--green)' }, { n:'Adepte', s:30, c:'var(--yellow)' },
-  { n:'Expert', s:60, c:'var(--amber)' }, { n:'Maître', s:100, c:'var(--orange)' }, { n:'Grand maître', s:175, c:'var(--pink)' }, { n:'Légende', s:300, c:'var(--cream)' }
+  { n:'Bronze', s:0, c:'#e58b4b', c2:'#7d3f16', c3:'#ffc590' },
+  { n:'Argent', s:15, c:'#c3d1e2', c2:'#6d8097', c3:'#f4f8fd' },
+  { n:'Or', s:40, c:'#ffc531', c2:'#b36b00', c3:'#fff0a8' },
+  { n:'Platine', s:70, c:'#2ee9cc', c2:'#0a8c86', c3:'#c4fff4' },
+  { n:'Diamant', s:110, c:'#58ccff', c2:'#1d5fe0', c3:'#d9f4ff' },
+  { n:'Champion', s:155, c:'#b86cff', c2:'#5b21c0', c3:'#eed6ff' },
+  { n:'Maître', s:205, c:'#ff4fd8', c2:'#8a1470', c3:'#ffc7f3' },
+  { n:'Grand maître', s:255, c:'#ff3346', c2:'#8c0b1f', c3:'#ffb3bb' },
+  { n:'Légende', s:300, c:'#ffe27a', c2:'#ff9d00', c3:'#ffffff' }
 ];
-const PP_PRESTIGE_PAS = 150;
-function ppRangMaitrise(mas){
+const PP_RANGS_EN = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Champion', 'Master', 'Grandmaster', 'Legend'];
+const PP_RANG_MAX = PP_RANGS.length - 1;
+function ppLangueEn(){ try{ return (typeof langueChoisie === 'function' ? langueChoisie() : 'fr') === 'en'; }catch(e){ return false; } }
+function ppRangVars(i){ const r = PP_RANGS[i]; return '--c:' + r.c + ';--c2:' + r.c2 + ';--c3:' + r.c3; }
+function ppSaisonId(d){ d = d || (typeof todayStr === 'function' ? todayStr() : new Date().toISOString().slice(0, 10)); return d.slice(0, 4) + '-T' + (Math.floor((+d.slice(5, 7) - 1) / 3) + 1); }
+function ppSaisonDebut(id){ return id.slice(0, 4) + '-' + String((+id.slice(6) - 1) * 3 + 1).padStart(2, '0') + '-01'; }
+function ppSaisonLabel(id){ return 'T' + id.slice(6) + ' ' + id.slice(0, 4); }
+
+function ppRangMaitrise(n){
   let i = 0;
-  for(let k = 0; k < PP_RANGS.length; k++) if(mas >= PP_RANGS[k].s) i = k;
-  const r = PP_RANGS[i], dernier = i === PP_RANGS.length - 1;
-  const prestige = dernier ? Math.floor((mas - r.s) / PP_PRESTIGE_PAS) : 0;
-  const debut = dernier ? r.s + PP_PRESTIGE_PAS * prestige : r.s;
-  const suivant = dernier ? debut + PP_PRESTIGE_PAS : PP_RANGS[i + 1].s;
-  return { i, r, dernier, prestige, reste: suivant - mas, pct: Math.max(0, Math.min(100, Math.round((mas - debut) / (suivant - debut) * 100))), suivantNom: dernier ? null : PP_RANGS[i + 1].n };
+  for(let k = 0; k < PP_RANGS.length; k++) if(n >= PP_RANGS[k].s) i = k;
+  const r = PP_RANGS[i], dernier = i === PP_RANG_MAX;
+  const suivant = dernier ? r.s : PP_RANGS[i + 1].s;
+  return { i, r, dernier, suivant, reste: dernier ? 0 : suivant - n, pct: dernier ? 100 : Math.max(0, Math.min(100, Math.round((n - r.s) / (suivant - r.s) * 100))), suivantNom: dernier ? null : PP_RANGS[i + 1].n };
 }
+
+/* 9 BADGES, de plus en plus riches (0 disque · 1 bouclier · 2 hexagone à chevrons · 3 diamant · 4 bouclier + étoile · 5 + ailes · 6 + ailes et couronne · 7 médaillon étoilé + couronne · 8 soleil, ailes, couronne).
+   Traits et remplissages en DÉGRADÉ MÉTAL (reflet clair → couleur → ton profond) + un reflet qui balaie le badge de temps en temps (classe gl1, depuis l'Or). */
+function ppEtoile(cx, cy, R, r, n){
+  let d = '';
+  for(let k = 0; k < n * 2; k++){ const a = -Math.PI / 2 + k * Math.PI / n, rad = k % 2 ? r : R; d += (k ? 'L' : 'M') + (cx + rad * Math.cos(a)).toFixed(1) + ' ' + (cy + rad * Math.sin(a)).toFixed(1); }
+  return d + 'Z';
+}
+let ppBadgeUid = 0;
+function ppBadgeRang(i){
+  const u = ++ppBadgeUid, C = 'url(#pg' + u + ')';
+  const st = (w, o) => `fill="none" stroke="${C}" stroke-width="${w}"${o ? ` stroke-opacity="${o}"` : ''} stroke-linecap="round" stroke-linejoin="round"`;
+  const fl = o => `fill="${C}" fill-opacity="${o}"`;
+  const bouclier = 'M32 6 54 14V32C54 46 44 54 32 59 20 54 10 46 10 32V14Z', bouclierI = 'M32 12 48 18V32C48 42 41 48 32 52 23 48 16 42 16 32V18Z';
+  const aile = `<path d="M11 21C4 20-3 14-8 6 0 8 6 10 11 15M11 30C4 29-2 25-7 19 0 20 6 22 11 25M12 38C6 38 1 35-2 30 3 31 8 32 12 33"/>`;
+  const ailes = `<g ${st(2.4)}>${aile}</g><g ${st(2.4)} transform="translate(64 0) scale(-1 1)">${aile}</g>`;
+  const couronne = `<path d="M23 9 22 -2 27 3 32 -6 37 3 42 -2 41 9Z" fill="${C}" stroke="${C}" stroke-width="1.4" stroke-linejoin="round"/><path d="M23.5 6.5H40.5" stroke="var(--bg,#0c0c12)" stroke-width="1.2" stroke-opacity=".6"/>`;
+  const etoile = (R, r, cy) => `<path d="${ppEtoile(32, cy || 33, R, r, 5)}" fill="${C}"/>`;
+  let g = '', wide = false, sil = '';
+  if(i === 0){ sil = '<circle cx="32" cy="32" r="22"/>'; g = `<circle cx="32" cy="32" r="22" ${fl(.14)} stroke="${C}" stroke-width="2.6"/><circle cx="32" cy="32" r="11" ${st(1.5, .5)}/><circle cx="32" cy="32" r="4" fill="${C}"/>`; }
+  else if(i === 1){ sil = `<path d="${bouclier}"/>`; g = `<path d="${bouclier}" ${fl(.16)} stroke="${C}" stroke-width="2.8" stroke-linejoin="round"/><path d="M23 30 32 38 41 30" ${st(3.4)}/>`; }
+  else if(i === 2){ sil = '<path d="M32 4 56 18V46L32 60 8 46V18Z"/>'; g = `<path d="M32 4 56 18V46L32 60 8 46V18Z" ${fl(.2)} stroke="${C}" stroke-width="3" stroke-linejoin="round"/><path d="M32 12 49 22V42L32 52 15 42V22Z" ${st(1.5, .5)}/><path d="M23 26 32 34 41 26M23 35 32 43 41 35" ${st(3.2)}/>`; }
+  else if(i === 3){ sil = '<path d="M32 3 59 32 32 61 5 32Z"/>'; g = `<path d="M32 3 59 32 32 61 5 32Z" ${fl(.2)} stroke="${C}" stroke-width="3.2" stroke-linejoin="round"/><path d="M32 14 48 32 32 50 16 32Z" ${fl(.34)} stroke="${C}" stroke-width="1.8" stroke-opacity=".7" stroke-linejoin="round"/><circle cx="32" cy="32" r="4.5" fill="${C}"/><path d="M32 -1V5M63 32H57M32 65V59M1 32H7" ${st(2.2, .8)}/>`; }
+  else if(i === 4){ sil = `<path d="${bouclier}"/>`; g = `<path d="${bouclier}" ${fl(.22)} stroke="${C}" stroke-width="3.4" stroke-linejoin="round"/><path d="${bouclierI}" ${st(1.6, .55)}/>${etoile(13, 5.4, 33)}`; }
+  else if(i === 5){ wide = true; sil = `<path d="${bouclier}"/>`; g = `${ailes}<path d="${bouclier}" ${fl(.24)} stroke="${C}" stroke-width="3.6" stroke-linejoin="round"/><path d="${bouclierI}" ${st(1.6, .55)}/>${etoile(14, 5.8, 33)}`; }
+  else if(i === 6){ wide = true; sil = `<path d="${bouclier}"/>`; g = `${ailes}<path d="${bouclier}" ${fl(.28)} stroke="${C}" stroke-width="3.8" stroke-linejoin="round"/><path d="${bouclierI}" ${st(1.6, .6)}/>${etoile(14, 5.8, 34)}${couronne}`; }
+  else if(i === 7){ wide = true; sil = '<circle cx="32" cy="33" r="21"/>'; g = `${ailes}<path d="${ppEtoile(32, 33, 31, 23, 8)}" ${fl(.22)} stroke="${C}" stroke-width="1.6" stroke-opacity=".6" stroke-linejoin="round"/><circle cx="32" cy="33" r="21" ${fl(.3)} stroke="${C}" stroke-width="3.4"/><circle cx="32" cy="33" r="16" ${st(1.4, .55)}/>${etoile(11.5, 4.8, 33)}${couronne}`; }
+  else { wide = true; sil = '<circle cx="32" cy="33" r="24"/>';
+    let rays = ''; for(let k = 0; k < 16; k++){ const a = k * Math.PI / 8, r1 = 27, r2 = k % 2 ? 31 : 35; rays += `M${(32 + r1 * Math.cos(a)).toFixed(1)} ${(33 + r1 * Math.sin(a)).toFixed(1)}L${(32 + r2 * Math.cos(a)).toFixed(1)} ${(33 + r2 * Math.sin(a)).toFixed(1)}`; }
+    g = `${ailes}<path d="${rays}" ${st(2.2, .9)}/><circle cx="32" cy="33" r="24" ${fl(.3)} stroke="${C}" stroke-width="3.8"/><circle cx="32" cy="33" r="19" ${st(1.6, .6)}/>${etoile(14.5, 6, 34)}<path d="${ppEtoile(2, -1, 4, 1.4, 4)}" fill="${C}"/><path d="${ppEtoile(62, -1, 4, 1.4, 4)}" fill="${C}"/>${couronne}`; }
+  const defs = `<defs><linearGradient id="pg${u}" gradientUnits="userSpaceOnUse" x1="0" y1="-6" x2="0" y2="62"><stop offset="0" style="stop-color:var(--c3)"/><stop offset=".42" style="stop-color:var(--c)"/><stop offset="1" style="stop-color:var(--c2)"/></linearGradient>` +
+    `<linearGradient id="pw${u}" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><clipPath id="pk${u}">${sil}</clipPath></defs>`;
+  const gleam = i >= 2 ? `<g clip-path="url(#pk${u})" pointer-events="none"><g class="gl"><rect x="-24" y="-10" width="15" height="84" fill="url(#pw${u})" transform="skewX(-22)"/></g></g>` : '';
+  const cls = 'pp-mbadge' + (i >= 3 ? ' g' + (i >= 7 ? 3 : i >= 5 ? 2 : 1) : '') + (i >= 2 ? ' gl1' : '') + (i === PP_RANG_MAX ? ' leg' : '');
+  return `<svg class="${cls}" viewBox="${wide ? '-10 -8 84 76' : '0 -8 64 76'}" width="${wide ? 77 : 59}" height="70" aria-hidden="true">${defs}${g}${gleam}</svg>`;
+}
+function ppBadgeBloc(i){ return `<span class="pp-bw a${i >= PP_RANG_MAX ? 7 : i >= 5 ? 5 : i >= 3 ? 3 : 0}">${ppBadgeRang(i)}</span>`; }
+function ppEmbers(n){
+  let h = '';
+  for(let k = 0; k < n; k++) h += `<i style="--x:${(4 + Math.random() * 92).toFixed(0)}%;--t:${(3.2 + Math.random() * 3.4).toFixed(1)}s;--d:${(-Math.random() * 6).toFixed(1)}s;--s:${(2 + Math.random() * 2.4).toFixed(1)}px;--dx:${(Math.random() * 44 - 22).toFixed(0)}px"></i>`;
+  return `<div class="pp-emb" aria-hidden="true">${h}</div>`;
+}
+
+/* La carte « Maîtrise » (HTML). o = { n: cartes maîtrisées ce trimestre, sais: {id, v:[{id,i}]}, jours: jours restants, masSem, nouveau, ancienI, cur }.
+   La carte finale est toujours dans le HTML ; si « nouveau », un calque .pp-rs la recouvre et ppRangAnim le remplit (séquence de montée de rang). */
+function ppRangCarte(o){
+  const rg = ppRangMaitrise(o.n), r = rg.r, nx = rg.dernier ? r : PP_RANGS[rg.i + 1];
+  const lab = ppSaisonLabel(o.sais.id);
+  const mnum = rg.dernier
+    ? `<div class="pp-mnum"><span><b>${o.n}</b></span><span style="color:${r.c}">Légende</span></div>`
+    : `<div class="pp-mnum"><span><b>${o.n}</b> / ${rg.suivant}</span><span style="color:${nx.c}">${nx.n}</span></div>`;
+  const but = rg.dernier
+    ? `Sommet atteint : tu es Légende ce trimestre.`
+    : `Encore <b>${rg.reste}</b> carte${rg.reste > 1 ? 's' : ''} à maîtriser pour devenir <b style="color:${nx.c}">${nx.n}</b>`;
+  const fin = o.jours > 0 ? `Fin de saison dans ${o.jours} jour${o.jours > 1 ? 's' : ''} · ton meilleur rang est gardé` : `Dernier jour de la saison · ton meilleur rang est gardé`;
+  const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(x => `<span style="${ppRangVars(x.i)}">${ppBadgeRang(x.i)}<em>${ppSaisonLabel(x.id)}</em></span>`).join('')}</div>` : '';
+  const calque = o.nouveau ? `<div class="pp-rs" style="--cn:${r.c};--c3n:${r.c3};--co:${PP_RANGS[o.ancienI].c}"></div>` : '';
+  return `<div class="pp-sgM"><div class="pp-mst r${rg.i}${o.nouveau ? ' pp-ranim' : ''}" style="${ppRangVars(rg.i)}" data-cur="${o.cur}" data-i="${rg.i}" data-o="${o.ancienI || 0}" data-n="${o.n}">
+    ${rg.i >= 7 ? ppEmbers(rg.i === PP_RANG_MAX ? 18 : 9) : ''}
+    <div class="pp-mtop">${ppBadgeBloc(rg.i)}
+    <div class="pp-minfo"><small>Saison ${lab} · rang ${rg.i + 1}/${PP_RANGS.length}</small><b class="pp-rn">${r.n}</b></div>
+    ${o.masSem > 0 ? `<div class="pp-mpct"><b>+${o.masSem}</b><span>maîtrisée${o.masSem > 1 ? 's' : ''} cette semaine</span></div>` : ''}</div>
+    ${mnum}
+    <div class="pp-mrow"><div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
+    <p class="pp-mgoal">${but}</p>
+    <p class="pp-mseas">${fin}</p>${vit}${calque}</div></div>`;
+}
+
+/* ---- v431 : moteur de particules (canvas) pour la séquence de montée de rang ---- */
+function ppHexA(h, a){ h = h.replace('#', ''); const n = parseInt(h.length === 3 ? h.replace(/./g, '$&$&') : h, 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; }
+function ppRangFx(cv, W, H){
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  const g = cv.getContext('2d'); if(!g) return null;
+  g.scale(dpr, dpr);
+  const P = [], R = []; let stop = false, last = performance.now();
+  const rnd = (a, b) => a + Math.random() * (b - a), pick = a => a[Math.floor(Math.random() * a.length)];
+  function line(x1, y1, x2, y2, w, col, a){ g.lineWidth = w; g.strokeStyle = ppHexA(col, a); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); }
+  function dot(x, y, z, col, a){ g.fillStyle = ppHexA(col, a * .9); g.beginPath(); g.arc(x, y, z, 0, 6.2832); g.fill(); g.fillStyle = ppHexA(col, a * .16); g.beginPath(); g.arc(x, y, z * 3.4, 0, 6.2832); g.fill(); }
+  function frame(now){
+    if(stop || !cv.isConnected) return;
+    const dt = Math.min(48, now - last); last = now; const f = dt / 16.67;
+    g.clearRect(0, 0, W, H); g.globalCompositeOperation = 'lighter'; g.lineCap = 'round';
+    for(let k = R.length - 1; k >= 0; k--){
+      const r = R[k];
+      if(r.d > 0){ r.d -= dt; continue; }
+      r.life -= dt; if(r.life <= 0){ R.splice(k, 1); continue; }
+      const a = r.life / r.max; r.r += r.v * dt * Math.max(.2, a);
+      g.lineWidth = Math.max(.6, r.w * a); g.strokeStyle = ppHexA(r.col, a * .95); g.beginPath(); g.arc(r.x, r.y, r.r, 0, 6.2832); g.stroke();
+      g.lineWidth = Math.max(.4, r.w * a * .35); g.strokeStyle = ppHexA('#ffffff', a * .6); g.beginPath(); g.arc(r.x, r.y, r.r * .97, 0, 6.2832); g.stroke();
+    }
+    for(let k = P.length - 1; k >= 0; k--){
+      const p = P[k]; p.life -= dt; if(p.life <= 0){ P.splice(k, 1); continue; }
+      const a = Math.min(1, p.life / p.max * 1.7);
+      if(p.k === 'in'){
+        p.v += p.acc * f; p.r -= p.v * f; p.a += p.w * f;
+        if(p.r < 12){ P.splice(k, 1); continue; }
+        const nx = p.cx + Math.cos(p.a) * p.r, ny = p.cy + Math.sin(p.a) * p.r;
+        line(p.x, p.y, nx, ny, p.z, p.col, a); p.x = nx; p.y = ny;
+      } else {
+        const dr = Math.pow(p.drag, f); p.vx *= dr; p.vy = p.vy * dr + p.g * f; p.x += p.vx * f; p.y += p.vy * f;
+        if(p.k === 's') line(p.x - p.vx * 1.9, p.y - p.vy * 1.9, p.x, p.y, p.z, p.col, a);
+        else dot(p.x, p.y, p.z, p.col, a);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  const add = p => { if(P.length < 1100) P.push(p); };
+  return {
+    sparks(cols, n, x, y, v0, v1, l0, l1, grav){ for(let k = 0; k < n; k++){ const a = rnd(0, 6.2832), v = rnd(v0, v1), l = rnd(l0, l1); add({ k:'s', x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, drag:.955, g:grav || .05, z:rnd(1, 2.4), col:pick(cols), life:l, max:l }); } },
+    embers(cols, n, x, y, spread, up, l0, l1){ for(let k = 0; k < n; k++){ const l = rnd(l0, l1); add({ k:'d', x:x + rnd(-spread, spread), y:y + rnd(-spread * .3, spread * .3), vx:rnd(-.5, .5), vy:-rnd(up * .4, up), drag:.995, g:-.004, z:rnd(1, 2.6), col:pick(cols), life:l, max:l }); } },
+    suck(col, cx, cy){ const r = rnd(140, Math.min(W * .62, 270)), a = rnd(0, 6.2832), l = 1400; add({ k:'in', cx, cy, r, a, v:rnd(1, 2), acc:rnd(.1, .24), w:rnd(.012, .03) * (Math.random() < .5 ? -1 : 1), x:cx + Math.cos(a) * r, y:cy + Math.sin(a) * r, z:rnd(1, 2.2), col, life:l, max:l }); },
+    ring(col, delay, v, w, life, x, y){ R.push({ x, y, r:10, v, w, col, life, max:life, d:delay }); },
+    stop(){ stop = true; try{ g.clearRect(0, 0, W, H); }catch(e){} }
+  };
+}
+
+/* v431 : SÉQUENCE DE MONTÉE DE RANG, DANS la carte de maîtrise (la carte grandit, jamais de plein écran).
+   Obscurité → énergie aspirée vers le badge qui vibre et brille → fissures → il éclate en éclats → silence → il s'écrase au centre (flash, ondes de choc,
+   colonne de lumière, étincelles, la carte tremble, le téléphone vibre) → le nom du rang s'écrit lettre par lettre → la carte retrouve sa taille.
+   Plus le rang est haut, plus tout est long, dense et lourd (Légende = le grand moment). Si le JS échoue, le calque se retire tout seul (CSS, 16 s). */
+function ppRangAnim(el){
+  const st = el.querySelector('.pp-rs');
+  try{ localStorage.setItem('cartes-rang-vu2', el.getAttribute('data-cur') || ''); }catch(e){}
+  const iN = Math.max(0, Math.min(PP_RANG_MAX, +el.getAttribute('data-i') || 0)), iO = Math.max(0, Math.min(iN, +el.getAttribute('data-o') || 0));
+  const nCartes = +el.getAttribute('data-n') || 0;
+  const reduit = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let fini = false, fx = null; const mins = [], ints = [], anims = [];
+  const h0 = el.offsetHeight;
+  const defaire = () => {
+    if(fini) return; fini = true;
+    mins.forEach(clearTimeout); ints.forEach(clearInterval);
+    anims.forEach(a => { try{ a.cancel(); }catch(e){} });
+    if(fx) fx.stop();
+    if(st && st.isConnected) st.remove();
+    el.classList.remove('pp-ranim');
+  };
+  if(!st || reduit || !el.animate){ defaire(); return; }
+  const A = (n, kf, o) => { if(!n) return null; const a = n.animate(kf, Object.assign({ fill:'both', easing:'cubic-bezier(.22,1,.36,1)' }, o)); anims.push(a); return a; };
+  const T = (fn, ms) => { mins.push(setTimeout(() => { if(fini) return; if(!el.isConnected){ defaire(); return; } try{ fn(); }catch(e){ defaire(); } }, ms)); };
+  const I = (fn, ms) => { const id = setInterval(() => { if(fini) return; if(!el.isConnected){ defaire(); return; } try{ fn(); }catch(e){} }, ms); ints.push(id); return id; };
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const vib = p => { try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} };
+  const rN = PP_RANGS[iN], rO = PP_RANGS[iO];
+  const t = iN / PP_RANG_MAX, f = .6 + .4 * t, W = st.clientWidth || el.clientWidth, H = 380, cy = 172, cx = W / 2;
+  const q = (navigator.hardwareConcurrency || 4) <= 3 ? .55 : 1;
+  const en = ppLangueEn(), nom = en ? PP_RANGS_EN[iN] : rN.n;
+  const LEG = iN === PP_RANG_MAX;
+  st.style.setProperty('--cy', cy + 'px');
+  st.innerHTML = '<div class="pp-rs-bg"></div><div class="pp-rs-rays"></div><div class="pp-rs-rays pp-rs-rays2"></div><canvas class="pp-rs-cv"></canvas>' +
+    '<div class="pp-rs-stage"><div class="pp-rs-core"></div><div class="pp-rs-beam"></div><div class="pp-rs-lens"></div>' +
+    '<div class="pp-rs-b old" style="' + ppRangVars(iO) + '">' + ppBadgeRang(iO) + '</div>' +
+    '<svg class="pp-rs-cr" viewBox="0 0 200 170"></svg>' +
+    '<div class="pp-rs-b nw" style="' + ppRangVars(iN) + '">' + ppBadgeRang(iN) + '</div></div>' +
+    '<div class="pp-rs-top">Nouveau rang !</div><div class="pp-rs-name"></div><div class="pp-rs-sub"></div><div class="pp-rs-fl"></div>';
+  const Q = s => st.querySelector(s);
+  const bg = Q('.pp-rs-bg'), rays = Q('.pp-rs-rays'), rays2 = Q('.pp-rs-rays2'), core = Q('.pp-rs-core'), beam = Q('.pp-rs-beam'), lens = Q('.pp-rs-lens');
+  const old = Q('.pp-rs-b.old'), nw = Q('.pp-rs-b.nw'), cr = Q('.pp-rs-cr'), top = Q('.pp-rs-top'), nm = Q('.pp-rs-name'), sub = Q('.pp-rs-sub'), fl = Q('.pp-rs-fl');
+  fx = ppRangFx(Q('.pp-rs-cv'), W, H);
+  const t0 = Date.now(), now = () => Date.now() - t0;
+
+  /* chronologie (ms) */
+  const tc0 = 420, dCharge = Math.round((900 + 1400 * t) * f), dCrack = Math.round((340 + 260 * t) * f);
+  const tBreak = tc0 + dCharge + dCrack, dSil = Math.round((240 + 600 * t) * f), tImp = tBreak + 140 + dSil;
+  const nL = nom.length, stag = Math.round(80 + 35 * t), tName = tImp + 420, tNameEnd = tName + nL * stag + 300;
+  const dHold = Math.round((600 + 1700 * t) * f), tOut = tNameEnd + 450 + dHold, tEnd = tOut + 850;
+  const sh = (cols, n, x, y, v0, v1, l0, l1, gr) => { if(fx) fx.sparks(cols, Math.round(n * q), x, y, v0, v1, l0, l1, gr); };
+  const ring = (col, d, v, w, life) => { if(fx) fx.ring(col, d, v, w, life, cx, cy); };
+
+  /* 0 · la carte grandit, tout s'assombrit, l'ancien badge entre */
+  A(el, [{ height:h0 + 'px' }, { height:H + 'px' }], { duration:460, easing:'cubic-bezier(.3,.9,.2,1)' });
+  A(st, [{ opacity:0 }, { opacity:1 }], { duration:380, easing:'ease-out' });
+  A(old, [{ transform:'scale(.45) rotate(-14deg)', opacity:0 }, { transform:'none', opacity:1 }], { duration:520, easing:'cubic-bezier(.34,1.56,.64,1)', fill:'backwards' });
+
+  /* 1 · charge : énergie aspirée, rayons, le badge vibre et brille de plus en plus */
+  A(bg, [{ opacity:0 }, { opacity:.6, offset:.75 }, { opacity:1 }], { duration:dCharge + dCrack, delay:tc0, easing:'ease-in' });
+  A(rays, [{ transform:'rotate(0deg)' }, { transform:'rotate(360deg)' }], { duration:18000, iterations:Infinity, easing:'linear' });
+  A(rays2, [{ transform:'rotate(0deg)' }, { transform:'rotate(-360deg)' }], { duration:26000, iterations:Infinity, easing:'linear' });
+  A(rays, [{ opacity:0 }, { opacity:.5 }, { opacity:.95 }], { duration:dCharge + dCrack, delay:tc0, easing:'ease-in', composite:'replace' });
+  A(rays2, [{ opacity:0 }, { opacity:iN >= 5 ? .5 : 0 }], { duration:dCharge + dCrack, delay:tc0, easing:'ease-in' });
+  const kf = [], N = Math.max(6, Math.round(dCharge / 45));
+  for(let k = 0; k <= N; k++){ const p = k / N, am = p * p * 5.5; kf.push({ transform:'translate(' + rnd(-am, am).toFixed(1) + 'px,' + rnd(-am, am).toFixed(1) + 'px) scale(' + (1 + .16 * p).toFixed(3) + ')' }); }
+  A(old, kf, { duration:dCharge, delay:tc0, easing:'linear' });
+  A(old, [{ filter:'drop-shadow(0 0 0 ' + rO.c + ') brightness(1)' }, { filter:'drop-shadow(0 0 26px ' + rO.c + ') brightness(1.5)' }], { duration:dCharge, delay:tc0, easing:'ease-in' });
+  T(() => {
+    const id = I(() => { const p = Math.min(1, (now() - tc0) / dCharge), n = Math.round((1 + p * 4) * q); for(let k = 0; k < n; k++) if(fx) fx.suck(k % 3 === 0 ? '#ffffff' : (k % 2 ? rN.c : rN.c3), cx, cy); }, 40);
+    T(() => clearInterval(id), dCharge + dCrack);
+    vib([10, 90, 12, 80, 14, 70, 16, 60, 18, 50, 22, 40, 26, 30, 30, 20]);
+  }, tc0);
+
+  /* 2 · fissures : des lignes blanches partent du centre, le badge clignote */
+  let cp = '';
+  for(let b = 0; b < 8; b++){ let a = b / 8 * 6.2832 + rnd(-.3, .3), x = 100, y = 85, d = 'M100 85'; const steps = 5 + Math.floor(rnd(0, 3)); for(let s = 0; s < steps; s++){ a += rnd(-.55, .55); const l = rnd(11, 17); x += Math.cos(a) * l; y += Math.sin(a) * l; d += ' L' + x.toFixed(1) + ' ' + y.toFixed(1); } cp += '<path d="' + d + '" pathLength="1"/>'; }
+  cr.innerHTML = cp;
+  [].forEach.call(cr.querySelectorAll('path'), (p, k) => A(p, [{ strokeDashoffset:1 }, { strokeDashoffset:0 }], { duration:Math.max(120, dCrack * .6), delay:tc0 + dCharge * .86 + k * 40, easing:'ease-out' }));
+  A(old, [{ filter:'drop-shadow(0 0 26px ' + rO.c + ') brightness(1.5)' }, { filter:'drop-shadow(0 0 30px #fff) brightness(3.2)' }, { filter:'drop-shadow(0 0 26px ' + rO.c + ') brightness(1.4)' }, { filter:'drop-shadow(0 0 34px #fff) brightness(3.8)' }, { filter:'drop-shadow(0 0 28px ' + rO.c + ') brightness(1.6)' }, { filter:'drop-shadow(0 0 40px #fff) brightness(5)' }], { duration:dCrack, delay:tc0 + dCharge, easing:'linear' });
+
+  /* 3 · éclatement : le badge part en éclats */
+  T(() => {
+    old.style.visibility = 'hidden';
+    A(cr, [{ opacity:1 }, { opacity:0 }], { duration:240 });
+    const nS = 7 + Math.round(5 * t), cuts = []; let acc = rnd(0, 6.2832);
+    for(let k = 0; k < nS; k++){ cuts.push(acc); acc += 6.2832 / nS * rnd(.6, 1.4); }
+    cuts.sort((a, b) => a - b);
+    for(let k = 0; k < nS; k++){
+      const a0 = cuts[k], a1 = k + 1 < nS ? cuts[k + 1] : cuts[0] + 6.2832, am = (a0 + a1) / 2, R0 = rnd(88, 104), R1 = rnd(52, 74);
+      const pt = (a, r) => (100 + Math.cos(a) * r).toFixed(1) + 'px ' + (85 + Math.sin(a) * r).toFixed(1) + 'px';
+      const s = document.createElement('div'); s.className = 'pp-rs-b sh'; s.setAttribute('style', ppRangVars(iO) + ';clip-path:polygon(100px 85px,' + pt(a0, R0) + ',' + pt(am, R1) + ',' + pt(a1, R0) + ')');
+      s.innerHTML = ppBadgeRang(iO); old.parentNode.insertBefore(s, nw);
+      const dist = (110 + Math.random() * 190) * (.8 + .5 * t), rot = (Math.random() < .5 ? -1 : 1) * rnd(60, 260);
+      A(s, [{ transform:'translate(0,0) rotate(0deg) scale(1)', opacity:1 }, { transform:'translate(' + (Math.cos(am) * dist).toFixed(0) + 'px,' + (Math.sin(am) * dist + 30).toFixed(0) + 'px) rotate(' + rot.toFixed(0) + 'deg) scale(' + rnd(.4, .8).toFixed(2) + ')', opacity:0 }], { duration:rnd(900, 1500), easing:'cubic-bezier(.1,.75,.25,1)' });
+    }
+    sh([rO.c, rO.c3, '#ffffff'], 70 + 130 * t, cx, cy, 3, 13, 500, 1100, .07);
+    ring(rO.c, 0, .8, 5, 650);
+    A(fl, [{ opacity:0 }, { opacity:.55, offset:.15 }, { opacity:0 }], { duration:420 });
+    vib([50]);
+  }, tBreak);
+
+  /* 4 · silence : tout se tait, un point de lumière grossit au centre */
+  T(() => {
+    A(rays, [{ opacity:.95 }, { opacity:.12 }], { duration:dSil + 140, easing:'ease-out' });
+    A(core, [{ opacity:0, transform:'scale(.1)' }, { opacity:1, transform:'scale(1.15)' }], { duration:dSil + 160, easing:'cubic-bezier(.5,0,.9,.4)' });
+    A(el, [{ transform:'none' }, { transform:'scale(.982)' }], { duration:dSil + 140, easing:'ease-in' });
+  }, tBreak + 100);
+
+  /* 5 · impact : le nouveau badge s'écrase au centre */
+  T(() => {
+    core.style.visibility = 'hidden';
+    const g0 = 'drop-shadow(0 0 ' + Math.round(12 + 16 * t) + 'px ' + rN.c + ')';
+    A(nw, [
+      { transform:'scale(3.6)', opacity:0, filter:'blur(16px) brightness(4) ' + g0, easing:'cubic-bezier(.5,0,1,.6)' },
+      { transform:'scale(.84)', opacity:1, filter:'blur(0px) brightness(2.4) ' + g0, offset:.5, easing:'cubic-bezier(.2,.9,.3,1.2)' },
+      { transform:'scale(1.07)', opacity:1, filter:'blur(0px) brightness(1.4) ' + g0, offset:.72, easing:'ease-out' },
+      { transform:'none', opacity:1, filter:'blur(0px) brightness(1) ' + g0 }
+    ], { duration:560, easing:'linear' });
+    A(fl, [{ opacity:0 }, { opacity:1, offset:.08 }, { opacity:0 }], { duration:Math.round(480 + 420 * t), easing:'ease-out' });
+    A(rays, [{ opacity:1 }, { opacity:LEG ? .8 : .55 }], { duration:1000 });
+    A(beam, [{ opacity:0, transform:'scaleX(.1)' }, { opacity:1, transform:'scaleX(1.3)', offset:.18 }, { opacity:0, transform:'scaleX(.2)' }], { duration:720 + 300 * t, easing:'ease-out' });
+    if(iN >= 3) A(lens, [{ opacity:0, transform:'scaleX(0)' }, { opacity:1, transform:'scaleX(1)', offset:.25 }, { opacity:0, transform:'scaleX(1.15)' }], { duration:700 + 300 * t, easing:'ease-out' });
+    const amp = 3 + 9 * t, sk = [];
+    for(let k = 0; k < 15; k++){ const dc = Math.pow(1 - k / 15, 1.6); sk.push({ transform:'translate(' + (rnd(-1, 1) * amp * dc).toFixed(1) + 'px,' + (rnd(-1, 1) * amp * dc).toFixed(1) + 'px) rotate(' + (rnd(-1, 1) * .55 * dc).toFixed(2) + 'deg)' }); }
+    sk.push({ transform:'none' });
+    A(el, sk, { duration:420 + 500 * t, easing:'linear' });
+    const nr = 1 + (iN >= 3 ? 1 : 0) + (iN >= 5 ? 1 : 0) + (LEG ? 2 : 0);
+    for(let k = 0; k < nr; k++) ring(k % 2 ? rN.c3 : rN.c, k * 120, .85 + .22 * k, Math.max(2, 7 - k), 900 + k * 130);
+    sh([rN.c, rN.c3, '#ffffff'], 140 + 260 * t, cx, cy, 4, 18, 600, 1300, .06);
+    if(fx) fx.embers([rN.c, rN.c3, '#ffffff'], Math.round((18 + 40 * t) * q), cx, cy, 24, 3.2, 1400, 2600);
+    A(top, [{ opacity:0, transform:'translateY(8px)' }, { opacity:1, transform:'none' }], { duration:500, delay:200 });
+    const gl = nw.querySelector('.gl'); if(gl) A(gl, [{ opacity:1, transform:'translateX(0)' }, { opacity:1, transform:'translateX(112px)' }], { duration:800, delay:420, easing:'ease-in-out' });
+    vib(LEG ? [120, 40, 60, 40, 40, 40, 300] : [90, 30, 40, 25, 30]);
+  }, tImp);
+
+  /* 6 · le nom du rang s'écrit, lettre par lettre */
+  T(() => {
+    const fs = Math.max(20, Math.min(40, Math.floor((W - 36) / (nL * .8))));
+    nm.style.fontSize = fs + 'px';
+    nm.innerHTML = [...nom.toUpperCase()].map(ch => ch === ' ' ? '<span class="sp">&nbsp;</span>' : '<span>' + ch + '</span>').join('');
+    [].forEach.call(nm.querySelectorAll('span'), (s, k) => {
+      A(s, [{ opacity:0, transform:'translateY(-26px) scale(2.8)', filter:'blur(10px)' }, { opacity:1, transform:'translateY(3px) scale(.94)', filter:'blur(0px)', offset:.65 }, { opacity:1, transform:'none', filter:'blur(0px)' }], { duration:480, delay:k * stag });
+      T(() => { const b = s.getBoundingClientRect(), r = st.getBoundingClientRect(); sh([rN.c3, '#ffffff', rN.c], 7, b.left - r.left + b.width / 2, b.top - r.top + b.height / 2, 1, 4.5, 300, 700, .03); }, k * stag + 120);
+    });
+    sub.textContent = en ? nCartes + ' card' + (nCartes > 1 ? 's' : '') + ' mastered this quarter' : nCartes + ' carte' + (nCartes > 1 ? 's' : '') + ' maîtrisée' + (nCartes > 1 ? 's' : '') + ' ce trimestre';
+    A(sub, [{ opacity:0, transform:'translateY(6px)' }, { opacity:1, transform:'none' }], { duration:600, delay:nL * stag + 120 });
+    if(iN >= 5) A(nm, [{ filter:'drop-shadow(0 0 8px ' + rN.c + ')' }, { filter:'drop-shadow(0 0 26px ' + rN.c3 + ')' }, { filter:'drop-shadow(0 0 8px ' + rN.c + ')' }], { duration:1500, delay:nL * stag + 300, iterations:Infinity, easing:'ease-in-out' });
+    else A(nm, [{ filter:'drop-shadow(0 0 10px ' + rN.c + ')' }, { filter:'drop-shadow(0 0 10px ' + rN.c + ')' }], { duration:100 });
+  }, tName);
+  if(iN >= 6) T(() => {
+    ring(rN.c3, 0, 1, 5, 1000); if(LEG) ring('#ffffff', 160, 1.2, 4, 1100);
+    A(fl, [{ opacity:0 }, { opacity:LEG ? .7 : .3, offset:.1 }, { opacity:0 }], { duration:LEG ? 1100 : 700 });
+    sh([rN.c, rN.c3, '#ffffff'], LEG ? 260 : 120, cx, cy, 3, 15, 700, 1500, .05);
+    A(el, [{ transform:'translate(' + (LEG ? 5 : 3) + 'px,0)' }, { transform:'translate(-' + (LEG ? 4 : 2) + 'px,1px)' }, { transform:'none' }], { duration:320, easing:'ease-out' });
+    vib(LEG ? [60, 30, 120] : [50]);
+  }, tNameEnd - 250);
+
+  /* 7 · maintien : des braises montent ; plus le rang est haut, plus il y en a */
+  T(() => { const id = I(() => { if(fx) fx.embers([rN.c, rN.c3, '#ffffff'], Math.round((1 + 3 * t) * q), W / 2, H + 6, W / 2, 1.9, 2200, 3400); }, 70); T(() => clearInterval(id), tOut - tImp - 300); }, tImp + 300);
+
+  /* 8 · sortie : le calque s'efface, la carte retrouve sa taille et ses éléments arrivent un à un */
+  T(() => {
+    A(st, [{ opacity:1 }, { opacity:0 }], { duration:620, easing:'ease-in-out' });
+    A(el, [{ height:H + 'px' }, { height:h0 + 'px' }], { duration:760, easing:'cubic-bezier(.65,0,.35,1)' });
+    const E = s => el.querySelector(s), D = 160;
+    A(E('.pp-mtop > .pp-bw'), [{ transform:'scale(.2) rotate(-25deg)', opacity:0, filter:'brightness(3)' }, { transform:'scale(1.22) rotate(6deg)', opacity:1, filter:'brightness(1.6)', offset:.6 }, { transform:'none', opacity:1, filter:'brightness(1)' }], { duration:900, delay:D, fill:'backwards' });
+    A(E('.pp-mtop > .pp-minfo'), [{ opacity:0, transform:'translateX(-16px)' }, { opacity:1, transform:'none' }], { duration:600, delay:D + 200, fill:'backwards' });
+    A(E('.pp-mtop > .pp-mpct'), [{ opacity:0, transform:'translateY(8px)' }, { opacity:1, transform:'none' }], { duration:600, delay:D + 380, fill:'backwards' });
+    A(E('.pp-mnum'), [{ opacity:0 }, { opacity:1 }], { duration:500, delay:D + 380, fill:'backwards' });
+    A(E('.pp-mrow .pp-mbar u'), [{ transform:'scaleX(0)' }, { transform:'scaleX(1)' }], { duration:800, delay:D + 380, fill:'backwards' });
+    A(E('.pp-mrow > .pp-mnext'), [{ opacity:0, transform:'scale(.6)' }, { opacity:1, transform:'none' }], { duration:500, delay:D + 600, fill:'backwards' });
+    ['.pp-mgoal', '.pp-mseas', '.pp-vit'].forEach((s, k) => A(E(s), [{ opacity:0, transform:'translateY(6px)' }, { opacity:1, transform:'none' }], { duration:500, delay:D + 650 + k * 80, fill:'backwards' }));
+  }, tOut);
+  T(defaire, tEnd);
+}
+(function(){
+  function go(){
+    new MutationObserver(() => {
+      const el = document.querySelector('.pp-mst.pp-ranim:not([data-played])');
+      if(el){ el.setAttribute('data-played', '1'); requestAnimationFrame(() => requestAnimationFrame(() => { try{ ppRangAnim(el); }catch(e){ el.classList.remove('pp-ranim'); const x = el.querySelector('.pp-rs'); if(x) x.remove(); } })); }
+    }).observe(document.documentElement, { childList:true, subtree:true });
+  }
+  if(document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+})();
 
 /* ================= Réglages (feuille du bas) ================= */
 function ppRelanceActive(){
@@ -20295,6 +20742,11 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v431', t:["Rangs : de Bronze à Légende, et une saison par trimestre","Ranks: from Bronze to Legend, with a season every quarter"], p:[
+    ["Neuf rangs qui suivent l'échelle des jeux vidéo : Bronze, Argent, Or, Platine, Diamant, Champion, Maître, Grand maître, Légende. Chaque rang a sa couleur, de plus en plus intense.","Nine ranks following the video-game ladder: Bronze, Silver, Gold, Platinum, Diamond, Champion, Master, Grandmaster, Legend. Each rank has its own colour, more and more intense."],
+    ["Quand tu montes de rang, la carte devient une vraie séquence : énergie, fissures, éclats, impact, nom du rang qui s'écrit. Plus le rang est haut, plus c'est fort. Légende est un moment à part.","When you reach a new rank, the card plays a full sequence: energy, cracks, shards, impact, the rank name being written. The higher the rank, the stronger it gets. Legend is a moment of its own."],
+    ["Le badge Légende brille en permanence : bordure en or qui tourne, rayons, braises et reflets.","The Legend badge shines all the time: a turning gold border, rays, embers and glints."],
+    ["Le rang compte les cartes maîtrisées pendant le trimestre. À la fin, ton meilleur rang est gardé dans la vitrine et tu repars de zéro.","Your rank counts the cards mastered during the quarter. At the end, your best rank is kept in the showcase and you start again from zero."]] },
   { v:'v423', t:["Stats plus claires, planning stable","Clearer stats, steadier planning"], p:[
     ["Statistiques : plus de doublons, deux colonnes bien rangées sur Chromebook, et une phrase pour comprendre les paliers.","Stats: no more repeats, two tidy columns on Chromebook, and a line explaining the levels."],
     ["Planning : la case « auj. » a la même forme que les autres, et la ligne du jour ne change plus de hauteur.","Planning: the “today” cell has the same shape as the others, and the day row no longer changes height."],
