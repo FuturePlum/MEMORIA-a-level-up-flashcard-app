@@ -19,6 +19,7 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v244 : v441 (ouverture de l'app : délai réseau réduit à 0,7 s pour la page principale quand une copie existe, pour que le splash natif ne reste plus à l'écran plusieurs secondes sur un mauvais wifi) : sw.js change.
    v243 : v439 (PC : même animation de retournement que sur téléphone, dos de la carte plus rempli, « cartes qui résistent » corrigées) : index.html change, donc nouvelle version du cache.
    v242 : v438 (PC : la fenêtre des Stats ne change plus de taille pendant le dos, plus de rejeu d'entrée des blocs) : index.html change, donc nouvelle version du cache.
    v241 : v437 (PC : la carte de maîtrise s'agrandit en douceur, sans pivot) : index.html change, donc nouvelle version du cache.
@@ -206,7 +207,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v243';
+const SW_VERSION = 'v244';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
@@ -234,6 +235,10 @@ self.addEventListener('activate', (event) => {
    si une copie existe et que le réseau n'a pas fini d'envoyer le fichier en DELAI_RESEAU_MS, on ouvre la copie tout de suite ; le téléchargement continue
    en arrière-plan et met la copie à jour pour la prochaine ouverture. Sans copie (toute première ouverture), on attend le réseau comme avant. */
 const DELAI_RESEAU_MS = 4000;
+/* v244 : pour l'OUVERTURE de l'app (page principale), 4 s c'était trop long : tant que le service worker ne répond pas, c'est le splash NATIF d'Android
+   (ou celui de Chrome sur PC) qui reste à l'écran, avant même que notre faux splash puisse s'afficher. Avec une copie sur l'appareil, on l'ouvre après 0,7 s ;
+   la nouvelle version se télécharge en arrière-plan et s'ouvre à la prochaine ouverture. */
+const DELAI_OUVERTURE_MS = 700;
 
 async function chercherReseau(req, preload){
   let res = null;
@@ -259,7 +264,7 @@ self.addEventListener('fetch', (event) => {
     try{ local = (await caches.match(req)) || (req.mode === 'navigate' ? await caches.match('./index.html') : null); }catch(e){ local = null; }
     try{
       if(!local) return await reseau;
-      const rep = await Promise.race([reseau, new Promise((ok) => setTimeout(() => ok(null), DELAI_RESEAU_MS))]);
+      const rep = await Promise.race([reseau, new Promise((ok) => setTimeout(() => ok(null), req.mode === 'navigate' ? DELAI_OUVERTURE_MS : DELAI_RESEAU_MS))]);
       return rep || local;
     }catch(e){
       return local || Response.error();

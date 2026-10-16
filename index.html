@@ -2410,7 +2410,7 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-week{padding:14px 10px 12px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line)}
 .pp-daysw{overflow-x:auto;scrollbar-width:none;margin:-8px -8px -4px;padding:8px 8px 4px}
 .pp-daysw::-webkit-scrollbar{display:none}
-.pp-days{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;text-align:center}
+.pp-days{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;text-align:center;align-items:start}   /* v441 : chaque case reste collée en haut (un <button> recentre son contenu quand la ligne est plus haute que lui) */
 .pp-d b{display:grid;place-items:center;height:38px;border-radius:9px;font-size:15px;font-weight:800;background:var(--c-dayb);margin-bottom:6px;outline:2px solid transparent;outline-offset:1.5px;transition:outline-color .2s;animation:pppop .4s var(--pps) both;animation-delay:calc(var(--i)*45ms)}
 .pp-d.pp-n b{background:none;border:1.5px dashed var(--line)}
 .cb-wc.proj b{opacity:.78}
@@ -4910,6 +4910,14 @@ function saveLocalDateControle(matiere, dateControle, majIso){
   const maj = loadDatesControleMaj();
   maj[matiere] = majIso || new Date().toISOString();
   ppEcrire('cartes-datecontrole-maj', JSON.stringify(maj));
+  /* v441 : un vrai changement de date (pas une date reçue de la synchro) part vers l'autre appareil quelques secondes plus tard.
+     Avant, rien ne déclenchait l'envoi : la date restait sur cet appareil tant qu'on ne révisait pas / ne quittait pas l'app. */
+  if(!majIso){
+    try{
+      clearTimeout(window.__ppDateSyncTimer);
+      window.__ppDateSyncTimer = setTimeout(() => { try{ if(typeof envoyerVersSync === 'function') envoyerVersSync(); }catch(e){} }, 4000);
+    }catch(e){}
+  }
 }
 function loadDatesControleMaj(){
   return ppLireJSON('cartes-datecontrole-maj', {}, ppEstObjet);
@@ -13316,7 +13324,7 @@ function ppWeekHtml(){
     const d = new Date(j.date + 'T12:00:00');
     const nomJour = d.toLocaleDateString('fr-FR', { weekday:'short' }).replace(/\.$/, '');
     const auj = j.date === today, ctrl = controles[j.date];
-    const lb = auj ? 'auj.' : (N > 9 ? `${nomJour}<br>${d.getDate()}` : nomJour);
+    const lb = auj ? (N > 9 ? `auj.<br>${d.getDate()}` : 'auj.') : (N > 9 ? `${nomJour}<br>${d.getDate()}` : nomJour);   /* v441 : « auj. » sur 2 lignes comme les autres jours (sinon son bouton, plus court, était recentré plus bas) */
     const contenu = j.total > 0 ? ((j.reel === 0 ? '≈' : '') + j.total) : (ctrl ? PP_IC.flag : '');
     const cls = ['pp-d', auj ? 'pp-today' : '', (j.total ? '' : (ctrl ? '' : 'pp-n')), ctrl ? 'pp-end' : '', j.date === sel ? 'pp-sel' : ''].filter(Boolean).join(' ');
     const titre = formatDateFr(j.date) + ' : ' + (j.total ? (j.reel === 0 ? '≈ ' + j.total + ' rappel' + (j.total > 1 ? 's' : '') : j.total + ' carte' + (j.total > 1 ? 's' : '') + (j.proj ? ' dont ≈ ' + j.proj + ' rappel' + (j.proj > 1 ? 's' : '') : '')) : 'rien') + (ctrl ? ' — contrôle ' + ctrl.join(', ') : '');
@@ -13877,6 +13885,8 @@ document.addEventListener('click', e => {
   if(racine.querySelector(':scope > #pp-stats-page')) closeStreakModal();
   /* v423 : la Synthèse se ferme aussi en cliquant à côté (grand écran) ; tryFermerSynthese redemande « Fermer la synthèse ? » si une saisie serait perdue */
   else if(racine.querySelector(':scope > #synth-overlay') && typeof tryFermerSynthese === 'function') tryFermerSynthese();
+  /* v441 : la liste « Synthèses » (Parcourir) se ferme aussi en cliquant à côté (grand écran), comme les autres fenêtres */
+  else if(racine.querySelector(':scope > #sb-overlay')) closeStreakModal();
 });
 
 /* ============================================================
@@ -14299,7 +14309,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v440';
+const PP_APP_VERSION = 'v441';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18716,7 +18726,7 @@ function fusionnerDepuisSync(data){
     }
     recalcPlanning();
     saveLocalPlanning();
-    if(archivesChangees > 0 || fantomes > 0){   // v326 : comme après un archivage fait ici (toggleArchiveMatiere), sans toucher à une séance en cours
+    if(archivesChangees > 0 || fantomes > 0 || nomsDatesChangees.length){   // v326 ; v441 : aussi pour une date de contrôle reçue (le Planning affichait encore l'ancienne) : comme après un archivage fait ici (toggleArchiveMatiere), sans toucher à une séance en cours
       try{ renderPlanning(); }catch(e){}
       try{ renderBrowse(); }catch(e){}
       if(activeTab === 'study' && !studySessionActive && !quizActive){ try{ buildQueue(); }catch(e){} }
@@ -20880,7 +20890,9 @@ function ppRangFlip(el){
   const r0 = el.getBoundingClientRect();
   let fondu = [];
   try{ if(versDos) fondu = autres().map(x => x.animate([{ opacity:1 }, { opacity:0 }], { duration:140, easing:'ease-in', fill:'forwards' })); }catch(e){}
-  const a = el.animate([{ transform:P + 'rotateY(0deg)' }, { transform:P + 'rotateY(90deg)' }], { duration:140, easing:'ease-in', fill:'forwards' });
+  /* v441 : sur Chromebook / grand écran, plus de pivot : la carte s'agrandit (ou rétrécit) simplement, en douceur, et son contenu apparaît en fondu */
+  const a = grand ? el.animate([{ opacity:1 }, { opacity:1 }], { duration:140 })
+                  : el.animate([{ transform:P + 'rotateY(0deg)' }, { transform:P + 'rotateY(90deg)' }], { duration:140, easing:'ease-in', fill:'forwards' });
   a.onfinish = () => {
     try{
       a.cancel();
@@ -20888,11 +20900,13 @@ function ppRangFlip(el){
       fondu.forEach(x => { try{ x.cancel(); }catch(e){} });
       const r1 = el.getBoundingClientRect();
       if(grand) el.style.flex = '0 0 auto';   /* sans ça, le flex de la carte pleine page ignore la hauteur animée */
-      const b = el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
+      const b = grand ? el.animate([{ opacity:1 }, { opacity:1 }], { duration:190 })
+                      : el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
+      if(grand) [...el.children].forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:300, delay:120, easing:'ease-out', fill:'backwards' }); }catch(e){} });
       const g = el.animate([
         { width:r0.width + 'px', height:r0.height + 'px', translate:(r0.left - r1.left) + 'px ' + (r0.top - r1.top) + 'px' },
         { width:r1.width + 'px', height:r1.height + 'px', translate:'0px 0px' }
-      ], { duration:420, easing:'cubic-bezier(.22,.9,.3,1)' });
+      ], { duration:grand ? 480 : 420, easing:grand ? 'cubic-bezier(.4,0,.2,1)' : 'cubic-bezier(.22,.9,.3,1)' });
       if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:140, easing:'ease-out', fill:'backwards' }); }catch(e){} });
       let fin = 0;
       const ok = () => { if(++fin >= 2){ el._flip = false; el.style.flex = ''; if(pg && !versDos) pg.style.height = ''; } };
