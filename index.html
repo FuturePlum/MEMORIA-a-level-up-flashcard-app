@@ -14309,7 +14309,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v441';
+const PP_APP_VERSION = 'v442';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20884,32 +20884,66 @@ function ppRangFlip(el){
   const grand = !!(window.matchMedia && matchMedia('(min-width:900px) and (min-height:480px)').matches);
   const pg = grand && el.closest ? el.closest('.pp-page') : null;
   if(pg && versDos) pg.style.height = pg.getBoundingClientRect().height + 'px';
-  const P = 'perspective(900px) ';
   try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
-  /* v436 : la carte se VOIT s'agrandir (vers le dos) et rétrécir (retour) : on garde sa place et sa taille d'avant, puis on glisse/étire jusqu'à la nouvelle (technique « FLIP »). Les autres blocs s'effacent / reviennent en fondu. */
   const r0 = el.getBoundingClientRect();
+  /* v442 : Chromebook / grand écran. Plus de pivot, et la carte n'est plus étirée en largeur/hauteur image par image (ça recalculait toute la mise en page à chaque image :
+     texte du dos qui se réorganise, saccades surtout au retour). Maintenant : (1) le contenu actuel s'efface (110 ms), (2) on change de face : la carte est déjà à sa taille FINALE,
+     (3) on la ramène depuis son ancienne taille / position avec UNE SEULE transformation (translate + scale, gérée par la carte graphique, aucun recalcul de mise en page),
+     pendant que le nouveau contenu apparaît en fondu une fois la carte presque en place. Au retour, les autres blocs reviennent en fondu par-dessous. */
+  if(grand){
+    const sortie = [];
+    try{
+      el._face0 = true;
+      [...el.children].forEach(x => sortie.push(x.animate([{ opacity:1 }, { opacity:0 }], { duration:110, easing:'ease-in', fill:'forwards' })));
+      if(versDos) autres().forEach(x => sortie.push(x.animate([{ opacity:1 }, { opacity:0 }], { duration:110, easing:'ease-in', fill:'forwards' })));
+    }catch(e){}
+    setTimeout(() => {
+      try{
+        sortie.forEach(x => { try{ x.cancel(); }catch(e){} });
+        permuter();
+        /* les blocs qui se ré-affichent rejouaient leurs animations d'entrée (barres, pastilles : une quarantaine) pendant que la carte bougeait : on les mène à leur état final tout de suite */
+        const calme = r => { try{ r.getAnimations({ subtree:true }).forEach(a => { if(a.animationName && a.effect && a.effect.getComputedTiming().iterations !== Infinity) a.finish(); }); }catch(e){} };
+        calme(el); autres().forEach(calme);
+        const r1 = el.getBoundingClientRect();
+        const sx = r0.width / (r1.width || 1), sy = r0.height / (r1.height || 1);
+        const dx = r0.left - r1.left, dy = r0.top - r1.top;
+        const posAvant = el.style.position, zAvant = el.style.zIndex;
+        if(getComputedStyle(el).position === 'static') el.style.position = 'relative';
+        el.style.zIndex = '6'; el.style.transformOrigin = '0 0'; el.style.willChange = 'transform';
+        const g = el.animate([
+          { transform:'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')' },
+          { transform:'translate(0px,0px) scale(1,1)' }
+        ], { duration:400, easing:'cubic-bezier(.32,.72,0,1)' });
+        [...el.children].forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:240, delay:150, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+        if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:260, delay:120, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+        const fin = () => {
+          el.style.willChange = ''; el.style.transformOrigin = ''; el.style.zIndex = zAvant; el.style.position = posAvant;
+          el._flip = false; if(pg && !versDos) pg.style.height = '';
+        };
+        g.onfinish = g.oncancel = fin;
+      }catch(e){ el._flip = false; }
+    }, 110);
+    return;
+  }
+  const P = 'perspective(900px) ';
+  /* v436 : la carte se VOIT s'agrandir (vers le dos) et rétrécir (retour) : on garde sa place et sa taille d'avant, puis on glisse/étire jusqu'à la nouvelle (technique « FLIP »). Les autres blocs s'effacent / reviennent en fondu. */
   let fondu = [];
   try{ if(versDos) fondu = autres().map(x => x.animate([{ opacity:1 }, { opacity:0 }], { duration:140, easing:'ease-in', fill:'forwards' })); }catch(e){}
-  /* v441 : sur Chromebook / grand écran, plus de pivot : la carte s'agrandit (ou rétrécit) simplement, en douceur, et son contenu apparaît en fondu */
-  const a = grand ? el.animate([{ opacity:1 }, { opacity:1 }], { duration:140 })
-                  : el.animate([{ transform:P + 'rotateY(0deg)' }, { transform:P + 'rotateY(90deg)' }], { duration:140, easing:'ease-in', fill:'forwards' });
+  const a = el.animate([{ transform:P + 'rotateY(0deg)' }, { transform:P + 'rotateY(90deg)' }], { duration:140, easing:'ease-in', fill:'forwards' });
   a.onfinish = () => {
     try{
       a.cancel();
       permuter();
       fondu.forEach(x => { try{ x.cancel(); }catch(e){} });
       const r1 = el.getBoundingClientRect();
-      if(grand) el.style.flex = '0 0 auto';   /* sans ça, le flex de la carte pleine page ignore la hauteur animée */
-      const b = grand ? el.animate([{ opacity:1 }, { opacity:1 }], { duration:190 })
-                      : el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
-      if(grand) [...el.children].forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:300, delay:120, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+      const b = el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
       const g = el.animate([
         { width:r0.width + 'px', height:r0.height + 'px', translate:(r0.left - r1.left) + 'px ' + (r0.top - r1.top) + 'px' },
         { width:r1.width + 'px', height:r1.height + 'px', translate:'0px 0px' }
-      ], { duration:grand ? 480 : 420, easing:grand ? 'cubic-bezier(.4,0,.2,1)' : 'cubic-bezier(.22,.9,.3,1)' });
+      ], { duration:420, easing:'cubic-bezier(.22,.9,.3,1)' });
       if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:140, easing:'ease-out', fill:'backwards' }); }catch(e){} });
       let fin = 0;
-      const ok = () => { if(++fin >= 2){ el._flip = false; el.style.flex = ''; if(pg && !versDos) pg.style.height = ''; } };
+      const ok = () => { if(++fin >= 2){ el._flip = false; el.style.flex = ''; } };
       b.onfinish = b.oncancel = ok; g.onfinish = g.oncancel = ok;
     }catch(e){ el._flip = false; }
   };

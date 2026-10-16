@@ -19,6 +19,7 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v245 : v442 (carte de maîtrise sur Chromebook : animation refaite en une seule transformation, plus de saccade) : index.html change, donc nouvelle version du cache.
    v244 : v441 (ouverture de l'app : délai réseau réduit à 0,7 s pour la page principale quand une copie existe, pour que le splash natif ne reste plus à l'écran plusieurs secondes sur un mauvais wifi) : sw.js change.
    v243 : v439 (PC : même animation de retournement que sur téléphone, dos de la carte plus rempli, « cartes qui résistent » corrigées) : index.html change, donc nouvelle version du cache.
    v242 : v438 (PC : la fenêtre des Stats ne change plus de taille pendant le dos, plus de rejeu d'entrée des blocs) : index.html change, donc nouvelle version du cache.
@@ -207,7 +208,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v244';
+const SW_VERSION = 'v245';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
