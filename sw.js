@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v248 : v445 (« À venir » : l'entretien des cartes maîtrisées compte dans « à revoir » et dans la bulle du jour, même total que l'accueil) : index.html change, donc nouvelle version du cache.
+   v247 : v444 (partage : l'envoi demande maintenant un code de synchro, pour que personne ne puisse épuiser le quota d'écritures du Worker) : index.html change, donc nouvelle version du cache.
    v246 : v443 (entretien des cartes maîtrisées étalé sur plusieurs jours au lieu de s'empiler le même jour ; la carte peut être retournée à nouveau pendant l'animation) : index.html change, donc nouvelle version du cache.
    v245 : v442 (carte de maîtrise sur Chromebook : animation refaite en une seule transformation, plus de saccade) : index.html change, donc nouvelle version du cache.
    v244 : v441 (ouverture de l'app : délai réseau réduit à 0,7 s pour la page principale quand une copie existe, pour que le splash natif ne reste plus à l'écran plusieurs secondes sur un mauvais wifi) : sw.js change.
@@ -209,7 +211,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v246';
+const SW_VERSION = 'v248';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

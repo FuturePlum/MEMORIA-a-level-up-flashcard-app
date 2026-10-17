@@ -12738,13 +12738,13 @@ async function ppPartagerMatiere(m){
   if(ppPartageEnCours) return;
   const d = ppPartageDonnees(m);
   if(!d){ ppToast('Aucune carte à partager'); return; }
-  if(!SYNC_WORKER_URL || navigator.onLine === false){ ppPartagerFichier(m, d); return; }
+  if(!SYNC_WORKER_URL || navigator.onLine === false || !syncActif()){ ppPartagerFichier(m, d); return; }   /* v444 : le Worker exige un code de synchro pour un partage ; sans synchro, partage par fichier */
   ppPartageEnCours = true;
   ppSheet(`<div class="pp-grab"></div><h2>Partager</h2><p class="pp-hint">Envoi…</p>`);
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), PARTAGE_ENVOI_MAX_MS);
   let code = '', jours = 14;
   try{
-    const res = await fetch(`${SYNC_WORKER_URL}/partage`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: d.json, signal: ctrl.signal });
+    const res = await fetch(`${SYNC_WORKER_URL}/partage?code=${encodeURIComponent(syncCodePerso())}`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: d.json, signal: ctrl.signal });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const j = await res.json();
     if(!j || typeof j.code !== 'string' || !/^[A-HJKMNP-Z2-9]{6}$/.test(j.code)) throw new Error('réponse inattendue');
@@ -13281,7 +13281,9 @@ function ppPlanCompute(){
     const diff = ppEcart(today, datesCtrl[datesCtrl.length - 1]) + 1;
     nbJours = Math.max(7, Math.min(ppWide() ? 120 : 14, diff));  // grand écran : jusqu'au dernier contrôle (la semaine défile) ; téléphone : 14 j
   }
-  const { jours, maxTotal } = getChargeGlobaleParJour(nbJours);
+  const { jours, maxTotal: maxBrut } = getChargeGlobaleParJour(nbJours);
+  let maxTotal = maxBrut;
+  for(const j of jours){ j.total += getEntretienDuJour(j.date); if(j.total > maxTotal) maxTotal = j.total; }   /* v445 : la bulle du jour = le chiffre de l'accueil (entretien compris) */
   if(maxTotal === 0) return null;
   let sel = aVenirJourSel;
   if(!sel || !jours.some(j => j.date === sel)) sel = (jours.find(j => j.total > 0) || jours[0]).date;
@@ -13291,7 +13293,8 @@ function ppPlanCompute(){
 function ppWkHtml(date, DD){
   const D = DD || ppPlanData, today = D.today, ctrl = D.controles[date];
   const cs = getCartesDuJour(date);
-  const rv = cs.filter(c => (c.palier || 0) > 0 || c.derniereRevision).length, nw = cs.length - rv;
+  const entretien = getEntretienDuJour(date);   /* v445 : l'entretien (cartes maîtrisées dues) compte dans « à revoir » : même total que l'accueil */
+  const rv = cs.filter(c => (c.palier || 0) > 0 || c.derniereRevision).length + entretien, nw = cs.length - (rv - entretien);
   const i = ppEcart(today, date);
   const nom = date === today ? "Aujourd'hui" : (date === addDays(today, 1) ? 'Demain'
     : ppCap(new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', i > 6 ? { weekday:'long', day:'numeric', month:'short' } : { weekday:'long' })));
@@ -13310,10 +13313,9 @@ function ppWkHtml(date, DD){
     m = `<div class="pp-m ${(mg.niveau === 'large' || mg.niveau === 'juste') ? '' : 'pp-bad'}" title="${escapeHtml(titre)}">${nomMat}<i class="pp-mtx">${escapeHtml(txt)}</i></div>`;   /* v396 : classe « pp-mtx » (« pp-mt » est aussi la classe des maths, en police à empattements : le texte « en retard d'1 j » sortait en serif) */
   }
   const jd = (D.jours || []).find(j => j.date === date), prevus = jd ? jd.proj : 0;
-  const entretien = getEntretienDuJour(date);   /* v344 (10a) */
   /* v423 : la ligne du jour garde TOUJOURS la même hauteur (3 lignes réservées) : le nom + les 3 repères principaux, puis les rappels / l'entretien, puis le statut du contrôle. Plus de retour à la ligne qui fait bouger la mise en page. */
   const l1 = `<div class="pp-w1">${nom}${rv ? `<span>${PP_IC.loop}${rv}</span>` : ''}${nw ? `<span style="color:var(--amber)">${PP_IC.spark}<i style="font-style:normal;color:var(--muted)">${nw}</i></span>` : ''}${ctrl ? `<span style="color:var(--yellow)">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : ''}</div>`;
-  const l2 = `<div class="pp-w2">${prevus ? `<span title="Estimation prudente : on compte environ 30 % de cartes à revoir en plus">≈ ${prevus} rappel${prevus > 1 ? 's' : ''}</span>` : ''}${entretien ? `<span title="Cartes déjà maîtrisées, revues de temps en temps pour ne pas les oublier">+${entretien} entretien</span>` : ''}</div>`;
+  const l2 = `<div class="pp-w2">${prevus ? `<span title="Estimation prudente : on compte environ 30 % de cartes à revoir en plus">≈ ${prevus} rappel${prevus > 1 ? 's' : ''}</span>` : ''}</div>`;
   return l1 + l2 + m;
 }
 function ppPlanPick(date){
@@ -14314,7 +14316,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v443';
+const PP_APP_VERSION = 'v445';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -16484,13 +16486,14 @@ async function sbPartager(id){
   const c = sbCorpsLire(id);
   if(!c){ ppToast('Pas encore sur cet appareil'); return; }
   if(!SYNC_WORKER_URL || navigator.onLine === false){ ppToast('Pas de connexion'); return; }
+  if(!syncActif()){ ppToast('Active la synchronisation pour partager une synthèse'); return; }   /* v444 : le Worker exige un code de synchro pour un partage */
   const json = JSON.stringify({ format: 'synthese-partage', version: 1, titre: e.titre, matiere: e.matiere, markdown: c.md, images: c.img });
   sbPartageEnCours = true;
   ppSheet(`<div class="pp-grab"></div><h2>Partager</h2><p class="pp-hint">Envoi…</p>`);
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), PARTAGE_ENVOI_MAX_MS);
   let code = '', jours = 14;
   try{
-    const res = await fetch(`${SYNC_WORKER_URL}/partage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: json, signal: ctrl.signal });
+    const res = await fetch(`${SYNC_WORKER_URL}/partage?code=${encodeURIComponent(syncCodePerso())}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: json, signal: ctrl.signal });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const j = await res.json();
     if(!j || typeof j.code !== 'string' || !/^[A-HJKMNP-Z2-9]{6}$/.test(j.code)) throw new Error('réponse inattendue');
