@@ -11838,13 +11838,17 @@ function exitStudySession(){
    (voir ppSesDraw). Sans carte à l'écran ou avec « réduire les animations » : retournement immédiat. */
 const PP_ENFONCE_MS = 110;   /* v245 : la descente dure .13 s, le retournement attend un peu plus */
 let ppFlipEnCours = false;
+let ppFlipsEnAttente = 0;   /* v443 : nombre de retournements programmés mais pas encore joués */
 function ppRetournerApresEnfoncement(fn){
   /* carte « à écrire » : la carte réponse (téléphone) / le panneau de droite (grand écran) s'enfoncent avec la carte question */
   document.querySelectorAll('#pp-ses .pp-rcard,#pp-ses .pp-ecrslot').forEach(e => { e.style.animation = 'none'; e.classList.add('pp-sink'); });
   const card = document.querySelector('.pp-card');
   const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(!card || reduit){ fn(); return; }
-  if(ppFlipEnCours) return; // double tap : un seul retournement
+  /* v443 : plus de garde « double tap : un seul retournement ». Elle ignorait un 2e tap donné avant la fin de l'animation : on devait attendre pour pouvoir retourner la carte
+     à nouveau (PC et mobile). Maintenant chaque tap/Espace retourne la carte, même pendant l'animation du retournement précédent ; ppFlipEnCours reste vrai tant qu'au
+     moins un retournement attend (il sert seulement à garder la carte enfoncée jusque-là). */
+  ppFlipsEnAttente++;
   ppFlipEnCours = true;
   if(!card.classList.contains('pp-sink')){
     card.style.animation = 'none'; // sinon l'animation d'entrée (fill forwards) masque le transform
@@ -11852,7 +11856,7 @@ function ppRetournerApresEnfoncement(fn){
     card._sinkT0 = Date.now();
   }
   const reste = Math.max(0, PP_ENFONCE_MS - (Date.now() - (card._sinkT0 || 0)));
-  setTimeout(() => { ppFlipEnCours = false; fn(); }, reste);
+  setTimeout(() => { ppFlipsEnAttente = Math.max(0, ppFlipsEnAttente - 1); ppFlipEnCours = ppFlipsEnAttente > 0; fn(); }, reste);
 }
 function flipCard(){
   if(carteEnSortie) return;
@@ -13114,6 +13118,7 @@ function reprogrammerCartesMatiere(matiere){
     patchesRepro[c.id] = { palier: c.palier, prochaineRevision, derniereRevision: c.derniereRevision };
   }
   saveLocalOverlayLot(patchesRepro);   // une seule écriture pour toute la matière
+  try{ lisserEntretien(); }catch(e){}   /* v443 : la compression des intervalles ne doit pas empiler toutes les maîtrisées sur le même jour */
   return auMoinsUnRepli;
 }
 
@@ -14309,7 +14314,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v442';
+const PP_APP_VERSION = 'v443';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -18335,7 +18340,87 @@ function annoncerEtalement(n, delaiMs){
   setTimeout(() => { try{ ppToast(msg); }catch(e){} }, delaiMs || 0);
 }
 
+/* v443 : ÉTALEMENT DE L'ENTRETIEN (cartes déjà maîtrisées).
+   Problème : le plafond par jour ignore les cartes maîtrisées. Quand un contrôle approche, les intervalles se compressent (ex. 30 j -> ~11 j) :
+   après un changement de date de contrôle (ou une absence), toutes les maîtrisées « en retard » tombaient le MÊME jour (ex. 19 le jour même, alors que le contrôle est dans 19 jours).
+   Règle : un jour peut avoir ENTRETIEN_CONFORT_PAR_JOUR cartes d'entretien sans rien changer. Au-delà, l'excédent est déplacé sur le jour le moins chargé
+   (apprentissage + entretien) de la fenêtre [lendemain ; limite], où limite = ENTRETIEN_MAX_DECALAGE_JOURS après le jour d'origine, et au plus tard la VEILLE du contrôle
+   (jamais le jour J, jamais après). Un jour n'accepte que s'il a encore de la place (< confort) et s'il est strictement moins chargé que le jour d'origine : ça ne peut donc
+   jamais aggraver une journée, et ça ne se répète pas en cascade. Reste dans la journée en priorité : le palier le plus bas, puis la date la plus ancienne.
+   Une carte dont la date est déjà le jour du contrôle ou après n'est jamais touchée. Comme lisserRetards : derniereModification n'est PAS modifiée (synchro). Idempotent. */
+const ENTRETIEN_LISSAGE_ACTIF = true;
+const ENTRETIEN_CONFORT_PAR_JOUR = 4;
+const ENTRETIEN_MAX_DECALAGE_JOURS = 10;
+
+function lisserEntretien(){
+  if(!ENTRETIEN_LISSAGE_ACTIF) return 0;
+  const today = todayStr();
+  const actives = new Set(getMatieresActives());
+  const apprentissage = {};   // jour -> nombre de cartes à apprendre/revoir (non maîtrisées)
+  const entretien = {};       // jour -> cartes maîtrisées dues ce jour-là
+  const limites = new Map();  // id -> dernier jour permis (calculé UNE fois, depuis le jour d'origine : pas de dérive en cascade)
+  let dernierJour = today;
+  for(const c of cartesPourPlafonds()){
+    const m = c.matiere || 'Sans matière';
+    if(!actives.has(m)) continue;
+    let j = c.prochaineRevision || today;
+    if(j < today) j = today;
+    if((c.palier || 0) >= MASTERED_PALIER){
+      (entretien[j] = entretien[j] || []).push(c);
+      const cfg = matieresConfig[m];
+      const D = (cfg && cfg.dateControle && cfg.dateControle >= today) ? cfg.dateControle : null;
+      let lim = addDays(j, ENTRETIEN_MAX_DECALAGE_JOURS);
+      if(D){ const veille = addDays(D, -1); if(veille < lim) lim = veille; }
+      limites.set(c.id, lim < j ? j : lim);
+      if(j > dernierJour) dernierJour = j;
+    } else {
+      apprentissage[j] = (apprentissage[j] || 0) + 1;
+    }
+  }
+  const charge = (j) => (apprentissage[j] || 0) + (entretien[j] ? entretien[j].length : 0);
+  const fin = addDays(dernierJour, ENTRETIEN_MAX_DECALAGE_JOURS);
+  let deplacees = 0;
+  for(let jour = today, garde = 0; jour <= fin && garde < 500; jour = addDays(jour, 1), garde++){
+    const liste = entretien[jour];
+    if(!liste || liste.length <= ENTRETIEN_CONFORT_PAR_JOUR) continue;
+    liste.sort((a, b) => ((a.palier || 0) - (b.palier || 0))
+      || (((a.prochaineRevision || today) < (b.prochaineRevision || today)) ? -1 : ((a.prochaineRevision || today) > (b.prochaineRevision || today)) ? 1 : 0)
+      || (String(a.id) < String(b.id) ? -1 : 1));
+    const excedent = liste.splice(ENTRETIEN_CONFORT_PAR_JOUR);   // les premiers restent, les autres cherchent une autre place
+    for(let k = 0; k < excedent.length; k++){
+      const c = excedent[k];
+      const enAttente = excedent.length - k;   // cartes de l'excédent pas encore placées (celle-ci comprise) : elles comptent encore dans la charge du jour d'origine
+      const lim = limites.get(c.id) || jour;
+      let cible = null, meilleure = Infinity;
+      for(let d = addDays(jour, 1); d <= lim; d = addDays(d, 1)){
+        const nbEntretien = entretien[d] ? entretien[d].length : 0;
+        if(nbEntretien >= ENTRETIEN_CONFORT_PAR_JOUR) continue;
+        const t = charge(d);
+        if(t < meilleure){ meilleure = t; cible = d; }
+      }
+      // On ne déplace que si ça allège vraiment : le jour d'accueil doit être moins chargé que le jour d'origine (carte comprise).
+      if(cible && meilleure + 1 < charge(jour) + enAttente){
+        (entretien[cible] = entretien[cible] || []).push(c);
+        c.prochaineRevision = cible;
+        saveLocalOverlay(c.id, { prochaineRevision: cible });
+        deplacees++;
+      } else {
+        liste.push(c);   // pas de meilleure place : elle reste là (jamais perdue)
+      }
+    }
+  }
+  if(deplacees > 0){ recalcPlanning(); saveLocalPlanning(); }
+  return deplacees;
+}
+
+/* v443 : tous les appelants (démarrage, synchro, changement de jour...) gardent le même nom ; on étale d'abord les retards d'apprentissage, puis l'entretien.
+   Le nombre renvoyé reste celui des cartes d'apprentissage en retard (message « carte(s) en retard étalée(s) »). */
 function lisserRetards(){
+  const n = lisserRetardsCore();
+  try{ lisserEntretien(); }catch(e){}
+  return n;
+}
+function lisserRetardsCore(){
   if(!LISSAGE_RETARDS_ACTIF) return 0;
   const today = todayStr();
   const PG = plafondGlobalEffectif();   /* v340 : plafond global effectif (sinon l'étalement défait les plafonds élevés) */
