@@ -360,6 +360,8 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^Sauvegarde restaurée : (\d+) matières? vides?$/,function(n){ return 'Backup restored: '+n+' empty '+(+n===1?'subject':'subjects'); }),
     f(/^dans (\d+) jours?$/,function(n){ return 'in '+c(n,'day'); }),
     f(/^contrôle dans (\d+) jours?$/,function(n){ return 'test in '+c(n,'day'); }),
+    f(/^(\d+) j$/,function(n){ return n+' d'; }),
+    f(/^\/(\d+) maîtrisées$/,function(n){ return '/'+n+' mastered'; }),
     f(/^sur (\d+) maîtrisées · (\d+) à aller$/,function(a,b){ return 'out of '+a+' mastered · '+b+' to go'; }),
     f(/^Archivées \((\d+)\)$/,function(n){ return 'Archived ('+n+')'; }),
     f(/^Appliquer \((\d+)\)$/,function(n){ return 'Apply ('+n+')'; }),
@@ -1921,6 +1923,27 @@ input[type="date"]{ color-scheme:inherit; }
 .pp-ctb u{display:block;height:100%;border-radius:4px;background:var(--yellow);text-decoration:none}
 .pp-ctm>span{font-size:12.5px;color:var(--muted)}
 .pp-ctm>span b{color:var(--cream)}
+/* v448 : bandeau contrôle de l'accueil. Téléphone : hauteur FIXE 99px (= l'ancien bandeau quand le nom passait sur 2 lignes) ; grand écran : mêmes rangées que l'ancien bandeau d'une ligne (18 + 21 + 15 px). */
+.pp-ctl2{height:99px}
+.pp-ctl2 .pp-ctm{display:flex;flex-direction:column;justify-content:center}
+.pp-c2t{display:flex;align-items:center;gap:8px;height:24px}
+.pp-c2t b{font-size:19px;font-weight:800;letter-spacing:-.015em;line-height:24px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pp-c2t small{flex:none;font-size:12px;font-weight:800;color:var(--yellow-t);opacity:.85}
+.pp-c2t em{margin-left:auto;flex:none;font-style:normal;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#1a1405;background:var(--yellow);border-radius:8px;padding:3px 9px;line-height:1.2;white-space:nowrap}
+.pp-c2b{height:10px;border-radius:5px;background:var(--c-yicon);margin:9px 0;overflow:hidden}
+.pp-c2b u{display:block;height:100%;border-radius:5px;background:var(--yellow);text-decoration:none}
+.pp-c2s{display:flex;align-items:baseline;gap:1px;height:20px;line-height:20px;font-size:14px;color:var(--muted);white-space:nowrap}
+.pp-c2s b{font-size:16px;font-weight:800;color:var(--cream)}
+.pp-c2s span{margin-left:1px}
+@media (min-width:900px) and (min-height:480px){
+  .pp-ctl2{height:auto}
+  .pp-c2t{height:18px}
+  .pp-c2t b{font-size:15px;line-height:18px}
+  .pp-c2t em{font-size:11px;padding:2px 7px}
+  .pp-c2b{height:7px;margin:8px 0 6px}
+  .pp-c2s{height:15px;line-height:15px;font-size:12.5px}
+  .pp-c2s b{font-size:12.5px}
+}
 .pp-home .pp-hero{flex:1;min-height:290px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;padding:18px;border-radius:26px;background:radial-gradient(circle at 100% 0%,rgba(255,107,61,.14),transparent 55%),var(--panel);border:2px solid var(--cream);box-shadow:7px 7px 0 var(--orange);margin:0 7px 7px 0}
 .pp-home .pp-hero .pp-big{font-size:118px;margin:0 0 10px -3px}
 .pp-home .pp-hero .pp-cta{margin:0}
@@ -1999,6 +2022,16 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-card.pp-out-ko{animation:ppoutL .32s ease-in forwards}
 .pp-card.pp-out-up{animation:ppoutU .32s ease-in forwards}
 .pp-card.pp-out-mid{animation:ppoutD .32s ease-in forwards}
+/* v450 : retour d'une carte après « Annuler » : elle revient du côté par lequel elle était partie (même trajet que la sortie, à l'envers) */
+.pp-card.pp-in.pp-back-ok{animation:ppbackR .42s cubic-bezier(.22,1,.36,1) both}
+.pp-card.pp-in.pp-back-ko{animation:ppbackL .42s cubic-bezier(.22,1,.36,1) both}
+.pp-card.pp-in.pp-back-mid{animation:ppbackD .42s cubic-bezier(.22,1,.36,1) both}
+@keyframes ppbackR{from{transform:translateX(130%) rotate(12deg);opacity:0}25%{opacity:1}to{transform:none;opacity:1}}
+@keyframes ppbackL{from{transform:translateX(-130%) rotate(-12deg);opacity:0}25%{opacity:1}to{transform:none;opacity:1}}
+@keyframes ppbackD{from{transform:translateY(60%) rotate(-3deg);opacity:0}30%{opacity:1}to{transform:none;opacity:1}}
+/* le bouton « Annuler » qui vient d'être utilisé se replie (hauteur + marges → 0) : la carte glisse vers sa place au lieu de sauter */
+.pp-undo.pp-undo-out{overflow:hidden;pointer-events:none;border:0;box-shadow:inset 0 0 0 1.5px var(--line);animation:ppundoOut .4s cubic-bezier(.22,1,.36,1) both}   /* contour en ombre interne : une vraie bordure garde 1-2 px de hauteur jusqu'à la fin et fait un petit saut */
+@keyframes ppundoOut{from{height:32px;margin:-2px 0 10px;opacity:1}to{height:0;margin:0;opacity:0}}
 /* v418 : pendant le glissement (geste ou sortie), la carte passe AU-DESSUS de tout (navbar PC, barre « cartes maîtrisées » / retour sur mobile) et n'est plus rognée par le cadre de la séance */
 .pp-card.armed,.pp-card[class*="pp-out-"]{z-index:60}
 #pp-ses:has(.pp-card.armed),#pp-ses:has(.pp-card[class*="pp-out-"]){overflow:visible}
@@ -3018,6 +3051,29 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   .cb-wk.can-left{ --fl:26px; }
   .cb-wk.can-right{ --fr:26px; }
   .cb-wk .cb-wc{ flex:1 0 40px; }
+  /* v449 : « Cette semaine » en colonnes pleines d'une seule couleur (voir ppCbHtml). */
+  .cb-wk .cb-wc.cb-pl{ flex:1 0 46px; }
+  .cb-wk.dense .cb-wc.cb-pl{ flex-basis:40px; }
+  button.cb-wc.cb-pl{ display:grid; grid-template-rows:19px minmax(0,1fr) 38px; gap:5px; align-items:stretch; justify-items:stretch; padding:5px 3px 3px; }
+  .cb-pl .pl-n{ text-align:center; font-size:18px; font-weight:800; line-height:20px; color:var(--cream); font-variant-numeric:tabular-nums; }
+  .cb-wk.dense .cb-pl .pl-n{ font-size:15px; }
+  .cb-pl.rest .pl-n{ opacity:.4; }
+  .cb-pl .pl-col{ position:relative; min-height:0; }
+  .cb-pl .pl-st{ position:absolute; left:0; right:0; bottom:0; height:var(--h); min-height:6px; background:var(--orange); border-radius:11px 11px 5px 5px; transform-origin:50% 100%; animation:pl-rise .65s cubic-bezier(.2,.9,.25,1.08) both; animation-delay:calc(var(--i) * 30ms); }
+  @keyframes pl-rise{ from{ transform:scaleY(.04); opacity:0; } to{ transform:none; opacity:1; } }
+  .cb-pl.rest .pl-st{ background:rgba(var(--ov),.14); }
+  .cb-pl.proj .pl-st{ opacity:.6; }
+  .cb-pl.proj .pl-st{ background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.3) 0 3px,transparent 3px 7px); }
+  .cb-wl{ flex:0 1 296px; min-height:272px; padding:11px 16px 9px; }   /* la semaine a besoin de hauteur pour que les colonnes se lisent ; la liste des matières défile déjà seule */
+  .cb-wl .cb-det{ margin-top:6px; }
+  .cb-pl .pl-d{ position:relative; display:grid; grid-template-rows:13px 23px; gap:2px; justify-items:center; align-content:start; }
+  .cb-pl .pl-k{ font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); line-height:14px; }
+  .cb-pl .pl-dn{ min-width:28px; height:23px; padding:0 6px; border-radius:12px; display:grid; place-items:center; font-size:14px; font-weight:800; color:var(--cream); }
+  .cb-pl.t .pl-k{ color:var(--orange); }
+  .cb-pl.t .pl-dn{ background:var(--orange); color:#1a0d08; }
+  .cb-pl.ctl .pl-dn{ box-shadow:inset 0 0 0 1.5px var(--yellow); }
+  .cb-pl .pl-f{ position:absolute; top:10px; left:calc(50% + 8px); width:18px; height:18px; border-radius:50%; background:var(--yellow); color:#1a1405; display:grid; place-items:center; box-shadow:0 2px 0 var(--yellow-d); }
+  .cb-pl .pl-f svg{ width:10px; height:10px; }
   .cb-ml.can-down{ -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent); mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent); }
   .cb-ml .pp-mat{ flex:none; margin:0; padding:9px 12px 10px; border-radius:14px; background:rgba(var(--ov),.025); border-width:1px; }
   .cb-mr .pp-mtop{ font-size:14.5px; margin-bottom:7px; gap:8px; min-width:0; }
@@ -10832,11 +10888,13 @@ function ppCtlHtml(){
   const all = cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === sm.matiere);
   const ht = all.length;
   const hd = all.filter(c => (c.palier || 0) >= MASTERED_PALIER).length;
-  const rest = ht - hd;
   const hp = ht ? Math.round(hd / ht * 100) : 0;
-  const de = /^[aeiouyhàâäéèêëîïôöùûü]/i.test(sm.matiere) ? "d'" : 'de ';
-  const badge = sm.joursAvant <= 0 ? "aujourd'hui" : (sm.joursAvant === 1 ? 'demain' : `dans ${sm.joursAvant} jours`);
-  return `<button class="pp-ctl" onclick="ppCtlGo('${escapeJsAttr(sm.matiere)}')"><i>${PP_IC.flag}</i><div class="pp-ctm"><div class="pp-ctt"><b>Contrôle ${de}${escapeHtml(sm.matiere)}</b><em>${badge}</em></div><div class="pp-ctb"><u style="width:${hp}%"></u></div><span><b>${hd}</b> sur ${ht} maîtrisées · ${rest} à aller</span></div><s>${PP_IC.chev}</s></button>`;
+  /* v448 : bandeau simplifié, MÊME dimensions qu'avant. Une seule ligne par rangée (le nom ne passe plus à la ligne : il se coupe avec « … »), plus de « Contrôle de », plus de « à aller » :
+     nom + délai (« 19 j ») / barre / « 28/35 maîtrisées ». « +N » = nombre d'AUTRES matières qui ont aussi un contrôle à venir (le bandeau montre toujours le plus proche). */
+  const today = todayStr();
+  const autres = getMatieresActives().filter(m => m !== sm.matiere && matieresConfig[m] && matieresConfig[m].dateControle && matieresConfig[m].dateControle >= today).length;
+  const badge = sm.joursAvant <= 0 ? "aujourd'hui" : (sm.joursAvant === 1 ? 'demain' : `${sm.joursAvant} j`);
+  return `<button class="pp-ctl pp-ctl2" onclick="ppCtlGo('${escapeJsAttr(sm.matiere)}')"><i>${PP_IC.flag}</i><div class="pp-ctm"><div class="pp-c2t"><b>${escapeHtml(sm.matiere)}</b>${autres ? `<small>+${autres}</small>` : ''}<em>${badge}</em></div><div class="pp-c2b"><u style="width:${hp}%"></u></div><div class="pp-c2s"><b>${hd}</b><span>/${ht} maîtrisées</span></div></div><s>${PP_IC.chev}</s></button>`;
 }
 /* v119 : aucun contrôle à venir => bouton « Ajouter une date de contrôle » à la place du bandeau (même emplacement).
    Ouvre la même fenêtre que « + Contrôle » (ppCtrlSheet('') : choisit la 1re matière sans date). v347 : aussi sur téléphone. */
@@ -10872,16 +10930,15 @@ function ppCbHtml(dueTotal){
   if(!D){
     week = `<div class="cb-wl"><div class="cb-h2">Cette semaine<small>cartes à revoir par jour</small></div><div class="cb-empty">Rien de prévu pour l'instant. Fixe une date de contrôle ci-dessous : le planning se calcule tout seul.</div></div>`;
   } else {
-    const mx = Math.max(1, ...D.jours.map(j => j.total));
+    const ech = Math.max(1, ...D.jours.map(j => j.total)) * 1.04;   /* même échelle pour tous les jours */
     const dense = D.N > 8;
-    const cols = D.jours.map(j => {
+    /* v449 : chaque jour = une colonne EMPILÉE par matière (couleur de la matière, la plus chargée en bas), l'entretien en gris au sommet .
+       3 rangées de hauteur fixe (nombre, colonne, jour) ; le drapeau du contrôle est une pastille posée SUR le coin de la date (hors du flux) : il ne décale JAMAIS les autres jours. */
+    const cols = D.jours.map((j, i) => {
       const d = new Date(j.date + 'T12:00:00'), auj = j.date === D.today, ctrl = D.controles[j.date];
       const nomJour = ppCap(d.toLocaleDateString('fr-FR', { weekday:'short' }).replace(/\.$/, ''));
-      const ks = Object.keys(j.parMatiere).sort((a, b) => j.parMatiere[b] - j.parMatiere[a]);
-      const sub = ctrl ? ctrl.join(', ') : (!j.total ? 'Repos' : (ks.length > 1 && auj ? 'Tout' : ks[0]));
-      const lab = auj ? (dense ? `Auj.<br>${d.getDate()}` : 'Auj.') : (dense ? `${nomJour}<br>${d.getDate()}` : nomJour); /* v171 : en mode dense, « Auj. » prend aussi 2 lignes (sinon sa barre descendait d'une ligne) */
       const titre = formatDateFr(j.date) + ' : ' + (j.total ? (j.reel === 0 ? '≈ ' + j.total + ' rappel' + (j.total > 1 ? 's' : '') : j.total + ' carte' + (j.total > 1 ? 's' : '') + (j.proj ? ' dont ≈ ' + j.proj + ' rappel' + (j.proj > 1 ? 's' : '') : '')) : 'rien') + (ctrl ? ' — contrôle ' + ctrl.join(', ') : '');
-      return `<button class="cb-wc${auj ? ' t' : ''}${j.date === D.sel ? ' sel' : ''}${j.total ? '' : ' rest'}${ctrl ? ' ctl' : ''}${j.total && j.reel === 0 ? ' proj' : ''}" data-date="${j.date}" title="${escapeHtml(titre)}" onclick="ppCbPick('${j.date}')"><b>${j.reel === 0 && j.total ? '≈' : ''}${j.total}</b><div class="cb-tr"><i style="--h:${Math.round(j.total / mx * 100)}%"></i></div><small>${lab}</small><em>${ctrl ? PP_IC.flag : ''}${escapeHtml(sub)}</em></button>`;
+      return `<button class="cb-wc cb-pl${auj ? ' t' : ''}${j.date === D.sel ? ' sel' : ''}${j.total ? '' : ' rest'}${ctrl ? ' ctl' : ''}${j.total && j.reel === 0 ? ' proj' : ''}" data-date="${j.date}" style="--i:${i};--h:${(j.total / ech * 100).toFixed(1)}%" title="${escapeHtml(titre)}" onclick="ppCbPick('${j.date}')"><span class="pl-n">${j.reel === 0 && j.total ? '≈' : ''}${j.total}</span><span class="pl-col"><span class="pl-st"></span></span><span class="pl-d"><span class="pl-k">${auj ? 'Auj.' : nomJour}</span><span class="pl-dn">${d.getDate()}</span>${ctrl ? `<span class="pl-f">${PP_IC.flag}</span>` : ''}</span></button>`;
     }).join('');
     week = `<div class="cb-wl"><div class="cb-h2">Cette semaine</div><div class="cb-wk${dense ? ' dense' : ''}">${cols}</div><div class="pp-wk cb-det" id="cb-det">${ppWkHtml(D.sel, D)}</div></div>`;
   }
@@ -11024,6 +11081,8 @@ function haptique(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e)
    ============================================================ */
 const PP_MC = { rouge:[255,77,122,1.6], orange:[255,176,32,1.15], vert:[46,216,163,1] };
 let ppMood = { pc:null, last:null, pm:undefined, anim:'in' };
+/* v450 : annulation. ppUndoBack = côté d'où la carte revient (le même que sa sortie) ; ppUndoOut = le bouton « Annuler » vient de disparaître : on le redessine une fois, en train de se replier. */
+let ppUndoBack = null, ppUndoOut = false;
 function ppMoodReset(){ ppMood = { pc:null, last:null, pm:undefined, anim:'in' }; }
 function ppMoodColor(counts){
   let w = 0; const c = [0,0,0];
@@ -11058,6 +11117,7 @@ function ppSesDraw(o){
   const mas = cartesPourStats().filter(x => (x.palier || 0) >= MASTERED_PALIER).length;   /* v336 */
   const bump = ppMood.pm !== undefined && ppMood.pm !== mas; ppMood.pm = mas;
   const anim = ppMood.anim; ppMood.anim = '';
+  const undoBack = (anim === 'in' && ppUndoBack && !ecrActive(o)) ? ppUndoBack : null, undoOut = ppUndoOut && !o.undo; ppUndoBack = null; ppUndoOut = false;
   /* v345 : téléphone, au retournement — on retient la question (position, taille, style) pour la faire glisser
      vers sa nouvelle place au lieu de la faire sauter (voir plus bas). Écran large et cartes « à écrire » : inchangés. */
   let ppGl = null;
@@ -11100,8 +11160,8 @@ function ppSesDraw(o){
   const acts = `<div class="pp-acts${fl ? '' : ' dim'}${(!fl && anim === 'flip') ? ' down' : ''}">${ans3}</div>`;  // .down = retour à la question : même animation que le 1er retournement, à l'envers
   ppSesShow(`<div class="pp-top"><div class="pp-bar1"><i style="background-color:${start}"></i><u></u></div></div>
   ${o.mp ? `<div class="pp-info"><span class="pp-mp">${o.mp}</span></div>` : ''}
-  ${o.undo ? `<button class="pp-undo" onclick="undoLastAnswer()">${ppSvg('<path d="M3 10h10a5 5 0 0 1 5 5v1M3 10l4-4M3 10l4 4"/>',14)}Annuler la dernière réponse</button>` : ''}
-  <div class="pp-stage"><div class="pp-card${anim === 'in' ? ' pp-in' : ''}" id="${o.ids.card}"><div class="pp-ch"><span class="pp-sticker" style="animation:none"><span class="pp-sk-p">${fl ? f.libArriere : f.libAvant}</span><span class="pp-sk-w">${f.libAvant}</span></span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || '')}</span></div>
+  ${o.undo ? `<button class="pp-undo" onclick="undoLastAnswer()">${ppSvg('<path d="M3 10h10a5 5 0 0 1 5 5v1M3 10l4-4M3 10l4 4"/>',14)}Annuler la dernière réponse</button>` : (undoOut ? `<div class="pp-undo pp-undo-out" aria-hidden="true">${ppSvg('<path d="M3 10h10a5 5 0 0 1 5 5v1M3 10l4-4M3 10l4 4"/>',14)}Annuler la dernière réponse</div>` : '')}
+  <div class="pp-stage"><div class="pp-card${anim === 'in' ? ' pp-in' : ''}${undoBack ? ' pp-back-' + undoBack : ''}" id="${o.ids.card}"><div class="pp-ch"><span class="pp-sticker" style="animation:none"><span class="pp-sk-p">${fl ? f.libArriere : f.libAvant}</span><span class="pp-sk-w">${f.libAvant}</span></span><span class="pp-tag" style="--c:${couleurMatiere(c.matiere)}"><span class="pp-dot"></span>${escapeHtml(c.matiere || '')}</span></div>
   <div class="pp-body${fl ? ' pp-flipped' : ''}" id="${o.ids.body}" onclick="${o.fnFlip}"><h1 class="pp-qt">${ppRichHtml(f.avant)}</h1>${f.imgAvant ? `<img class="pp-qimg" src="${f.imgAvant}" alt="" draggable="false">` : ''}${fl ? `<div class="pp-rule"></div><p class="pp-at${back.length > 90 ? ' pp-l' : ''}">${ppRichHtml(back)}</p>${f.imgArriere ? `<img class="pp-aimg" src="${f.imgArriere}" alt="" draggable="false">` : ''}` : ''}</div>
   <div class="pp-foot">${foot}</div><div class="pp-pastille"></div></div>${ra}</div>
   ${acts}
@@ -12308,6 +12368,7 @@ function ppJournalDefait(id){
 }
 function undoLastAnswer(){
   if(!lastAnswer) return;
+  const niveauAnnule = lastAnswer.niveau;   // v450 : la carte revient du côté par lequel elle est partie
   ecrReset(); // carte à écrire : elle revient « à écrire », champ vide, verrou levé
   if(lastAnswer.journal) ppJournalDefait(lastAnswer.cardId);   // la réponse annulée sort aussi du journal du bilan
   if(lastAnswer.prevSerie){
@@ -12366,6 +12427,8 @@ function undoLastAnswer(){
   planifierSyncDiffere();   // l'état annulé doit partir lui aussi (sinon l'autre appareil garde la réponse annulée)
   justAdvanced = true;
   ppMood.anim = 'in';
+  ppUndoBack = niveauAnnule === 'vert' ? 'ok' : (niveauAnnule === 'rouge' ? 'ko' : 'mid');
+  ppUndoOut = true;
   renderStudy();
   renderStreak();
 }
@@ -13283,7 +13346,7 @@ function ppPlanCompute(){
   }
   const { jours, maxTotal: maxBrut } = getChargeGlobaleParJour(nbJours);
   let maxTotal = maxBrut;
-  for(const j of jours){ j.total += getEntretienDuJour(j.date); if(j.total > maxTotal) maxTotal = j.total; }   /* v445 : la bulle du jour = le chiffre de l'accueil (entretien compris) */
+  for(const j of jours){ const ent = getEntretienDuJour(j.date); j.total += ent; j.reel += ent; if(j.total > maxTotal) maxTotal = j.total; }   /* v445 : la bulle du jour = le chiffre de l'accueil (entretien compris) */
   if(maxTotal === 0) return null;
   let sel = aVenirJourSel;
   if(!sel || !jours.some(j => j.date === sel)) sel = (jours.find(j => j.total > 0) || jours[0]).date;
@@ -13314,9 +13377,10 @@ function ppWkHtml(date, DD){
   }
   const jd = (D.jours || []).find(j => j.date === date), prevus = jd ? jd.proj : 0;
   /* v423 : la ligne du jour garde TOUJOURS la même hauteur (3 lignes réservées) : le nom + les 3 repères principaux, puis les rappels / l'entretien, puis le statut du contrôle. Plus de retour à la ligne qui fait bouger la mise en page. */
-  const l1 = `<div class="pp-w1">${nom}${rv ? `<span>${PP_IC.loop}${rv}</span>` : ''}${nw ? `<span style="color:var(--amber)">${PP_IC.spark}<i style="font-style:normal;color:var(--muted)">${nw}</i></span>` : ''}${ctrl ? `<span style="color:var(--yellow)">${PP_IC.flag}${escapeHtml(formatDateFrShort(date))}</span>` : ''}</div>`;
-  const l2 = `<div class="pp-w2">${prevus ? `<span title="Estimation prudente : on compte environ 30 % de cartes à revoir en plus">≈ ${prevus} rappel${prevus > 1 ? 's' : ''}</span>` : ''}</div>`;
-  return l1 + l2 + m;
+  /* v446 : UN seul repère ↻ = tout ce qui est à revoir ce jour-là (cartes en cours + entretien + rappels estimés) ; « ≈ » seulement s'il y a une estimation. Plus de ligne « ≈ N rappels », plus de date sur le jour de contrôle (déjà visible en haut et dans la matière). */
+  const totalRevoir = rv + prevus;
+  const l1 = `<div class="pp-w1">${nom}${totalRevoir ? `<span>${PP_IC.loop}${prevus ? '≈' : ''}${totalRevoir}</span>` : ''}${nw ? `<span style="color:var(--amber)">${PP_IC.spark}<i style="font-style:normal;color:var(--muted)">${nw}</i></span>` : ''}${ctrl ? `<span style="color:var(--yellow)">${PP_IC.flag}</span>` : ''}</div>`;
+  return l1 + m;
 }
 function ppPlanPick(date){
   if(!ppPlanData) return;
@@ -14316,7 +14380,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v445';
+const PP_APP_VERSION = 'v450';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){

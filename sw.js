@@ -19,6 +19,11 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v253 : v450 (« Annuler la dernière réponse » : la carte revient du côté par lequel elle est partie et le bouton se replie en douceur, plus de saut) : index.html change, donc nouvelle version du cache.
+   v252 : v449 (grand écran : « Cette semaine » en colonnes pleines d'une seule couleur, rangées de hauteur fixe : le jour du contrôle n'est plus décalé) : index.html change, donc nouvelle version du cache.
+   v251 : v448 (accueil : bandeau du contrôle simplifié, mêmes dimensions) : index.html change, donc nouvelle version du cache.
+   v250 : v447 (« À venir » : un jour qui n'a que de l'entretien n'est plus marqué « ≈ » comme une estimation) : index.html change, donc nouvelle version du cache.
+   v249 : v446 (« À venir » : un seul repère ↻ pour tout ce qui est à revoir, plus de ligne « rappels » ni de date sur le jour de contrôle) : index.html change, donc nouvelle version du cache.
    v248 : v445 (« À venir » : l'entretien des cartes maîtrisées compte dans « à revoir » et dans la bulle du jour, même total que l'accueil) : index.html change, donc nouvelle version du cache.
    v247 : v444 (partage : l'envoi demande maintenant un code de synchro, pour que personne ne puisse épuiser le quota d'écritures du Worker) : index.html change, donc nouvelle version du cache.
    v246 : v443 (entretien des cartes maîtrisées étalé sur plusieurs jours au lieu de s'empiler le même jour ; la carte peut être retournée à nouveau pendant l'animation) : index.html change, donc nouvelle version du cache.
@@ -211,7 +216,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v248';
+const SW_VERSION = 'v253';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
