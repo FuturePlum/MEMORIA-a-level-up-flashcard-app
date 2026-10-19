@@ -19,6 +19,7 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v259 : v455 (Statistiques : une seule barre, l'XP de la saison ; la maîtrise n'est plus qu'un boost d'XP) : index.html change, donc nouvelle version du cache.
    v254 : v451 (Statistiques : la carte de maîtrise se retourne à tout moment, sans attendre la fin de l'animation) : index.html change, donc nouvelle version du cache.
    v253 : v450 (« Annuler la dernière réponse » : la carte revient du côté par lequel elle est partie et le bouton se replie en douceur, plus de saut) : index.html change, donc nouvelle version du cache.
    v252 : v449 (grand écran : « Cette semaine » en colonnes pleines d'une seule couleur, rangées de hauteur fixe : le jour du contrôle n'est plus décalé) : index.html change, donc nouvelle version du cache.
@@ -217,7 +218,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v258';
+const SW_VERSION = 'v259';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

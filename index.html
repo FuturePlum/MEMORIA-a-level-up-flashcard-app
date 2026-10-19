@@ -452,9 +452,11 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   });
   /* v419 : statistiques ludiques (rang de maîtrise, % du jour, temps par séance) */
   var RANGS_EN={'Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend'};
-  Object.assign(D,{'Maîtrise':'Mastery','Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Vitrine':'Showcase','estimé en fin de saison':'estimated at season end','Sommet':'Peak','/sem':'/wk','Rangs':'Ranks','Maîtrisées par jour':'Mastered per day','À voir pour progresser':'To review to progress','Cartes qui résistent':'Stubborn cards','Aucune carte ne résiste':'No stubborn cards',"aujourd'hui":'today','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Nouveau rang !':'New rank!','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
+  Object.assign(D,{'XP aujourd\u2019hui':'XP today','Niveau':'Level','XP au total':'Total XP','XP cette semaine':'XP this week','Maîtrise':'Mastery','Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Vitrine':'Showcase','estimé en fin de saison':'estimated at season end','Sommet':'Peak','/sem':'/wk','Rangs':'Ranks','Maîtrisées par jour':'Mastered per day','À voir pour progresser':'To review to progress','Cartes qui résistent':'Stubborn cards','Aucune carte ne résiste':'No stubborn cards',"aujourd'hui":'today','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Nouveau rang !':'New rank!','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
   RULES.push(
     f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
+    f(/^Encore ([\d\u202f\u00a0 ]+) XP pour devenir (.+)$/,function(n,r){ return n+' XP to become '+(RANGS_EN[r]||r); }),
+    f(/^(\d+) maîtrisées? cette semaine$/,function(n){ return n+' mastered this week'; }),
     f(/^Encore (\d+(?:[.,]5)?) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ n = n.replace(',', '.'); return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
     f(/^Saison T(\d) (\d{4})$/,function(q,y){ return 'Season Q'+q+' '+y; }),
     f(/^Fin de saison dans (\d+) jours?$/,function(n){ return 'Season ends in '+c(n,'day'); }),
@@ -4525,6 +4527,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mst.r8 .pp-minfo b.pp-rn{font-size:26px;letter-spacing:.02em;background:linear-gradient(100deg,#fff 0%,#ffe27a 28%,#fff 50%,#ffbe1a 72%,#fff 100%);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ppshim 3.2s linear infinite}
 @keyframes ppshim{to{background-position:-240% 0}}
 .pp-mseas{margin:7px 0 0;font-size:12px;color:var(--muted)}
+.pp-mwk{margin:5px 0 0;font-size:12px;color:var(--muted)}
 .pp-vit{display:flex;align-items:flex-end;gap:12px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.09)}
 .pp-vit small{align-self:center;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pp-vit span{display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -4577,6 +4580,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 /* v432 : dos de la carte de maîtrise */
 #pp-stats-page .pp-mst{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pp-mst .pp-mseas{padding-right:36px}
+.pp-mst .pp-mwk{padding-right:36px}
 .pp-mst>.pp-flipic:not(.pp-rs):not(.pp-emb),.pp-dk>.pp-flipic{position:absolute;right:12px;bottom:12px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--c3);font-style:normal}
 .pp-dk{position:relative;padding-bottom:44px}
 /* v435 : carte de maîtrise retournée = toute la page (téléphone : seule la carte reste ; PC : dos sur 2 colonnes) */
@@ -12614,7 +12618,7 @@ const XP_ACTIF = true;
 const XP_CFG = {
   BASE_DUE: 10, BASE_EXTRA: 2, BASE_QUIZ: 1,                       // carte due / révision en plus / S'entraîner
   X_ECRIRE: 1.3, X_NOUVELLE: 1.5, X_DIFFICILE: 1.5, X_SUE: 0.7, SUE_PALIER: 4,
-  RETARD_PAR_JOUR: 1, RETARD_MAX: 7, RATE_HIER: 3, PAR_PALIER: 3, MAITRISEE: 10,
+  RETARD_PAR_JOUR: 1, RETARD_MAX: 7, RATE_HIER: 3, PAR_PALIER: 3, MAITRISEE: 40, PRETE_CONTROLE: 15,
   REPETITION: [1, 0.5, 0.2],                                         // 1re, 2e, 3e passe sur la même carte le même jour ; ensuite 0
   PLAFOND_EXTRA: 200,                                                // XP max par jour sur les révisions en plus (et S'entraîner)
   BONUS_OBJECTIF: 100, BONUS_COUVERTURE: 50, BONUS_2E_SEANCE: 25, BONUS_FIN_SEANCE: 25, ECART_2E_SEANCE_H: 6,
@@ -12651,7 +12655,8 @@ function xpCarte(o){
   if(o.passe === 1 && o.due) xp += Math.min(R.RETARD_MAX, Math.max(0, o.retard || 0)) * R.RETARD_PAR_JOUR;
   if(o.due && rep > 0){
     if(o.palAp > o.palAv) xp += R.PAR_PALIER * (o.palAp - o.palAv);
-    if(o.devientMaitrisee) xp += R.MAITRISEE;
+    if(o.bonusRang > 0) xp += o.bonusRang;                          /* v455 : boost de rang (maîtrisée +40, « prête pour le contrôle » +15, déjà décomptés) */
+    else if(o.devientMaitrisee) xp += R.MAITRISEE;
   }
   if(o.passe === 1 && o.rateHier) xp += R.RATE_HIER;
   return xp;
@@ -12685,7 +12690,10 @@ function xpAppareil(){
   }catch(e){ return 'a00'; }
 }
 const xpNum = (v, max) => { v = +v; return (Number.isFinite(v) && v > 0) ? Math.min(max || 1e9, Math.round(v * 10) / 10) : 0; };
-function xpSyncVide(){ return { t: {}, j: {}, r: 0, c: { d: '', s: {} } }; }
+function xpSyncVide(){ return { t: {}, j: {}, r: 0, c: { d: '', s: {} }, z: { id: '', t: {} } }; }
+/* v455 : XP de la SAISON (trimestre) = ce qui donne le rang. z = { id: '2026-T4', t: { appareil: XP } } : un compteur par appareil, fusion par maximum (comme t). */
+function xpSaisonId(d){ return d.slice(0, 4) + '-T' + (Math.floor((+d.slice(5, 7) - 1) / 3) + 1); }
+function xpSaisonDebut(id){ return id.slice(0, 4) + '-' + String((+id.slice(6) - 1) * 3 + 1).padStart(2, '0') + '-01'; }
 function xpSyncNettoyer(o){
   const r = xpSyncVide();
   if(!o || typeof o !== 'object') return r;
@@ -12696,6 +12704,10 @@ function xpSyncNettoyer(o){
     if(Object.keys(e).length) r.j[d] = e;
   });
   r.r = xpNum(o.r);
+  if(o.z && typeof o.z === 'object' && /^\d{4}-T[1-4]$/.test(String(o.z.id)) && o.z.t && typeof o.z.t === 'object'){
+    r.z.id = o.z.id;
+    Object.keys(o.z.t).forEach(k => { if(XP_ID_RE.test(k)){ const v = xpNum(o.z.t[k]); if(v > 0) r.z.t[k] = v; } });
+  }
   const c = o.c;
   if(c && typeof c === 'object' && XP_JOUR_RE.test(String(c.d)) && c.s && typeof c.s === 'object'){
     r.c.d = c.d;
@@ -12724,7 +12736,17 @@ function xpSyncMigrer(){
   }catch(e){}
   return s;
 }
+/* Saison courante : si le registre n'a pas encore le compteur du trimestre en cours (1re fois, ou nouveau trimestre), on le reconstruit depuis l'XP des jours (j) ; l'ancien trimestre est d'abord rangé dans la vitrine. */
+function xpSaisonAssurer(o){
+  const id = xpSaisonId(todayStr());
+  if(o.z.id === id || (o.z.id && o.z.id > id)) return;
+  if(o.z.id && typeof ppSaisonLire === 'function'){ try{ ppSaisonLire(null, true); }catch(e){} }
+  const deb = xpSaisonDebut(id), z = { id, t: {} };
+  Object.keys(o.j).forEach(d => { if(d >= deb) Object.keys(o.j[d]).forEach(k => { z.t[k] = xpArr((z.t[k] || 0) + o.j[d][k]); }); });
+  o.z = z;
+}
 function xpSyncEcrire(o){
+  xpSaisonAssurer(o);
   const lim = addDays(todayStr(), -20);
   Object.keys(o.j).forEach(d => { if(d < lim) delete o.j[d]; });
   ppEcrire(XP_SYNC_KEY, JSON.stringify(o));
@@ -12737,11 +12759,22 @@ function xpSyncLire(){
 }
 function xpTotal(s){ return xpSomme((s || xpSyncLire()).t); }
 function xpJourTotal(s, d){ return xpSomme(s.j[d]); }
+/* XP d'un trimestre (id = '2026-T4', par défaut le courant). Lecture seule : si le compteur n'est pas encore au registre, on additionne les jours du trimestre. */
+function xpSaisonTotal(s, id){
+  s = s || xpSyncLire(); id = id || xpSaisonId(todayStr());
+  if(s.z.id === id) return xpSomme(s.z.t);
+  if(s.z.id && s.z.id > id) return 0;
+  const deb = xpSaisonDebut(id); let n = 0;
+  Object.keys(s.j).forEach(d => { if(d >= deb) n += xpJourTotal(s, d); });
+  return n;
+}
 /* Ajoute de l'XP à CET appareil (à chaque carte : rien n'est perdu si l'app est fermée en pleine séance). */
 function xpAjoute(x){
   x = xpArr(+x || 0); if(!(x > 0)) return;
   const s = xpSyncLire(), me = xpAppareil(), d = todayStr();
+  xpSaisonAssurer(s);
   s.t[me] = xpArr((s.t[me] || 0) + x);
+  if(s.z.id === xpSaisonId(d)) s.z.t[me] = xpArr((s.z.t[me] || 0) + x);
   const e = s.j[d] || (s.j[d] = {});
   e[me] = xpArr((e[me] || 0) + x);
   s.r = Math.max(s.r, Math.round(xpJourTotal(s, d)));
@@ -12754,12 +12787,15 @@ function xpSyncFusion(a, b){
     Object.keys(src.j).forEach(d => { const e = o.j[d] || (o.j[d] = {}); Object.keys(src.j[d]).forEach(k => { e[k] = Math.max(e[k] || 0, src.j[d][k]); }); });
   });
   o.r = Math.max(a.r, b.r);
+  if(a.z.id === b.z.id) [a.z, b.z].forEach(zz => { o.z.id = zz.id; Object.keys(zz.t).forEach(k => { o.z.t[k] = Math.max(o.z.t[k] || 0, zz.t[k]); }); });
+  else { const w = a.z.id > b.z.id ? a.z : b.z; o.z = { id: w.id, t: { ...w.t } }; }   /* trimestre plus récent = gagne */
   o.c = (b.c.d && b.c.d > a.c.d) ? { d: b.c.d, s: { ...b.c.s } } : { d: a.c.d, s: { ...a.c.s } };
   if(b.c.d && b.c.d === a.c.d) Object.keys(b.c.s).forEach(k => { const l = o.c.s[k]; if(!l || b.c.s[k].q > l.q) o.c.s[k] = b.c.s[k]; });
   return o;
 }
 /* Réception (synchro ou restauration d'une sauvegarde) : fusion sans recul, idempotente. Retourne true si quelque chose a changé. */
 function xpSyncRecevoir(brut){
+  try{ if(typeof ppSaisonLire === 'function') ppSaisonLire(null, true); }catch(e){}   /* v455 : range un trimestre fini dans la vitrine AVANT que la fusion ne le remplace */
   const loc = xpSyncLire(), fus = xpSyncFusion(loc, xpSyncNettoyer(brut));
   if(JSON.stringify(xpTrier(fus)) === JSON.stringify(xpTrier(loc))) return false;
   xpSyncEcrire(fus); return true;
@@ -12822,7 +12858,7 @@ function xpApresReponse(o){
   const retard = (ent.n === 1 && passe === 1 && ent.du && o.prevProchaineRevision) ? Math.round((Date.parse(today) - Date.parse(o.prevProchaineRevision)) / 864e5) : 0;
   let rateHier = false;
   if(passe === 1 && o.niveau !== 'rouge'){ try{ rateHier = !!journalCarteDuJour(c.id, addDays(today, -1)).aEchec; }catch(e){} }
-  let xp = xpCarte({ passe, base: ent.b, due: !!ent.du, ecrite: c.ecrite === true, premier: passe === 1 && premier, difficile, palAv: o.prevPalier || 0, palAp: o.palier || 0, joursControle: jc, retard, rateHier, devientMaitrisee: !!o.becameMastered });
+  let xp = xpCarte({ passe, base: ent.b, due: !!ent.du, ecrite: c.ecrite === true, premier: passe === 1 && premier, difficile, palAv: o.prevPalier || 0, palAp: o.palier || 0, joursControle: jc, retard, rateHier, devientMaitrisee: !!o.becameMastered, bonusRang: o.bonusRang || 0 });
   if(!ent.du){ xp = Math.min(xp, xpResteDuJour(st)); st.ex = (st.ex || 0) + xp; }
   xp *= xpMultSerie();
   let gagne = xp;
@@ -12889,12 +12925,14 @@ function xpBilanPhrase(i){
   return en ? 'A solid session.' : 'Une bonne séance.';
 }
 function xpBilanHtml(b){
+  /* v455 : la barre du bilan est la barre de rang de la saison (la même que sur la carte Maîtrise), plus une barre de niveau. */
   if(!XP_ACTIF || !b || !b.xp || !(b.xp.x > 0)) return '';
-  const en = ppLangueEn(), i = b.xp, tot = xpTotal(), av = xpNiveau(Math.max(0, tot - i.x)), ap = xpNiveau(tot), monte = ap.niv > av.niv;
-  const lab = n => (en ? 'Lvl ' : 'Niv. ') + n;
-  return `<div class="pp-xpb" data-x="${Math.round(i.x)}" data-monte="${monte ? 1 : 0}" data-p0="${av.pct}" data-p1="${monte ? 100 : ap.pct}" data-p2="${ap.pct}" data-l2="${lab(ap.niv)}"><div class="pp-xpt"><b class="pp-xpn">+${xpFmt(i.x)}</b><span>XP</span><span class="pp-xpv">${lab(monte ? av.niv : ap.niv)}</span></div><div class="pp-mxb"><u style="width:${av.pct}%"></u></div><p class="pp-xps">${xpBilanPhrase(i)}</p></div>`;
+  const en = ppLangueEn(), i = b.xp, fin = xpSaisonTotal(), deb = Math.max(0, fin - i.x);
+  const av = ppRangMaitrise(deb), ap = ppRangMaitrise(fin), monte = ap.i > av.i;
+  const nom = g => en ? PP_RANGS_EN[g.i] : g.r.n;
+  return `<div class="pp-xpb" style="${ppRangVars(ap.i)}" data-x="${Math.round(i.x)}" data-monte="${monte ? 1 : 0}" data-p0="${av.pct}" data-p1="${monte ? 100 : ap.pct}" data-p2="${ap.pct}" data-l2="${nom(ap)}"><div class="pp-xpt"><b class="pp-xpn">+${xpFmt(i.x)}</b><span>XP</span><span class="pp-xpv">${nom(monte ? av : ap)}</span></div><div class="pp-mxb"><u style="width:${av.pct}%"></u></div><p class="pp-xps">${xpBilanPhrase(i)}</p></div>`;
 }
-if(typeof module !== 'undefined') module.exports = Object.assign(module.exports || {}, { XP_CFG, xpCarte, xpNiveau, xpControleMult, xpSyncFusion, xpSyncNettoyer, xpEvenement, xpBilanPhrase });
+if(typeof module !== 'undefined') module.exports = Object.assign(module.exports || {}, { XP_CFG, xpCarte, xpNiveau, xpControleMult, xpSyncFusion, xpSyncNettoyer, xpEvenement, xpBilanPhrase, xpSaisonId, xpSaisonDebut, xpSaisonTotal, xpSyncVide });
 /* === XP v453 fin === */
 
 /* === Retour visuel v454 ===
@@ -13021,8 +13059,8 @@ function answer(niveau, opts){
   ['cartes-streak', 'lissage-marqueur-retard', 'cartes-stats-extra'].forEach(k => { try{ prevSerie[k] = localStorage.getItem(k); }catch(e){ prevSerie[k] = null; } });
   bumpStreak();
   ppStatBump();
-  ppRangCompte(c, prevPalier || 0, palier || 0, becameMastered, dateControleReponse);   // v431/v453 : points de la saison (1 par carte maîtrisée, ½ si « prête pour le contrôle ») ; « Annuler » remet le bloc stats-extra sauvegardé plus haut
-  if(XP_ACTIF){ try{ const xr = xpApresReponse({ c, niveau, jourJuge, prevPalier, palier, prevDifficultes, prevNiveauPerdu, prevProchaineRevision, prevDerniereRevision, becameMastered, dateControle: dateControleReponse }); ppCueArmer(xr && xr.evt); }catch(e){} }   // v453 : XP (décoration) ; v454 : moment fort → retour visuel sur la carte suivante
+  let bonusRang = 0; try{ bonusRang = ppRangCompte(c, prevPalier || 0, palier || 0, becameMastered, dateControleReponse) || 0; }catch(e){}   // v431/v453 : points de la saison (1 par carte maîtrisée, ½ si « prête pour le contrôle ») ; « Annuler » remet le bloc stats-extra sauvegardé plus haut
+  if(XP_ACTIF){ try{ const xr = xpApresReponse({ c, niveau, jourJuge, prevPalier, palier, prevDifficultes, prevNiveauPerdu, prevProchaineRevision, prevDerniereRevision, becameMastered, bonusRang, dateControle: dateControleReponse }); ppCueArmer(xr && xr.evt); }catch(e){} }   // v453 : XP (décoration) ; v454 : moment fort → retour visuel sur la carte suivante
   ppJournalAjoute(c.id, niveau);   // journal local du bilan de la semaine (synchronisé depuis la v224 ; exporté et restauré depuis la v223)
   if(!sansEffet || mj) saveLocalOverlay(c.id, { palier, prochaineRevision, derniereRevision, derniereModification, difficultes: c.difficultes || 0, facileConsecutif: c.facileConsecutif || 0, facilite: c.facilite, ...(mj ? maitriseNettoyerChamps(c) : {}) });
 
@@ -15107,7 +15145,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v454';
+const PP_APP_VERSION = 'v455';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -20929,7 +20967,7 @@ function ppStatExtra(){
 const PP_SAISON_RE = /^\d{4}-T[1-4]$/;
 function ppSaisonNettoyer(x){
   if(!x || typeof x !== 'object' || !PP_SAISON_RE.test(String(x.id))) return null;
-  return { id: x.id, n: Math.max(0, Math.round((+x.n || 0) * 2) / 2), pr: (Array.isArray(x.pr) ? x.pr : []).filter(y => typeof y === 'string' && y.length < 80).slice(-2500), v: (Array.isArray(x.v) ? x.v : []).filter(y => y && PP_SAISON_RE.test(String(y.id)) && Number.isFinite(+y.i)).map(y => ({ id: y.id, i: Math.max(0, Math.min(PP_RANGS.length - 1, Math.floor(+y.i))) })).slice(-8) };
+  return { id: x.id, n: Math.max(0, Math.round(+x.n || 0)), pr: (Array.isArray(x.pr) ? x.pr : []).filter(y => typeof y === 'string' && y.length < 80).slice(-2500), v: (Array.isArray(x.v) ? x.v : []).filter(y => y && PP_SAISON_RE.test(String(y.id)) && Number.isFinite(+y.i)).map(y => ({ id: y.id, i: Math.max(0, Math.min(PP_RANGS.length - 1, Math.floor(+y.i))) })).slice(-8) };
 }
 function ppSaisonFusion(a, b){
   if(!a) return b; if(!b) return a;
@@ -20943,26 +20981,25 @@ function ppSaisonLire(ex, persist){
   ex = ex || ppStatExtra();
   const id = ppSaisonId();
   let s = ex.saison, change = false;
-  if(!s){ const deb = ppSaisonDebut(id); s = { id, n: ppSeancesLire().filter(x => x.d >= deb).reduce((a, x) => a + x.m, 0), pr: [], v: [] }; change = true; }
-  else if(s.id < id){ s = { id, n: 0, pr: [], v: s.n > 0 ? s.v.concat([{ id: s.id, i: ppRangMaitrise(s.n).i }]).slice(-8) : s.v }; change = true; }
+  const xpN = i2 => { try{ return Math.round(xpSaisonTotal(null, i2)); }catch(e){ return 0; } };   /* v455 : les points de la saison = l'XP du trimestre (registre synchronisé) */
+  if(!s){ s = { id, n: xpN(id), pr: [], v: [] }; change = true; }
+  else if(s.id < id){ const fin = Math.max(s.n, xpN(s.id)); s = { id, n: xpN(id), pr: [], v: fin > 0 ? s.v.concat([{ id: s.id, i: ppRangMaitrise(fin).i }]).slice(-8) : s.v }; change = true; }
+  else if(s.id === id){ const n = xpN(id); if(n !== s.n){ s.n = n; change = true; } }
   if(change && persist){ ex.saison = s; ppStatSave(ex); }
   return s;
 }
-function ppSaisonAjout(d){
-  const ex = ppStatExtra(), s = ppSaisonLire(ex);
-  s.n = Math.max(0, s.n + d); ex.saison = s; ppStatSave(ex);
-}
-/* v453 : points de la saison. Maîtrisée (palier 4, nouvelle) = 1 point en tout ; « prête pour le contrôle » (palier 3 atteint, contrôle dans 0 à 10 jours) = ½ point, une seule fois par carte et par saison (liste `pr`). */
+/* v455 : boosts d'XP du rang. Maîtrisée = +40 ; « prête pour le contrôle » (palier 3 atteint, contrôle dans 0 à 10 jours) = +15, une seule fois par carte et par saison (liste `pr`) ; si la carte devient maîtrisée après avoir été « prête », il reste +25. Retourne l'XP de boost (0 si rien). */
 function ppRangCompte(c, palAv, palAp, devientMaitrisee, dateControle){
-  let d = 0, ex = null, s = null;
+  const R = XP_CFG; let b = 0, ex = null, s = null;
   const lire = () => { if(!s){ ex = ppStatExtra(); s = ppSaisonLire(ex); if(!Array.isArray(s.pr)) s.pr = []; } };
-  if(!MAITRISE_ACTIF){ if(devientMaitrisee) ppSaisonAjout(1); return; }
-  if(devientMaitrisee){ lire(); const dej = s.pr.indexOf(c.id) >= 0; d = dej ? 0.5 : 1; if(!dej) s.pr.push(c.id); }
+  if(!MAITRISE_ACTIF) return devientMaitrisee ? R.MAITRISEE : 0;
+  if(devientMaitrisee){ lire(); const dej = s.pr.indexOf(c.id) >= 0; b = dej ? R.MAITRISEE - R.PRETE_CONTROLE : R.MAITRISEE; if(!dej) s.pr.push(c.id); }
   else if(palAp >= 3 && palAv < 3 && dateControle){
     const j = Math.round((Date.parse(dateControle) - Date.parse(todayStr())) / 864e5);
-    if(j >= 0 && j <= 10){ lire(); if(s.pr.indexOf(c.id) < 0){ s.pr.push(c.id); d = 0.5; } }
+    if(j >= 0 && j <= 10){ lire(); if(s.pr.indexOf(c.id) < 0){ s.pr.push(c.id); b = R.PRETE_CONTROLE; } }
   }
-  if(d > 0){ s.n += d; ex.saison = s; ppStatSave(ex); }
+  if(b > 0){ ex.saison = s; ppStatSave(ex); }
+  return b;
 }
 function ppSaisonJoursRestants(id){
   const t = todayStr().split('-'), fin = new Date(+id.slice(0, 4), +id.slice(6) * 3, 0, 12), auj = new Date(+t[0], +t[1] - 1, +t[2], 12);
@@ -21419,14 +21456,14 @@ function ppStatsHtml(){
    c = couleur vive · c2 = ton profond (bas du dégradé métal) · c3 = reflet clair. Plus le rang monte, plus la couleur est intense et la mise en scène lourde. */
 const PP_RANGS = [
   { n:'Bronze', s:0, c:'#e58b4b', c2:'#7d3f16', c3:'#ffc590' },
-  { n:'Argent', s:30, c:'#c3d1e2', c2:'#6d8097', c3:'#f4f8fd' },
-  { n:'Or', s:75, c:'#ffc531', c2:'#b36b00', c3:'#fff0a8' },
-  { n:'Platine', s:130, c:'#2ee9cc', c2:'#0a8c86', c3:'#c4fff4' },
-  { n:'Diamant', s:195, c:'#58ccff', c2:'#1d5fe0', c3:'#d9f4ff' },
-  { n:'Champion', s:265, c:'#b86cff', c2:'#5b21c0', c3:'#eed6ff' },
-  { n:'Maître', s:340, c:'#ff4fd8', c2:'#8a1470', c3:'#ffc7f3' },
-  { n:'Grand maître', s:420, c:'#ff3346', c2:'#8c0b1f', c3:'#ffb3bb' },
-  { n:'Légende', s:510, c:'#ffe27a', c2:'#ff9d00', c3:'#ffffff' }
+  { n:'Argent', s:4500, c:'#c3d1e2', c2:'#6d8097', c3:'#f4f8fd' },
+  { n:'Or', s:11500, c:'#ffc531', c2:'#b36b00', c3:'#fff0a8' },
+  { n:'Platine', s:20000, c:'#2ee9cc', c2:'#0a8c86', c3:'#c4fff4' },
+  { n:'Diamant', s:30000, c:'#58ccff', c2:'#1d5fe0', c3:'#d9f4ff' },
+  { n:'Champion', s:41000, c:'#b86cff', c2:'#5b21c0', c3:'#eed6ff' },
+  { n:'Maître', s:52500, c:'#ff4fd8', c2:'#8a1470', c3:'#ffc7f3' },
+  { n:'Grand maître', s:65000, c:'#ff3346', c2:'#8c0b1f', c3:'#ffb3bb' },
+  { n:'Légende', s:79000, c:'#ffe27a', c2:'#ff9d00', c3:'#ffffff' }
 ];
 const PP_RANGS_EN = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Champion', 'Master', 'Grandmaster', 'Legend'];
 const PP_RANG_MAX = PP_RANGS.length - 1;
@@ -21436,6 +21473,7 @@ function ppSaisonId(d){ d = d || (typeof todayStr === 'function' ? todayStr() : 
 function ppSaisonDebut(id){ return id.slice(0, 4) + '-' + String((+id.slice(6) - 1) * 3 + 1).padStart(2, '0') + '-01'; }
 function ppSaisonLabel(id){ return 'T' + id.slice(6) + ' ' + id.slice(0, 4); }
 
+function ppXpCourt(n){ n = Math.round(+n || 0); if(n < 1000) return String(n); const k = n / 1000; return (Number.isInteger(k) ? String(k) : k.toFixed(1).replace('.', ppLangueEn() ? '.' : ',')) + 'k'; }
 function ppNumRang(n){ return Number.isInteger(n) ? String(n) : String(n).replace('.', ppLangueEn() ? '.' : ','); }
 function ppRangMaitrise(n){
   let i = 0;
@@ -21490,36 +21528,26 @@ function ppEmbers(n){
 /* La carte « Maîtrise » (HTML). o = { n: cartes maîtrisées ce trimestre, sais: {id, v:[{id,i}]}, jours: jours restants, masSem, nouveau, ancienI, cur }.
    La carte finale est toujours dans le HTML ; si « nouveau », un calque .pp-rs la recouvre et ppRangAnim le remplit (séquence de montée de rang). */
 function ppRangCarte(o){
+  /* v455 : UNE seule barre = l'XP de la saison ; elle donne le rang. o.n = XP du trimestre. */
   const rg = ppRangMaitrise(o.n), r = rg.r, nx = rg.dernier ? r : PP_RANGS[rg.i + 1];
-  const lab = ppSaisonLabel(o.sais.id);
-  const mnum = rg.dernier
-    ? `<div class="pp-mnum"><span><b>${ppNumRang(o.n)}</b></span></div>`
-    : `<div class="pp-mnum"><span><b>${ppNumRang(o.n)}</b> / ${rg.suivant}</span></div>`;
+  const lab = ppSaisonLabel(o.sais.id), x = XP_ACTIF ? xpAffichage() : null;
+  const mnum = `<div class="pp-mnum"><span><b>${xpFmt(o.n)}</b> XP</span></div>`;
   const but = rg.dernier
     ? `Sommet atteint : tu es Légende ce trimestre.`
-    : `Encore <b>${ppNumRang(rg.reste)}</b> carte${rg.reste > 1 ? 's' : ''} à maîtriser pour devenir <b style="color:${nx.c}">${nx.n}</b>`;
+    : `Encore <b>${xpFmt(rg.reste)}</b> XP pour devenir <b style="color:${nx.c}">${nx.n}</b>`;
   const fin = o.jours > 0 ? `Fin de saison dans ${o.jours} jour${o.jours > 1 ? 's' : ''}` : `Dernier jour de la saison`;
-  const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(x => `<span style="${ppRangVars(x.i)}">${ppBadgeRang(x.i)}<em>${ppSaisonLabel(x.id)}</em></span>`).join('')}</div>` : '';
-  /* v452 (7b) : segment clair = cartes en route (surplus). La partie pleine et les textes (rang, « Encore N cartes ») restent en cartes entières. */
-  let seg = '';
-  if(!rg.dernier && Number.isFinite(o.surplus) && o.surplus > 0){
-    const plein = rg.pct, tot = Math.min(rg.reste > 0 ? 99 : 100, Math.round((o.n + o.surplus - r.s) / (rg.suivant - r.s) * 100));
-    if(Number.isFinite(tot) && tot - plein >= 1) seg = `<s aria-hidden="true" style="left:${plein}%;width:${tot - plein}%"></s>`;
-  }
-  const pal = ppPaliersFmt(o.palSem);
-  const haut = (o.masSem > 0 || pal)
-    ? `<div class="pp-mpct">${o.masSem > 0 ? `<b>+${o.masSem}</b><span>maîtrisée${o.masSem > 1 ? 's' : ''} cette semaine</span>${pal ? `<span class="pp-mpal">${pal.num} ${pal.mot}</span>` : ''}` : `<b>${pal.num}</b><span>${pal.mot} cette semaine</span>`}</div>`
-    : '';
+  const haut = x ? `<div class="pp-mpct"><b>+${xpFmt(x.auj)}</b><span>XP aujourd\u2019hui</span></div>` : '';
+  const sem = o.masSem > 0 ? `<p class="pp-mwk">${o.masSem} maîtrisée${o.masSem > 1 ? 's' : ''} cette semaine</p>` : '';
   const calque = o.nouveau ? `<div class="pp-rs" style="--cn:${r.c};--c3n:${r.c3};--co:${PP_RANGS[o.ancienI].c}"></div>` : '';
-  return `<div class="pp-sgM"><div class="pp-mst r${rg.i}${o.nouveau ? ' pp-ranim' : ''}" style="${ppRangVars(rg.i)}" role="button" tabindex="0" aria-label="Maîtrise" data-cur="${o.cur}" data-i="${rg.i}" data-o="${o.ancienI || 0}" data-n="${o.n}">
+  return `<div class="pp-sgM"><div class="pp-mst r${rg.i}${o.nouveau ? ' pp-ranim' : ''}" style="${ppRangVars(rg.i)}" role="button" tabindex="0" aria-label="Maîtrise" data-cur="${o.cur}" data-i="${rg.i}" data-o="${o.ancienI || 0}" data-n="${Math.round(o.n)}">
     ${rg.i >= 7 ? ppEmbers(rg.i === PP_RANG_MAX ? 18 : 9) : ''}
     <div class="pp-mtop">${ppBadgeBloc(rg.i)}
     <div class="pp-minfo"><small>Saison ${lab}</small><b class="pp-rn">${r.n}</b></div>
     ${haut}</div>
     ${mnum}
-    <div class="pp-mrow"><div class="pp-mbar"><u style="width:${rg.pct}%"></u>${seg}</div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
-    <p class="pp-mgoal">${but}</p>
-    <p class="pp-mseas">${fin}</p>${xpCarteHtml()}${vit}<i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i>${calque}</div></div>`;
+    <div class="pp-mrow"><div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
+    <p class="pp-mgoal">${but}</p>${sem}
+    <p class="pp-mseas">${fin}</p><i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i>${calque}</div></div>`;
 }
 
 /* ---- v431 : moteur de particules (canvas) pour la séquence de montée de rang ---- */
@@ -21716,7 +21744,7 @@ function ppRangAnim(el){
       A(s, [{ opacity:0, transform:'translateY(-26px) scale(2.8)', filter:'blur(10px)' }, { opacity:1, transform:'translateY(3px) scale(.94)', filter:'blur(0px)', offset:.65 }, { opacity:1, transform:'none', filter:'blur(0px)' }], { duration:480, delay:k * stag });
       T(() => { const b = s.getBoundingClientRect(), r = st.getBoundingClientRect(); sh([rN.c3, '#ffffff', rN.c], 7, b.left - r.left + b.width / 2, b.top - r.top + b.height / 2, 1, 4.5, 300, 700, .03); }, k * stag + 120);
     });
-    sub.textContent = en ? nCartes + ' card' + (nCartes > 1 ? 's' : '') + ' mastered this quarter' : nCartes + ' carte' + (nCartes > 1 ? 's' : '') + ' maîtrisée' + (nCartes > 1 ? 's' : '') + ' ce trimestre';
+    sub.textContent = en ? xpFmt(nCartes) + ' XP this quarter' : xpFmt(nCartes) + ' XP ce trimestre';
     A(sub, [{ opacity:0, transform:'translateY(6px)' }, { opacity:1, transform:'none' }], { duration:600, delay:nL * stag + 120 });
     if(iN >= 5) A(nm, [{ filter:'drop-shadow(0 0 8px ' + rN.c + ')' }, { filter:'drop-shadow(0 0 26px ' + rN.c3 + ')' }, { filter:'drop-shadow(0 0 8px ' + rN.c + ')' }], { duration:1500, delay:nL * stag + 300, iterations:Infinity, easing:'ease-in-out' });
     else A(nm, [{ filter:'drop-shadow(0 0 10px ' + rN.c + ')' }, { filter:'drop-shadow(0 0 10px ' + rN.c + ')' }], { duration:100 });
@@ -21743,7 +21771,7 @@ function ppRangAnim(el){
     A(E('.pp-mnum'), [{ opacity:0 }, { opacity:1 }], { duration:500, delay:D + 380, fill:'backwards' });
     A(E('.pp-mrow .pp-mbar u'), [{ transform:'scaleX(0)' }, { transform:'scaleX(1)' }], { duration:800, delay:D + 380, fill:'backwards' });
     A(E('.pp-mrow > .pp-mnext'), [{ opacity:0, transform:'scale(.6)' }, { opacity:1, transform:'none' }], { duration:500, delay:D + 600, fill:'backwards' });
-    ['.pp-mgoal', '.pp-mseas', '.pp-vit'].forEach((s, k) => A(E(s), [{ opacity:0, transform:'translateY(6px)' }, { opacity:1, transform:'none' }], { duration:500, delay:D + 650 + k * 80, fill:'backwards' }));
+    ['.pp-mgoal', '.pp-mwk', '.pp-mseas'].forEach((s, k) => A(E(s), [{ opacity:0, transform:'translateY(6px)' }, { opacity:1, transform:'none' }], { duration:500, delay:D + 650 + k * 80, fill:'backwards' }));
   }, tOut);
   T(defaire, tEnd);
 }
@@ -21761,20 +21789,18 @@ function ppRangAnim(el){
    Les Statistiques sont recréées à chaque ouverture, donc la carte repart toujours sur sa face principale. */
 let ppDosHtml = '';
 function ppRangDos(o){
-  const rg = ppRangMaitrise(o.n), r = rg.r, nx = rg.dernier ? r : PP_RANGS[rg.i + 1], cs = o.cs, today = o.today;
-  const ses = ppSeancesLire(), loc = ppLangueEn() ? 'en-GB' : 'fr-FR';
-  /* rythme : allure = maîtrisées par semaine sur les 14 derniers jours ; besoin = ce qu'il faut par semaine pour le rang suivant avant la fin de saison */
-  const sem = Math.max(1, o.jours / 7);
-  const m14 = ses.filter(x => x.d >= addDays(today, -13)).reduce((a, x) => a + x.m, 0), allure = m14 / 2;
-  const proj = ppRangMaitrise(Math.floor(o.n + allure * (o.jours / 7)));
-  const besoin = rg.dernier ? 0 : Math.ceil(rg.reste / sem);
-  const enRoute = rg.dernier || allure >= besoin;
-  const tuiles = `<div class="pp-dkt">
-    <div><b style="--k:${r.c3}">+${o.masSem}</b><span>cette semaine</span></div>
-    <div>${rg.dernier ? `<b style="--k:${r.c3}">✓</b><span>Sommet</span>` : `<b style="--k:${enRoute ? 'var(--green,#2ed9a4)' : 'var(--amber,#ffb21f)'}">${besoin}<small>/sem</small></b><span>→ ${nx.n}</span>`}</div>
-    <div><b style="--k:${proj.r.c3}">${proj.r.n}</b><span>estimé en fin de saison</span></div></div>`;
-  /* échelle des 9 rangs */
-  const lad = PP_RANGS.map((x, i) => `<span class="${i < rg.i ? 'ok' : i === rg.i ? 'cur' : 'lock'}" style="${ppRangVars(i)}">${ppBadgeRang(i)}<em>${x.s}</em></span>`).join('');
+  /* v455 : seuils de rang en XP, niveau, XP totale, semaine comparée à la précédente, vitrine. Plus de projection (« estimé en fin de saison », allure nécessaire). */
+  const rg = ppRangMaitrise(o.n), r = rg.r, cs = o.cs, today = o.today;
+  const ses = ppSeancesLire(), loc = ppLangueEn() ? 'en-GB' : 'fr-FR', en = ppLangueEn();
+  const x = XP_ACTIF ? xpAffichage() : null, total = x ? xpTotal() : 0;
+  const tuiles = x ? `<div class="pp-dkt">
+    <div><b style="--k:${r.c3}">${x.niv}</b><span>Niveau</span></div>
+    <div><b style="--k:${r.c3}">${xpFmt(total)}</b><span>XP au total</span></div>
+    <div><b style="--k:${r.c3}">${xpFmt(x.sem)}</b><span>XP cette semaine</span></div></div>
+    <p class="pp-dkv">${en ? 'Last week ' : 'Semaine précédente '}${xpFmt(x.prec)} \u00b7 ${en ? 'Best day ' : 'Record '}${xpFmt(x.record)}</p>` : '';
+  const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(y => `<span style="${ppRangVars(y.i)}">${ppBadgeRang(y.i)}<em>${ppSaisonLabel(y.id)}</em></span>`).join('')}</div>` : '';
+  /* échelle des 9 rangs (seuils en XP) */
+  const lad = PP_RANGS.map((y, i) => `<span class="${i < rg.i ? 'ok' : i === rg.i ? 'cur' : 'lock'}" style="${ppRangVars(i)}">${ppBadgeRang(i)}<em>${ppXpCourt(y.s)}</em></span>`).join('');
   /* maîtrisées par jour (7 derniers jours) */
   const j7 = []; for(let k = 6; k >= 0; k--){ const d = addDays(today, -k); j7.push({ d, m: ses.filter(x => x.d === d).reduce((a, x) => a + x.m, 0) }); }
   const mx = Math.max(1, ...j7.map(x => x.m));
@@ -21790,7 +21816,7 @@ function ppRangDos(o){
   return `<div class="pp-dk"><div class="pp-dka">
     <div class="pp-dkh">${ppBadgeRang(rg.i)}<div><small>Maîtrise</small><b class="pp-rn">${r.n}</b></div><div class="pp-dkr"><span>${ppSaisonLabel(o.sais.id)}</span></div></div>
     <div class="pp-lad">${lad}</div>
-    ${tuiles}</div><div class="pp-dkc">
+    ${tuiles}${vit}</div><div class="pp-dkc">
     <p class="pp-dks">Maîtrisées par jour</p><div class="pp-dkb">${barres}</div>
     <p class="pp-dks">À voir pour progresser</p>${entonnoir}
     </div><div class="pp-dkx"><p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}</div>
@@ -21971,6 +21997,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v455', t:["Une seule barre : ton XP","One bar: your XP"], p:[
+    ["La grande barre de la carte Maîtrise est maintenant ta barre d'XP : c'est elle qui te fait monter de rang, saison après saison. Tout ce qui te rapporte de l'XP fait avancer cette barre.","The big bar on the Mastery card is now your XP bar: it is what moves you up in rank, season after season. Everything that earns XP moves this bar."],
+    ["Maîtriser une carte donne un gros coup de pouce d'XP, et une carte « prête pour le contrôle » un petit. Le niveau, l'XP totale, ta semaine et ta vitrine sont au dos de la carte.","Mastering a card gives a big XP boost, and a card that is “ready for the test” a small one. Your level, total XP, your week and your showcase are on the back of the card."]
+  ] },
   { v:'v454', t:["Ton XP voyage avec toi","Your XP travels with you"], p:[
     ["Ton niveau, ton XP du jour, ta semaine et ton record sont les mêmes sur téléphone et ordinateur. Changer d'appareil ne fait rien perdre et ne compte rien en double.","Your level, today's XP, your week and your record are the same on phone and computer. Switching devices loses nothing and counts nothing twice."],
     ["L'XP est enregistrée carte après carte : fermer l'app en pleine séance n'en fait plus perdre. S'entraîner compte aussi, et se synchronise.","XP is saved card after card: closing the app mid-session no longer loses any. Practice counts too, and syncs."],
