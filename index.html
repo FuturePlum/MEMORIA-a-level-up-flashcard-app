@@ -1928,7 +1928,7 @@ input[type="date"]{ color-scheme:inherit; }
 .pp-ctb u{display:block;height:100%;border-radius:4px;background:var(--yellow);text-decoration:none}
 .pp-ctm>span{font-size:12.5px;color:var(--muted)}
 .pp-ctm>span b{color:var(--cream)}
-/* v448 : bandeau contrôle de l'accueil. Téléphone : hauteur FIXE 99px (= l'ancien bandeau quand le nom passait sur 2 lignes) ; grand écran : mêmes rangées que l'ancien bandeau d'une ligne (18 + 21 + 15 px). */
+/* v448 : bandeau contrôle de l'accueil. Téléphone (avant v461) : hauteur FIXE 99px (= l'ancien bandeau quand le nom passait sur 2 lignes) ; grand écran : mêmes rangées que l'ancien bandeau d'une ligne (18 + 21 + 15 px). */
 .pp-ctl2{height:99px}
 .pp-ctl2 .pp-ctm{display:flex;flex-direction:column;justify-content:center}
 .pp-c2t{display:flex;align-items:center;gap:8px;height:24px}
@@ -1948,6 +1948,18 @@ input[type="date"]{ color-scheme:inherit; }
   .pp-c2b{height:7px;margin:8px 0 6px}
   .pp-c2s{height:15px;line-height:15px;font-size:12.5px}
   .pp-c2s b{font-size:12.5px}
+}
+/* v461 : bandeau contrôle plus compact sur téléphone (99px -> ~66px) : nom + délai en haut, puis la barre et « 28/35 maîtrisées » sur UNE seule ligne. Grand écran inchangé. */
+@media not all and (min-width:900px) and (min-height:480px){
+  .pp-ctl2{height:auto;padding:10px 12px 10px 10px;gap:10px;border-radius:17px}
+  .pp-ctl2>i{width:34px;height:34px;border-radius:11px}
+  .pp-ctl2 .pp-ctm{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:5px;align-items:center}
+  .pp-ctl2 .pp-c2t{grid-column:1/-1;height:22px}
+  .pp-ctl2 .pp-c2t b{font-size:17px;line-height:22px}
+  .pp-ctl2 .pp-c2t em{font-size:11px;padding:2px 8px}
+  .pp-ctl2 .pp-c2b{grid-column:1;grid-row:2;height:8px;margin:0}
+  .pp-ctl2 .pp-c2s{grid-column:2;grid-row:2;height:18px;line-height:18px;font-size:12.5px}
+  .pp-ctl2 .pp-c2s b{font-size:14px}
 }
 .pp-home .pp-hero{flex:1;min-height:290px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;padding:18px;border-radius:26px;background:radial-gradient(circle at 100% 0%,rgba(255,107,61,.14),transparent 55%),var(--panel);border:2px solid var(--cream);box-shadow:7px 7px 0 var(--orange);margin:0 7px 7px 0}
 .pp-home .pp-hero .pp-big{font-size:118px;margin:0 0 10px -3px}
@@ -9814,6 +9826,7 @@ function pcAnnuler(box){
 function pcLancerSeance(a, mode){
   const m = (a.matiere && a.matiere !== 'toutes' && getMatieres().includes(a.matiere)) ? a.matiere : 'toutes';
   if(!cartesNonPausees().some(c => m === 'toutes' || (c.matiere || 'Sans matière') === m)){ ppToast('Aucune carte à réviser'); return; }
+  if(mode === 'entrainer' && !cartesPourPlafonds().some(c => m === 'toutes' || (c.matiere || 'Sans matière') === m)){ ppToast('Aucune carte à réviser'); return; }   /* v460 : S'entraîner ignore les matières archivées */
   ppCoachFermer();
   setTimeout(() => {
     try{
@@ -11926,7 +11939,7 @@ function openChooseMatiereForQuiz(){
   const mats = getMatieresActives().filter(m => CARDS.some(c => (c.matiere || 'Sans matière') === m));
   const fixe = matiereFilter !== 'toutes' || mats.length <= 1;
   const portee = matiereFilter !== 'toutes' ? matiereFilter : 'toutes';
-  const nbTout = portee === 'toutes' ? cartesNonPausees().length : cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === portee).length;
+  const nbTout = portee === 'toutes' ? cartesPourPlafonds().length : cartesPourPlafonds().filter(c => (c.matiere || 'Sans matière') === portee).length;   /* v460 : sans les matières archivées */
   const nbDiff = cartesDifficiles(portee).length;
   const diffOff = nbDiff < QUIZ_DIFF_MIN;
   const diffTxt = diffOff ? (nbDiff + '/' + QUIZ_DIFF_MIN) : undefined;
@@ -11938,7 +11951,7 @@ function openChooseMatiereForQuiz(){
     lignes.push(entrItem('Tout regrouper', nbTout, "closeChooseMatiereForAll(); startQuizGrouped()", { grouped: true }));
     lignes.push(entrItem('Les difficiles', nbDiff, "openChooseDifficiles()", { off: diffOff, txt: diffTxt }));
     lignes.push('<div class="home-matiere-due-sep"></div>');
-    mats.forEach(m => { const n = cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === m).length; lignes.push(entrItem(escapeHtml(m), n, "closeChooseMatiereForAll(); startQuizOnMatiere('" + escapeJsAttr(m) + "')")); });
+    mats.forEach(m => { const n = cartesPourPlafonds().filter(c => (c.matiere || 'Sans matière') === m).length; lignes.push(entrItem(escapeHtml(m), n, "closeChooseMatiereForAll(); startQuizOnMatiere('" + escapeJsAttr(m) + "')")); });
   }
   document.getElementById('modal-root').innerHTML = `
     <div class="modal-overlay" onclick="if(event.target===this) closeChooseMatiereForAll()">
@@ -13336,8 +13349,9 @@ function exitQuiz(){
    Les cartes en pause (pausee === true) n'y sont jamais. */
 const QUIZ_DIFF_SEUIL = 2, QUIZ_DIFF_MAX = 20, QUIZ_DIFF_MIN = 5;
 let quizDifficilesSeul = false;
+/* v460 : une matière archivée est TOTALEMENT exclue de « S'entraîner » et de « Les difficiles » (compteurs, grisage x/5 et lancement) : base = cartesPourPlafonds() (ni pause, ni matière archivée). */
 function cartesDifficiles(matiere){
-  return CARDS
+  return cartesPourPlafonds()
     .filter(c => c.pausee !== true && (c.difficultes || 0) >= QUIZ_DIFF_SEUIL && (!matiere || matiere === 'toutes' || (c.matiere || 'Sans matière') === matiere))
     .sort((a, b) => ((b.difficultes || 0) - (a.difficultes || 0)) || (facilitePour(a) - facilitePour(b)))
     .slice(0, QUIZ_DIFF_MAX);
@@ -13357,10 +13371,11 @@ function startQuizFromHome(garderSuite, difficiles){
     if(d.length){ startQuiz(d); return; }
     quizDifficilesSeul = false;   // plus de difficiles (carte réussie entre-temps) : entraînement normal
   }
-  let base = cartesNonPausees().slice();
+  let base = cartesPourPlafonds().slice();   /* v460 : sans les matières archivées */
   if(matiereFilter !== 'toutes'){
     base = base.filter(c => (c.matiere || 'Sans matière') === matiereFilter);
   }
+  if(!base.length){ ppToast('Aucune carte à réviser'); return; }
   startQuiz(melangerParMatiere(base, 'quiz|' + matiereFilter));
 }
 
@@ -13371,7 +13386,7 @@ let quizSeen = [];
 function quizMatiereSuivante(){
   const r = getMatieresActives()
     .filter(m => !quizSeen.includes(m))
-    .map(m => ({ matiere: m, count: quizDifficilesSeul ? cartesDifficiles(m).length : cartesNonPausees().filter(c => (c.matiere || 'Sans matière') === m).length }))
+    .map(m => ({ matiere: m, count: quizDifficilesSeul ? cartesDifficiles(m).length : cartesPourPlafonds().filter(c => (c.matiere || 'Sans matière') === m).length }))
     .filter(x => x.count >= 2)
     .sort((a, b) => (b.count - a.count) || a.matiere.localeCompare(b.matiere, 'fr'))[0];
   return r || null;
@@ -15256,7 +15271,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v459';
+const PP_APP_VERSION = 'v461';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -22175,6 +22190,9 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v460', t:["S'entraîner ignore les matières archivées","Practice ignores archived subjects"], p:[
+    ["« S'entraîner » et « Les difficiles » ne proposent plus les cartes des matières archivées (compteurs, grisage et lancement), comme « Tout réviser ».","“Practice” and “Tough ones” no longer offer cards from archived subjects (counters, greying and launch), like “Study all”."]
+  ] },
   { v:'v459', t:["Le dos de la carte Maîtrise, sans doublon","The back of the Mastery card, without repeats"], p:[
     ["Au dos de la carte Maîtrise, « Où en sont tes cartes » disparaît : c'était déjà dans les Statistiques (« Répartition des paliers »).","On the back of the Mastery card, “Where your cards stand” is gone: it was already in the Statistics (“Level breakdown”)."],
     ["À la place : « Ton rythme » (XP de ta dernière séance, ta meilleure et la moyenne sur 7 jours, ton bonus de série), « Prochain contrôle » (combien de cartes sont prêtes) et le nombre d'XP qu'il te reste avant le prochain niveau.","In its place: “Your pace” (XP from your last session, your best and the 7-day average, your streak bonus), “Next test” (how many cards are ready) and how much XP is left before the next level."]
