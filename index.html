@@ -4477,24 +4477,54 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mxb{height:5px;border-radius:4px;background:var(--c-s1);overflow:hidden;margin-top:6px}
 .pp-mxb u{display:block;height:100%;border-radius:4px;background:var(--c,var(--orange))}
 .pp-mxs{margin:6px 0 0;font-size:12px;color:var(--muted)}
-/* v454 : bilan de séance (XP) + retour visuel sur la carte (reflet, coche, relief) */
-.pp-xpb{margin:14px 0 2px;padding:12px 14px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);text-align:left;animation:pppop .35s var(--pps) .18s both}
-.pp-xpt{display:flex;align-items:baseline;gap:6px}
-.pp-xpn{font-size:26px;line-height:1.05;font-weight:800;letter-spacing:-.03em;color:var(--orange-t);font-variant-numeric:tabular-nums}
-.pp-xpt span{font-size:13px;font-weight:700;color:var(--muted)}
-.pp-xpt .pp-xpv{margin-left:auto;font-size:14px;font-weight:800;color:var(--cream)}
-.pp-xpb .pp-mxb{height:7px;margin-top:8px}
-.pp-xpb .pp-mxb u{transition:width 1s cubic-bezier(.22,1,.36,1)}
-.pp-xps{margin:9px 0 0;font-size:13px;color:var(--muted)}
-.pp-xpb.monte .pp-xpv{color:var(--orange-t);animation:pppop .5s var(--pps) both}
+/* v457 : bilan de séance (XP) = un grand chiffre sur une scène sombre (même rendu en thème clair), sans barre ; retour visuel sur la carte (reflet, relief, gerbe) */
+.pp-xpb{--k:0;position:relative;overflow:hidden;margin:16px 0 10px;padding:15px 12px 14px;border-radius:22px;text-align:center;color:#f5f1e8;isolation:isolate;
+  background:radial-gradient(120% 140% at 50% 0%,#2b1d11 0%,#17131c 56%,#0e0c14 100%);border:1.5px solid rgba(255,176,32,.38);box-shadow:0 4px 0 #8a5a14,0 0 0 rgba(255,176,32,0);
+  animation:ppxpIn .55s var(--pps) .1s both}
+@keyframes ppxpIn{0%{opacity:0;transform:translateY(14px) scale(.94)}100%{opacity:1;transform:none}}
+.pp-xpg{position:absolute;left:50%;top:52%;width:92%;aspect-ratio:1;border-radius:50%;z-index:-1;pointer-events:none;transform:translate(-50%,-50%) scale(calc(.55 + var(--k)*.95));opacity:calc(.12 + var(--k)*.88);
+  background:radial-gradient(circle,rgba(255,176,32,.5) 0%,rgba(255,107,61,.22) 38%,transparent 68%)}
+.pp-xprays{position:absolute;left:50%;top:52%;width:150%;aspect-ratio:1;z-index:-1;pointer-events:none;opacity:0;transform:translate(-50%,-50%);
+  background:repeating-conic-gradient(from 0deg,rgba(255,200,80,0) 0 9deg,rgba(255,200,80,.2) 9deg 13deg);
+  -webkit-mask-image:radial-gradient(circle,#000 0,transparent 62%);mask-image:radial-gradient(circle,#000 0,transparent 62%);animation:ppxpRay 16s linear infinite}
+.pp-xpb.t1 .pp-xprays,.pp-xpb.t2 .pp-xprays,.pp-xpb.t3 .pp-xprays{opacity:calc(var(--k)*.55)}
+.pp-xpb.t3 .pp-xprays{opacity:calc(var(--k)*.9)}
+@keyframes ppxpRay{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.pp-xpcv{position:absolute;inset:0;z-index:4;pointer-events:none}
+.pp-xpsh{position:absolute;top:0;bottom:0;left:0;width:46%;z-index:3;pointer-events:none;opacity:0;transform:translateX(-130%) skewX(-18deg);
+  background:linear-gradient(90deg,transparent,rgba(255,240,190,.34),transparent)}
+.pp-xpl{margin:0;font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#d9a640;opacity:.92}
+.pp-xpn{display:flex;align-items:baseline;justify-content:center;gap:7px;margin:3px 0 0}
+.pp-xpd{position:relative;display:inline-grid;filter:drop-shadow(0 0 calc(var(--k)*20px) rgba(255,176,32,.7));will-change:transform}
+.pp-xpd>*{grid-area:1/1;font-size:var(--fs,64px);line-height:1.02;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";white-space:nowrap;font-style:normal}
+.pp-xpd .gh{visibility:hidden}
+.pp-xpd .lv{text-align:center;background:linear-gradient(180deg,#fff7d6 0%,#ffd93d 40%,#ff8a3d 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.pp-xpu{font-size:20px;font-weight:800;letter-spacing:.02em;color:#ffd93d;display:inline-block}
+.pp-xps{margin:6px 0 0;font-size:13px;color:#b9b3c9}
+.pp-xpr{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:5px 14px 5px 7px;border-radius:99px;font-size:13px;color:#f5f1e8;background:color-mix(in srgb,var(--c) 22%,#15151d);border:1.5px solid var(--c);box-shadow:0 0 18px color-mix(in srgb,var(--c) 45%,transparent)}
+.pp-xpr b{font-weight:800;color:var(--c)}
+.pp-xpri{display:block;width:26px;height:26px;flex:none}
+.pp-xpri svg{width:100%;height:100%;display:block;overflow:visible}
+.pp-xpb.rest .pp-xpg{animation:ppxpBreath 2.8s ease-in-out infinite}
+@keyframes ppxpBreath{50%{transform:translate(-50%,-50%) scale(1.3);opacity:.78}}
+/* carte Maîtrise : le total qui grimpe */
+.pp-mnum b{font-variant-numeric:tabular-nums;display:inline-block;transform-origin:left center}
+.pp-mnum b.pp-cnt{color:#ffd93d;text-shadow:0 0 14px rgba(255,176,32,.6)}
+.pp-mnum{position:relative}
+.pp-mgain{position:absolute;left:0;bottom:100%;margin-bottom:2px;font-style:normal;font-size:13px;font-weight:800;color:#ffd93d;text-shadow:0 0 10px rgba(255,176,32,.65);pointer-events:none;opacity:0}
+/* gerbe d'étincelles sur un moment fort */
+.pp-gerbe{position:fixed;z-index:9000;pointer-events:none}
+.pp-gerbe i{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);background:var(--c);filter:drop-shadow(0 0 5px var(--c));opacity:0;
+  clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:ppgerbe var(--t) cubic-bezier(.15,.7,.3,1) var(--d) both}
+@keyframes ppgerbe{0%{opacity:0;transform:translate(0,0) scale(.2) rotate(0)}12%{opacity:1;transform:translate(calc(var(--x)*.25),calc(var(--y)*.25)) scale(1.3) rotate(calc(var(--r)*.25))}100%{opacity:0;transform:translate(var(--x),calc(var(--y) + 34px)) scale(.3) rotate(var(--r))}}
+@media (prefers-reduced-motion:reduce){.pp-xprays,.pp-xpb.rest .pp-xpg{animation:none}.pp-gerbe{display:none}}
 .pp-card::before,.pp-card::after{content:"";position:absolute;pointer-events:none;opacity:0}
 .pp-card::after{inset:0;z-index:6;border-radius:inherit;background:linear-gradient(115deg,transparent 36%,rgba(255,217,61,.3) 50%,transparent 64%);background-size:260% 100%;background-position:130% 0}
 .pp-card.pp-cue::after{animation:ppcueShine .85s ease-out both}
 .pp-card.pp-cue-v2::after{animation-duration:.72s;animation-delay:.06s;background-image:linear-gradient(100deg,transparent 38%,rgba(255,176,32,.3) 50%,transparent 62%)}
 .pp-card.pp-cue-v3::after{animation-duration:.95s;background-image:linear-gradient(125deg,transparent 34%,rgba(255,217,61,.26) 48%,rgba(255,107,61,.2) 54%,transparent 66%)}
 @keyframes ppcueShine{0%{opacity:0;background-position:130% 0}15%{opacity:1}100%{opacity:0;background-position:-30% 0}}
-.pp-card.pp-cue-p::before{bottom:92px;right:16px;width:30px;height:30px;z-index:7;border-radius:50%;border:2px solid var(--cream);background:var(--orange) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/17px no-repeat;animation:ppcueCoche 1s var(--pps) both}
-@keyframes ppcueCoche{0%{opacity:0;transform:scale(.4) rotate(-14deg)}22%{opacity:1;transform:scale(1.12) rotate(3deg)}36%{transform:scale(1)}78%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.pp-card.pp-cue-out::after{animation-duration:.34s;animation-delay:0s}   /* v456 : le reflet traverse la carte pendant qu'elle sort (0,32 s) */
 .pp-card.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 26px rgba(255,176,32,.38)!important}
 .pp-card.pp-cue-c.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 40px rgba(255,176,32,.55)!important}
 @supports (color:color-mix(in srgb,red,blue)){.pp-card{box-shadow:9px 9px 0 color-mix(in srgb,var(--orange),var(--amber) calc(var(--pp-ch,0)*1%))}}
@@ -12197,6 +12227,7 @@ function sortirCarte(niveau, opts, apres){
   const sortie = niveau === 'orange' ? (opts.dy < 0 ? 'pp-out-up' : 'pp-out-mid') : (niveau === 'vert' ? 'pp-out-ok' : 'pp-out-ko');
   scene.style.animation = ''; scene.style.transition = '';
   scene.classList.add(sortie);
+  ppCueSortie(scene);   // v456 : reflet sur la carte qui part
   const rc = document.querySelector('#pp-ses .pp-rcard');   // carte « à écrire » (téléphone) : la carte réponse sort avec la carte question
   if(rc){ rc.style.animation = ''; rc.style.transition = ''; rc.classList.add(sortie); }
   setTimeout(() => { ppMood.anim = 'in'; apres(); clearTimeout(carteEnSortieT); carteEnSortie = false; }, 320);
@@ -12925,18 +12956,23 @@ function xpBilanPhrase(i){
   return en ? 'A solid session.' : 'Une bonne séance.';
 }
 function xpBilanHtml(b){
-  /* v455 : la barre du bilan est la barre de rang de la saison (la même que sur la carte Maîtrise), plus une barre de niveau. */
+  /* v457 : plus de barre. Un grand chiffre d'XP, animé (voir ppXpBilanAnime). Une montée de rang ajoute une pastille « Nouveau rang ». */
   if(!XP_ACTIF || !b || !b.xp || !(b.xp.x > 0)) return '';
-  const en = ppLangueEn(), i = b.xp, fin = xpSaisonTotal(), deb = Math.max(0, fin - i.x);
+  const en = ppLangueEn(), i = b.xp, n = Math.round(i.x), fin = xpSaisonTotal(), deb = Math.max(0, fin - i.x);
   const av = ppRangMaitrise(deb), ap = ppRangMaitrise(fin), monte = ap.i > av.i;
   const nom = g => en ? PP_RANGS_EN[g.i] : g.r.n;
-  return `<div class="pp-xpb" style="${ppRangVars(ap.i)}" data-x="${Math.round(i.x)}" data-monte="${monte ? 1 : 0}" data-p0="${av.pct}" data-p1="${monte ? 100 : ap.pct}" data-p2="${ap.pct}" data-l2="${nom(ap)}"><div class="pp-xpt"><b class="pp-xpn">+${xpFmt(i.x)}</b><span>XP</span><span class="pp-xpv">${nom(monte ? av : ap)}</span></div><div class="pp-mxb"><u style="width:${av.pct}%"></u></div><p class="pp-xps">${xpBilanPhrase(i)}</p></div>`;
+  const tier = n >= 900 ? 3 : n >= 400 ? 2 : n >= 150 ? 1 : 0;
+  const txt = '+' + xpFmt(n), nb = String(n).length;
+  const fs = Math.max(40, Math.min(70, Math.floor(250 / (nb * .62 + (nb > 3 ? .3 : 0) + .6))));
+  const bad = (monte && typeof ppBadgeRang === 'function') ? `<span class="pp-xpri">${ppBadgeRang(ap.i)}</span>` : '';
+  const chip = monte ? `<div class="pp-xpr" style="${ppRangVars(ap.i)}">${bad}<span>${en ? 'New rank' : 'Nouveau rang'} \u00b7 <b>${nom(ap)}</b></span></div>` : '';
+  return `<div class="pp-xpb t${tier}${monte ? ' monte' : ''}" role="img" aria-label="${txt} XP" style="--fs:${fs}px" data-x="${n}" data-t="${tier}" data-monte="${monte ? 1 : 0}" data-l2="${nom(ap)}"><div class="pp-xpg"></div><div class="pp-xprays"></div><canvas class="pp-xpcv"></canvas><i class="pp-xpsh"></i><p class="pp-xpl">${en ? 'XP earned' : 'XP gagnée'}</p><div class="pp-xpn"><span class="pp-xpd"><i class="gh" aria-hidden="true">${txt}</i><b class="lv">${txt}</b></span><span class="pp-xpu">XP</span></div><p class="pp-xps">${xpBilanPhrase(i)}</p>${chip}</div>`;
 }
 if(typeof module !== 'undefined') module.exports = Object.assign(module.exports || {}, { XP_CFG, xpCarte, xpNiveau, xpControleMult, xpSyncFusion, xpSyncNettoyer, xpEvenement, xpBilanPhrase, xpSaisonId, xpSaisonDebut, xpSaisonTotal, xpSyncVide });
 /* === XP v453 fin === */
 
 /* === Retour visuel v454 ===
-   Sobre : pendant la séance, aucun chiffre ni texte. Les moments forts se voient sur la carte qui arrive (reflet, coche, relief qui s'éclaire) ;
+   Sobre : pendant la séance, aucun chiffre ni texte. Les moments forts se voient sur la carte qui part (reflet) et dans le relief qui s'éclaire ;
    les chiffres sont au bilan de fin. Même retour quel que soit le bouton appuyé : seul le moment fort (voir xpEvenement) déclenche quelque chose. */
 let ppCue = '';
 function ppCueArmer(evt){ ppCue = evt || ''; }
@@ -12948,37 +12984,106 @@ function ppCueChaleur(){
     document.documentElement.style.setProperty('--pp-ch', String(Math.min(35, ev * 5 + sessionMastered * 3 + Math.floor(sessionReviewed / 8) * 2)));
   }catch(e){}
 }
-function ppCueJoue(){
-  const evt = ppCue; ppCue = '';
-  if(!XP_ACTIF) return;
-  ppCueChaleur();
-  if(!evt) return;
+/* v456 : le reflet se joue sur la carte qu'on vient de noter, pendant qu'elle part (0,3 s) : il lui appartient, pas à la suivante. Plus de coche. */
+function ppCueSortie(sc){
   try{
-    const sc = document.querySelector('.pp-card'); if(!sc) return;
-    const cl = ['pp-cue', evt === 'rattrapee' ? 'pp-cue-r' : 'pp-cue-p', 'pp-cue-v' + (1 + Math.floor(Math.random() * 3))];
+    if(!XP_ACTIF || !ppCue || !sc) return;
+    const evt = ppCue;
+    const cl = ['pp-cue', 'pp-cue-out', 'pp-cue-v' + (1 + Math.floor(Math.random() * 3))];
     if(evt === 'coriace') cl.push('pp-cue-c');
     cl.forEach(x => sc.classList.add(x));
     sc.classList.add('pp-cue-sh');
     if(evt !== 'rattrapee') haptique([10, 50, 14]);
-    setTimeout(() => { sc.classList.remove('pp-cue-sh'); }, 420);
-    setTimeout(() => { cl.forEach(x => sc.classList.remove(x)); }, 1100);
+    ppCueGerbe(sc, evt);
+    setTimeout(() => { sc.classList.remove('pp-cue-sh'); cl.forEach(x => sc.classList.remove(x)); }, 300);   // avant que la carte suivante n'arrive
   }catch(e){}
 }
-/* Bilan : le nombre monte, la barre se remplit ; une montée de niveau remplit la barre jusqu'au bout puis repart du bas. */
+/* v457 : gerbe d'étincelles là où la carte vient de partir (couche fixe : elle survit au changement de carte). Aucun texte. */
+function ppCueGerbe(sc, evt){
+  try{
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const r = sc.getBoundingClientRect(); if(!(r.width > 0)) return;
+    const n = evt === 'coriace' ? 28 : evt === 'palier' ? 20 : 11;
+    const cl = ['#ffd93d', '#ffb020', '#ff6b3d', '#fff3c4'];
+    const w = document.createElement('div'); w.className = 'pp-gerbe'; w.setAttribute('aria-hidden', 'true');
+    w.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+    let h = '';
+    for(let k = 0; k < n; k++){
+      const a = Math.random() * 6.2832, d = 50 + Math.random() * 120;
+      h += '<i style="left:' + Math.round(8 + Math.random() * 84) + '%;top:' + Math.round(10 + Math.random() * 80) + '%;--c:' + cl[k % 4] + ';--s:' + (10 + Math.random() * 12).toFixed(1) + 'px;--x:' + Math.round(Math.cos(a) * d) + 'px;--y:' + Math.round(Math.sin(a) * d - 26) + 'px;--r:' + Math.round(Math.random() * 300 - 150) + 'deg;--d:' + Math.round(Math.random() * 90) + 'ms;--t:' + Math.round(520 + Math.random() * 420) + 'ms"></i>';
+    }
+    w.innerHTML = h; document.body.appendChild(w);
+    setTimeout(() => { try{ w.remove(); }catch(e){} }, 1200);
+  }catch(e){}
+}
+function ppCueJoue(){
+  ppCue = '';
+  if(!XP_ACTIF) return;
+  try{ [].forEach.call(document.querySelectorAll('.pp-card'), sc => { ['pp-cue', 'pp-cue-out', 'pp-cue-v1', 'pp-cue-v2', 'pp-cue-v3', 'pp-cue-c', 'pp-cue-sh'].forEach(x => sc.classList.remove(x)); }); }catch(e){}
+  ppCueChaleur();
+}
+/* v457 : bilan de fin de séance. Le chiffre grimpe vite puis ralentit (comme un compteur de jackpot) pendant que de la lumière est aspirée vers lui,
+   puis il s'écrase : flash, onde, gerbe d'étincelles, secousse, vibration. Tout grandit avec l'XP gagnée (4 paliers d'intensité). */
 function ppXpBilanAnime(){
   try{
-    const b = document.querySelector('.pp-xpb'); if(!b) return;
-    const n = +b.dataset.x, bar = b.querySelector('.pp-mxb u'), num = b.querySelector('.pp-xpn'), niv = b.querySelector('.pp-xpv');
-    const fin = () => { num.textContent = '+' + xpFmt(n); };
-    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches){ bar.style.width = b.dataset.p2 + '%'; niv.textContent = b.dataset.l2; return; }
-    const dur = Math.min(1400, 500 + n * 4), t0 = performance.now();
-    const pas = t => { const k = Math.min(1, (t - t0) / dur); num.textContent = '+' + xpFmt(Math.round(n * (1 - Math.pow(1 - k, 3)))); if(k < 1) requestAnimationFrame(pas); else fin(); };
-    num.textContent = '+0'; requestAnimationFrame(pas);
-    setTimeout(() => { bar.style.width = b.dataset.p1 + '%'; }, 250);
-    if(b.dataset.monte === '1') setTimeout(() => {
-      bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = ''; bar.style.width = b.dataset.p2 + '%';
-      niv.textContent = b.dataset.l2; b.classList.add('monte'); haptique([12, 60, 18]);
-    }, 1550);
+    const b = document.querySelector('.pp-xpb'); if(!b || b.dataset.go) return; b.dataset.go = '1';
+    const n = +b.dataset.x, tier = +b.dataset.t || 0, monte = b.dataset.monte === '1';
+    const lv = b.querySelector('.lv'), cv = b.querySelector('.pp-xpcv'), ph = b.querySelector('.pp-xps'), chip = b.querySelector('.pp-xpr'), unit = b.querySelector('.pp-xpu'), lab = b.querySelector('.pp-xpl'), sh = b.querySelector('.pp-xpsh'), wrap = b.querySelector('.pp-xpd');
+    const txt = '+' + xpFmt(n);
+    if((window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || !b.animate){ lv.textContent = txt; b.style.setProperty('--k', '1'); return; }
+    lv.textContent = '+0'; ph.style.opacity = '0'; if(chip) chip.style.opacity = '0'; unit.style.opacity = '0';
+    const q = (navigator.hardwareConcurrency || 4) <= 3 ? .55 : 1;
+    const COL = ['#ffb020', '#ffd93d', '#ffffff', '#ff6b3d'];
+    const rb = b.getBoundingClientRect(), W = Math.round(rb.width) || 300, H = Math.round(rb.height) || 150;
+    const fx = (cv && typeof ppRangFx === 'function') ? ppRangFx(cv, W, H) : null;
+    const rl = lv.getBoundingClientRect(), cx = (rl.left - rb.left) + rl.width / 2, cy = (rl.top - rb.top) + rl.height / 2;
+    const A = (el, kf, o) => { try{ return el.animate(kf, Object.assign({ fill: 'both', easing: 'cubic-bezier(.22,1,.36,1)' }, o)); }catch(e){ return null; } };
+    const dur = Math.round(950 + Math.min(1500, n * 1.5)), t0 = performance.now() + 220;   // 0,22 s d'attente : le bloc entre d'abord
+    const pas = 8, amp = 2 + tier * 1.5;
+    let last = 0, ticks = 0, acc = 0, fini = false, tp = t0;
+    A(lab, [{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 160 });
+    const atterrit = () => {
+      fini = true; lv.textContent = txt; b.style.setProperty('--k', '1'); b.classList.add('land');
+      A(lv, [{ filter: 'brightness(3) saturate(.6)', transform: 'scale(1.2)' }, { filter: 'brightness(1.5)', transform: 'scale(.96)', offset: .45 }, { filter: 'brightness(1)', transform: 'scale(1)' }], { duration: 760, easing: 'cubic-bezier(.2,.9,.3,1.15)' });
+      unit.style.opacity = ''; A(unit, [{ opacity: 0, transform: 'scale(.4) rotate(-14deg)' }, { opacity: 1, transform: 'scale(1.3) rotate(4deg)', offset: .55 }, { opacity: 1, transform: 'none' }], { duration: 560, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      A(sh, [{ transform: 'translateX(-130%) skewX(-18deg)', opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 1, offset: .75 }, { transform: 'translateX(290%) skewX(-18deg)', opacity: 0 }], { duration: 900, easing: 'cubic-bezier(.5,0,.3,1)' });
+      const g = 22 + tier * 14;
+      A(b, [{ boxShadow: '0 4px 0 #8a5a14,0 0 0 rgba(255,176,32,0)' }, { boxShadow: '0 4px 0 #8a5a14,0 0 ' + g + 'px rgba(255,176,32,.85)', offset: .22 }, { boxShadow: '0 4px 0 #8a5a14,0 0 ' + Math.round(g / 3) + 'px rgba(255,176,32,.28)' }], { duration: 1100, easing: 'ease-out' });
+      if(tier >= 1){ const kf = []; for(let k = 0; k < 14; k++){ const dc = Math.pow(1 - k / 14, 1.6); kf.push({ transform: 'translate(' + ((Math.random() * 2 - 1) * amp * dc).toFixed(1) + 'px,' + ((Math.random() * 2 - 1) * amp * dc).toFixed(1) + 'px)' }); } kf.push({ transform: 'none' }); A(b, kf, { duration: 380 + tier * 90, easing: 'linear', composite: 'add' }); }
+      if(fx){
+        fx.ring('#ffd93d', 0, .8 + tier * .1, 6, 700 + tier * 120, cx, cy);
+        for(let k = 1; k <= tier; k++) fx.ring(k % 2 ? '#ffb020' : '#ffffff', k * 130, .9 + k * .18, Math.max(2, 6 - k), 800 + k * 140, cx, cy);
+        fx.sparks(COL, Math.round((70 + tier * 70) * q), cx, cy, 3, 11 + tier * 3, 550, 1250, .07);
+        if(tier >= 1) fx.embers(COL, Math.round((10 + tier * 14) * q), cx, cy + 6, 70, 2.6, 1300, 2400);
+      }
+      haptique(tier >= 3 ? [40, 30, 60, 30, 100] : tier === 2 ? [32, 28, 64] : tier === 1 ? [26, 24, 46] : [22, 20, 34]);
+      setTimeout(() => { ph.style.opacity = ''; A(ph, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 520 }); }, 280);
+      if(chip) setTimeout(() => {
+        chip.style.opacity = ''; A(chip, [{ opacity: 0, transform: 'scale(.4) translateY(10px)' }, { opacity: 1, transform: 'scale(1.14)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 640, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+        if(fx){ const rc = chip.getBoundingClientRect(), bx = rc.left - rb.left + rc.width / 2, by = rc.top - rb.top + rc.height / 2; const c = getComputedStyle(chip).getPropertyValue('--c').trim() || '#ffd93d'; fx.ring(c, 0, .7, 5, 800, bx, by); fx.sparks([c, '#ffffff', '#ffd93d'], Math.round(60 * q), bx, by, 2, 9, 500, 1100, .06); }
+        haptique([12, 60, 18]);
+      }, 780);
+      if(tier >= 2) setTimeout(() => { try{ b.classList.add('rest'); }catch(e){} }, 1200);
+      setTimeout(() => { try{ if(fx) fx.stop(); }catch(e){} }, 3600);
+    };
+    const frame = now => {
+      if(fini || !b.isConnected){ if(!b.isConnected && fx) try{ fx.stop(); }catch(e){} return; }
+      const k = Math.max(0, Math.min(1, (now - t0) / dur)), e = 1 - Math.pow(1 - k, 3.2);
+      if(now >= t0){
+        lv.textContent = '+' + xpFmt(Math.round(n * e));
+        b.style.setProperty('--k', e.toFixed(3));
+        const sp = Math.max(0, e - last) ; last = e;
+        const st = Math.floor(e * pas);
+        if(st > ticks){ ticks = st; haptique(5 + tier * 2); A(wrap, [{ transform: 'scale(1)' }, { transform: 'scale(' + (1.035 + tier * .012).toFixed(3) + ')' }, { transform: 'scale(1)' }], { duration: 170, easing: 'ease-out', fill: 'none' }); }
+        if(fx){
+          acc += (now - tp) / 40; tp = now;
+          while(acc >= 1){ acc -= 1; const m = Math.round((1 + tier + k * 3) * q); for(let j = 0; j < m; j++) fx.suck(j % 3 === 0 ? '#ffffff' : (j % 2 ? '#ffd93d' : '#ffb020'), cx, cy); }
+          if(sp > 0 && tier >= 1 && Math.random() < .35) fx.sparks(COL, Math.round((1 + tier) * q), cx, cy, 1.4, 4 + tier, 300, 650, .05);
+        }
+      }
+      if(k >= 1) atterrit(); else requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
   }catch(e){}
 }
 /* === fin retour visuel === */
@@ -13105,7 +13210,7 @@ function answer(niveau, opts){
     justAdvanced = true;
     renderStudy();
     renderStreak();
-    ppCueJoue();   // v454 : reflet / coche sur la carte qui arrive (seulement après un moment fort)
+    ppCueJoue();   // v456 : nettoie le reflet et réchauffe le relief (le reflet lui-même est déjà passé sur la carte qui part)
   });
 }
 
@@ -15145,7 +15250,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v455';
+const PP_APP_VERSION = 'v457';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -21096,7 +21201,7 @@ function ppBilanHtml(){
     evo = d > 0 ? `<em>+${d} %</em>` : (d < 0 ? `<em class="dn">−${-d} %</em>` : `<em class="dn">=</em>`);   /* v418 : « +47 % » au lieu de « +47 pts » */
   }
   const mas = cartesPourStats().filter(c => (c.palier || 0) >= MASTERED_PALIER).length;   /* v336 */
-  return `<div class="pp-bil"><div><b>${ppDuree(e.ms)}</b><span>temps</span></div><div><b>${taux} %</b><span>réussite</span>${evo}</div><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span>${e.m > 0 ? `<em>+${e.m}</em>` : ''}</div></div>${xpBilanHtml(b)}`;
+  return `${xpBilanHtml(b)}<div class="pp-bil"><div><b>${ppDuree(e.ms)}</b><span>temps</span></div><div><b>${taux} %</b><span>réussite</span>${evo}</div><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span>${e.m > 0 ? `<em>+${e.m}</em>` : ''}</div></div>`;
 }
 /* Statistiques : temps et nombre de cartes des 7 derniers jours (v423 : « cartes » remplace « aujourd'hui », déjà dans la carte Aujourd'hui). */
 /* v424 : temps actif des 7 derniers jours (même calcul pour la tuile « cette semaine » et le titre « Temps par séance »). */
@@ -21785,6 +21890,47 @@ function ppRangAnim(el){
   if(document.body) go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 
+/* v457 : carte Maîtrise (Statistiques). Si tu as gagné de l'XP depuis la dernière fois qu'elle a été vue, le total grimpe depuis l'ancien chiffre,
+   la barre avance, et « +N » s'envole. Sinon rien ne bouge. L'ancien total vu est gardé sur l'appareil (affichage seulement, rien à synchroniser). */
+function ppXpCarteAnime(el){
+  if(!XP_ACTIF || !el) return;
+  const cur = el.getAttribute('data-cur') || '', sid = cur.split('|')[0], ri = +el.getAttribute('data-i'), tot = +el.getAttribute('data-n');
+  if(!sid || !(tot >= 0)) return;
+  let prev = null;
+  try{ const vu = localStorage.getItem('cartes-xp-vu3'); if(vu){ const p = vu.split('|'); if(p[0] === sid && +p[1] >= 0) prev = +p[1]; } localStorage.setItem('cartes-xp-vu3', sid + '|' + tot); }catch(e){}
+  if(prev === null || !(tot > prev)) return;
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const b = el.querySelector('.pp-mnum b'), u = el.querySelector('.pp-mbar u'), gain = tot - prev; if(!b || !el.animate) return;
+  const dur = Math.round(800 + Math.min(1400, gain * .9));
+  const A = (n, kf, o) => { try{ return n && n.animate(kf, Object.assign({ fill: 'both', easing: 'cubic-bezier(.22,1,.36,1)' }, o)); }catch(e){ return null; } };
+  const pa = ppRangMaitrise(prev);
+  if(u && pa.i === ri){ const w1 = u.style.width || (u.getBoundingClientRect().width / Math.max(1, u.parentNode.getBoundingClientRect().width) * 100) + '%'; A(u, [{ width: pa.pct + '%' }, { width: w1 }], { duration: dur, delay: 200 }); }
+  b.classList.add('pp-cnt'); b.textContent = xpFmt(prev);
+  const g = document.createElement('i'); g.className = 'pp-mgain'; g.textContent = '+' + xpFmt(gain); b.parentNode.appendChild(g);
+  A(g, [{ opacity: 0, transform: 'translateY(10px) scale(.7)' }, { opacity: 1, transform: 'translateY(-6px) scale(1.1)', offset: .25 }, { opacity: 1, transform: 'translateY(-12px)', offset: .7 }, { opacity: 0, transform: 'translateY(-26px)' }], { duration: dur + 500, delay: 160, easing: 'ease-out' });
+  const t1 = performance.now() + 200;
+  const pas = now => {
+    if(!b.isConnected) return;
+    const k = Math.max(0, Math.min(1, (now - t1) / dur)), e = 1 - Math.pow(1 - k, 3);
+    b.textContent = xpFmt(Math.round(prev + gain * e));
+    if(k < 1) requestAnimationFrame(pas);
+    else { b.classList.remove('pp-cnt'); A(b, [{ transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 480, easing: 'cubic-bezier(.34,1.56,.64,1)' }); setTimeout(() => { try{ g.remove(); }catch(e){} }, 400); haptique(12); }
+  };
+  requestAnimationFrame(pas);
+}
+(function(){
+  function go(){
+    new MutationObserver(() => {
+      const el = document.querySelector('.pp-mst:not([data-xpc])');
+      if(!el) return;
+      el.setAttribute('data-xpc', '1');
+      if(el.classList.contains('pp-ranim') || el.hasAttribute('data-played')){ try{ localStorage.setItem('cartes-xp-vu3', (el.getAttribute('data-cur') || '').split('|')[0] + '|' + el.getAttribute('data-n')); }catch(e){} return; }   /* la séquence « Nouveau rang ! » gère son propre chiffre */
+      requestAnimationFrame(() => requestAnimationFrame(() => { try{ ppXpCarteAnime(el); }catch(e){} }));
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  }
+  if(document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+})();
+
 /* v432 : DOS de la carte de maîtrise. Un tap sur la carte la retourne (rapide : ~0,3 s) et montre tout ce qui fait avancer la maîtrise.
    Les Statistiques sont recréées à chaque ouverture, donc la carte repart toujours sur sa face principale. */
 let ppDosHtml = '';
@@ -21997,6 +22143,14 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v457', t:["Ton XP, en grand","Your XP, big"], p:[
+    ["En fin de séance, l'XP gagnée est un grand chiffre qui grimpe, de plus en plus lentement, pendant que la lumière est aspirée vers lui, puis il éclate : flash, onde, étincelles, petite vibration. Plus tu as gagné, plus c'est fort. Plus de barre dans ce bilan.","At the end of a session, the XP you earned is one big number that climbs, slowing down as light is pulled into it, then bursts: flash, shockwave, sparks, a small buzz. The more you earned, the bigger it gets. No bar in this summary any more."],
+    ["Quand tu fais vraiment avancer une carte, une gerbe d'étincelles dorées jaillit là où elle vient de partir.","When you really move a card forward, a burst of golden sparks flies out where it just left."],
+    ["Dans Statistiques, si tu as gagné de l'XP depuis ta dernière visite, ton total grimpe depuis l'ancien chiffre et la barre avance.","In Statistics, if you earned XP since your last visit, your total climbs from the old number and the bar moves forward."]
+  ] },
+  { v:'v456', t:["Le reflet suit ta carte","The shine follows your card"], p:[
+    ["Quand tu fais vraiment avancer une carte, le reflet doré passe maintenant sur cette carte pendant qu'elle part, et non plus sur la suivante. La petite coche orange a disparu.","When you really move a card forward, the golden shine now passes over that card as it leaves, not over the next one. The small orange check mark is gone."]
+  ] },
   { v:'v455', t:["Une seule barre : ton XP","One bar: your XP"], p:[
     ["La grande barre de la carte Maîtrise est maintenant ta barre d'XP : c'est elle qui te fait monter de rang, saison après saison. Tout ce qui te rapporte de l'XP fait avancer cette barre.","The big bar on the Mastery card is now your XP bar: it is what moves you up in rank, season after season. Everything that earns XP moves this bar."],
     ["Maîtriser une carte donne un gros coup de pouce d'XP, et une carte « prête pour le contrôle » un petit. Le niveau, l'XP totale, ta semaine et ta vitrine sont au dos de la carte.","Mastering a card gives a big XP boost, and a card that is “ready for the test” a small one. Your level, total XP, your week and your showcase are on the back of the card."]
