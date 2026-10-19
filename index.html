@@ -455,7 +455,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   Object.assign(D,{'Maîtrise':'Mastery','Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Vitrine':'Showcase','estimé en fin de saison':'estimated at season end','Sommet':'Peak','/sem':'/wk','Rangs':'Ranks','Maîtrisées par jour':'Mastered per day','À voir pour progresser':'To review to progress','Cartes qui résistent':'Stubborn cards','Aucune carte ne résiste':'No stubborn cards',"aujourd'hui":'today','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Nouveau rang !':'New rank!','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
   RULES.push(
     f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
-    f(/^Encore (\d+) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
+    f(/^Encore (\d+(?:[.,]5)?) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ n = n.replace(',', '.'); return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
     f(/^Saison T(\d) (\d{4})$/,function(q,y){ return 'Season Q'+q+' '+y; }),
     f(/^Fin de saison dans (\d+) jours?$/,function(n){ return 'Season ends in '+c(n,'day'); }),
     f(/^Dernier jour de la saison$/,function(){ return 'Last day of the season'; }),
@@ -464,8 +464,11 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     f(/^Fin de saison dans (\d+) jours? · ton meilleur rang est gardé$/,function(n){ return 'Season ends in '+c(n,'day')+' · your best rank is kept'; }),
     f(/^Dernier jour de la saison · ton meilleur rang est gardé$/,function(){ return 'Last day of the season · your best rank is kept'; }),
     f(/^Sommet atteint : tu es Légende ce trimestre\.$/,function(){ return 'Peak reached: you are Legend this quarter.'; }),
-    f(/^(\d+) faites? · (\d+) restantes?$/,function(n,m){ return n+' done · '+m+' left'; })
+    f(/^(\d+) faites? · (\d+) restantes?$/,function(n,m){ return n+' done · '+m+' left'; }),
+    f(/^\+(\d+)(?:,(\d))? paliers?$/,function(n,d){ return '+'+n+(d?'.'+d:'')+(n==='1'&&!d?' level':' levels'); }),   /* v452 (7b) */
+    f(/^\+(\d+),(\d)$/,function(n,d){ return '+'+n+'.'+d; })
   );
+  Object.assign(D,{ 'palier cette semaine':'level this week','paliers cette semaine':'levels this week' });   /* v452 (7b) */
   Object.assign(D,{ 'Désarchiver':'Unarchive','Archiver':'Archive','La sort des révisions, sans rien supprimer':'Takes it out of your reviews, without deleting anything',
     'pas de connexion':'no connection','réponse illisible du serveur':'unreadable server response','erreur inconnue':'unknown error' });
   RULES.push(
@@ -4465,6 +4468,35 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mbadge.leg{animation:ppleg 2.6s ease-in-out infinite}
 @keyframes ppleg{50%{filter:drop-shadow(0 0 17px color-mix(in srgb,var(--c) 85%,transparent))}}
 .pp-mgoal{margin:9px 0 0;font-size:14px;color:var(--cream)}
+.pp-mxp{margin:12px 0 0;padding-top:10px;border-top:1px solid rgba(255,255,255,.12)}
+.pp-mxl{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:14px;color:var(--cream)}
+.pp-mxl b{font-weight:800;font-size:15px}
+.pp-mxl span{font-size:13px;color:var(--muted);text-align:right}
+.pp-mxb{height:5px;border-radius:4px;background:var(--c-s1);overflow:hidden;margin-top:6px}
+.pp-mxb u{display:block;height:100%;border-radius:4px;background:var(--c,var(--orange))}
+.pp-mxs{margin:6px 0 0;font-size:12px;color:var(--muted)}
+/* v454 : bilan de séance (XP) + retour visuel sur la carte (reflet, coche, relief) */
+.pp-xpb{margin:14px 0 2px;padding:12px 14px;border-radius:15px;background:var(--panel);border:1.5px solid var(--line);text-align:left;animation:pppop .35s var(--pps) .18s both}
+.pp-xpt{display:flex;align-items:baseline;gap:6px}
+.pp-xpn{font-size:26px;line-height:1.05;font-weight:800;letter-spacing:-.03em;color:var(--orange-t);font-variant-numeric:tabular-nums}
+.pp-xpt span{font-size:13px;font-weight:700;color:var(--muted)}
+.pp-xpt .pp-xpv{margin-left:auto;font-size:14px;font-weight:800;color:var(--cream)}
+.pp-xpb .pp-mxb{height:7px;margin-top:8px}
+.pp-xpb .pp-mxb u{transition:width 1s cubic-bezier(.22,1,.36,1)}
+.pp-xps{margin:9px 0 0;font-size:13px;color:var(--muted)}
+.pp-xpb.monte .pp-xpv{color:var(--orange-t);animation:pppop .5s var(--pps) both}
+.pp-card::before,.pp-card::after{content:"";position:absolute;pointer-events:none;opacity:0}
+.pp-card::after{inset:0;z-index:6;border-radius:inherit;background:linear-gradient(115deg,transparent 36%,rgba(255,217,61,.3) 50%,transparent 64%);background-size:260% 100%;background-position:130% 0}
+.pp-card.pp-cue::after{animation:ppcueShine .85s ease-out both}
+.pp-card.pp-cue-v2::after{animation-duration:.72s;animation-delay:.06s;background-image:linear-gradient(100deg,transparent 38%,rgba(255,176,32,.3) 50%,transparent 62%)}
+.pp-card.pp-cue-v3::after{animation-duration:.95s;background-image:linear-gradient(125deg,transparent 34%,rgba(255,217,61,.26) 48%,rgba(255,107,61,.2) 54%,transparent 66%)}
+@keyframes ppcueShine{0%{opacity:0;background-position:130% 0}15%{opacity:1}100%{opacity:0;background-position:-30% 0}}
+.pp-card.pp-cue-p::before{bottom:92px;right:16px;width:30px;height:30px;z-index:7;border-radius:50%;border:2px solid var(--cream);background:var(--orange) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/17px no-repeat;animation:ppcueCoche 1s var(--pps) both}
+@keyframes ppcueCoche{0%{opacity:0;transform:scale(.4) rotate(-14deg)}22%{opacity:1;transform:scale(1.12) rotate(3deg)}36%{transform:scale(1)}78%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.pp-card.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 26px rgba(255,176,32,.38)!important}
+.pp-card.pp-cue-c.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 40px rgba(255,176,32,.55)!important}
+@supports (color:color-mix(in srgb,red,blue)){.pp-card{box-shadow:9px 9px 0 color-mix(in srgb,var(--orange),var(--amber) calc(var(--pp-ch,0)*1%))}}
+@media (prefers-reduced-motion:reduce){.pp-card::before,.pp-card::after{display:none}.pp-card.pp-cue-sh,.pp-card.pp-cue-c.pp-cue-sh{box-shadow:9px 9px 0 var(--orange)!important}}
 .pp-mgoal b{font-weight:800}
 .pp-mpips{display:flex;gap:5px;margin:12px 0 8px}
 .pp-mpips i{flex:1;height:6px;border-radius:4px;background:var(--c-s1)}
@@ -4696,6 +4728,19 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #pp-stats-page .pp-dosmode .pp-dk .pp-rb{ padding:5px 0; }
 }
 </style>
+<style id="v452-style">
+/* v452 (étape 7b) : carte « Maîtrise » — segment clair de la barre (cartes en route : crédit compris) et ligne « paliers cette semaine ». Rien d'autre n'est modifié (dos de la carte, grand écran : inchangés). */
+.pp-mrow .pp-mbar{position:relative}
+.pp-mrow .pp-mbar s{position:absolute;top:0;bottom:0;text-decoration:none;background:color-mix(in srgb,var(--c,#fff) 36%,transparent);animation:pp452seg .7s .9s ease-out both}
+@keyframes pp452seg{from{opacity:0}to{opacity:1}}
+.pp-mpct .pp-mpal{font-weight:800;color:var(--cream)}
+@media (prefers-reduced-motion:reduce){.pp-mrow .pp-mbar s{animation:none!important}}
+</style>
+<style id="v452b-style">
+/* v452b : plus de barre de défilement visible dans Statistiques (le défilement marche toujours) */
+#pp-stats-page .pp-sb{scrollbar-width:none;-ms-overflow-style:none}
+#pp-stats-page .pp-sb::-webkit-scrollbar{display:none;width:0;height:0}
+</style>
 
 </head>
 <body>
@@ -4886,6 +4931,7 @@ function applyLocalOverlay(){
   CARDS = CARDS.concat(loadImportedCards());
   CARDS = CARDS.filter(c => !deleted.includes(c.id));
   CARDS = CARDS.map(c => ppEstObjet(overlay[c.id]) ? { ...c, ...overlay[c.id] } : c);
+  CARDS = CARDS.map(maitriseNettoyerCarte);   /* v452 (étape 4) : champs de maîtrise assainis à la lecture ; cartes sans ces champs inchangées */
   applyLocalDateControleOverlay();
   applyLocalEmptyMatieres();
   applyLocalArchiveOverlay();
@@ -5865,6 +5911,7 @@ let ppFresh = true; // vrai quand l'accueil arrive depuis un autre onglet / une 
 
 let sessionReviewed = 0;
 let sessionMastered = 0; // cartes passées à MASTERED_PALIER pendant la session en cours
+let sessionProgress = 0; // v452 (étape 7a) : somme des gains BRUTS de palier + crédit pendant la séance (jamais de recul) ; seulement quand la maîtrise à crédit est active ; Annuler retire le gain de la réponse annulée
 let studySessionActive = false;
 let studyMode = 'due'; // 'due' | 'all'
 let lastAnswer = null; // snapshot de la dernière réponse pour permettre l'annulation
@@ -7185,6 +7232,8 @@ function pcSyncHistEnvoi(){
   /* v433 : compteur de la saison (rang de maîtrise) : voyage aussi, sinon le rang diffère d'un appareil à l'autre */
   const sai = ppStatExtra().saison;
   if(sai) out.saison = sai;
+  /* v454 : registre d'XP (appareil par appareil, fusion par maximum) */
+  try{ const xs = xpSyncPourEnvoi(); if(xs) out.xpSync = xs; }catch(e){}
   return out;
 }
 /* v423 : tri fixe des séances (jour, durée, cartes, « Facile », maîtrisées, erreurs) : même ordre sur tous les appareils */
@@ -7213,8 +7262,9 @@ function ppStatsFusionnerDepuisSync(data){
       const cle = x => [x.d, x.ms, x.n, x.v, x.m, x.e].join('|');
       const loc = ppSeancesLire(), vus = new Set(loc.map(cle));
       const ajout = ppSeancesNettoyer(data.seances).filter(x => !vus.has(cle(x)));
-      if(ajout.length){ ppEcrire(PP_SEANCES_KEY, JSON.stringify(ppSeancesTrier(loc.concat(ajout)).slice(-60))); change = true; }
+      if(ajout.length){ ppEcrire(PP_SEANCES_KEY, JSON.stringify(ppSeancesTrier(loc.concat(ajout)).slice(-60))); change = true; }   /* v454 : l'XP n'est plus déduite des séances reçues (double comptage possible) : elle voyage dans `xpSync` */
     }
+    if(ppEstObjet(data.xpSync)){ try{ if(xpSyncRecevoir(data.xpSync)) change = true; }catch(e3){} }   /* v454 : registre d'XP, fusion par maximum */
     return change;
   }catch(e){ return false; }
 }
@@ -11400,8 +11450,11 @@ function renderStudyInner(){
       : '';
     const btnRetour = `<button class="pp-cta${many ? ' pp-quiet' : ''}" onclick="exitStudySession()">${PP_HOME}Retour à l'accueil</button>`;
     ppMood.anim = '';
+    ppSeance.terminee = true;   /* v453 : séance menée jusqu'au bout (bonus de fin) */
     ppSesShow(`<div class="pp-done">${ppConfetti()}<div class="pp-okm">${PP_IC.ok}</div><h2>Terminé pour aujourd'hui</h2><p>${sessionReviewed} carte${sessionReviewed>1?'s':''} révisée${sessionReviewed>1?'s':''}${sessionMastered ? ` · ${sessionMastered} nouvelle${sessionMastered>1?'s':''} maîtrisée${sessionMastered>1?'s':''}` : ''}.</p>
  ${ppBilanHtml()}<div class="pp-btns">${btnSuite}${btnErreurs}${btnRetour}</div></div>`);
+    ppXpBilanAnime();   // v454 : le nombre monte, la barre se remplit
+    ppCueChaleurRaz();
     return;
   }
   const c = queue[currentIndex];
@@ -11601,6 +11654,8 @@ function startStudySession(mode){
   studySessionActive = true;
   sessionReviewed = 0;
   sessionMastered = 0;
+  sessionProgress = 0;
+  xpSessionRaz();   /* v453 */
   sessionErrors = [];
   lastAnswer = null;
   sessionMoodCounts = { rouge: 0, orange: 0, vert: 0 };
@@ -11627,6 +11682,8 @@ function startReviewSessionErrors(){
   studySessionActive = true;
   sessionReviewed = 0;
   sessionMastered = 0;
+  sessionProgress = 0;
+  xpSessionRaz();   /* v453 */
   sessionErrors = [];
   lastAnswer = null;
   sessionMoodCounts = { rouge: 0, orange: 0, vert: 0 };
@@ -12003,6 +12060,11 @@ function journalCarteDuJour(id, today){
   return r;
 }
 
+/* v452 (étape 5) : réponses de CETTE carte, de la plus ancienne à la plus récente (à lire AVANT ppJournalAjoute). */
+function journalEntreesCarte(id){
+  try{ return ppLireJSON('cartes-reponses', [], Array.isArray).filter(e => e && e.id === id); }catch(err){ return []; }
+}
+
 /* Fonction pure : { sansEffet, e1, raison } pour une réponse. sansEffet = la carte ne change pas (ni palier, ni date, ni facilité). */
 /* v420 : DÉLAI DE REMONTÉE. Avant : une carte réussie ne comptait qu'une fois par jour calendaire (la 2e réussite du même jour ne changeait rien, même 15 h plus tard).
    Maintenant : si la dernière réponse comptée date de 12 h ou plus (DELAI_REMONTEE_H), une nouvelle réussite compte de nouveau, même le même jour. L'heure de la dernière
@@ -12235,6 +12297,654 @@ function sortirCarte(niveau, opts, apres){
   }).observe(document.body, { childList:true, subtree:true });
 })();
 
+/* === MAITRISE v452 début === */
+/* maitrise.js — module PUR de la refonte de la maîtrise (étape 1 : socle).
+   Sans dépendance ; en Node il lit la référence ref-v451.js, dans l'app (étape 4) il utilisera les fonctions déjà présentes.
+   Drapeau : MAITRISE_ACTIF (ou ctx.actif) = false → comportement v451 EXACT (aucun champ nouveau n'est touché).
+   Étape 1 = réussites le même jour (crédit partiel / remontée à 12 h via derniereComptee), « Difficile », mode S'entraîner.
+   Reste à faire (étape 2) : rouge « solide », niveauPerdu, fiabilité/instabilité, garde d'espacement→crédit, crédit d'apprentissage (E1), S24. */
+const MAITRISE_ACTIF = true;   // v452 : maîtrise à crédit ACTIVE (livraison, étape 9). Retour exact à la v451 : remplacer par false (une seule ligne, rien d'autre à changer ; les champs déjà enregistrés sont alors simplement ignorés).
+const MAITRISE_CFG = {
+  CREDIT_MAX: 0.4,               // plafond du crédit non confirmé (étape 3 : 0,6 → 0,4, voir RAPPORT-ETAPE3.md)
+  EPISODE_FENETRE_MIN: 90,       // minutes : réponses d'une même carte regroupées en « épisode »
+  DELAI_REMONTEE_H: 12,          // palier complet si ≥ 12 h depuis derniereComptee
+  CREDIT_K_MAX: 0.5,             // part de l'écart restant gagnée à ≥ 12 h d'écart
+  CREDIT_EXPOSANT_ECART: 0.5,    // k(h) = min(1, (h/12)^0.5) * CREDIT_K_MAX
+  CREDIT_APPRENTISSAGE: 0.15,    // (étape 2)
+  CREDIT_ORANGE: 0.1,            // part de l'écart restant gagnée sur un « Difficile »
+  CREDIT_EXPIRE_JOURS: 3,        // crédit non confirmé effacé (à la lecture) au-delà
+  SOLIDE_PALIER_MIN: 2, SOLIDE_SERIE_MIN: 3, FIABILITE_FENETRE: 6, FIABILITE_SEUIL: 0.5, FIABILITE_MIN_REPONSES: 4,  // (étape 2)
+  BARRE_EXPOSANT: 3,             // (étape 7a)
+  COMPTEE_RECENTE_H: 3,          // AJOUT étape 1 (hors brief) : passage de minuit, voir test S15 et SUIVI « Constats »
+  TROU_UNIQUE: true,             // AJOUT étape 2 (hors brief) : un 2ᵉ « Pas su » alors qu'un trou est déjà ouvert (niveauPerdu) = vrai oubli → palier 0
+  CREDIT_ANCRE_REPONSE: false,   // AJOUT étape 3 : true = le crédit expire CREDIT_EXPIRE_JOURS après la dernière RÉPONSE (et non après derniereComptee)
+  GARDE_SEUIL: 0.9               // AJOUT étape 5 : part de l'intervalle prévu qui doit être écoulée pour qu'un « Facile » sur une carte pas encore due la fasse monter (0,5 = v451 ; 0,9 retenu après simulation, voir simulation-garde.js ; sinon petit crédit « révision anticipée »)
+};
+const PALIER_MAX = 6;            // = INTERVALS.length - 1 (INTERVALS = [1,3,7,14,30,60,90])
+const JOUR_VIDE = { aEchec:false, aRouge:false, aVert:false, ancienne:false, plein:false };
+
+const _REF = (typeof module !== 'undefined' && typeof require === 'function') ? require('./ref-v451.js') : null;
+function _nextPalier(){ return typeof nextPalier !== 'undefined' ? nextPalier : _REF.nextPalier; }
+function _jugementDuJour(){ return typeof jugementDuJour !== 'undefined' ? jugementDuJour : _REF.jugementDuJour; }
+function _mast(){ return typeof MASTERED_PALIER !== 'undefined' ? MASTERED_PALIER : _REF.MASTERED_PALIER; }
+function _ecart(){ return typeof ecartJours !== 'undefined' ? ecartJours : _REF.ecartJours; }
+function _r1(){ return typeof R1_ACTIF !== 'undefined' ? R1_ACTIF : (_REF ? _REF.R1_ACTIF : true); }
+
+/* Heures écoulées depuis un ISO. null si absent, NaN, futur : le mécanisme concerné est alors désactivé (= v451). Différence de timestamps : minuit, fuseau et heure d'été n'interviennent pas. */
+function heuresDepuis(iso, maintenantMs){
+  if(iso === null || iso === undefined || iso === '') return null;
+  const t = typeof iso === 'number' ? iso : Date.parse(iso);
+  if(!Number.isFinite(t) || !Number.isFinite(maintenantMs)) return null;
+  const h = (maintenantMs - t) / 3600000;
+  return h >= 0 ? h : null;
+}
+function _borne(x){ return Number.isFinite(x) ? Math.min(MAITRISE_CFG.CREDIT_MAX, Math.max(0, x)) : 0; }
+function kEcart(heures){
+  if(!Number.isFinite(heures) || heures < 0) return 0;
+  return Math.min(1, Math.pow(heures / MAITRISE_CFG.DELAI_REMONTEE_H, MAITRISE_CFG.CREDIT_EXPOSANT_ECART)) * MAITRISE_CFG.CREDIT_K_MAX;
+}
+/* Crédit lu (lecture seule, idempotente) : 0 s'il a expiré ou si derniereComptee est inutilisable (pas de crédit fantôme). */
+function creditEff(c, maintenantMs){
+  if(!c) return 0;
+  let h = heuresDepuis(c.derniereComptee, maintenantMs);
+  if(h === null) return 0;                                   // pas de crédit fantôme
+  if(MAITRISE_CFG.CREDIT_ANCRE_REPONSE){ const hR = heuresDepuis(c.derniereReponse, maintenantMs); if(hR !== null && hR < h) h = hR; }
+  if(h > MAITRISE_CFG.CREDIT_EXPIRE_JOURS * 24) return 0;
+  return _borne(c.credit);
+}
+function gagnerCredit(credit, k){
+  const c = _borne(credit), kk = Number.isFinite(k) ? Math.min(1, Math.max(0, k)) : 0;
+  return _borne(c + (MAITRISE_CFG.CREDIT_MAX - c) * kk);
+}
+
+/* ---------- Journal (cartes-reponses) : entrées { id, d:'AAAA-MM-JJ', r: 0 rouge | 1 orange | 2 vert } de CETTE carte, de la plus ancienne à la plus récente, AVANT la réponse en cours. ---------- */
+function jourDepuisJournal(entries, today, plein){
+  const r = { aEchec:false, aRouge:false, aVert:false, ancienne:false, plein:!!plein };
+  if(!Array.isArray(entries)) return r;
+  for(const e of entries){
+    if(!e) continue;
+    if(e.d < today) r.ancienne = true;
+    else if(e.d === today){ if(e.r === 2) r.aVert = true; else { r.aEchec = true; if(e.r === 0) r.aRouge = true; } }
+  }
+  return r;
+}
+/* Journal plein et peu d'entrées pour cette carte : les plus anciennes ont pu être perdues → pas de verdict (null). Journal plein mais assez d'entrées : les dernières sont complètes. */
+function _journalSur(entries, plein){ return Array.isArray(entries) && !(plein && entries.length < MAITRISE_CFG.FIABILITE_FENETRE); }
+function serieReussites(entries, plein){
+  if(!_journalSur(entries, plein)) return null;
+  let n = 0;
+  for(let i = entries.length - 1; i >= 0; i--){ if(entries[i] && entries[i].r === 2) n++; else break; }
+  return n;
+}
+function fiabilite(entries, plein){
+  if(!_journalSur(entries, plein)) return null;
+  const f = entries.slice(-MAITRISE_CFG.FIABILITE_FENETRE).filter(Boolean);
+  if(f.length < MAITRISE_CFG.FIABILITE_MIN_REPONSES) return null;
+  let s = 0; for(const e of f) s += e.r === 2 ? 1 : e.r === 1 ? 0.5 : 0;
+  return s / f.length;
+}
+function estSolide(c, serie, fiab){
+  if(fiab !== null && fiab !== undefined && fiab < MAITRISE_CFG.FIABILITE_SEUIL) return false;   // AJOUT étape 2 : une carte instable n'est pas protégée
+  return ((c && c.palier) || 0) >= MAITRISE_CFG.SOLIDE_PALIER_MIN || (serie !== null && serie !== undefined && serie >= MAITRISE_CFG.SOLIDE_SERIE_MIN);
+}
+function _dateOk(s){ return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s + 'T00:00:00Z')); }
+/* « Révisée à peu près à l'heure » : retard ≤ intervalle prévu. Dates absentes ou invalides → false (= v451, palier 0). */
+function revisionALHeure(c, today){
+  if(!c || !_dateOk(c.derniereRevision) || !_dateOk(c.prochaineRevision) || !_dateOk(today)) return false;
+  const prevu = _ecart()(c.derniereRevision, c.prochaineRevision), retard = _ecart()(c.prochaineRevision, today);
+  return retard <= Math.max(1, prevu);
+}
+/* Une carte qui revient à un niveau perdu ≥ maîtrisée n'est PAS une nouvelle maîtrise (4 → 3 → 4 ne compte qu'une fois). avant/apres : { palier, niveauPerdu }. */
+function estNouvelleMaitrise(avant, apres){
+  const M = _mast();
+  if(!((apres.palier || 0) >= M) || (avant.palier || 0) >= M) return false;
+  return !(avant.niveauPerdu !== null && avant.niveauPerdu !== undefined && avant.niveauPerdu >= M);
+}
+
+/* Garde d'espacement (étape 5) : un « Facile » sur une carte pas encore due ne la fait monter que si au moins GARDE_SEUIL de l'intervalle prévu est écoulé. Seulement avec MAITRISE_ACTIF ; v451 (½) est codée en dur dans jugementDuJour. */
+function _gardeEspacement(c, niveau, estRappel, today, jug){
+  if(niveau !== 'vert' || estRappel || !jug || jug.sansEffet || jug.e1) return jug;
+  if(!_dateOk(c.derniereRevision) || !_dateOk(c.prochaineRevision) || !_dateOk(today)) return jug;
+  if(!(c.derniereRevision < today && c.prochaineRevision > today)) return jug;
+  const prevu = _ecart()(c.derniereRevision, c.prochaineRevision), ecoule = _ecart()(c.derniereRevision, today);
+  return ecoule < Math.max(1, prevu * MAITRISE_CFG.GARDE_SEUIL) ? { sansEffet:true, e1:false, raison:'espacement' } : jug;
+}
+
+/* jugementMaitrise(c, niveau, ctx) → nouvel état (la carte n'est pas modifiée).
+   ctx : { today:'AAAA-MM-JJ', maintenantMs, journal (entrées de cette carte), journalPlein, j (facultatif : sinon déduit du journal), estRappel, entrainement, actif }
+   Renvoie { palier, credit, niveauPerdu, difficultes, facileConsecutif, derniereComptee, derniereReponse, derniereRevision, comptee, raison }. */
+function jugementMaitrise(c, niveau, ctx){
+  ctx = ctx || {}; c = c || {};
+  const CFG = MAITRISE_CFG;
+  const ms = Number.isFinite(ctx.maintenantMs) ? ctx.maintenantMs : Date.now();
+  const today = ctx.today, estRappel = !!ctx.estRappel;
+  const entries = Array.isArray(ctx.journal) ? ctx.journal : null;
+  const j = ctx.j || jourDepuisJournal(entries, today, ctx.journalPlein) || JOUR_VIDE;
+  const actif = typeof ctx.actif === 'boolean' ? ctx.actif : MAITRISE_ACTIF;
+  const nowIso = new Date(ms).toISOString();
+  const p0 = c.palier || 0;
+  const garde = { palier:p0, credit:c.credit, niveauPerdu:c.niveauPerdu, difficultes:c.difficultes, facileConsecutif:c.facileConsecutif, derniereComptee:c.derniereComptee, derniereReponse:c.derniereReponse, derniereRevision:c.derniereRevision, comptee:false, raison:'' };
+  if(ctx.entrainement) return Object.assign(garde, { raison:'entrainement' });   // S20 : aucun effet
+
+  // 1) Décision v451 (référence) : palier, difficultes, facileConsecutif
+  let jug = _jugementDuJour()(c, niveau, estRappel, j, today, ms);
+  if(actif) jug = _gardeEspacement(c, niveau, estRappel, today, jug);   // étape 5 : seuil de la garde réglable (GARDE_SEUIL)
+  const copie = Object.assign({}, c);
+  let palier = p0;
+  if(!jug.sansEffet) palier = jug.e1 ? 1 : _nextPalier()(copie, niveau, { echecDejaCompte: _r1() && j.aEchec });
+  let v = { palier, difficultes: jug.sansEffet ? c.difficultes : copie.difficultes, facileConsecutif: jug.sansEffet ? c.facileConsecutif : copie.facileConsecutif, comptee: !jug.sansEffet, raison: jug.raison || (jug.e1 ? 'e1' : '') };
+  if(!actif) return Object.assign(garde, v, { derniereRevision: v.comptee ? today : c.derniereRevision });   // v451 exact (answer() posera derniereRevision à l'étape 5)
+
+  // 2) Nouvelle règle
+  const hC = heuresDepuis(c.derniereComptee, ms), hR = heuresDepuis(c.derniereReponse, ms), ce = creditEff(c, ms);
+  const serie = serieReussites(entries, ctx.journalPlein), fiab = fiabilite(entries, ctx.journalPlein);
+  const instable = fiab !== null && fiab < CFG.FIABILITE_SEUIL, facteur = instable ? 0.5 : 1;
+  const dernier = entries && entries.length ? entries[entries.length - 1] : null;
+  const enEpisode = hR !== null && hR * 60 <= CFG.EPISODE_FENETRE_MIN;
+  const echecEpisode = !!(dernier && dernier.r < 2 && enEpisode), rougeEpisode = !!(dernier && dernier.r === 0 && enEpisode);
+  // Épisode (même au passage de minuit) : un échec de plus dans la foulée d'un échec ne re-pénalise pas
+  if(v.comptee && ((niveau === 'rouge' && rougeEpisode) || (niveau === 'orange' && echecEpisode))) v = { palier:p0, difficultes:c.difficultes, facileConsecutif:c.facileConsecutif, comptee:false, raison:'episode' };
+
+  const out = Object.assign({}, v, { credit: ce, niveauPerdu: c.niveauPerdu === undefined ? null : c.niveauPerdu, derniereReponse: nowIso, derniereComptee: c.derniereComptee, derniereRevision: c.derniereRevision });
+  const compter = () => { out.comptee = true; out.derniereComptee = nowIso; out.derniereRevision = today; };
+
+  if(niveau === 'vert' && !estRappel){
+    const dejaCompte = hC !== null && (c.derniereRevision === today || hC < CFG.COMPTEE_RECENTE_H);   // S15 : 23 h 50 puis 0 h 10 = 20 min, pas deux jours
+    if(jug.e1){                                                                                      // carte neuve : palier 1 une fois ; petit crédit si ≥ 2 échecs dans l'épisode
+      const nEchecs = entries ? entries.filter(e => e && e.d === today && e.r < 2).length : 0;
+      out.credit = nEchecs >= 2 ? CFG.CREDIT_APPRENTISSAGE : 0; compter(); out.raison = 'e1';
+      return out;
+    }
+    if(dejaCompte && hC < CFG.DELAI_REMONTEE_H){                                                      // S2, S3, S4 : crédit partiel, jamais de palier
+      let k = kEcart(hC);
+      if(out.niveauPerdu !== null && hC >= 1) k *= 2;                                                // récupération rapide après un trou (S6)
+      out.palier = p0; out.difficultes = c.difficultes; out.facileConsecutif = c.facileConsecutif; out.comptee = false; out.raison = 'credit';
+      out.credit = gagnerCredit(ce, k * facteur);
+      return out;
+    }
+    if(!dejaCompte && jug.raison === 'espacement' && hC !== null){                                    // S12 : révision anticipée
+      const prevu = _ecart()(c.derniereRevision, c.prochaineRevision), ecoule = _ecart()(c.derniereRevision, today);
+      out.palier = p0; out.difficultes = c.difficultes; out.facileConsecutif = c.facileConsecutif; out.comptee = false; out.raison = 'anticipee';
+      out.credit = gagnerCredit(ce, 0.5 * (prevu > 0 ? Math.min(1, ecoule / prevu) : 0) * facteur);
+      return out;
+    }
+    if(!v.comptee && !dejaCompte) return out;                                                         // sans effet v451 (ex. mécanisme désactivé faute d'heure)
+    if(!v.comptee && !(dejaCompte && hC >= CFG.DELAI_REMONTEE_H)) return out;
+    // Cas normal ou remontée (≥ 12 h) : palier complet, avec probation étendue (carte instable) et récupération du niveau perdu
+    const cp = Object.assign({}, c);
+    let pal = _nextPalier()(cp, 'vert', { echecDejaCompte: _r1() && j.aEchec }), fc = cp.facileConsecutif, hold = false;
+    if(instable && p0 >= 1 && p0 !== _mast() - 1){                                                   // S8 / S24 : 2 faciles d'affilée à tous les paliers
+      const f = (c.facileConsecutif || 0) + 1;
+      if(f < 2){ pal = p0; fc = f; hold = true; }
+    }
+    let np = out.niveauPerdu;
+    if(!hold && np !== null){
+      const valide = Number.isInteger(np) && np >= 0 && np <= PALIER_MAX && hC !== null && hC <= CFG.CREDIT_EXPIRE_JOURS * 24;
+      if(valide && np > pal){ pal = np; fc = 0; }                                                    // le trou est rebouché
+      np = null;
+    }
+    out.palier = pal; out.facileConsecutif = fc; out.difficultes = cp.difficultes; out.niveauPerdu = np;
+    out.credit = pal > p0 ? 0 : (hC !== null ? gagnerCredit(ce, kEcart(hC) * facteur) : ce);          // palier tenu (probation) : le crédit récompense sans avancer
+    out.raison = dejaCompte ? 'remontee' : (hold ? 'probation-etendue' : 'normal'); compter();
+    return out;
+  }
+
+  if(niveau === 'rouge' && out.comptee){
+    const cp = Object.assign({}, c); _nextPalier()(cp, 'rouge', { echecDejaCompte: _r1() && j.aEchec });
+    out.difficultes = cp.difficultes; out.facileConsecutif = 0; out.credit = 0;
+    const solide = estSolide(c, serie, fiab) && p0 >= 1 && revisionALHeure(c, today) && !(CFG.TROU_UNIQUE && c.niveauPerdu !== null && c.niveauPerdu !== undefined);
+    if(solide){ out.palier = p0 - 1; out.niveauPerdu = Math.max(Number.isInteger(c.niveauPerdu) ? c.niveauPerdu : 0, p0); out.raison = 'trou'; }
+    else { out.palier = 0; out.niveauPerdu = null; out.raison = 'oubli'; }
+    compter();
+    return out;
+  }
+  if(out.comptee) compter();
+  if(niveau === 'orange'){                                                                           // « Difficile » : petit crédit, 1ʳᵉ réponse de l'épisode seulement
+    const premiere = hR === null ? false : hR * 60 > CFG.EPISODE_FENETRE_MIN;
+    if(premiere && (out.comptee || hC !== null)) out.credit = gagnerCredit(ce, CFG.CREDIT_ORANGE * facteur);
+  }
+  return out;
+}
+
+/* ---------- Champs de maîtrise portés par la carte (étape 4) : credit, derniereComptee, derniereReponse, niveauPerdu.
+   Absents = valeurs neutres (v451). Toute valeur lue (overlay, import, export) passe ici : jamais NaN, jamais hors bornes. ---------- */
+const MAITRISE_CHAMPS = ['credit', 'derniereComptee', 'derniereReponse', 'niveauPerdu'];
+function _isoHorodatage(s, maintenantMs){
+  if(typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) return null;
+  const t = Date.parse(s);
+  if(!Number.isFinite(t)) return null;
+  const now = Number.isFinite(maintenantMs) ? maintenantMs : Date.now();
+  return t > now + 86400000 ? null : s;       // plus d'un jour dans le futur = horloge folle : ignoré (heuresDepuis ignore déjà les petits écarts)
+}
+function maitriseNettoyerChamps(src, maintenantMs){
+  src = (src && typeof src === 'object') ? src : {};
+  const np = src.niveauPerdu;
+  return {
+    credit: _borne(typeof src.credit === 'number' ? src.credit : NaN),
+    derniereComptee: _isoHorodatage(src.derniereComptee, maintenantMs),
+    derniereReponse: _isoHorodatage(src.derniereReponse, maintenantMs),
+    niveauPerdu: (typeof np === 'number' && Number.isInteger(np) && np >= 0 && np <= PALIER_MAX) ? np : null
+  };
+}
+/* Carte lue du stockage : si elle porte au moins un des 4 champs, on les assainit tous ; sinon on la rend telle quelle (v451 : aucun champ ajouté). */
+function maitriseNettoyerCarte(c){
+  if(!c || typeof c !== 'object') return c;
+  if(!MAITRISE_CHAMPS.some(k => c[k] !== undefined)) return c;
+  return Object.assign({}, c, maitriseNettoyerChamps(c));
+}
+
+/* ---------- Application à une carte et « Annuler » (étape 5) ----------
+   appliquerMaitrise(c, niveau, ctx) : décide (jugementMaitrise) puis écrit sur la carte `c` les 7 champs que le module gouverne
+   (palier, difficultes, facileConsecutif, credit, derniereComptee, derniereReponse, niveauPerdu). Les dates de révision (prochaineRevision, derniereRevision)
+   et derniereModification restent à answer() (elles dépendent des intervalles). Renvoie { avant, resultat } : `avant` = instantané exact (champ absent = null).
+   annulerMaitrise(c, snap) remet exactement ces 7 champs (un champ absent avant l'est de nouveau après). */
+const MAITRISE_CHAMPS_APPLIQUES = ['palier', 'difficultes', 'facileConsecutif', 'credit', 'derniereComptee', 'derniereReponse', 'niveauPerdu'];
+function appliquerMaitrise(c, niveau, ctx){
+  const avant = {};
+  for(const k of MAITRISE_CHAMPS_APPLIQUES) avant[k] = Object.prototype.hasOwnProperty.call(c, k) ? { v: c[k] } : null;
+  const r = jugementMaitrise(c, niveau, ctx);
+  c.palier = r.palier;
+  if(r.difficultes !== undefined) c.difficultes = r.difficultes;
+  if(r.facileConsecutif !== undefined) c.facileConsecutif = r.facileConsecutif;
+  if(r.credit !== undefined) c.credit = _borne(r.credit);
+  if(r.derniereComptee !== undefined) c.derniereComptee = r.derniereComptee;
+  if(r.derniereReponse !== undefined) c.derniereReponse = r.derniereReponse;
+  if(r.niveauPerdu !== undefined) c.niveauPerdu = r.niveauPerdu;
+  return { avant, resultat: r };
+}
+function annulerMaitrise(c, snap){
+  if(!c || !snap || !snap.avant) return;
+  for(const k of MAITRISE_CHAMPS_APPLIQUES){
+    if(snap.avant[k] === null || snap.avant[k] === undefined) delete c[k]; else c[k] = snap.avant[k].v;
+  }
+}
+/* ---------- Synchro (étape 6) ----------
+   Règle de fusion d'une carte (inchangée depuis la v308) : la copie dont `derniereModification` est la plus récente gagne EN ENTIER (égalité : la locale reste) ;
+   les 4 champs de maîtrise voyagent avec elle. À l'arrivée ils sont toujours assainis (maitriseNettoyerChamps : crédit borné, dates ISO valides et pas dans le futur, niveauPerdu entier 0..6).
+   Une copie reçue qui n'en porte aucun (appareil pas encore à jour) remet à neutre ceux de la carte locale qu'elle remplace : crédit et niveauPerdu dépendent du palier, qui vient de la même copie.
+   Renvoie {} si ni la copie reçue ni la carte locale n'ont de champ de maîtrise (aucun champ ajouté : v451). */
+function maitriseChampsSync(item, local){
+  const porte = o => !!o && typeof o === 'object' && MAITRISE_CHAMPS.some(k => o[k] !== undefined);
+  return (porte(item) || porte(local)) ? maitriseNettoyerChamps(item) : {};
+}
+/* Vrai si appliquerMaitrise a changé au moins un des 7 champs (sert à poser derniereModification, donc à ce que la synchro voie le changement). */
+function maitriseAChange(snap, c){
+  if(!snap || !snap.avant || !c) return false;
+  return MAITRISE_CHAMPS_APPLIQUES.some(k => (snap.avant[k] ? snap.avant[k].v : undefined) !== c[k]);
+}
+
+/* ---------- Statistiques (étape 7a) : calculs seulement, aucun affichage ----------
+   niveauReel(c, ms) = palier + crédit encore valable (0 si le drapeau est false : la mesure reste celle de la v451).
+   gainNiveau(avant, après) = gain BRUT d'une réponse (jamais négatif : un recul n'est jamais affiché, décision 3). Alimente `sessionProgress` (answer()) puis le champ `p` de la séance.
+   barreMaitrise(cartes, ms) = { n, surplus, valeur } sur les cartes qu'on lui donne (l'appelant passe les cartes ACTIVES, cartesPourStats()) :
+   n = cartes maîtrisées (palier ≥ MASTERED_PALIER, le nombre qui ne triche pas) ; surplus = Σ ((palier + crédit) / MASTERED_PALIER)^BARRE_EXPOSANT sur les non maîtrisées ; valeur = n + surplus.
+   Les arrondis et l'affichage sont à l'étape 7b. */
+function niveauReel(c, maintenantMs){
+  if(!c) return 0;
+  const p = Number.isFinite(+c.palier) ? Math.max(0, Math.min(PALIER_MAX, Math.floor(+c.palier))) : 0;
+  /* étape 8 : le crédit d'une carte DÉJÀ maîtrisée ne mesure rien (la barre l'ignore) : on ne le compte pas, sinon « Réviser tout » répété gonfle « +N paliers » sans rien apprendre. */
+  return p + ((MAITRISE_ACTIF && p < _mast()) ? creditEff(c, maintenantMs) : 0);
+}
+function gainNiveau(avant, apres){
+  const g = apres - avant;
+  return (Number.isFinite(g) && g > 0) ? g : 0;
+}
+function barreMaitrise(cartes, maintenantMs){
+  const ref = _mast(), e = MAITRISE_CFG.BARRE_EXPOSANT;
+  let n = 0, surplus = 0;
+  if(Array.isArray(cartes)) for(let i = 0; i < cartes.length; i++){
+    const c = cartes[i];
+    if(!c) continue;
+    const p = Number.isFinite(+c.palier) ? Math.max(0, Math.min(PALIER_MAX, Math.floor(+c.palier))) : 0;
+    if(p >= ref){ n++; continue; }
+    const x = (p + (MAITRISE_ACTIF ? creditEff(c, maintenantMs) : 0)) / ref;
+    surplus += Math.pow(x, e);
+  }
+  return { n, surplus, valeur: n + surplus };
+}
+
+if(typeof module !== 'undefined') module.exports = { niveauReel, gainNiveau, barreMaitrise, maitriseChampsSync, MAITRISE_CHAMPS_APPLIQUES, appliquerMaitrise, annulerMaitrise, maitriseAChange, MAITRISE_ACTIF, MAITRISE_CFG, PALIER_MAX, JOUR_VIDE, heuresDepuis, kEcart, creditEff, gagnerCredit, jourDepuisJournal, serieReussites, fiabilite, estSolide, revisionALHeure, estNouvelleMaitrise, jugementMaitrise, MAITRISE_CHAMPS, maitriseNettoyerChamps, maitriseNettoyerCarte };
+/* === MAITRISE v452 fin === */
+
+/* === XP v453 début === */
+/* XP : couche DÉCORATIVE. Elle ne change ni les paliers, ni les dates, ni la barre de maîtrise, ni le rang.
+   Elle dépend de l'état réel de la carte (due ou non, nouvelle, difficile, retard…), jamais du bouton appuyé.
+   Drapeau : XP_ACTIF = false → plus rien n'est calculé ni affiché (les XP déjà enregistrées sont simplement ignorées). */
+const XP_ACTIF = true;
+const XP_CFG = {
+  BASE_DUE: 10, BASE_EXTRA: 2, BASE_QUIZ: 1,                       // carte due / révision en plus / S'entraîner
+  X_ECRIRE: 1.3, X_NOUVELLE: 1.5, X_DIFFICILE: 1.5, X_SUE: 0.7, SUE_PALIER: 4,
+  RETARD_PAR_JOUR: 1, RETARD_MAX: 7, RATE_HIER: 3, PAR_PALIER: 3, MAITRISEE: 10,
+  REPETITION: [1, 0.5, 0.2],                                         // 1re, 2e, 3e passe sur la même carte le même jour ; ensuite 0
+  PLAFOND_EXTRA: 200,                                                // XP max par jour sur les révisions en plus (et S'entraîner)
+  BONUS_OBJECTIF: 100, BONUS_COUVERTURE: 50, BONUS_2E_SEANCE: 25, BONUS_FIN_SEANCE: 25, ECART_2E_SEANCE_H: 6,
+  SERIE_PAR_JOUR: 0.1, SERIE_MAX: 0.3,
+  NIVEAU_BASE: 1000, NIVEAU_PAR_N: 150,                              // passer du niveau n à n+1 coûte 1000 + 150 × n
+  TENACE: 2, PALIER_FORT: 3                                          // v454 : carte « coriace » = au moins 2 échecs derniers ; « palier » marquant = palier 3 ou plus
+};
+let sessionXp = 0;                                                   // XP de la séance en cours (enregistrée avec la séance : champ `x`)
+let sessionXpInfo = { due: 0, diff: 0, ob: 0 };
+/* v454 : moments forts de la séance (jamais liés au bouton appuyé seul : ils viennent de ce que la carte devient dans le temps). */
+let sessionEchecs = new Set();                                       // cartes ratées dans cette séance (pour « rattrapée »)
+let sessionEvt = { coriace: 0, palier: 0, rattrapee: 0 };
+function xpSessionRaz(){ sessionXp = 0; sessionXpInfo = { due: 0, diff: 0, ob: 0 }; sessionEchecs = new Set(); sessionEvt = { coriace: 0, palier: 0, rattrapee: 0 }; try{ ppCueChaleurRaz(); }catch(e){} }
+/* Événement marquant d'une réponse : « coriace » (carte souvent ratée qui franchit enfin un palier), « palier » (carte qui atteint le palier 3 ou plus), « rattrapee » (carte ratée plus tôt dans la séance, réussie ensuite). null sinon. */
+function xpEvenement(o, sessionEchecsSet){
+  if(o.niveau !== 'vert'){ sessionEchecsSet.add(o.c.id); return null; }
+  const gain = (o.palier || 0) > (o.prevPalier || 0), tenace = (o.prevDifficultes || 0) >= XP_CFG.TENACE;
+  const rattrapee = sessionEchecsSet.has(o.c.id); sessionEchecsSet.delete(o.c.id);
+  if(gain && tenace) return 'coriace';
+  if(gain && (o.palier || 0) >= XP_CFG.PALIER_FORT) return 'palier';
+  return rattrapee ? 'rattrapee' : null;
+}
+function xpControleMult(j){ if(j === null || j === undefined || !Number.isFinite(j) || j < 0 || j > 7) return 1; return j >= 4 ? 1.1 : j >= 2 ? 1.2 : 1.3; }
+/* XP d'UNE réponse, avant bonus de série. o = { passe (1, 2, 3…), base, due, ecrite, premier, difficile, palAv, palAp, joursControle, retard, rateHier, devientMaitrisee } */
+function xpCarte(o){
+  const R = XP_CFG, rep = o.passe >= 1 && o.passe <= R.REPETITION.length ? R.REPETITION[o.passe - 1] : 0;
+  let mult = 1;
+  if(o.ecrite) mult *= R.X_ECRIRE;
+  if(o.premier) mult *= R.X_NOUVELLE;
+  if(o.difficile) mult *= R.X_DIFFICILE;
+  if(!o.premier && o.palAv >= R.SUE_PALIER) mult *= R.X_SUE;
+  mult *= xpControleMult(o.joursControle);
+  let xp = o.base * rep * mult;
+  if(o.passe === 1 && o.due) xp += Math.min(R.RETARD_MAX, Math.max(0, o.retard || 0)) * R.RETARD_PAR_JOUR;
+  if(o.due && rep > 0){
+    if(o.palAp > o.palAv) xp += R.PAR_PALIER * (o.palAp - o.palAv);
+    if(o.devientMaitrisee) xp += R.MAITRISEE;
+  }
+  if(o.passe === 1 && o.rateHier) xp += R.RATE_HIER;
+  return xp;
+}
+function xpNiveau(total){
+  total = Math.max(0, +total || 0);
+  let n = 1, c = 0;
+  while(c + XP_CFG.NIVEAU_BASE + XP_CFG.NIVEAU_PAR_N * n <= total){ c += XP_CFG.NIVEAU_BASE + XP_CFG.NIVEAU_PAR_N * n; n++; }
+  const cout = XP_CFG.NIVEAU_BASE + XP_CFG.NIVEAU_PAR_N * n;
+  return { niv: n, dans: total - c, cout, pct: Math.max(0, Math.min(100, Math.floor((total - c) / cout * 100))) };
+}
+function xpMultSerie(){
+  let n = 0; try{ n = getStreakData().count || 0; }catch(e){}
+  return 1 + Math.min(XP_CFG.SERIE_MAX, XP_CFG.SERIE_PAR_JOUR * Math.max(0, n));
+}
+/* === Synchro de l'XP (v454) ===
+   Principe : chaque appareil n'écrit QUE ses propres compteurs ; la fusion prend toujours le MAXIMUM, appareil par appareil.
+   Jamais d'addition de totaux reçus, jamais d'écrasement : changer d'appareil ne peut ni perdre ni compter deux fois de l'XP.
+   Aucun appel de plus : ces données voyagent dans le même envoi groupé que les séances (champ `xpSync`).
+   t = XP cumulée par appareil (le niveau = somme) ; j = XP par jour et par appareil (14 derniers jours : aujourd'hui, semaine, record) ; r = record (max) ;
+   c = état du JOUR par appareil (passes par carte, XP « en plus » déjà prise, bonus déjà donnés) pour que deux appareils ne redonnent pas les mêmes XP. */
+const XP_SYNC_KEY = 'cartes-xp-sync', XP_APP_KEY = 'cartes-xp-appareil';
+const XP_ID_RE = /^[a-z0-9]{3,12}$/, XP_JOUR_RE = /^\d{4}-\d{2}-\d{2}$/;
+function xpAppareil(){
+  try{
+    let d = localStorage.getItem(XP_APP_KEY);
+    if(d && XP_ID_RE.test(d)) return d;
+    d = ('a' + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 6)).slice(0, 9);
+    if(!XP_ID_RE.test(d)) d = 'a' + Date.now().toString(36).slice(-6);
+    localStorage.setItem(XP_APP_KEY, d); return d;
+  }catch(e){ return 'a00'; }
+}
+const xpNum = (v, max) => { v = +v; return (Number.isFinite(v) && v > 0) ? Math.min(max || 1e9, Math.round(v * 10) / 10) : 0; };
+function xpSyncVide(){ return { t: {}, j: {}, r: 0, c: { d: '', s: {} } }; }
+function xpSyncNettoyer(o){
+  const r = xpSyncVide();
+  if(!o || typeof o !== 'object') return r;
+  if(o.t && typeof o.t === 'object') Object.keys(o.t).forEach(k => { if(XP_ID_RE.test(k)){ const v = xpNum(o.t[k]); if(v > 0) r.t[k] = v; } });
+  if(o.j && typeof o.j === 'object') Object.keys(o.j).forEach(d => {
+    if(!XP_JOUR_RE.test(d) || !o.j[d] || typeof o.j[d] !== 'object') return;
+    const e = {}; Object.keys(o.j[d]).forEach(k => { if(XP_ID_RE.test(k)){ const v = xpNum(o.j[d][k]); if(v > 0) e[k] = v; } });
+    if(Object.keys(e).length) r.j[d] = e;
+  });
+  r.r = xpNum(o.r);
+  const c = o.c;
+  if(c && typeof c === 'object' && XP_JOUR_RE.test(String(c.d)) && c.s && typeof c.s === 'object'){
+    r.c.d = c.d;
+    Object.keys(c.s).forEach(k => {
+      const e = c.s[k]; if(!XP_ID_RE.test(k) || !e || typeof e !== 'object') return;
+      const kk = {};
+      if(e.k && typeof e.k === 'object') Object.keys(e.k).slice(0, 3000).forEach(id => { const n = Math.floor(+e.k[id]); if(id.length <= 60 && Number.isFinite(n) && n > 0) kk[id] = Math.min(99, n); });
+      r.c.s[k] = { q: Math.max(0, Math.floor(+e.q) || 0), ex: xpNum(e.ex), ob: e.ob ? 1 : 0, s2: e.s2 ? 1 : 0, lf: Math.max(0, Math.floor(+e.lf) || 0), k: kk };
+    });
+  }
+  return r;
+}
+function xpTrier(v){ if(Array.isArray(v) || !v || typeof v !== 'object') return v; const r = {}; Object.keys(v).sort().forEach(k => { r[k] = xpTrier(v[k]); }); return r; }
+const xpSomme = m => { let s = 0; Object.keys(m || {}).forEach(k => { s += m[k]; }); return s; };
+const xpArr = v => Math.round(v * 10) / 10;
+/* 1re lecture sur un appareil qui avait déjà de l'XP (v453) : ce qu'il avait devient l'appareil « old » (fusion par maximum entre appareils : pas de double comptage). */
+function xpSyncMigrer(){
+  const s = xpSyncVide();
+  try{
+    const ex = ppStatExtra();
+    if(ex.xp > 0) s.t.old = xpArr(ex.xp);
+    if(ex.xpRecord > 0) s.r = ex.xpRecord;
+    const ajJour = (d, x) => { if(XP_JOUR_RE.test(String(d)) && x > 0){ s.j[d] = s.j[d] || {}; s.j[d].old = xpArr((s.j[d].old || 0) + x); } };
+    ppSeancesLire().forEach(x => { if(x.x > 0) ajJour(x.d, x.x); });
+    const qz = xpQuizLire(); Object.keys(qz).forEach(d => ajJour(d, +qz[d]));
+  }catch(e){}
+  return s;
+}
+function xpSyncEcrire(o){
+  const lim = addDays(todayStr(), -20);
+  Object.keys(o.j).forEach(d => { if(d < lim) delete o.j[d]; });
+  ppEcrire(XP_SYNC_KEY, JSON.stringify(o));
+}
+function xpSyncLire(){
+  let brut = null;
+  try{ brut = localStorage.getItem(XP_SYNC_KEY); }catch(e){}
+  if(brut === null){ const m = xpSyncMigrer(); xpSyncEcrire(m); return m; }
+  try{ return xpSyncNettoyer(JSON.parse(brut)); }catch(e){ return xpSyncVide(); }
+}
+function xpTotal(s){ return xpSomme((s || xpSyncLire()).t); }
+function xpJourTotal(s, d){ return xpSomme(s.j[d]); }
+/* Ajoute de l'XP à CET appareil (à chaque carte : rien n'est perdu si l'app est fermée en pleine séance). */
+function xpAjoute(x){
+  x = xpArr(+x || 0); if(!(x > 0)) return;
+  const s = xpSyncLire(), me = xpAppareil(), d = todayStr();
+  s.t[me] = xpArr((s.t[me] || 0) + x);
+  const e = s.j[d] || (s.j[d] = {});
+  e[me] = xpArr((e[me] || 0) + x);
+  s.r = Math.max(s.r, Math.round(xpJourTotal(s, d)));
+  xpSyncEcrire(s);
+}
+function xpSyncFusion(a, b){
+  const o = xpSyncVide();
+  [a, b].forEach(src => {
+    Object.keys(src.t).forEach(k => { o.t[k] = Math.max(o.t[k] || 0, src.t[k]); });
+    Object.keys(src.j).forEach(d => { const e = o.j[d] || (o.j[d] = {}); Object.keys(src.j[d]).forEach(k => { e[k] = Math.max(e[k] || 0, src.j[d][k]); }); });
+  });
+  o.r = Math.max(a.r, b.r);
+  o.c = (b.c.d && b.c.d > a.c.d) ? { d: b.c.d, s: { ...b.c.s } } : { d: a.c.d, s: { ...a.c.s } };
+  if(b.c.d && b.c.d === a.c.d) Object.keys(b.c.s).forEach(k => { const l = o.c.s[k]; if(!l || b.c.s[k].q > l.q) o.c.s[k] = b.c.s[k]; });
+  return o;
+}
+/* Réception (synchro ou restauration d'une sauvegarde) : fusion sans recul, idempotente. Retourne true si quelque chose a changé. */
+function xpSyncRecevoir(brut){
+  const loc = xpSyncLire(), fus = xpSyncFusion(loc, xpSyncNettoyer(brut));
+  if(JSON.stringify(xpTrier(fus)) === JSON.stringify(xpTrier(loc))) return false;
+  xpSyncEcrire(fus); return true;
+}
+/* Ce qui part dans la synchro / la sauvegarde (clés triées : deux appareils qui ont les mêmes données envoient le même texte). null = rien à envoyer. */
+function xpSyncPourEnvoi(){
+  const s = xpSyncLire();
+  if(!xpTotal(s) && !s.r && !Object.keys(s.c.s).length) return null;
+  return xpTrier(s);
+}
+/* État du jour des AUTRES appareils (passes par carte, XP « en plus » prise, bonus donnés, fin de la dernière séance). */
+function xpAutres(){
+  const r = { ex: 0, ob: 0, s2: 0, lf: 0, k: {} };
+  try{
+    const s = xpSyncLire(), me = xpAppareil();
+    if(s.c.d !== todayStr()) return r;
+    Object.keys(s.c.s).forEach(dev => {
+      if(dev === me) return;
+      const e = s.c.s[dev];
+      r.ex += e.ex; if(e.ob) r.ob = 1; if(e.s2) r.s2 = 1; if(e.lf > r.lf) r.lf = e.lf;
+      Object.keys(e.k).forEach(id => { r.k[id] = (r.k[id] || 0) + e.k[id]; });
+    });
+  }catch(e){}
+  return r;
+}
+/* Publie l'état du jour de CET appareil (appelée à chaque sauvegarde de l'état du jour). */
+function xpPublier(o){
+  const s = xpSyncLire(), me = xpAppareil();
+  if(s.c.d !== o.d) s.c = { d: o.d, s: {} };
+  const k = {}; Object.keys(o.k || {}).forEach(id => { const n = o.k[id] && o.k[id].n; if(n > 0) k[id] = Math.min(99, n); });
+  const ancien = s.c.s[me];
+  s.c.s[me] = { q: (ancien ? ancien.q : 0) + 1, ex: xpArr(o.ex || 0), ob: o.ob ? 1 : 0, s2: o.s2 ? 1 : 0, lf: o.lf || 0, k };
+  xpSyncEcrire(s);
+}
+/* === fin synchro XP === */
+/* État du jour (v454 : copie publiée par xpPublier pour les autres appareils) : compteurs anti-répétition, plafond des révisions en plus, bonus déjà donnés. */
+const XP_JOUR_KEY = 'cartes-xp-jour', XP_QUIZ_KEY = 'cartes-xp-quiz';
+function xpJourLire(){
+  const t = todayStr();
+  try{ const o = JSON.parse(localStorage.getItem(XP_JOUR_KEY) || 'null'); if(o && typeof o === 'object' && o.d === t && o.k && typeof o.k === 'object') return o; }catch(e){}
+  return { d: t, k: {}, ex: 0, dep: -1, ob: 0, s2: 0, lf: 0 };
+}
+function xpJourSauver(o){ ppEcrire(XP_JOUR_KEY, JSON.stringify(o)); try{ xpPublier(o); }catch(e){} }
+function xpQuizLire(){ try{ const o = JSON.parse(localStorage.getItem(XP_QUIZ_KEY) || 'null'); return (o && typeof o === 'object') ? o : {}; }catch(e){ return {}; } }
+function xpResteDuJour(st){ return Math.max(0, XP_CFG.PLAFOND_EXTRA - (st.ex || 0) - xpAutres().ex); }   /* v454 : le plafond du jour compte aussi l'XP prise sur les autres appareils */
+/* Appelée par answer() APRÈS la réponse (carte déjà mise à jour). Retourne { xp, evt } : l'XP gagnée par cette réponse et l'événement marquant (ou null). */
+function xpApresReponse(o){
+  const c = o.c, st = xpJourLire(), today = o.jourJuge, R = XP_CFG, au = xpAutres();
+  if(!ppSeance.t0) ppSeance.t0 = Date.now();
+  const premier = !o.prevPalier && !o.prevDerniereRevision;
+  const ent = st.k[c.id] || (st.k[c.id] = { n: 0, b: 0, du: 0 });
+  ent.n++;
+  const passe = ent.n + (au.k[c.id] || 0);   /* v454 : passes déjà faites AUJOURD'HUI sur les autres appareils */
+  if(ent.n === 1){
+    const due = premier || (!!o.prevProchaineRevision && o.prevProchaineRevision <= today && o.prevDerniereRevision !== today);
+    ent.du = due ? 1 : 0; ent.b = due ? R.BASE_DUE : R.BASE_EXTRA;
+  }
+  const difficile = (o.prevDifficultes > 0) || (o.prevNiveauPerdu !== null && o.prevNiveauPerdu !== undefined);
+  const jc = o.dateControle ? Math.round((Date.parse(o.dateControle) - Date.parse(today)) / 864e5) : null;
+  const retard = (ent.n === 1 && passe === 1 && ent.du && o.prevProchaineRevision) ? Math.round((Date.parse(today) - Date.parse(o.prevProchaineRevision)) / 864e5) : 0;
+  let rateHier = false;
+  if(passe === 1 && o.niveau !== 'rouge'){ try{ rateHier = !!journalCarteDuJour(c.id, addDays(today, -1)).aEchec; }catch(e){} }
+  let xp = xpCarte({ passe, base: ent.b, due: !!ent.du, ecrite: c.ecrite === true, premier: passe === 1 && premier, difficile, palAv: o.prevPalier || 0, palAp: o.palier || 0, joursControle: jc, retard, rateHier, devientMaitrisee: !!o.becameMastered });
+  if(!ent.du){ xp = Math.min(xp, xpResteDuJour(st)); st.ex = (st.ex || 0) + xp; }
+  xp *= xpMultSerie();
+  let gagne = xp;
+  if(passe === 1 && ent.du) sessionXpInfo.due++;
+  if(passe === 1 && difficile) sessionXpInfo.diff++;
+  /* Objectif du jour (100 % = plus aucune carte due) et couverture : même moment dans l'app (le « pourcentage du jour » de l'accueil). Une seule fois par jour (tous appareils), seulement s'il y avait des cartes dues au départ. */
+  try{
+    const restantes = () => cartesPourStats().filter(k => k.derniereRevision !== today && (k.prochaineRevision || today) <= today).length;
+    if(st.dep < 0) st.dep = restantes() + (ent.du && ent.n === 1 ? 1 : 0);
+    if(st.dep > 0 && !st.ob && !au.ob && restantes() === 0){ st.ob = 1; gagne += R.BONUS_OBJECTIF + R.BONUS_COUVERTURE; sessionXpInfo.ob = 1; }
+  }catch(e){}
+  sessionXp += gagne;
+  xpAjoute(gagne);   /* v454 : écrit tout de suite dans le registre synchronisé */
+  xpJourSauver(st);
+  const evt = xpEvenement(o, sessionEchecs);
+  if(evt) sessionEvt[evt]++;
+  return { xp: gagne, passe, difficile, evt };
+}
+/* S'entraîner : 1 XP par carte (ne touche pas à la maîtrise). Même plafond du jour que les révisions en plus. v454 : l'XP va dans le registre synchronisé. */
+function xpQuiz(c){
+  const st = xpJourLire(), au = xpAutres(), key = 'q' + c.id, ent = st.k[key] || (st.k[key] = { n: 0 });
+  ent.n++;
+  const passe = ent.n + (au.k[key] || 0);
+  const rep = passe <= XP_CFG.REPETITION.length ? XP_CFG.REPETITION[passe - 1] : 0;
+  const xp = Math.min(XP_CFG.BASE_QUIZ * rep * (c.ecrite === true ? XP_CFG.X_ECRIRE : 1), xpResteDuJour(st)) * xpMultSerie();
+  st.ex = (st.ex || 0) + xp;
+  xpAjoute(xp);
+  xpJourSauver(st);
+}
+/* Bonus de fin de séance (appelé une seule fois par ppSeanceFin). Retourne les XP de bonus. */
+function xpBonusFinSeance(s){
+  const st = xpJourLire(), au = xpAutres(), R = XP_CFG; let b = 0;
+  const lf = Math.max(st.lf || 0, au.lf);   /* v454 : fin de la dernière séance, tous appareils */
+  if(s.terminee) b += R.BONUS_FIN_SEANCE;
+  if(!st.s2 && !au.s2 && lf && s.t0 && (s.t0 - lf) >= R.ECART_2E_SEANCE_H * 3600000){ b += R.BONUS_2E_SEANCE; st.s2 = 1; }
+  st.lf = Date.now(); xpJourSauver(st);
+  return b;
+}
+/* Ce que montre la carte Maîtrise : niveau, XP du jour, record, semaine / semaine dernière. v454 : tout vient du registre synchronisé (mêmes chiffres sur tous les appareils). */
+function xpAffichage(){
+  const s = xpSyncLire(), today = todayStr();
+  const jour = d => xpJourTotal(s, d);
+  const auj = Math.round(jour(today));
+  let sem = jour(today), prec = 0;
+  for(let k = 1; k <= 6; k++) sem += jour(addDays(today, -k));
+  for(let k = 7; k <= 13; k++) prec += jour(addDays(today, -k));
+  return { ...xpNiveau(xpTotal(s)), auj, record: Math.max(s.r, auj), sem: Math.round(sem), prec: Math.round(prec) };
+}
+function xpFmt(n){ n = Math.round(+n || 0); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'); }
+function xpCarteHtml(){
+  if(!XP_ACTIF) return '';
+  const x = xpAffichage(), en = ppLangueEn();
+  const l1 = en ? 'Lvl ' + x.niv : 'Niv. ' + x.niv, l2 = x.auj > 0 ? '+' + xpFmt(x.auj) + (en ? ' XP today' : ' XP aujourd\u2019hui') : (en ? 'No XP yet today' : 'Pas encore d\u2019XP aujourd\u2019hui');
+  const bas = x.record > 0 ? (en ? 'Best day ' : 'Record ') + xpFmt(x.record) + ' \u00b7 ' + (en ? 'this week ' : 'cette semaine ') + xpFmt(x.sem) + (x.prec > 0 ? ' (' + (en ? 'last ' : 'préc. ') + xpFmt(x.prec) + ')' : '') : '';
+  return `<div class="pp-mxp"><div class="pp-mxl"><b>${l1}</b><span>${l2}</span></div><div class="pp-mxb"><u style="width:${x.pct}%"></u></div>${bas ? `<p class="pp-mxs">${bas}</p>` : ''}</div>`;
+}
+/* Bilan de fin de séance : l'XP gagnée + la barre de niveau, avec UNE phrase volontairement vague (pas la formule : on ne veut pas qu'on « joue » le système). */
+function xpBilanPhrase(i){
+  const en = ppLangueEn(), e = (i && i.ev) || {};
+  if(e.coriace > 0) return en ? 'Some stubborn cards gave way.' : 'Des cartes tenaces ont cédé.';
+  if(e.palier > 0) return en ? 'Some cards moved up a notch.' : 'Des cartes ont passé un cap.';
+  if(e.rattrapee > 0) return en ? 'Missed cards are back on track.' : 'Des cartes ratées sont rattrapées.';
+  if(i && i.diff > 0) return en ? 'You worked on tricky cards: that is what moves things.' : 'Tu as travaillé des cartes difficiles : c’est ça qui fait avancer.';
+  return en ? 'A solid session.' : 'Une bonne séance.';
+}
+function xpBilanHtml(b){
+  if(!XP_ACTIF || !b || !b.xp || !(b.xp.x > 0)) return '';
+  const en = ppLangueEn(), i = b.xp, tot = xpTotal(), av = xpNiveau(Math.max(0, tot - i.x)), ap = xpNiveau(tot), monte = ap.niv > av.niv;
+  const lab = n => (en ? 'Lvl ' : 'Niv. ') + n;
+  return `<div class="pp-xpb" data-x="${Math.round(i.x)}" data-monte="${monte ? 1 : 0}" data-p0="${av.pct}" data-p1="${monte ? 100 : ap.pct}" data-p2="${ap.pct}" data-l2="${lab(ap.niv)}"><div class="pp-xpt"><b class="pp-xpn">+${xpFmt(i.x)}</b><span>XP</span><span class="pp-xpv">${lab(monte ? av.niv : ap.niv)}</span></div><div class="pp-mxb"><u style="width:${av.pct}%"></u></div><p class="pp-xps">${xpBilanPhrase(i)}</p></div>`;
+}
+if(typeof module !== 'undefined') module.exports = Object.assign(module.exports || {}, { XP_CFG, xpCarte, xpNiveau, xpControleMult, xpSyncFusion, xpSyncNettoyer, xpEvenement, xpBilanPhrase });
+/* === XP v453 fin === */
+
+/* === Retour visuel v454 ===
+   Sobre : pendant la séance, aucun chiffre ni texte. Les moments forts se voient sur la carte qui arrive (reflet, coche, relief qui s'éclaire) ;
+   les chiffres sont au bilan de fin. Même retour quel que soit le bouton appuyé : seul le moment fort (voir xpEvenement) déclenche quelque chose. */
+let ppCue = '';
+function ppCueArmer(evt){ ppCue = evt || ''; }
+function ppCueChaleurRaz(){ try{ document.documentElement.style.removeProperty('--pp-ch'); }catch(e){} }
+/* Le relief orange de la carte se réchauffe très légèrement quand la séance avance bien (mélange de critères : moments forts, maîtrisées, volume). */
+function ppCueChaleur(){
+  try{
+    const ev = sessionEvt.coriace + sessionEvt.palier + sessionEvt.rattrapee;
+    document.documentElement.style.setProperty('--pp-ch', String(Math.min(35, ev * 5 + sessionMastered * 3 + Math.floor(sessionReviewed / 8) * 2)));
+  }catch(e){}
+}
+function ppCueJoue(){
+  const evt = ppCue; ppCue = '';
+  if(!XP_ACTIF) return;
+  ppCueChaleur();
+  if(!evt) return;
+  try{
+    const sc = document.querySelector('.pp-card'); if(!sc) return;
+    const cl = ['pp-cue', evt === 'rattrapee' ? 'pp-cue-r' : 'pp-cue-p', 'pp-cue-v' + (1 + Math.floor(Math.random() * 3))];
+    if(evt === 'coriace') cl.push('pp-cue-c');
+    cl.forEach(x => sc.classList.add(x));
+    sc.classList.add('pp-cue-sh');
+    if(evt !== 'rattrapee') haptique([10, 50, 14]);
+    setTimeout(() => { sc.classList.remove('pp-cue-sh'); }, 420);
+    setTimeout(() => { cl.forEach(x => sc.classList.remove(x)); }, 1100);
+  }catch(e){}
+}
+/* Bilan : le nombre monte, la barre se remplit ; une montée de niveau remplit la barre jusqu'au bout puis repart du bas. */
+function ppXpBilanAnime(){
+  try{
+    const b = document.querySelector('.pp-xpb'); if(!b) return;
+    const n = +b.dataset.x, bar = b.querySelector('.pp-mxb u'), num = b.querySelector('.pp-xpn'), niv = b.querySelector('.pp-xpv');
+    const fin = () => { num.textContent = '+' + xpFmt(n); };
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches){ bar.style.width = b.dataset.p2 + '%'; niv.textContent = b.dataset.l2; return; }
+    const dur = Math.min(1400, 500 + n * 4), t0 = performance.now();
+    const pas = t => { const k = Math.min(1, (t - t0) / dur); num.textContent = '+' + xpFmt(Math.round(n * (1 - Math.pow(1 - k, 3)))); if(k < 1) requestAnimationFrame(pas); else fin(); };
+    num.textContent = '+0'; requestAnimationFrame(pas);
+    setTimeout(() => { bar.style.width = b.dataset.p1 + '%'; }, 250);
+    if(b.dataset.monte === '1') setTimeout(() => {
+      bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = ''; bar.style.width = b.dataset.p2 + '%';
+      niv.textContent = b.dataset.l2; b.classList.add('monte'); haptique([12, 60, 18]);
+    }, 1550);
+  }catch(e){}
+}
+/* === fin retour visuel === */
+
 function answer(niveau, opts){
   if(carteEnSortie) return;
   const c = queue[currentIndex];
@@ -12257,16 +12967,27 @@ function answer(niveau, opts){
   // v362 : un jugement par jour. Le journal est lu AVANT d'y ajouter la réponse en cours.
   const jourJuge = todayStr();
   const jrCarte = journalCarteDuJour(c.id, jourJuge);
-  const jug = jugementDuJour(c, niveau, estRappel, jrCarte, jourJuge);
+  let jug = jugementDuJour(c, niveau, estRappel, jrCarte, jourJuge);
+  /* v452 (étape 5) : maîtrise à crédit, derrière MAITRISE_ACTIF (false = v451 exact). Un rappel léger réussi reste sans effet. */
+  const prevDerniereComptee = c.derniereComptee || null;
+  const prevNiveauPerdu = (c.niveauPerdu === undefined) ? null : c.niveauPerdu;
+  let mj = null, progresReponse = 0;
+  const tMaitrise = Date.now(), niveauAvant = MAITRISE_ACTIF ? niveauReel(c, tMaitrise) : 0;
+  if(MAITRISE_ACTIF && !rappelLeger){
+    mj = appliquerMaitrise(c, niveau, { today: jourJuge, maintenantMs: tMaitrise, journal: journalEntreesCarte(c.id), journalPlein: jrCarte.plein, j: jrCarte, estRappel });
+    progresReponse = gainNiveau((prevNiveauPerdu !== null && prevNiveauPerdu > niveauAvant) ? prevNiveauPerdu : niveauAvant, niveauReel(c, tMaitrise));   /* v452 (7a) : gain brut de cette réponse ; regagner un niveau perdu (trou rebouché) n'est pas un gain : le recul n'a jamais été affiché */
+    sessionProgress += progresReponse;
+    jug = { sansEffet: !mj.resultat.comptee, e1: mj.resultat.raison === 'e1', raison: mj.resultat.raison };
+  }
   const sansEffet = jug.sansEffet;   // la carte ne change pas (rappel léger, réponse déjà comptée aujourd'hui, garde d'espacement)
-  const palier = sansEffet ? (c.palier || 0) : jug.e1 ? 1 : nextPalier(c, niveau, { echecDejaCompte: R1_ACTIF && jrCarte.aEchec });
+  const palier = mj ? mj.resultat.palier : sansEffet ? (c.palier || 0) : jug.e1 ? 1 : nextPalier(c, niveau, { echecDejaCompte: R1_ACTIF && jrCarte.aEchec });
   if(!sansEffet && !jug.e1) majFacilite(c, niveau);
   const intervals = getIntervalsForMatiere(c.matiere);
   // Facilité : ajuste la durée du palier obtenu. Quand les intervalles sont déjà
   // comprimés par un contrôle proche, on ne l'allonge jamais (seulement raccourci).
   let coefFacilite = facilitePour(c);
   if(intervals !== INTERVALS && coefFacilite > 1) coefFacilite = 1;
-  const joursPalier = plafonnerJoursParEcart(Math.max(1, Math.round(intervals[palier] * coefFacilite)), prevDerniereRevision, jourJuge, jug.raison === 'remontee' ? (Date.now() - Date.parse(c.derniereModification || '')) / 86400000 : 0);   // v363 : jamais plus de 3 × le temps réellement écoulé (v420 : en jours fractionnaires après une remontée le même jour)
+  const joursPalier = plafonnerJoursParEcart(Math.max(1, Math.round(intervals[palier] * coefFacilite)), prevDerniereRevision, jourJuge, jug.raison === 'remontee' ? (Date.now() - Date.parse((mj && prevDerniereComptee) || c.derniereModification || '')) / 86400000 : 0);   // v363 : jamais plus de 3 × le temps réellement écoulé (v420 : en jours fractionnaires après une remontée le même jour)
   /* "Difficile" et "Pas su" : on veut revoir la carte plus tard dans CETTE
      session (via réinsertion ci-dessous) ET qu'elle redevienne due dès demain
      si elle n'est pas revue aujourd'hui — pas dans 7/14/30 jours comme le
@@ -12282,7 +13003,7 @@ function answer(niveau, opts){
   const prochaineRevision = dateInchangee ? c.prochaineRevision : ((ECHEC_TOUJOURS_DEMAIN && niveau !== 'vert') ? prochaineRevisionBrute : plafonnerDateRevision(c.matiere, prochaineRevisionBrute, dateControleReponse, c.id));   // v364 : un raté revient toujours demain
   const derniereRevision = dateInchangee ? c.derniereRevision : todayStr();
   const prevDerniereModification = c.derniereModification || null;
-  const derniereModification = sansEffet ? c.derniereModification : new Date().toISOString();
+  const derniereModification = (sansEffet && !(mj && maitriseAChange(mj, c))) ? c.derniereModification : new Date().toISOString();   // v452 : un changement de crédit etc. compte aussi (synchro)
   c.palier = palier;
   c.prochaineRevision = prochaineRevision;
   c.derniereRevision = derniereRevision;
@@ -12291,7 +13012,7 @@ function answer(niveau, opts){
   const dtSeance = ppSeanceTick();
   sessionMoodCounts[niveau] = (sessionMoodCounts[niveau] || 0) + 1;
   const nowMastered = (palier || 0) >= MASTERED_PALIER;
-  const becameMastered = nowMastered && !prevMastered;
+  const becameMastered = mj ? estNouvelleMaitrise({ palier: prevPalier, niveauPerdu: prevNiveauPerdu }, { palier }) : (nowMastered && !prevMastered);   // v452 : revenir à un niveau perdu maîtrisé n'est pas une nouvelle maîtrise
   if(becameMastered) sessionMastered++;
   const wasNewSessionError = niveau !== 'vert' && !sessionErrors.some(e => e.id === c.id);
   if(wasNewSessionError) sessionErrors.push(c);
@@ -12300,9 +13021,10 @@ function answer(niveau, opts){
   ['cartes-streak', 'lissage-marqueur-retard', 'cartes-stats-extra'].forEach(k => { try{ prevSerie[k] = localStorage.getItem(k); }catch(e){ prevSerie[k] = null; } });
   bumpStreak();
   ppStatBump();
-  if(becameMastered) ppSaisonAjout(1);   // v431 : compteur de la saison (trimestre) ; « Annuler » le remet via le bloc stats-extra sauvegardé plus haut
+  ppRangCompte(c, prevPalier || 0, palier || 0, becameMastered, dateControleReponse);   // v431/v453 : points de la saison (1 par carte maîtrisée, ½ si « prête pour le contrôle ») ; « Annuler » remet le bloc stats-extra sauvegardé plus haut
+  if(XP_ACTIF){ try{ const xr = xpApresReponse({ c, niveau, jourJuge, prevPalier, palier, prevDifficultes, prevNiveauPerdu, prevProchaineRevision, prevDerniereRevision, becameMastered, dateControle: dateControleReponse }); ppCueArmer(xr && xr.evt); }catch(e){} }   // v453 : XP (décoration) ; v454 : moment fort → retour visuel sur la carte suivante
   ppJournalAjoute(c.id, niveau);   // journal local du bilan de la semaine (synchronisé depuis la v224 ; exporté et restauré depuis la v223)
-  if(!sansEffet) saveLocalOverlay(c.id, { palier, prochaineRevision, derniereRevision, derniereModification, difficultes: c.difficultes || 0, facileConsecutif: c.facileConsecutif || 0, facilite: c.facilite });
+  if(!sansEffet || mj) saveLocalOverlay(c.id, { palier, prochaineRevision, derniereRevision, derniereModification, difficultes: c.difficultes || 0, facileConsecutif: c.facileConsecutif || 0, facilite: c.facilite, ...(mj ? maitriseNettoyerChamps(c) : {}) });
 
   // Rappel du lendemain : carte vue pour la 1re fois, réussie du 1er coup, ~1 sur 3
   // au hasard (max 5/jour) => elle reviendra demain en rappel léger.
@@ -12333,7 +13055,7 @@ function answer(niveau, opts){
   // Sens vu pour cette carte (⇄) : gardé pour qu'un "Annuler" la remette dans
   // le MÊME sens (sinon le tirage serait refait et l'écran changerait).
   const sensVu = (sensAffiche.cle === 'etude:' + currentIndex + ':' + c.id) ? sensAffiche.inverse : false;
-  lastAnswer = { cardId: c.id, index: currentIndex, journal: true, dt: dtSeance, sensVu, sansEffet, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute, prevSerie };
+  lastAnswer = { cardId: c.id, index: currentIndex, journal: true, dt: dtSeance, sensVu, sansEffet, prevPalier, prevProchaineRevision, prevDerniereRevision, prevDifficultes, prevFacileConsecutif, prevFacilite, prevDerniereModification, reinsertedAt, wasNewSessionError, becameMastered, niveau, estRappel, lendemainAjoute, prevSerie, maitrise: mj, progres: progresReponse };
   recalcPlanning();
   saveLocalPlanning();
   planifierSyncDiffere();
@@ -12345,6 +13067,7 @@ function answer(niveau, opts){
     justAdvanced = true;
     renderStudy();
     renderStreak();
+    ppCueJoue();   // v454 : reflet / coche sur la carte qui arrive (seulement après un moment fort)
   });
 }
 
@@ -12379,6 +13102,7 @@ function undoLastAnswer(){
   } else ppStatUndo();
   const c = queue[lastAnswer.index];
   if(c && c.id === lastAnswer.cardId){
+    if(lastAnswer.maitrise){ annulerMaitrise(c, lastAnswer.maitrise); c.derniereModification = lastAnswer.prevDerniereModification; }   // v452 (étape 5) : les 7 champs de maîtrise reviennent exactement comme avant
     if(!lastAnswer.sansEffet){   // v362 : une réponse sans effet n'a rien changé à la carte, il n'y a rien à restaurer
       c.palier = lastAnswer.prevPalier;
       c.prochaineRevision = lastAnswer.prevProchaineRevision;
@@ -12395,7 +13119,7 @@ function undoLastAnswer(){
     // Défait aussi le compteur de réinsertions pour cette carte, sinon un
     // undo/refaire répété grillerait le plafond MAX_REINSERTIONS sans raison.
     if(ppEstObjet(c.reinsertionsSession) && lastAnswer.niveau && c.reinsertionsSession[lastAnswer.niveau] > 0) c.reinsertionsSession[lastAnswer.niveau]--;
-    if(!lastAnswer.sansEffet) saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision: c.prochaineRevision, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification, difficultes: c.difficultes, facileConsecutif: c.facileConsecutif, facilite: c.facilite });
+    if(!lastAnswer.sansEffet || lastAnswer.maitrise) saveLocalOverlay(c.id, { palier: c.palier, prochaineRevision: c.prochaineRevision, derniereRevision: c.derniereRevision, derniereModification: c.derniereModification, difficultes: c.difficultes, facileConsecutif: c.facileConsecutif, facilite: c.facilite, ...(lastAnswer.maitrise ? maitriseNettoyerChamps(c) : {}) });
     // Ne retire de sessionErrors que si cette réponse est ce qui l'y avait ajoutée
     // (elle n'y figurait pas avant, cf. prevDifficultes) : sinon une carte déjà
     // en erreur plus tôt dans la session resterait à tort marquée "à revoir".
@@ -12420,6 +13144,7 @@ function undoLastAnswer(){
   if(lastAnswer.dt) ppSeance.ms = Math.max(0, ppSeance.ms - lastAnswer.dt);
   if(lastAnswer.niveau) sessionMoodCounts[lastAnswer.niveau] = Math.max(0, (sessionMoodCounts[lastAnswer.niveau] || 0) - 1);
   if(lastAnswer.becameMastered) sessionMastered = Math.max(0, sessionMastered - 1);
+  if(lastAnswer.progres) sessionProgress = Math.max(0, sessionProgress - lastAnswer.progres);   /* v452 (7a) */
   flipped = true;
   lastAnswer = null;
   recalcPlanning();
@@ -12581,6 +13306,7 @@ function quizAnswer(niveau, opts){
   // point central qui distingue ce mode de "Réviser"/"Réviser tout" : un
   // entraînement sert à se tester sans faire avancer ni reculer la maîtrise.
   quizMoodCounts[niveau] = (quizMoodCounts[niveau] || 0) + 1;
+  if(XP_ACTIF){ try{ xpQuiz(c); }catch(e){} }   // v453 : 1 XP par carte, sans toucher à la maîtrise
   ppMood.last = niveau;
   sortirCarte(niveau, opts, () => {
     quizIndex++;
@@ -13007,7 +13733,8 @@ function ppFicheReset(id){
   const derniereModification = new Date().toISOString();
   c.palier = 0; c.derniereRevision = null; c.prochaineRevision = prochaineRevision;
   c.difficultes = 0; c.facileConsecutif = 0; c.facilite = 1; c.derniereModification = derniereModification;
-  saveLocalOverlay(id, { palier: 0, prochaineRevision, derniereRevision: null, derniereModification, difficultes: 0, facileConsecutif: 0, facilite: 1 });
+  c.credit = 0; c.derniereComptee = null; c.derniereReponse = null; c.niveauPerdu = null;   /* v452 (étape 4) : la maîtrise repart de zéro */
+  saveLocalOverlay(id, { palier: 0, prochaineRevision, derniereRevision: null, derniereModification, difficultes: 0, facileConsecutif: 0, facilite: 1, credit: 0, derniereComptee: null, derniereReponse: null, niveauPerdu: null });
   ppSheetClose();
   recalcPlanning();
   saveLocalPlanning();
@@ -14380,7 +15107,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v450';
+const PP_APP_VERSION = 'v454';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -17560,6 +18287,7 @@ function construireDonneesProgression(options){
     derniereModification: c.derniereModification || null,
     difficultes: c.difficultes || 0,
     facileConsecutif: c.facileConsecutif || 0,
+    ...maitriseNettoyerChamps(c),   /* v452 (étape 4) : credit, derniereComptee, derniereReponse, niveauPerdu */
     facilite: facilitePour(c),
     inversible: c.inversible === true,
     ecrite: c.ecrite === true,
@@ -17609,6 +18337,7 @@ function construireDonneesProgression(options){
     ...((options && options.pourSync) ? pcSyncHistEnvoi() : {
       statsExtra: ppStatExtra(),
       seances: ppSeancesLire(),
+      ...(function(){ try{ const xs = xpSyncPourEnvoi(); return xs ? { xpSync: xs } : {}; }catch(e){ return {}; } })(),   // v454 : registre d'XP
       reglages: ppLireReglagesSauvegarde(),
       ...pcExportProf()   // v223 : carnet, historique des conversations (index + corps) et journal des réponses
     })
@@ -17681,7 +18410,10 @@ function ppRestaurerAnnexes(a){
       total: Math.max(loc.total, Math.max(0, Math.floor(+a.statsExtra.total) || 0)),
       temps: Math.max(loc.temps, Math.max(0, Math.floor(+a.statsExtra.temps) || 0)),
       passees: (() => { const v = new Set(loc.passees.map(x => x.m)); return loc.passees.concat(ppStatPasseesNettoyer(a.statsExtra.passees).filter(x => !v.has(x.m))).slice(-60); })(),
-      saison: ppSaisonFusion(loc.saison, ppSaisonNettoyer(a.statsExtra.saison))
+      saison: ppSaisonFusion(loc.saison, ppSaisonNettoyer(a.statsExtra.saison)),
+      xp: Math.max(loc.xp || 0, Math.max(0, Math.floor(+a.statsExtra.xp) || 0)),   /* v453 : import = le plus grand total (jamais d'addition, sinon double comptage) */
+      xpRecord: Math.max(loc.xpRecord || 0, Math.max(0, Math.floor(+a.statsExtra.xpRecord) || 0)),
+      xpFrac: loc.xpFrac || 0
     });
   }
   if(Array.isArray(a.seances)){
@@ -17695,6 +18427,7 @@ function ppRestaurerAnnexes(a){
       ppEcrire(PP_SEANCES_KEY, JSON.stringify(fusion));
     }
   }
+  if(ppEstObjet(a.xpSync)){ try{ xpSyncRecevoir(a.xpSync); }catch(e){} }   // v454 : fusion par maximum, jamais d'addition
   const r = a.reglages;
   if(ppEstObjet(r)){
     const absent = k => { try{ return localStorage.getItem(k) === null; }catch(e){ return false; } };
@@ -17773,12 +18506,13 @@ function importerProgression(data){
     const difficultes = Number.isFinite(item.difficultes) ? Math.max(0, item.difficultes) : 0;
     const facileConsecutif = Number.isFinite(item.facileConsecutif) ? Math.max(0, item.facileConsecutif) : 0;
     const facilite = facilitePour({ facilite: item.facilite }); // absent (ancien export) => 1
+    const maitrise = maitriseNettoyerChamps(item);   // v452 (étape 4) : valeurs hors bornes / invalides ramenées au neutre
     const inversible = item.inversible === true, ecrite = item.ecrite === true, pausee = item.pausee === true;
     const imgs = ppImgPatch(item);
     // Absent sur un vieux payload version 2 (ou export sans champ) : null,
     // traité comme "très ancien" partout où c'est comparé (voir fusionnerDepuisSync).
     const derniereModification = typeof item.derniereModification === 'string' ? item.derniereModification : null;
-    items.push({ id: (item.id && /^[\w.-]{1,64}$/.test(String(item.id))) ? String(item.id) : null, matiere, question, reponse, palier, prochaineRevision, derniereRevision, derniereModification, difficultes, facileConsecutif, facilite, inversible, ecrite, pausee, ...imgs });
+    items.push({ id: (item.id && /^[\w.-]{1,64}$/.test(String(item.id))) ? String(item.id) : null, matiere, question, reponse, palier, prochaineRevision, derniereRevision, derniereModification, difficultes, facileConsecutif, ...maitrise, facilite, inversible, ecrite, pausee, ...imgs });
   }
   if(items.length === 0){
     // Une sauvegarde peut ne contenir que des matières vides (aucune carte) : on les restaure quand même.
@@ -18340,6 +19074,7 @@ function finaliserImport(items, renommages){
       derniereModification: it.derniereModification || new Date().toISOString(),
       difficultes: it.difficultes || 0,
       facileConsecutif: it.facileConsecutif || 0,
+      ...maitriseNettoyerChamps(it),   // v452 (étape 4)
       facilite: facilitePour(it),
       inversible: it.inversible === true,
       ecrite: it.ecrite === true,
@@ -18358,6 +19093,7 @@ function finaliserImport(items, renommages){
       derniereModification: carte.derniereModification,
       difficultes: carte.difficultes,
       facileConsecutif: carte.facileConsecutif,
+      credit: carte.credit, derniereComptee: carte.derniereComptee, derniereReponse: carte.derniereReponse, niveauPerdu: carte.niveauPerdu,   // v452 (étape 4)
       facilite: carte.facilite,
       inversible: carte.inversible,
       ecrite: carte.ecrite,
@@ -18774,6 +19510,7 @@ function fusionnerDepuisSync(data){
       derniereModification: derniereModificationRecue, difficultes, facileConsecutif, inversible, ecrite,
       imgQRetiree: retQ, imgRRetiree: retR
     };
+    Object.assign(patch, maitriseChampsSync(item, localCarte));   /* v452 (étape 6) : credit, derniereComptee, derniereReponse, niveauPerdu voyagent avec la carte, validés à l'arrivée */
     if(faciliteRecue !== null) patch.facilite = faciliteRecue;
     if(typeof item.pausee === 'boolean') patch.pausee = item.pausee;   // absent (autre appareil pas à jour) : on garde la pause locale
 
@@ -20182,17 +20919,17 @@ function ppStatExtra(){
     if(o && typeof o === 'object'){
       /* v428 : temps actif cumulé (ms). Absent des anciennes sauvegardes : on part de la somme des séances déjà enregistrées. */
       const temps = Number.isFinite(+o.temps) && o.temps !== null ? Math.max(0, Math.floor(+o.temps)) : ppSeancesLire().reduce((a, x) => a + x.ms, 0);
-      return { record: Math.max(0, Math.floor(+o.record) || 0), total: Math.max(0, Math.floor(+o.total) || 0), temps, passees: ppStatPasseesNettoyer(o.passees), saison: ppSaisonNettoyer(o.saison) };
+      return { record: Math.max(0, Math.floor(+o.record) || 0), total: Math.max(0, Math.floor(+o.total) || 0), temps, passees: ppStatPasseesNettoyer(o.passees), saison: ppSaisonNettoyer(o.saison), xp: Math.max(0, Math.floor(+o.xp) || 0), xpRecord: Math.max(0, Math.floor(+o.xpRecord) || 0), xpFrac: Math.max(0, Math.min(0.999, +o.xpFrac || 0)) };
     }
   }catch(err){}
-  return { record: 0, total: 0, temps: 0, passees: [], saison: null };
+  return { record: 0, total: 0, temps: 0, passees: [], saison: null, xp: 0, xpRecord: 0, xpFrac: 0 };
 }
 /* v431 : SAISON (trimestre) du rang de maîtrise. cartes-stats-extra.saison = { id: '2026-T4', n: cartes maîtrisées ce trimestre, v: [{ id, i }] = meilleur rang des trimestres passés (vitrine) }.
    Compteur : +1 quand une carte devient maîtrisée (annulable : « Annuler » remet tout le bloc stats-extra comme avant). 1re fois : on reprend les maîtrisées des séances du trimestre. */
 const PP_SAISON_RE = /^\d{4}-T[1-4]$/;
 function ppSaisonNettoyer(x){
   if(!x || typeof x !== 'object' || !PP_SAISON_RE.test(String(x.id))) return null;
-  return { id: x.id, n: Math.max(0, Math.floor(+x.n) || 0), v: (Array.isArray(x.v) ? x.v : []).filter(y => y && PP_SAISON_RE.test(String(y.id)) && Number.isFinite(+y.i)).map(y => ({ id: y.id, i: Math.max(0, Math.min(PP_RANGS.length - 1, Math.floor(+y.i))) })).slice(-8) };
+  return { id: x.id, n: Math.max(0, Math.round((+x.n || 0) * 2) / 2), pr: (Array.isArray(x.pr) ? x.pr : []).filter(y => typeof y === 'string' && y.length < 80).slice(-2500), v: (Array.isArray(x.v) ? x.v : []).filter(y => y && PP_SAISON_RE.test(String(y.id)) && Number.isFinite(+y.i)).map(y => ({ id: y.id, i: Math.max(0, Math.min(PP_RANGS.length - 1, Math.floor(+y.i))) })).slice(-8) };
 }
 function ppSaisonFusion(a, b){
   if(!a) return b; if(!b) return a;
@@ -20200,20 +20937,32 @@ function ppSaisonFusion(a, b){
   const vit = new Map(); [...an.v, ...nv.v].forEach(y => { const e = vit.get(y.id); if(!e || y.i > e.i) vit.set(y.id, y); });
   if(a.id !== b.id && an.n > 0 && !vit.has(an.id)) vit.set(an.id, { id: an.id, i: ppRangMaitrise(an.n).i });
   vit.delete(nv.id);
-  return { id: nv.id, n: a.id === b.id ? Math.max(a.n, b.n) : nv.n, v: [...vit.values()].sort((x, y) => x.id < y.id ? -1 : 1).slice(-8) };
+  return { id: nv.id, n: a.id === b.id ? Math.max(a.n, b.n) : nv.n, pr: a.id === b.id ? [...new Set([...(a.pr || []), ...(b.pr || [])])].slice(-2500) : (nv.pr || []), v: [...vit.values()].sort((x, y) => x.id < y.id ? -1 : 1).slice(-8) };
 }
 function ppSaisonLire(ex, persist){
   ex = ex || ppStatExtra();
   const id = ppSaisonId();
   let s = ex.saison, change = false;
-  if(!s){ const deb = ppSaisonDebut(id); s = { id, n: ppSeancesLire().filter(x => x.d >= deb).reduce((a, x) => a + x.m, 0), v: [] }; change = true; }
-  else if(s.id < id){ s = { id, n: 0, v: s.n > 0 ? s.v.concat([{ id: s.id, i: ppRangMaitrise(s.n).i }]).slice(-8) : s.v }; change = true; }
+  if(!s){ const deb = ppSaisonDebut(id); s = { id, n: ppSeancesLire().filter(x => x.d >= deb).reduce((a, x) => a + x.m, 0), pr: [], v: [] }; change = true; }
+  else if(s.id < id){ s = { id, n: 0, pr: [], v: s.n > 0 ? s.v.concat([{ id: s.id, i: ppRangMaitrise(s.n).i }]).slice(-8) : s.v }; change = true; }
   if(change && persist){ ex.saison = s; ppStatSave(ex); }
   return s;
 }
 function ppSaisonAjout(d){
   const ex = ppStatExtra(), s = ppSaisonLire(ex);
   s.n = Math.max(0, s.n + d); ex.saison = s; ppStatSave(ex);
+}
+/* v453 : points de la saison. Maîtrisée (palier 4, nouvelle) = 1 point en tout ; « prête pour le contrôle » (palier 3 atteint, contrôle dans 0 à 10 jours) = ½ point, une seule fois par carte et par saison (liste `pr`). */
+function ppRangCompte(c, palAv, palAp, devientMaitrisee, dateControle){
+  let d = 0, ex = null, s = null;
+  const lire = () => { if(!s){ ex = ppStatExtra(); s = ppSaisonLire(ex); if(!Array.isArray(s.pr)) s.pr = []; } };
+  if(!MAITRISE_ACTIF){ if(devientMaitrisee) ppSaisonAjout(1); return; }
+  if(devientMaitrisee){ lire(); const dej = s.pr.indexOf(c.id) >= 0; d = dej ? 0.5 : 1; if(!dej) s.pr.push(c.id); }
+  else if(palAp >= 3 && palAv < 3 && dateControle){
+    const j = Math.round((Date.parse(dateControle) - Date.parse(todayStr())) / 864e5);
+    if(j >= 0 && j <= 10){ lire(); if(s.pr.indexOf(c.id) < 0){ s.pr.push(c.id); d = 0.5; } }
+  }
+  if(d > 0){ s.n += d; ex.saison = s; ppStatSave(ex); }
 }
 function ppSaisonJoursRestants(id){
   const t = todayStr().split('-'), fin = new Date(+id.slice(0, 4), +id.slice(6) * 3, 0, 12), auj = new Date(+t[0], +t[1] - 1, +t[2], 12);
@@ -20244,14 +20993,25 @@ function ppStatUndo(){
 }
 
 /* ---- v160 : bilan de fin de séance + objectif du jour (données locales à l'appareil, jamais synchronisées) ----
-   `cartes-seances` = liste des 60 dernières séances { d: jour, ms: temps actif, n: cartes, v: « Facile », m: nouvelles maîtrisées, e: 1 si « Revoir les erreurs » }.
+   `cartes-seances` = liste des 60 dernières séances { d: jour, ms: temps actif, n: cartes, v: « Facile », m: nouvelles maîtrisées, e: 1 si « Revoir les erreurs », p: (v452) progression en paliers, absent = 0 }.
    Temps actif : à chaque réponse on ajoute le temps écoulé depuis la précédente, plafonné à 2 min (app laissée ouverte = pas comptée). */
 const PP_SEANCES_KEY = 'cartes-seances';
 const PP_SEANCE_MIN_MS = 5000;   /* v425 : une « séance » de moins de 5 s (rafale de réponses, 0 s) n'est pas listée dans les statistiques */
 function ppSeancesNettoyer(a){
   if(!Array.isArray(a)) return [];
   return a.filter(x => x && typeof x === 'object' && typeof x.d === 'string' && Number.isFinite(+x.n) && +x.n > 0)
-    .map(x => ({ d:x.d, ms:Math.max(0, +x.ms || 0), n:Math.floor(+x.n), v:Math.max(0, Math.floor(+x.v) || 0), m:Math.max(0, Math.floor(+x.m) || 0), e:x.e ? 1 : 0 })).slice(-60);
+    .map(x => ({ d:x.d, ms:Math.max(0, +x.ms || 0), n:Math.floor(+x.n), v:Math.max(0, Math.floor(+x.v) || 0), m:Math.max(0, Math.floor(+x.m) || 0), e:x.e ? 1 : 0, ...(ppSeanceP(x) > 0 ? { p: ppSeanceP(x) } : {}), ...(ppSeanceX(x) > 0 ? { x: ppSeanceX(x) } : {}) })).slice(-60);
+}
+/* v452 (7a) : progression de la séance en paliers (gains bruts de palier + crédit), arrondie à 0,1. Absent / invalide / négatif = 0 (anciennes séances, sauvegardes, appareils en v451). */
+/* v453 : XP de la séance (entier). Absent / invalide / négatif = 0 (anciennes séances, appareils en v451/v452). */
+function ppSeanceX(x){ const v = x && +x.x; return (Number.isFinite(v) && v > 0 && v < 1e7) ? Math.round(v) : 0; }
+function ppSeanceP(x){ const v = x && +x.p; return (Number.isFinite(v) && v > 0) ? Math.round(v * 10) / 10 : 0; }
+/* v452 (7b) : « +230 paliers » — entier dès 10, une décimale (virgule) en dessous, rien si moins de 0,1 ; « palier » au singulier seulement pour exactement 1. Retourne null (rien à afficher) ou { num: '+2,3', mot: 'paliers' }. */
+function ppPaliersFmt(p){
+  const v = +p; if(!Number.isFinite(v) || v <= 0) return null;
+  const r = v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
+  if(!(r > 0)) return null;
+  return { num: '+' + (r >= 10 ? String(r) : String(r).replace('.', ',')), mot: r === 1 ? 'palier' : 'paliers' };
 }
 function ppSeancesLire(){
   try{ return ppSeancesNettoyer(JSON.parse(localStorage.getItem(PP_SEANCES_KEY) || '[]')); }
@@ -20273,10 +21033,13 @@ function ppSeanceFin(){
   const liste = ppSeancesLire();
   const prev = studyMode === 'errors' ? null : ([...liste].reverse().find(x => !x.e && x.n >= 5) || null);
   const e = { d: todayStr(), ms: Math.round(s.ms), n: sessionReviewed, v: sessionMoodCounts.vert || 0, m: sessionMastered, e: studyMode === 'errors' ? 1 : 0 };
+  if(sessionProgress > 0 && Math.round(sessionProgress * 10) > 0) e.p = Math.round(sessionProgress * 10) / 10;   /* v452 (7a) : champ `p`, ajouté seulement s'il y a un gain ; `m` inchangé */
+  let xpInfo = null;
+  if(XP_ACTIF){ try{ const bonus = xpBonusFinSeance(s); if(bonus > 0){ sessionXp += bonus; xpAjoute(bonus); } const tot = Math.round(sessionXp); if(tot > 0){ e.x = tot; xpInfo = { x: tot, due: sessionXpInfo.due, diff: sessionXpInfo.diff, ob: sessionXpInfo.ob, ev: { ...sessionEvt } }; } }catch(err){} }   /* v453/v454 : l'XP des cartes est déjà dans le registre ; ici seulement le bonus de fin de séance */
   liste.push(e);
   ppEcrire(PP_SEANCES_KEY, JSON.stringify(liste.slice(-60)));
   { const ex = ppStatExtra(); ex.temps += Math.round(s.ms); ppStatSave(ex); }   // v428 : temps cumulé depuis le début
-  s.bilan = { e, prev, aujourdhui: liste.filter(x => x.d === e.d).reduce((a, x) => a + x.n, 0) };
+  s.bilan = { e, xp: xpInfo, prev, aujourdhui: liste.filter(x => x.d === e.d).reduce((a, x) => a + x.n, 0) };
   return s.bilan;
 }
 function ppDuree(ms){
@@ -20296,7 +21059,7 @@ function ppBilanHtml(){
     evo = d > 0 ? `<em>+${d} %</em>` : (d < 0 ? `<em class="dn">−${-d} %</em>` : `<em class="dn">=</em>`);   /* v418 : « +47 % » au lieu de « +47 pts » */
   }
   const mas = cartesPourStats().filter(c => (c.palier || 0) >= MASTERED_PALIER).length;   /* v336 */
-  return `<div class="pp-bil"><div><b>${ppDuree(e.ms)}</b><span>temps</span></div><div><b>${taux} %</b><span>réussite</span>${evo}</div><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span>${e.m > 0 ? `<em>+${e.m}</em>` : ''}</div></div>`;
+  return `<div class="pp-bil"><div><b>${ppDuree(e.ms)}</b><span>temps</span></div><div><b>${taux} %</b><span>réussite</span>${evo}</div><div><b>${mas}</b><span>maîtrisée${mas > 1 ? 's' : ''}</span>${e.m > 0 ? `<em>+${e.m}</em>` : ''}</div></div>${xpBilanHtml(b)}`;
 }
 /* Statistiques : temps et nombre de cartes des 7 derniers jours (v423 : « cartes » remplace « aujourd'hui », déjà dans la carte Aujourd'hui). */
 /* v424 : temps actif des 7 derniers jours (même calcul pour la tuile « cette semaine » et le titre « Temps par séance »). */
@@ -20584,7 +21347,10 @@ function ppStatsHtml(){
   const sais = ppSaisonLire(ex, true);
   const rg = ppRangMaitrise(sais.n);
   const debutSem = addDays(todayStr(), -6);
-  const masSem = ppSeancesLire().filter(x => x.d >= debutSem).reduce((a, x) => a + x.m, 0);   /* maîtrisées cette semaine (somme des séances) */
+  const seancesSem = ppSeancesLire().filter(x => x.d >= debutSem);
+  const masSem = seancesSem.reduce((a, x) => a + x.m, 0);   /* maîtrisées cette semaine (somme des séances) */
+  const palSem = seancesSem.reduce((a, x) => a + ppSeanceP(x), 0);   /* v452 (7b) : paliers gagnés cette semaine (somme des `p`) */
+  const surplusBarre = MAITRISE_ACTIF ? barreMaitrise(cs, Date.now()).surplus : 0;   /* v452 (7b) : cartes en route (crédit compris) ; 0 tant que le drapeau est false = barre v451 */
   /* « Nouveau rang ! » : 1re ouverture des Stats après avoir monté DANS LE MÊME trimestre (dernier rang vu gardé sur l'appareil ; rien au tout premier affichage ni au changement de trimestre). */
   const cur = sais.id + '|' + rg.i;
   let nouveau = false, ancienI = 0;
@@ -20597,7 +21363,7 @@ function ppStatsHtml(){
       else if(rg.i > vi){ nouveau = true; ancienI = Math.max(0, Math.min(PP_RANGS.length - 1, vi)); setTimeout(() => { try{ localStorage.setItem('cartes-rang-vu2', cur); }catch(e){} }, 12000); }
     }
   }catch(err){}
-  const hero = ppRangCarte({ n: sais.n, sais, jours: ppSaisonJoursRestants(sais.id), masSem, nouveau, ancienI, cur });
+  const hero = ppRangCarte({ n: sais.n, sais, jours: ppSaisonJoursRestants(sais.id), masSem, palSem, surplus: surplusBarre, nouveau, ancienI, cur });
   ppDosHtml = ppRangDos({ n: sais.n, sais, jours: ppSaisonJoursRestants(sais.id), masSem, cs, today });
   /* v419 : pourcentage du jour = cartes déjà révisées aujourd'hui / (déjà révisées + encore à voir). Mêmes définitions que l'accueil (« à réviser » = date de révision atteinte ; « faites » = révisées aujourd'hui). */
   const faites = cs.filter(c => c.derniereRevision === today).length;
@@ -20647,19 +21413,20 @@ function ppStatsHtml(){
   ${termine}</div>`;
 }
 
+/* v453 : seuils recalculés pour un rythme de 2 à 3 contrôles par semaine (simulation-rangs.js). Une carte rapporte 1 point au total : ½ quand elle est « prête pour le contrôle » (palier 3, contrôle à 10 jours ou moins), le reste (½ ou 1) quand elle devient maîtrisée. */
 /* v431 : RANGS de maîtrise = Bronze · Argent · Or · Platine · Diamant · Champion · Maître · Grand maître · Légende (9 rangs, l'échelle que tout joueur connaît).
    Le rang se calcule sur les cartes maîtrisées PENDANT LE TRIMESTRE (la « saison »). Au changement de trimestre, le meilleur rang part dans la vitrine et on repart de zéro.
    c = couleur vive · c2 = ton profond (bas du dégradé métal) · c3 = reflet clair. Plus le rang monte, plus la couleur est intense et la mise en scène lourde. */
 const PP_RANGS = [
   { n:'Bronze', s:0, c:'#e58b4b', c2:'#7d3f16', c3:'#ffc590' },
-  { n:'Argent', s:15, c:'#c3d1e2', c2:'#6d8097', c3:'#f4f8fd' },
-  { n:'Or', s:40, c:'#ffc531', c2:'#b36b00', c3:'#fff0a8' },
-  { n:'Platine', s:70, c:'#2ee9cc', c2:'#0a8c86', c3:'#c4fff4' },
-  { n:'Diamant', s:110, c:'#58ccff', c2:'#1d5fe0', c3:'#d9f4ff' },
-  { n:'Champion', s:155, c:'#b86cff', c2:'#5b21c0', c3:'#eed6ff' },
-  { n:'Maître', s:205, c:'#ff4fd8', c2:'#8a1470', c3:'#ffc7f3' },
-  { n:'Grand maître', s:255, c:'#ff3346', c2:'#8c0b1f', c3:'#ffb3bb' },
-  { n:'Légende', s:300, c:'#ffe27a', c2:'#ff9d00', c3:'#ffffff' }
+  { n:'Argent', s:30, c:'#c3d1e2', c2:'#6d8097', c3:'#f4f8fd' },
+  { n:'Or', s:75, c:'#ffc531', c2:'#b36b00', c3:'#fff0a8' },
+  { n:'Platine', s:130, c:'#2ee9cc', c2:'#0a8c86', c3:'#c4fff4' },
+  { n:'Diamant', s:195, c:'#58ccff', c2:'#1d5fe0', c3:'#d9f4ff' },
+  { n:'Champion', s:265, c:'#b86cff', c2:'#5b21c0', c3:'#eed6ff' },
+  { n:'Maître', s:340, c:'#ff4fd8', c2:'#8a1470', c3:'#ffc7f3' },
+  { n:'Grand maître', s:420, c:'#ff3346', c2:'#8c0b1f', c3:'#ffb3bb' },
+  { n:'Légende', s:510, c:'#ffe27a', c2:'#ff9d00', c3:'#ffffff' }
 ];
 const PP_RANGS_EN = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Champion', 'Master', 'Grandmaster', 'Legend'];
 const PP_RANG_MAX = PP_RANGS.length - 1;
@@ -20669,6 +21436,7 @@ function ppSaisonId(d){ d = d || (typeof todayStr === 'function' ? todayStr() : 
 function ppSaisonDebut(id){ return id.slice(0, 4) + '-' + String((+id.slice(6) - 1) * 3 + 1).padStart(2, '0') + '-01'; }
 function ppSaisonLabel(id){ return 'T' + id.slice(6) + ' ' + id.slice(0, 4); }
 
+function ppNumRang(n){ return Number.isInteger(n) ? String(n) : String(n).replace('.', ppLangueEn() ? '.' : ','); }
 function ppRangMaitrise(n){
   let i = 0;
   for(let k = 0; k < PP_RANGS.length; k++) if(n >= PP_RANGS[k].s) i = k;
@@ -20725,23 +21493,33 @@ function ppRangCarte(o){
   const rg = ppRangMaitrise(o.n), r = rg.r, nx = rg.dernier ? r : PP_RANGS[rg.i + 1];
   const lab = ppSaisonLabel(o.sais.id);
   const mnum = rg.dernier
-    ? `<div class="pp-mnum"><span><b>${o.n}</b></span></div>`
-    : `<div class="pp-mnum"><span><b>${o.n}</b> / ${rg.suivant}</span></div>`;
+    ? `<div class="pp-mnum"><span><b>${ppNumRang(o.n)}</b></span></div>`
+    : `<div class="pp-mnum"><span><b>${ppNumRang(o.n)}</b> / ${rg.suivant}</span></div>`;
   const but = rg.dernier
     ? `Sommet atteint : tu es Légende ce trimestre.`
-    : `Encore <b>${rg.reste}</b> carte${rg.reste > 1 ? 's' : ''} à maîtriser pour devenir <b style="color:${nx.c}">${nx.n}</b>`;
+    : `Encore <b>${ppNumRang(rg.reste)}</b> carte${rg.reste > 1 ? 's' : ''} à maîtriser pour devenir <b style="color:${nx.c}">${nx.n}</b>`;
   const fin = o.jours > 0 ? `Fin de saison dans ${o.jours} jour${o.jours > 1 ? 's' : ''}` : `Dernier jour de la saison`;
   const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(x => `<span style="${ppRangVars(x.i)}">${ppBadgeRang(x.i)}<em>${ppSaisonLabel(x.id)}</em></span>`).join('')}</div>` : '';
+  /* v452 (7b) : segment clair = cartes en route (surplus). La partie pleine et les textes (rang, « Encore N cartes ») restent en cartes entières. */
+  let seg = '';
+  if(!rg.dernier && Number.isFinite(o.surplus) && o.surplus > 0){
+    const plein = rg.pct, tot = Math.min(rg.reste > 0 ? 99 : 100, Math.round((o.n + o.surplus - r.s) / (rg.suivant - r.s) * 100));
+    if(Number.isFinite(tot) && tot - plein >= 1) seg = `<s aria-hidden="true" style="left:${plein}%;width:${tot - plein}%"></s>`;
+  }
+  const pal = ppPaliersFmt(o.palSem);
+  const haut = (o.masSem > 0 || pal)
+    ? `<div class="pp-mpct">${o.masSem > 0 ? `<b>+${o.masSem}</b><span>maîtrisée${o.masSem > 1 ? 's' : ''} cette semaine</span>${pal ? `<span class="pp-mpal">${pal.num} ${pal.mot}</span>` : ''}` : `<b>${pal.num}</b><span>${pal.mot} cette semaine</span>`}</div>`
+    : '';
   const calque = o.nouveau ? `<div class="pp-rs" style="--cn:${r.c};--c3n:${r.c3};--co:${PP_RANGS[o.ancienI].c}"></div>` : '';
   return `<div class="pp-sgM"><div class="pp-mst r${rg.i}${o.nouveau ? ' pp-ranim' : ''}" style="${ppRangVars(rg.i)}" role="button" tabindex="0" aria-label="Maîtrise" data-cur="${o.cur}" data-i="${rg.i}" data-o="${o.ancienI || 0}" data-n="${o.n}">
     ${rg.i >= 7 ? ppEmbers(rg.i === PP_RANG_MAX ? 18 : 9) : ''}
     <div class="pp-mtop">${ppBadgeBloc(rg.i)}
     <div class="pp-minfo"><small>Saison ${lab}</small><b class="pp-rn">${r.n}</b></div>
-    ${o.masSem > 0 ? `<div class="pp-mpct"><b>+${o.masSem}</b><span>maîtrisée${o.masSem > 1 ? 's' : ''} cette semaine</span></div>` : ''}</div>
+    ${haut}</div>
     ${mnum}
-    <div class="pp-mrow"><div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
+    <div class="pp-mrow"><div class="pp-mbar"><u style="width:${rg.pct}%"></u>${seg}</div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
     <p class="pp-mgoal">${but}</p>
-    <p class="pp-mseas">${fin}</p>${vit}<i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i>${calque}</div></div>`;
+    <p class="pp-mseas">${fin}</p>${xpCarteHtml()}${vit}<i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i>${calque}</div></div>`;
 }
 
 /* ---- v431 : moteur de particules (canvas) pour la séquence de montée de rang ---- */
@@ -21020,8 +21798,12 @@ function ppRangDos(o){
 }
 /* retournement : la carte pivote jusqu'à la tranche (140 ms), le contenu change, elle finit de pivoter (190 ms) */
 function ppRangFlip(el){
-  if(!el || el._flip || el.classList.contains('pp-ranim') || !ppDosHtml) return;
-  el._flip = true;
+  if(!el || el.classList.contains('pp-ranim') || !ppDosHtml) return;
+  /* v451 : plus de verrou pendant tout le retournement. 'pre' = les ~180 premières ms (le contenu n'a pas encore changé : les taps sont comptés) ;
+     'post' = la carte finit de se poser : un nouveau tap la reprend EXACTEMENT là où elle en est (position, taille, angle) et la retourne tout de suite. */
+  if(el._flip === 'pre'){ el._pend = (el._pend || 0) + 1; return; }   /* taps très rapprochés : comptés, la carte finira sur la bonne face (un nombre pair de taps = retour à la face de départ) */
+  const rep = el._flip === 'post' ? el._rep : null; el._rep = null;
+  el._flip = 'pre'; el._pend = 0;
   const versDos = !el.classList.contains('pp-dos');
   const sb = el.closest ? el.closest('.pp-sb') : null;
   if(sb) sb.classList.add('pp-sbstill');   /* v435 : au dos, la carte prend toute la place (les autres blocs sont masqués) */
@@ -21031,13 +21813,20 @@ function ppRangFlip(el){
     else { if(el._face) el.innerHTML = el._face; el.classList.remove('pp-dos'); if(sb) sb.classList.remove('pp-dosmode'); }
   };
   const reduit = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduit || !el.animate){ permuter(); el._flip = false; return; }
+  if(reduit || !el.animate){ if(rep){ try{ rep.end(); }catch(e){} } permuter(); el._flip = false; return; }
+  /* v451 : un fondu qui part de l'opacité ACTUELLE (un bloc qui était en train de réapparaître ne clignote pas) */
+  const fondre = (x, dur, ease) => { const o0 = parseFloat(getComputedStyle(x).opacity); return x.animate([{ opacity:isNaN(o0) ? 1 : o0 }, { opacity:0 }], { duration:dur, easing:ease, fill:'forwards' }); };
+  /* v451 : place / taille réelles de la carte MÊME penchée (le centre ne bouge pas quand elle pivote ; la largeur et la hauteur viennent de la mise en page) */
+  const mesure = () => {
+    const r = el.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+    if(Math.abs(r.width - w) < 1.5) return r;
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    return { left:cx - w / 2, top:cy - h / 2, width:w, height:h };
+  };
   /* v439 : même animation sur téléphone et sur PC (pivot + la carte change de taille). Sur grand écran, la fenêtre des Stats garde sa taille pendant tout le dos. */
   const grand = !!(window.matchMedia && matchMedia('(min-width:900px) and (min-height:480px)').matches);
   const pg = grand && el.closest ? el.closest('.pp-page') : null;
-  if(pg && versDos) pg.style.height = pg.getBoundingClientRect().height + 'px';
   try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
-  const r0 = el.getBoundingClientRect();
   /* v442 : Chromebook / grand écran. Plus de pivot, et la carte n'est plus étirée en largeur/hauteur image par image (ça recalculait toute la mise en page à chaque image :
      texte du dos qui se réorganise, saccades surtout au retour). Maintenant : (1) le contenu actuel s'efface (110 ms), (2) on change de face : la carte est déjà à sa taille FINALE,
      (3) on la ramène depuis son ancienne taille / position avec UNE SEULE transformation (translate + scale, gérée par la carte graphique, aucun recalcul de mise en page),
@@ -21046,13 +21835,17 @@ function ppRangFlip(el){
     const sortie = [];
     try{
       el._face0 = true;
-      [...el.children].forEach(x => sortie.push(x.animate([{ opacity:1 }, { opacity:0 }], { duration:110, easing:'ease-in', fill:'forwards' })));
-      if(versDos) autres().forEach(x => sortie.push(x.animate([{ opacity:1 }, { opacity:0 }], { duration:110, easing:'ease-in', fill:'forwards' })));
+      [...el.children].forEach(x => sortie.push(fondre(x, 110, 'ease-in')));
+      if(versDos) autres().forEach(x => sortie.push(fondre(x, 110, 'ease-in')));
     }catch(e){}
     setTimeout(() => {
       try{
+        const r0 = el.getBoundingClientRect();   /* v451 : mesurée ICI (avant, au tap) : si la carte finissait encore de se poser, on part de sa vraie position */
+        const annule = el._pend % 2 === 1, dosFinal = annule ? !versDos : versDos; el._pend = 0;   /* v451 : nombre impair de taps en plus = on revient à la face de départ */
+        if(rep){ try{ rep.end(); }catch(e){} }   /* arrête l'ancienne animation (sa fin de course) et rend les styles */
+        if(pg && dosFinal) pg.style.height = pg.getBoundingClientRect().height + 'px';
         sortie.forEach(x => { try{ x.cancel(); }catch(e){} });
-        permuter();
+        if(!annule) permuter();
         /* les blocs qui se ré-affichent rejouaient leurs animations d'entrée (barres, pastilles : une quarantaine) pendant que la carte bougeait : on les mène à leur état final tout de suite */
         const calme = r => { try{ r.getAnimations({ subtree:true }).forEach(a => { if(a.animationName && a.effect && a.effect.getComputedTiming().iterations !== Infinity) a.finish(); }); }catch(e){} };
         calme(el); autres().forEach(calme);
@@ -21067,25 +21860,34 @@ function ppRangFlip(el){
           { transform:'translate(0px,0px) scale(1,1)' }
         ], { duration:400, easing:'cubic-bezier(.32,.72,0,1)' });
         [...el.children].forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:240, delay:150, easing:'ease-out', fill:'backwards' }); }catch(e){} });
-        if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:260, delay:120, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+        if(!dosFinal) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:260, delay:120, easing:'ease-out', fill:'backwards' }); }catch(e){} });
         const fin = () => {
           el.style.willChange = ''; el.style.transformOrigin = ''; el.style.zIndex = zAvant; el.style.position = posAvant;
-          el._flip = false; if(pg && !versDos) pg.style.height = '';
+          el._flip = false; el._rep = null; if(pg && !dosFinal) pg.style.height = '';
         };
         g.onfinish = g.oncancel = fin;
-      }catch(e){ el._flip = false; }
+        el._flip = 'post';
+        el._rep = { end: () => { g.onfinish = g.oncancel = null; try{ g.cancel(); }catch(e){} fin(); } };
+      }catch(e){ el._flip = false; el._rep = null; }
     }, 110);
     return;
   }
   const P = 'perspective(900px) ';
   /* v436 : la carte se VOIT s'agrandir (vers le dos) et rétrécir (retour) : on garde sa place et sa taille d'avant, puis on glisse/étire jusqu'à la nouvelle (technique « FLIP »). Les autres blocs s'effacent / reviennent en fondu. */
   let fondu = [];
-  try{ if(versDos) fondu = autres().map(x => x.animate([{ opacity:1 }, { opacity:0 }], { duration:140, easing:'ease-in', fill:'forwards' })); }catch(e){}
-  const a = el.animate([{ transform:P + 'rotateY(0deg)' }, { transform:P + 'rotateY(90deg)' }], { duration:140, easing:'ease-in', fill:'forwards' });
+  try{ if(versDos) fondu = autres().map(x => fondre(x, 140, 'ease-in')); }catch(e){}
+  /* v451 : si la carte finissait de se poser, on lit son angle actuel et on la ramène vers la tranche par le chemin le plus court (au pire 140 ms, souvent presque rien) ;
+     sa taille / sa position continuent de glisser pendant ce temps (rep.end() ne les arrête qu'au moment de changer de face). */
+  let a0 = 0, a1 = 90, tA = 140;
+  if(rep){ a0 = rep.angle(); a1 = -90; tA = Math.max(40, 140 * (a0 + 90) / 90); rep.stopB(); }
+  const a = el.animate([{ transform:P + 'rotateY(' + a0 + 'deg)' }, { transform:P + 'rotateY(' + a1 + 'deg)' }], { duration:tA, easing:'ease-in', fill:'forwards' });
   a.onfinish = () => {
     try{
+      const r0 = mesure();   /* v451 : mesurée au moment de changer de face (avant : au tap) */
+      const annule = el._pend % 2 === 1, dosFinal = annule ? !versDos : versDos; el._pend = 0;
       a.cancel();
-      permuter();
+      if(rep){ try{ rep.end(); }catch(e){} }
+      if(!annule) permuter();
       fondu.forEach(x => { try{ x.cancel(); }catch(e){} });
       const r1 = el.getBoundingClientRect();
       const b = el.animate([{ transform:P + 'rotateY(-90deg)' }, { transform:P + 'rotateY(0deg)' }], { duration:190, easing:'cubic-bezier(.2,.9,.3,1)' });
@@ -21093,13 +21895,18 @@ function ppRangFlip(el){
         { width:r0.width + 'px', height:r0.height + 'px', translate:(r0.left - r1.left) + 'px ' + (r0.top - r1.top) + 'px' },
         { width:r1.width + 'px', height:r1.height + 'px', translate:'0px 0px' }
       ], { duration:420, easing:'cubic-bezier(.22,.9,.3,1)' });
-      if(!versDos) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:140, easing:'ease-out', fill:'backwards' }); }catch(e){} });
+      if(!dosFinal) autres().forEach(x => { try{ x.animate([{ opacity:0 }, { opacity:1 }], { duration:320, delay:140, easing:'ease-out', fill:'backwards' }); }catch(e){} });
       let fin = 0;
-      const ok = () => { if(++fin >= 2){ el._flip = false; el.style.flex = ''; } };
+      const ok = () => { if(++fin >= 2){ el._flip = false; el._rep = null; el.style.flex = ''; } };
       b.onfinish = b.oncancel = ok; g.onfinish = g.oncancel = ok;
-    }catch(e){ el._flip = false; }
+      el._flip = 'post';
+      el._rep = {
+        angle: () => { try{ const m = new DOMMatrix(getComputedStyle(el).transform); return Math.max(-90, Math.min(0, -Math.atan2(m.m13, m.m11) * 180 / Math.PI));   /* lu avec le signe inverse de celui des images-clés */ }catch(e){ return 0; } },
+        stopB: () => { b.onfinish = b.oncancel = null; try{ b.cancel(); }catch(e){} },
+        end: () => { g.onfinish = g.oncancel = null; try{ g.cancel(); }catch(e){} el.style.flex = ''; }
+      };
+    }catch(e){ el._flip = false; el._rep = null; }
   };
-  a.oncancel = () => { if(el.animate && !el._flip) return; };
 }
 document.addEventListener('click', e => { const el = e.target && e.target.closest ? e.target.closest('#pp-stats-page .pp-mst') : null; if(el) ppRangFlip(el); });
 document.addEventListener('keydown', e => { if((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches && e.target.matches('#pp-stats-page .pp-mst')){ e.preventDefault(); ppRangFlip(e.target); } });
@@ -21164,6 +21971,20 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v454', t:["Ton XP voyage avec toi","Your XP travels with you"], p:[
+    ["Ton niveau, ton XP du jour, ta semaine et ton record sont les mêmes sur téléphone et ordinateur. Changer d'appareil ne fait rien perdre et ne compte rien en double.","Your level, today's XP, your week and your record are the same on phone and computer. Switching devices loses nothing and counts nothing twice."],
+    ["L'XP est enregistrée carte après carte : fermer l'app en pleine séance n'en fait plus perdre. S'entraîner compte aussi, et se synchronise.","XP is saved card after card: closing the app mid-session no longer loses any. Practice counts too, and syncs."],
+    ["Quand tu fais vraiment avancer une carte (une carte tenace qui cède, un cap franchi, une carte ratée enfin rattrapée), un reflet passe sur la carte suivante. Aucun texte, rien qui t'interrompt, et « Pas su » ou « Difficile » ne changent rien à ça.","When you really move a card forward (a stubborn card gives way, a milestone is passed, a missed card is finally recovered), a glint passes over the next card. No text, nothing that interrupts you, and “Didn't know” or “Tough” change none of it."],
+    ["En fin de séance, l'XP gagnée monte et ta barre de niveau se remplit, avec une phrase pour dire ce qui a compté.","At the end of a session, the XP you earned counts up and your level bar fills, with a line about what mattered."]] },
+  { v:'v453', t:["XP, niveaux et nouveaux rangs","XP, levels and new ranks"], p:[
+    ["Chaque carte rapporte de l'XP, selon son état réel (due, nouvelle, difficile, en retard, contrôle proche) et jamais selon le bouton : tu peux appuyer sur « Pas su » sans rien perdre. L'XP ne change ni tes paliers, ni tes dates, ni ta maîtrise.","Every card earns XP based on its real state (due, new, tough, late, test coming up), never on the button you press: you can tap “Didn't know” without losing anything. XP changes neither your tiers, nor your dates, nor your mastery."],
+    ["Dans la carte Maîtrise : ton niveau avec sa barre, l'XP du jour, ton record et ta semaine comparée à la précédente. En fin de séance, une ligne résume ce que tu as gagné.","On the mastery card: your level with its bar, today's XP, your record and this week compared to last. At the end of a session, one line sums up what you earned."],
+    ["Les révisions en plus rapportent peu et sont plafonnées chaque jour : répéter une même carte ne sert qu'à t'entraîner.","Extra reviews earn little and are capped every day: repeating the same card is just practice."],
+    ["Rangs : une carte « prête pour le contrôle » (palier 3, contrôle à 10 jours ou moins) compte déjà un demi-point, puis le reste quand elle est maîtrisée. Les seuils ont été recalculés : Argent 30, Or 75, Platine 130, Diamant 195, Champion 265, Maître 340, Grand maître 420, Légende 510.","Ranks: a card that is “ready for the test” (tier 3, test within 10 days) already counts half a point, then the rest once mastered. Thresholds were recalculated: Silver 30, Gold 75, Platinum 130, Diamond 195, Champion 265, Master 340, Grandmaster 420, Legend 510."]] },
+  { v:'v452', t:["Une maîtrise plus juste","A fairer mastery"], p:[
+    ["Une carte que tu connais bien et que tu rates sur une petite faute recule d'un seul niveau au lieu de repartir de zéro : si tu la réussis le lendemain, elle retrouve son niveau.","A card you know well and miss on a small slip drops only one level instead of starting from zero: if you get it right the next day, it gets its level back."],
+    ["La barre de la carte Maîtrise tient compte des cartes presque maîtrisées (partie plus claire), et une ligne indique les paliers gagnés cette semaine.","The bar on the Mastery card now counts cards that are almost mastered (lighter part), and a line shows the levels gained this week."],
+    ["Réviser une carte trop tôt ne la fait plus monter de niveau : elle gagne seulement un petit crédit, pour que « maîtrisées » reste fidèle à ce que tu sais vraiment.","Reviewing a card too early no longer moves it up a level: it only earns a small credit, so “mastered” stays true to what you really know."]] },
   { v:'v435', t:["Le dos de la carte prend toute la place","The back of the card takes the whole page"], p:[
     ["Quand tu retournes la carte de maîtrise, le reste des statistiques se masque : tu ne vois que ses détails. Sur ordinateur, ils s'affichent sur deux colonnes.","When you flip the mastery card, the rest of the statistics hides: you only see its details. On computer, they show in two columns."]] },
   { v:'v434', t:["Carte de maîtrise plus légère","Lighter mastery card"], p:[
@@ -22227,7 +23048,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
       c = queue[currentIndex];
       o.m = studyMode; o.f = matiereFilter;
       if(c){ o.c = c.id; o.fl = flipped ? 1 : 0; }
-      o.sr = sessionReviewed; o.sm = sessionMastered; o.mc = sessionMoodCounts;
+      o.sr = sessionReviewed; o.sm = sessionMastered; o.mc = sessionMoodCounts; if(sessionProgress > 0) o.sp = Math.round(sessionProgress * 1000) / 1000; if(sessionXp > 0) o.sx = Math.round(sessionXp * 10) / 10;
       if(c && ecr && ecr.typed && ecr.cle === ('study:' + currentIndex + ':' + c.id)){ o.et = ecr.typed.slice(0, 20000); if(ecr.locked) o.lk = 1; }
     }
     if(ppAddMode === 'man') o.am = 'man';
@@ -22388,7 +23209,7 @@ try{ init(); }catch(e){ ppErreurDemarrage(e); }
             var k = queue.findIndex(function(c){ return c.id === o.c; });
             if(k >= 0){ var carte = queue.splice(k, 1)[0]; queue.unshift(carte); currentIndex = 0; flipped = !!o.fl; carteOk = true; cid = carte.id; }
           }
-          sessionReviewed = o.sr | 0; sessionMastered = o.sm | 0;
+          sessionReviewed = o.sr | 0; sessionMastered = o.sm | 0; sessionProgress = (Number.isFinite(+o.sp) && +o.sp > 0 && +o.sp < 100000) ? +o.sp : 0; sessionXp = (Number.isFinite(+o.sx) && +o.sx > 0 && +o.sx < 1e6) ? +o.sx : 0;
           if(o.mc && typeof o.mc === 'object') sessionMoodCounts = { rouge: o.mc.rouge | 0, orange: o.mc.orange | 0, vert: o.mc.vert | 0 };
           if(o.et && carteOk) ecr = { cle: 'study:0:' + cid, typed: String(o.et), locked: !!o.lk, flipT: o.lk ? Date.now() - 5000 : 0 };
           renderStudy();
