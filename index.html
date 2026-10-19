@@ -4661,6 +4661,11 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-rpl>div>b{font-size:19px;font-weight:800;color:var(--cream);font-variant-numeric:tabular-nums}
 .pp-rpl>div>span{min-width:0}
 @media (prefers-reduced-motion:reduce){.pp-rpb u{animation:none}}
+/* v459 : « Prochain contrôle » au dos de la carte Maîtrise (la barre réutilise .pp-rpb) */
+.pp-ctk>div:first-child{display:flex;align-items:baseline;gap:10px;font-size:13px;font-weight:700}
+.pp-ctk>div:first-child span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cream)}
+.pp-ctk>div:first-child b{flex:none;font-size:12px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.pp-ctk .pp-rpb{margin:7px 0 0}
 .pp-rb{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.07);font-size:13px}
 .pp-rb span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pp-rb b{flex:none;font-size:12px;color:var(--pink)}
@@ -15251,7 +15256,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v458';
+const PP_APP_VERSION = 'v459';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -21936,7 +21941,7 @@ function ppXpCarteAnime(el){
    Les Statistiques sont recréées à chaque ouverture, donc la carte repart toujours sur sa face principale. */
 let ppDosHtml = '';
 function ppRangDos(o){
-  /* v455 : seuils de rang en XP, niveau, XP totale, semaine comparée à la précédente, vitrine. Plus de projection (« estimé en fin de saison », allure nécessaire). */
+  /* v455 : seuils de rang en XP, niveau, XP totale, semaine comparée à la précédente, vitrine. Plus de projection (« estimé en fin de saison », allure nécessaire). v459 : « Ton rythme » et « Prochain contrôle » à la place de la répartition des cartes (doublon des Statistiques). */
   const rg = ppRangMaitrise(o.n), r = rg.r, cs = o.cs, today = o.today;
   const ses = ppSeancesLire(), loc = ppLangueEn() ? 'en-GB' : 'fr-FR', en = ppLangueEn();
   const x = XP_ACTIF ? xpAffichage() : null, total = x ? xpTotal() : 0;
@@ -21944,6 +21949,7 @@ function ppRangDos(o){
     <div><b style="--k:${r.c3}">${x.niv}</b><span>Niveau</span></div>
     <div><b style="--k:${r.c3}">${xpFmt(total)}</b><span>XP au total</span></div>
     <div><b style="--k:${r.c3}">${xpFmt(x.sem)}</b><span>XP cette semaine</span></div></div>
+    <p class="pp-dkv">${en ? 'Level ' + (x.niv + 1) + ' in ' : 'Niveau ' + (x.niv + 1) + ' dans '}${xpFmt(Math.max(1, x.cout - x.dans))} XP</p>
     <p class="pp-dkv">${en ? 'Last week ' : 'Semaine précédente '}${xpFmt(x.prec)} \u00b7 ${en ? 'Best day ' : 'Record '}${xpFmt(x.record)}</p>` : '';
   const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(y => `<span style="${ppRangVars(y.i)}">${ppBadgeRang(y.i)}<em>${ppSaisonLabel(y.id)}</em></span>`).join('')}</div>` : '';
   /* échelle des 9 rangs (seuils en XP) */
@@ -21952,17 +21958,36 @@ function ppRangDos(o){
   const j7 = []; for(let k = 6; k >= 0; k--){ const d = addDays(today, -k); j7.push({ d, m: ses.filter(x => x.d === d).reduce((a, x) => a + x.m, 0) }); }
   const mx = Math.max(1, ...j7.map(x => x.m));
   const barres = j7.map(x => `<div${x.d === today ? ' class="t"' : ''}><b>${x.m || ''}</b><i style="--r:${(x.m / mx).toFixed(3)}"></i><em>${ppEsc(new Date(x.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'narrow' }))}</em></div>`).join('');
-  /* v458 : « Où en sont tes cartes » remplace « À voir pour progresser » (les paliers ne parlaient à personne) : toutes les cartes en 4 groupes en mots simples. */
-  const rep = [
-    { t: 'Maîtrisées',          c: 'var(--green)', n: cs.filter(c => (c.palier || 0) >= MASTERED_PALIER).length },
-    { t: 'Presque maîtrisées',  c: 'var(--yellow)', n: cs.filter(c => (c.palier || 0) === MASTERED_PALIER - 1).length },
-    { t: 'En route',            c: 'var(--amber)', n: cs.filter(c => (c.palier || 0) > 0 && (c.palier || 0) < MASTERED_PALIER - 1).length },
-    { t: 'À apprendre',         c: 'var(--pink)', n: cs.filter(c => !((c.palier || 0) > 0)).length }
-  ];
-  const nbc = rep.reduce((a, x) => a + x.n, 0);
-  const repart = nbc > 0
-    ? `<div class="pp-rpb">${rep.filter(x => x.n > 0).map(x => `<u style="--c:${x.c};flex:${x.n}"></u>`).join('')}</div><div class="pp-rpl">${rep.map(x => `<div style="--c:${x.c}"><i></i><b>${x.n}</b><span>${x.t}</span></div>`).join('')}</div>`
-    : `<p class="pp-dkv">Aucune carte pour l'instant</p>`;
+  /* v459 : « Où en sont tes cartes » est retiré : c'était le même chiffre que « Répartition des paliers » des Statistiques. À la place, ce que les Statistiques ne disent pas et qui touche à l'XP :
+     « Ton rythme » (XP des séances, bonus de série) et « Prochain contrôle » (combien de cartes sont prêtes). Aucun calcul d'XP ni de maîtrise touché : lecture seule. */
+  let rythme = '';
+  if(x){
+    try{
+      const sem0 = addDays(today, -6), xsem = ses.filter(q => q.d >= sem0 && q.d <= today).map(ppSeanceX).filter(v => v > 0);
+      let dern = 0; for(let k = ses.length - 1; k >= 0; k--){ const v = ppSeanceX(ses[k]); if(v > 0){ dern = v; break; } }
+      const meil = xsem.length ? Math.max(...xsem) : 0, moy = xsem.length ? Math.round(xsem.reduce((a, v) => a + v, 0) / xsem.length) : 0;
+      let bs = 0; try{ bs = Math.round((xpMultSerie() - 1) * 100); }catch(e){}
+      const nb = v => v > 0 ? xpFmt(v) : '\u2013', cel = (b, t) => `<div><i></i><b>${b}</b><span>${t}</span></div>`;
+      rythme = `<p class="pp-dks">${en ? 'Your pace' : 'Ton rythme'}</p><div class="pp-rpl">${cel(nb(dern), en ? 'Last session' : 'Dernière séance')}${cel(nb(meil), en ? 'Best (7 d)' : 'Meilleure (7 j)')}${cel(nb(moy), en ? 'Average (7 d)' : 'Moyenne (7 j)')}${cel(bs > 0 ? '+' + bs + ' %' : '0 %', en ? 'Streak bonus' : 'Bonus de série')}</div>`;
+    }catch(e){ rythme = ''; }
+  }
+  /* Prochain contrôle (matières actives) : la date la plus proche ; à égalité, la matière la moins avancée. « Prêtes » = palier 3 ou plus (maîtrisées + presque maîtrisées). Rien s'il n'y a pas de contrôle à venir. */
+  let ctl = '';
+  try{
+    let cb = null;
+    getMatieresActives().forEach(m => {
+      const cfg = matieresConfig[m]; if(!cfg || !cfg.dateControle || cfg.dateControle < today) return;
+      const l = cs.filter(c => (c.matiere || 'Sans matière') === m); if(!l.length) return;
+      const mas = l.filter(c => (c.palier || 0) >= MASTERED_PALIER).length, pres = l.filter(c => (c.palier || 0) === MASTERED_PALIER - 1).length, r = (mas + pres) / l.length;
+      if(!cb || cfg.dateControle < cb.d || (cfg.dateControle === cb.d && r < cb.r)) cb = { m, d: cfg.dateControle, n: l.length, mas, pres, r };
+    });
+    if(cb){
+      const j = Math.max(0, Math.round((Date.parse(cb.d) - Date.parse(today)) / 864e5));
+      const quand = j === 0 ? (en ? 'today' : "aujourd'hui") : j === 1 ? (en ? 'tomorrow' : 'demain') : (en ? 'in ' + j + ' days' : 'dans ' + j + ' j');
+      const seg = (n, c) => n > 0 ? `<u style="--c:${c};flex:none;width:${(n / cb.n * 100).toFixed(2)}%"></u>` : '';
+      ctl = `<p class="pp-dks">${en ? 'Next test' : 'Prochain contrôle'}<span>${quand}</span></p><div class="pp-ctk"><div><span>${ppEsc(cb.m)}</span><b>${cb.mas + cb.pres}/${cb.n} ${en ? 'ready' : 'prêtes'}</b></div><div class="pp-rpb">${seg(cb.mas, 'var(--green)')}${seg(cb.pres, 'var(--yellow)')}</div></div>`;
+    }
+  }catch(e){ ctl = ''; }
   /* cartes qui résistent (ratées au moins une fois, pas encore maîtrisées) */
   const dures = cs.filter(c => (c.palier || 0) < MASTERED_PALIER && (c.difficultes || 0) > 0).sort((a, b) => (b.difficultes || 0) - (a.difficultes || 0));
   const dh = dures.slice(0, 3).map(c => `<div class="pp-rb"><span>${ppEsc(pcNet(c.question) || '[image]')}</span><b>✕ ${c.difficultes}</b></div>`).join('');
@@ -21971,7 +21996,7 @@ function ppRangDos(o){
     <div class="pp-lad">${lad}</div>
     ${tuiles}${vit}</div><div class="pp-dkc">
     <p class="pp-dks">Maîtrisées par jour</p><div class="pp-dkb">${barres}</div>
-    <p class="pp-dks">Où en sont tes cartes${nbc > 0 ? `<span>${nbc}</span>` : ''}</p>${repart}
+    ${rythme}${ctl}
     </div><div class="pp-dkx"><p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}</div>
     <i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i></div>`;
 }
@@ -22150,6 +22175,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v459', t:["Le dos de la carte Maîtrise, sans doublon","The back of the Mastery card, without repeats"], p:[
+    ["Au dos de la carte Maîtrise, « Où en sont tes cartes » disparaît : c'était déjà dans les Statistiques (« Répartition des paliers »).","On the back of the Mastery card, “Where your cards stand” is gone: it was already in the Statistics (“Level breakdown”)."],
+    ["À la place : « Ton rythme » (XP de ta dernière séance, ta meilleure et la moyenne sur 7 jours, ton bonus de série), « Prochain contrôle » (combien de cartes sont prêtes) et le nombre d'XP qu'il te reste avant le prochain niveau.","In its place: “Your pace” (XP from your last session, your best and the 7-day average, your streak bonus), “Next test” (how many cards are ready) and how much XP is left before the next level."]
+  ] },
   { v:'v458', t:["Le dos de la carte, plus clair","The back of the card, clearer"], p:[
     ["Au dos de la carte Maîtrise, « À voir pour progresser » (les paliers) laisse la place à « Où en sont tes cartes » : toutes tes cartes en quatre groupes en mots simples (maîtrisées, presque maîtrisées, en route, à apprendre), sur une seule barre.","On the back of the Mastery card, “Cards to see to progress” (the levels) gives way to “Where your cards stand”: all your cards in four plain groups (mastered, almost mastered, on the way, to learn), on a single bar."]
   ] },
