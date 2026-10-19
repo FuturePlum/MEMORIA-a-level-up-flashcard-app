@@ -452,7 +452,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   });
   /* v419 : statistiques ludiques (rang de maîtrise, % du jour, temps par séance) */
   var RANGS_EN={'Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend'};
-  Object.assign(D,{'XP aujourd\u2019hui':'XP today','Niveau':'Level','XP au total':'Total XP','XP cette semaine':'XP this week','Maîtrise':'Mastery','Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Vitrine':'Showcase','estimé en fin de saison':'estimated at season end','Sommet':'Peak','/sem':'/wk','Rangs':'Ranks','Maîtrisées par jour':'Mastered per day','À voir pour progresser':'To review to progress','Cartes qui résistent':'Stubborn cards','Aucune carte ne résiste':'No stubborn cards',"aujourd'hui":'today','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Nouveau rang !':'New rank!','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
+  Object.assign(D,{'Où en sont tes cartes':'Where your cards stand','Maîtrisées':'Mastered','Presque maîtrisées':'Almost mastered','En route':'On the way','À apprendre':'To learn','Aucune carte pour l\u2019instant':'No cards yet','XP aujourd\u2019hui':'XP today','Niveau':'Level','XP au total':'Total XP','XP cette semaine':'XP this week','Maîtrise':'Mastery','Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Vitrine':'Showcase','estimé en fin de saison':'estimated at season end','Sommet':'Peak','/sem':'/wk','Rangs':'Ranks','Maîtrisées par jour':'Mastered per day','À voir pour progresser':'To review to progress','Cartes qui résistent':'Stubborn cards','Aucune carte ne résiste':'No stubborn cards',"aujourd'hui":'today','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Nouveau rang !':'New rank!','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
   RULES.push(
     f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
     f(/^Encore ([\d\u202f\u00a0 ]+) XP pour devenir (.+)$/,function(n,r){ return n+' XP to become '+(RANGS_EN[r]||r); }),
@@ -4512,12 +4512,17 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mnum b.pp-cnt{color:#ffd93d;text-shadow:0 0 14px rgba(255,176,32,.6)}
 .pp-mnum{position:relative}
 .pp-mgain{position:absolute;left:0;bottom:100%;margin-bottom:2px;font-style:normal;font-size:13px;font-weight:800;color:#ffd93d;text-shadow:0 0 10px rgba(255,176,32,.65);pointer-events:none;opacity:0}
-/* gerbe d'étincelles sur un moment fort */
-.pp-gerbe{position:fixed;z-index:9000;pointer-events:none}
-.pp-gerbe i{position:absolute;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);background:var(--c);filter:drop-shadow(0 0 5px var(--c));opacity:0;
-  clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:ppgerbe var(--t) cubic-bezier(.15,.7,.3,1) var(--d) both}
-@keyframes ppgerbe{0%{opacity:0;transform:translate(0,0) scale(.2) rotate(0)}12%{opacity:1;transform:translate(calc(var(--x)*.25),calc(var(--y)*.25)) scale(1.3) rotate(calc(var(--r)*.25))}100%{opacity:0;transform:translate(var(--x),calc(var(--y) + 34px)) scale(.3) rotate(var(--r))}}
-@media (prefers-reduced-motion:reduce){.pp-xprays,.pp-xpb.rest .pp-xpg{animation:none}.pp-gerbe{display:none}}
+/* halo et ondes sur un moment fort (carte + bouton touché) */
+.pp-halo{position:fixed;inset:0;z-index:9000;pointer-events:none}
+.pp-halo i{position:fixed;display:block;opacity:0;pointer-events:none}
+.pp-bloom{background:radial-gradient(closest-side,rgba(255,190,60,.5) 55%,rgba(255,140,40,.18) 80%,transparent);filter:blur(10px);animation:ppbloom .85s ease-out both}
+@keyframes ppbloom{0%{opacity:0;transform:scale(.8)}25%{opacity:1}100%{opacity:0;transform:scale(1.18)}}
+.pp-onde{border:2.5px solid rgba(255,206,90,.95);box-shadow:0 0 20px rgba(255,176,32,.65),inset 0 0 18px rgba(255,176,32,.3);animation:pponde .85s cubic-bezier(.2,.7,.3,1) var(--d,0ms) both}
+.pp-onde-b{border-width:2px}
+@keyframes pponde{0%{opacity:0;transform:scale(1)}14%{opacity:1}100%{opacity:0;transform:scale(var(--s,1.18))}}
+.pp-ans.pp-ans-halo{animation:ppansHalo .6s ease-out both}
+@keyframes ppansHalo{0%{box-shadow:0 0 0 rgba(255,176,32,0)}30%{box-shadow:0 0 26px rgba(255,200,80,.85);filter:brightness(1.25)}100%{box-shadow:0 0 0 rgba(255,176,32,0)}}
+@media (prefers-reduced-motion:reduce){.pp-xprays,.pp-xpb.rest .pp-xpg{animation:none}.pp-halo{display:none}}
 .pp-card::before,.pp-card::after{content:"";position:absolute;pointer-events:none;opacity:0}
 .pp-card::after{inset:0;z-index:6;border-radius:inherit;background:linear-gradient(115deg,transparent 36%,rgba(255,217,61,.3) 50%,transparent 64%);background-size:260% 100%;background-position:130% 0}
 .pp-card.pp-cue::after{animation:ppcueShine .85s ease-out both}
@@ -4645,14 +4650,17 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-dkb .t i{opacity:1;box-shadow:0 0 10px color-mix(in srgb,var(--c) 70%,transparent)}
 .pp-dkb b{font-size:11px;font-weight:800;min-height:13px}
 .pp-dkb em{font-style:normal;font-size:10px;color:var(--muted)}
-.pp-fn{display:grid;grid-template-columns:10px 62px 1fr 24px auto;align-items:center;gap:8px;padding:5px 0;font-size:13px;font-weight:700}
-.pp-fn>i{width:10px;height:10px;border-radius:50%;background:var(--c)}
-.pp-fn>s{display:block;height:8px;border-radius:5px;background:rgba(255,255,255,.09);overflow:hidden;text-decoration:none}
-.pp-fn>s u{display:block;height:100%;border-radius:5px;background:var(--c);text-decoration:none}
-.pp-fn>b{text-align:right}
-.pp-fn>em{font-style:normal;font-size:11px;font-weight:800;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border-radius:9px;padding:2px 8px;min-width:0}
-.pp-fn>em:empty{display:none}
-.pp-fn>em small{font-size:10px;font-weight:700}
+/* v458 : répartition des cartes (une barre en segments + légende) */
+.pp-rpb{display:flex;gap:3px;height:12px;border-radius:7px;overflow:hidden;margin:2px 0 11px;background:rgba(255,255,255,.09)}
+.pp-rpb u{display:block;height:100%;min-width:6px;background:var(--c);text-decoration:none;transform-origin:left;animation:pprpIn .7s cubic-bezier(.22,1,.36,1) both}
+.pp-rpb u:nth-child(2){animation-delay:.06s}.pp-rpb u:nth-child(3){animation-delay:.12s}.pp-rpb u:nth-child(4){animation-delay:.18s}
+@keyframes pprpIn{from{transform:scaleX(0);opacity:.4}to{transform:none;opacity:1}}
+.pp-rpl{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px}
+.pp-rpl>div{display:grid;grid-template-columns:10px auto 1fr;align-items:baseline;column-gap:8px;font-size:13px;font-weight:700;color:var(--muted)}
+.pp-rpl>div>i{width:10px;height:10px;border-radius:50%;background:var(--c);align-self:center}
+.pp-rpl>div>b{font-size:19px;font-weight:800;color:var(--cream);font-variant-numeric:tabular-nums}
+.pp-rpl>div>span{min-width:0}
+@media (prefers-reduced-motion:reduce){.pp-rpb u{animation:none}}
 .pp-rb{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.07);font-size:13px}
 .pp-rb span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pp-rb b{flex:none;font-size:12px;color:var(--pink)}
@@ -4713,8 +4721,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #pp-stats-page .pp-dosmode .pp-dkx>.pp-dks:first-child{ margin-top:26px; }
   #pp-stats-page .pp-dosmode .pp-dkb{ --bh:120px; height:170px; }
   #pp-stats-page .pp-dosmode .pp-dkb b{ font-size:13px; } #pp-stats-page .pp-dosmode .pp-dkb em{ font-size:12px; }
-  #pp-stats-page .pp-dosmode .pp-fn{ font-size:15px; padding:9px 0; grid-template-columns:12px 74px 1fr 28px auto; }
-  #pp-stats-page .pp-dosmode .pp-fn s{ height:10px; }
+  #pp-stats-page .pp-dosmode .pp-rpb{ height:14px; } #pp-stats-page .pp-dosmode .pp-rpl>div{ font-size:15px; } #pp-stats-page .pp-dosmode .pp-rpl>div>b{ font-size:22px; }
   #pp-stats-page .pp-dosmode .pp-dk .pp-rb{ font-size:15px; padding:10px 0; } #pp-stats-page .pp-dosmode .pp-dk .pp-rb b{ font-size:13.5px; }
   #pp-stats-page .pp-dosmode .pp-dkv{ font-size:15px; }
   #pp-stats-page .pp-sb.pp-dosmode .pp-mst{ padding:22px 26px; }
@@ -4742,7 +4749,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #pp-stats-page .pp-dosmode .pp-dks{ margin:16px 0 6px; }
   #pp-stats-page .pp-dosmode .pp-dkx>.pp-dks:first-child{ margin-top:16px; }
   #pp-stats-page .pp-dosmode .pp-dkb{ --bh:84px; height:122px; }
-  #pp-stats-page .pp-dosmode .pp-fn{ padding:6px 0; }
+  #pp-stats-page .pp-dosmode .pp-rpl{ gap:6px 12px; }
   #pp-stats-page .pp-dosmode .pp-dk .pp-rb{ padding:7px 0; }
 }
 @media (min-width:900px) and (min-height:480px) and (max-height:640px){
@@ -4758,7 +4765,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   #pp-stats-page .pp-dosmode .pp-dks{ margin:10px 0 4px; }
   #pp-stats-page .pp-dosmode .pp-dkx>.pp-dks:first-child{ margin-top:10px; }
   #pp-stats-page .pp-dosmode .pp-dkb{ --bh:60px; height:92px; }
-  #pp-stats-page .pp-dosmode .pp-fn{ padding:4px 0; font-size:14px; }
+  #pp-stats-page .pp-dosmode .pp-rpl>div{ font-size:14px; }
   #pp-stats-page .pp-dosmode .pp-dk .pp-rb{ padding:5px 0; }
 }
 </style>
@@ -12227,7 +12234,7 @@ function sortirCarte(niveau, opts, apres){
   const sortie = niveau === 'orange' ? (opts.dy < 0 ? 'pp-out-up' : 'pp-out-mid') : (niveau === 'vert' ? 'pp-out-ok' : 'pp-out-ko');
   scene.style.animation = ''; scene.style.transition = '';
   scene.classList.add(sortie);
-  ppCueSortie(scene);   // v456 : reflet sur la carte qui part
+  ppCueSortie(scene, niveau);   // v456 : reflet sur la carte qui part
   const rc = document.querySelector('#pp-ses .pp-rcard');   // carte « à écrire » (téléphone) : la carte réponse sort avec la carte question
   if(rc){ rc.style.animation = ''; rc.style.transition = ''; rc.classList.add(sortie); }
   setTimeout(() => { ppMood.anim = 'in'; apres(); clearTimeout(carteEnSortieT); carteEnSortie = false; }, 320);
@@ -12985,7 +12992,7 @@ function ppCueChaleur(){
   }catch(e){}
 }
 /* v456 : le reflet se joue sur la carte qu'on vient de noter, pendant qu'elle part (0,3 s) : il lui appartient, pas à la suivante. Plus de coche. */
-function ppCueSortie(sc){
+function ppCueSortie(sc, niveau){
   try{
     if(!XP_ACTIF || !ppCue || !sc) return;
     const evt = ppCue;
@@ -12994,26 +13001,26 @@ function ppCueSortie(sc){
     cl.forEach(x => sc.classList.add(x));
     sc.classList.add('pp-cue-sh');
     if(evt !== 'rattrapee') haptique([10, 50, 14]);
-    ppCueGerbe(sc, evt);
+    ppCueHalo(sc, evt, niveau);
     setTimeout(() => { sc.classList.remove('pp-cue-sh'); cl.forEach(x => sc.classList.remove(x)); }, 300);   // avant que la carte suivante n'arrive
   }catch(e){}
 }
-/* v457 : gerbe d'étincelles là où la carte vient de partir (couche fixe : elle survit au changement de carte). Aucun texte. */
-function ppCueGerbe(sc, evt){
+/* v457 : le moment fort se voit en lumière, pas en paillettes. Couche fixe (elle survit au changement de carte) :
+   un halo doré qui enfle derrière la carte, des ondes de contour qui partent de ses bords (3 pour « Coriace », 2 pour « Palier », 1 pour « Rattrapée »),
+   et la même onde autour du bouton qu'on vient de toucher. Aucun texte. */
+function ppCueHalo(sc, evt, niveau){
   try{
     if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const r = sc.getBoundingClientRect(); if(!(r.width > 0)) return;
-    const n = evt === 'coriace' ? 28 : evt === 'palier' ? 20 : 11;
-    const cl = ['#ffd93d', '#ffb020', '#ff6b3d', '#fff3c4'];
-    const w = document.createElement('div'); w.className = 'pp-gerbe'; w.setAttribute('aria-hidden', 'true');
-    w.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
-    let h = '';
-    for(let k = 0; k < n; k++){
-      const a = Math.random() * 6.2832, d = 50 + Math.random() * 120;
-      h += '<i style="left:' + Math.round(8 + Math.random() * 84) + '%;top:' + Math.round(10 + Math.random() * 80) + '%;--c:' + cl[k % 4] + ';--s:' + (10 + Math.random() * 12).toFixed(1) + 'px;--x:' + Math.round(Math.cos(a) * d) + 'px;--y:' + Math.round(Math.sin(a) * d - 26) + 'px;--r:' + Math.round(Math.random() * 300 - 150) + 'deg;--d:' + Math.round(Math.random() * 90) + 'ms;--t:' + Math.round(520 + Math.random() * 420) + 'ms"></i>';
-    }
+    const w = document.createElement('div'); w.className = 'pp-halo'; w.setAttribute('aria-hidden', 'true');
+    const nO = evt === 'coriace' ? 3 : evt === 'palier' ? 2 : 1;
+    const box = (rc, rad, cls, d, sc2) => '<i class="' + cls + '" style="left:' + rc.left + 'px;top:' + rc.top + 'px;width:' + rc.width + 'px;height:' + rc.height + 'px;border-radius:' + rad + 'px;--d:' + d + 'ms;--s:' + sc2 + '"></i>';
+    let h = box({ left: r.left - r.width * .12, top: r.top - r.height * .12, width: r.width * 1.24, height: r.height * 1.24 }, 40, 'pp-bloom', 0, 1);
+    for(let k = 0; k < nO; k++) h += box(r, 24, 'pp-onde', k * 150, (1.14 + k * .07).toFixed(2));
+    const bt = niveau ? document.querySelector('.pp-ans[onclick*="\'' + niveau + '\'"]') : null;
+    if(bt){ const br = bt.getBoundingClientRect(); if(br.width > 0){ for(let k = 0; k < nO; k++) h += box(br, 16, 'pp-onde pp-onde-b', 40 + k * 140, (1.28 + k * .12).toFixed(2)); try{ bt.classList.add('pp-ans-halo'); setTimeout(() => { try{ bt.classList.remove('pp-ans-halo'); }catch(e){} }, 700); }catch(e){} } }
     w.innerHTML = h; document.body.appendChild(w);
-    setTimeout(() => { try{ w.remove(); }catch(e){} }, 1200);
+    setTimeout(() => { try{ w.remove(); }catch(e){} }, 1300);
   }catch(e){}
 }
 function ppCueJoue(){
@@ -13022,8 +13029,8 @@ function ppCueJoue(){
   try{ [].forEach.call(document.querySelectorAll('.pp-card'), sc => { ['pp-cue', 'pp-cue-out', 'pp-cue-v1', 'pp-cue-v2', 'pp-cue-v3', 'pp-cue-c', 'pp-cue-sh'].forEach(x => sc.classList.remove(x)); }); }catch(e){}
   ppCueChaleur();
 }
-/* v457 : bilan de fin de séance. Le chiffre grimpe vite puis ralentit (comme un compteur de jackpot) pendant que de la lumière est aspirée vers lui,
-   puis il s'écrase : flash, onde, gerbe d'étincelles, secousse, vibration. Tout grandit avec l'XP gagnée (4 paliers d'intensité). */
+/* v457 : bilan de fin de séance. Le chiffre grimpe vite puis ralentit (comme un compteur de jackpot) dans un halo qui grandit, avec une onde douce à chaque tic,
+   puis il s'écrase : flash, ondes de lumière, secousse, vibration. Tout grandit avec l'XP gagnée (4 paliers d'intensité). */
 function ppXpBilanAnime(){
   try{
     const b = document.querySelector('.pp-xpb'); if(!b || b.dataset.go) return; b.dataset.go = '1';
@@ -13050,17 +13057,16 @@ function ppXpBilanAnime(){
       const g = 22 + tier * 14;
       A(b, [{ boxShadow: '0 4px 0 #8a5a14,0 0 0 rgba(255,176,32,0)' }, { boxShadow: '0 4px 0 #8a5a14,0 0 ' + g + 'px rgba(255,176,32,.85)', offset: .22 }, { boxShadow: '0 4px 0 #8a5a14,0 0 ' + Math.round(g / 3) + 'px rgba(255,176,32,.28)' }], { duration: 1100, easing: 'ease-out' });
       if(tier >= 1){ const kf = []; for(let k = 0; k < 14; k++){ const dc = Math.pow(1 - k / 14, 1.6); kf.push({ transform: 'translate(' + ((Math.random() * 2 - 1) * amp * dc).toFixed(1) + 'px,' + ((Math.random() * 2 - 1) * amp * dc).toFixed(1) + 'px)' }); } kf.push({ transform: 'none' }); A(b, kf, { duration: 380 + tier * 90, easing: 'linear', composite: 'add' }); }
-      if(fx){
-        fx.ring('#ffd93d', 0, .8 + tier * .1, 6, 700 + tier * 120, cx, cy);
-        for(let k = 1; k <= tier; k++) fx.ring(k % 2 ? '#ffb020' : '#ffffff', k * 130, .9 + k * .18, Math.max(2, 6 - k), 800 + k * 140, cx, cy);
-        fx.sparks(COL, Math.round((70 + tier * 70) * q), cx, cy, 3, 11 + tier * 3, 550, 1250, .07);
-        if(tier >= 1) fx.embers(COL, Math.round((10 + tier * 14) * q), cx, cy + 6, 70, 2.6, 1300, 2400);
+      const g0 = b.querySelector('.pp-xpg'); if(g0) A(g0, [{ transform: 'translate(-50%,-50%) scale(.9)', opacity: .5 }, { transform: 'translate(-50%,-50%) scale(1.75)', opacity: 1, offset: .3 }, { transform: 'translate(-50%,-50%) scale(1.5)', opacity: .9 }], { duration: 1300, easing: 'ease-out', fill: 'none' });
+      if(fx){   // ondes de lumière qui partent du chiffre (2 à 5 selon l'XP), toutes douces
+        const nO = 2 + tier;
+        for(let k = 0; k < nO; k++) fx.ring(k % 2 ? '#ffb020' : '#ffd93d', k * 170, .5 + k * .1, Math.max(2.5, 7 - k * 1.2), 1100 + k * 160, cx, cy);
       }
       haptique(tier >= 3 ? [40, 30, 60, 30, 100] : tier === 2 ? [32, 28, 64] : tier === 1 ? [26, 24, 46] : [22, 20, 34]);
       setTimeout(() => { ph.style.opacity = ''; A(ph, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 520 }); }, 280);
       if(chip) setTimeout(() => {
         chip.style.opacity = ''; A(chip, [{ opacity: 0, transform: 'scale(.4) translateY(10px)' }, { opacity: 1, transform: 'scale(1.14)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 640, easing: 'cubic-bezier(.34,1.56,.64,1)' });
-        if(fx){ const rc = chip.getBoundingClientRect(), bx = rc.left - rb.left + rc.width / 2, by = rc.top - rb.top + rc.height / 2; const c = getComputedStyle(chip).getPropertyValue('--c').trim() || '#ffd93d'; fx.ring(c, 0, .7, 5, 800, bx, by); fx.sparks([c, '#ffffff', '#ffd93d'], Math.round(60 * q), bx, by, 2, 9, 500, 1100, .06); }
+        if(fx){ const rc = chip.getBoundingClientRect(), bx = rc.left - rb.left + rc.width / 2, by = rc.top - rb.top + rc.height / 2; const c = getComputedStyle(chip).getPropertyValue('--c').trim() || '#ffd93d'; fx.ring(c, 0, .55, 4, 900, bx, by); fx.ring('#ffffff', 160, .7, 2.5, 900, bx, by); }
         haptique([12, 60, 18]);
       }, 780);
       if(tier >= 2) setTimeout(() => { try{ b.classList.add('rest'); }catch(e){} }, 1200);
@@ -13074,12 +13080,7 @@ function ppXpBilanAnime(){
         b.style.setProperty('--k', e.toFixed(3));
         const sp = Math.max(0, e - last) ; last = e;
         const st = Math.floor(e * pas);
-        if(st > ticks){ ticks = st; haptique(5 + tier * 2); A(wrap, [{ transform: 'scale(1)' }, { transform: 'scale(' + (1.035 + tier * .012).toFixed(3) + ')' }, { transform: 'scale(1)' }], { duration: 170, easing: 'ease-out', fill: 'none' }); }
-        if(fx){
-          acc += (now - tp) / 40; tp = now;
-          while(acc >= 1){ acc -= 1; const m = Math.round((1 + tier + k * 3) * q); for(let j = 0; j < m; j++) fx.suck(j % 3 === 0 ? '#ffffff' : (j % 2 ? '#ffd93d' : '#ffb020'), cx, cy); }
-          if(sp > 0 && tier >= 1 && Math.random() < .35) fx.sparks(COL, Math.round((1 + tier) * q), cx, cy, 1.4, 4 + tier, 300, 650, .05);
-        }
+        if(st > ticks){ ticks = st; haptique(5 + tier * 2); if(fx) fx.ring('#ffb020', 0, .3 + .25 * e, 3, 950, cx, cy); A(wrap, [{ transform: 'scale(1)' }, { transform: 'scale(' + (1.035 + tier * .012).toFixed(3) + ')' }, { transform: 'scale(1)' }], { duration: 170, easing: 'ease-out', fill: 'none' }); }
       }
       if(k >= 1) atterrit(); else requestAnimationFrame(frame);
     };
@@ -15250,7 +15251,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v457';
+const PP_APP_VERSION = 'v458';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -21951,11 +21952,17 @@ function ppRangDos(o){
   const j7 = []; for(let k = 6; k >= 0; k--){ const d = addDays(today, -k); j7.push({ d, m: ses.filter(x => x.d === d).reduce((a, x) => a + x.m, 0) }); }
   const mx = Math.max(1, ...j7.map(x => x.m));
   const barres = j7.map(x => `<div${x.d === today ? ' class="t"' : ''}><b>${x.m || ''}</b><i style="--r:${(x.m / mx).toFixed(3)}"></i><em>${ppEsc(new Date(x.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'narrow' }))}</em></div>`).join('');
-  /* cartes à voir pour progresser : par palier, combien sont dues aujourd'hui */
-  const cl = ['', 'var(--pink)', 'var(--amber)', 'var(--yellow)'];
-  const pal = [1, 2, 3].map(l => { const li = cs.filter(c => Math.min(c.palier || 0, MASTERED_PALIER) === l); return { l, n: li.length, due: li.filter(c => c.derniereRevision !== today && (c.prochaineRevision || today) <= today).length }; });
-  const mp = Math.max(1, ...pal.map(x => x.n));
-  const entonnoir = pal.map(x => `<div class="pp-fn" style="--c:${cl[x.l]}"><i></i><span>Palier ${x.l}</span><s><u style="width:${Math.round(x.n / mp * 100)}%"></u></s><b>${x.n}</b>${x.due ? `<em>${x.due} <small>aujourd'hui</small></em>` : '<em></em>'}</div>`).join('');
+  /* v458 : « Où en sont tes cartes » remplace « À voir pour progresser » (les paliers ne parlaient à personne) : toutes les cartes en 4 groupes en mots simples. */
+  const rep = [
+    { t: 'Maîtrisées',          c: 'var(--green)', n: cs.filter(c => (c.palier || 0) >= MASTERED_PALIER).length },
+    { t: 'Presque maîtrisées',  c: 'var(--yellow)', n: cs.filter(c => (c.palier || 0) === MASTERED_PALIER - 1).length },
+    { t: 'En route',            c: 'var(--amber)', n: cs.filter(c => (c.palier || 0) > 0 && (c.palier || 0) < MASTERED_PALIER - 1).length },
+    { t: 'À apprendre',         c: 'var(--pink)', n: cs.filter(c => !((c.palier || 0) > 0)).length }
+  ];
+  const nbc = rep.reduce((a, x) => a + x.n, 0);
+  const repart = nbc > 0
+    ? `<div class="pp-rpb">${rep.filter(x => x.n > 0).map(x => `<u style="--c:${x.c};flex:${x.n}"></u>`).join('')}</div><div class="pp-rpl">${rep.map(x => `<div style="--c:${x.c}"><i></i><b>${x.n}</b><span>${x.t}</span></div>`).join('')}</div>`
+    : `<p class="pp-dkv">Aucune carte pour l'instant</p>`;
   /* cartes qui résistent (ratées au moins une fois, pas encore maîtrisées) */
   const dures = cs.filter(c => (c.palier || 0) < MASTERED_PALIER && (c.difficultes || 0) > 0).sort((a, b) => (b.difficultes || 0) - (a.difficultes || 0));
   const dh = dures.slice(0, 3).map(c => `<div class="pp-rb"><span>${ppEsc(pcNet(c.question) || '[image]')}</span><b>✕ ${c.difficultes}</b></div>`).join('');
@@ -21964,7 +21971,7 @@ function ppRangDos(o){
     <div class="pp-lad">${lad}</div>
     ${tuiles}${vit}</div><div class="pp-dkc">
     <p class="pp-dks">Maîtrisées par jour</p><div class="pp-dkb">${barres}</div>
-    <p class="pp-dks">À voir pour progresser</p>${entonnoir}
+    <p class="pp-dks">Où en sont tes cartes${nbc > 0 ? `<span>${nbc}</span>` : ''}</p>${repart}
     </div><div class="pp-dkx"><p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}</div>
     <i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i></div>`;
 }
@@ -22143,9 +22150,12 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v458', t:["Le dos de la carte, plus clair","The back of the card, clearer"], p:[
+    ["Au dos de la carte Maîtrise, « À voir pour progresser » (les paliers) laisse la place à « Où en sont tes cartes » : toutes tes cartes en quatre groupes en mots simples (maîtrisées, presque maîtrisées, en route, à apprendre), sur une seule barre.","On the back of the Mastery card, “Cards to see to progress” (the levels) gives way to “Where your cards stand”: all your cards in four plain groups (mastered, almost mastered, on the way, to learn), on a single bar."]
+  ] },
   { v:'v457', t:["Ton XP, en grand","Your XP, big"], p:[
-    ["En fin de séance, l'XP gagnée est un grand chiffre qui grimpe, de plus en plus lentement, pendant que la lumière est aspirée vers lui, puis il éclate : flash, onde, étincelles, petite vibration. Plus tu as gagné, plus c'est fort. Plus de barre dans ce bilan.","At the end of a session, the XP you earned is one big number that climbs, slowing down as light is pulled into it, then bursts: flash, shockwave, sparks, a small buzz. The more you earned, the bigger it gets. No bar in this summary any more."],
-    ["Quand tu fais vraiment avancer une carte, une gerbe d'étincelles dorées jaillit là où elle vient de partir.","When you really move a card forward, a burst of golden sparks flies out where it just left."],
+    ["En fin de séance, l'XP gagnée est un grand chiffre qui grimpe, de plus en plus lentement, dans un halo de lumière qui grandit, puis il éclate en ondes douces avec un flash et une petite vibration. Plus tu as gagné, plus c'est fort. Plus de barre dans ce bilan.","At the end of a session, the XP you earned is one big number that climbs, slowing down inside a growing halo of light, then bursts into soft waves with a flash and a small buzz. The more you earned, the bigger it gets. No bar in this summary any more."],
+    ["Quand tu fais vraiment avancer une carte, un halo doré l'enveloppe et des ondes de lumière partent de ses bords et du bouton que tu viens de toucher.","When you really move a card forward, a golden halo wraps it and waves of light ripple out from its edges and from the button you just pressed."],
     ["Dans Statistiques, si tu as gagné de l'XP depuis ta dernière visite, ton total grimpe depuis l'ancien chiffre et la barre avance.","In Statistics, if you earned XP since your last visit, your total climbs from the old number and the bar moves forward."]
   ] },
   { v:'v456', t:["Le reflet suit ta carte","The shine follows your card"], p:[
