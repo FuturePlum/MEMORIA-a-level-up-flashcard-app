@@ -4535,7 +4535,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mnum b.pp-cnt{color:#ffd93d;text-shadow:0 0 14px rgba(255,176,32,.6)}
 .pp-mnum{position:relative}
 .pp-mgain{position:absolute;left:0;bottom:100%;margin-bottom:2px;font-style:normal;font-size:13px;font-weight:800;color:#ffd93d;text-shadow:0 0 10px rgba(255,176,32,.65);pointer-events:none;opacity:0}
-/* halo et ondes sur un moment fort (carte + bouton touché) */
+/* halo et ondes sur un moment fort (carte seulement) */
 .pp-halo{position:fixed;inset:0;z-index:9000;pointer-events:none}
 .pp-halo i{position:fixed;display:block;opacity:0;pointer-events:none}
 .pp-bloom{background:radial-gradient(closest-side,rgba(255,190,60,.5) 55%,rgba(255,140,40,.18) 80%,transparent);filter:blur(10px);animation:ppbloom .85s ease-out both}
@@ -4548,13 +4548,11 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 @media (prefers-reduced-motion:reduce){.pp-xprays,.pp-xpb.rest .pp-xpg{animation:none}.pp-halo{display:none}}
 .pp-card::before,.pp-card::after{content:"";position:absolute;pointer-events:none;opacity:0}
 .pp-card::after{inset:0;z-index:6;border-radius:inherit;background:linear-gradient(115deg,transparent 36%,rgba(255,217,61,.3) 50%,transparent 64%);background-size:260% 100%;background-position:130% 0}
-.pp-card.pp-cue::after{animation:ppcueShine .85s ease-out both}
-.pp-card.pp-cue-v2::after{animation-duration:.72s;animation-delay:.06s;background-image:linear-gradient(100deg,transparent 38%,rgba(255,176,32,.3) 50%,transparent 62%)}
-.pp-card.pp-cue-v3::after{animation-duration:.95s;background-image:linear-gradient(125deg,transparent 34%,rgba(255,217,61,.26) 48%,rgba(255,107,61,.2) 54%,transparent 66%)}
-@keyframes ppcueShine{0%{opacity:0;background-position:130% 0}15%{opacity:1}100%{opacity:0;background-position:-30% 0}}
-.pp-card.pp-cue-out::after{animation-duration:.34s;animation-delay:0s}   /* v456 : le reflet traverse la carte pendant qu'elle sort (0,32 s) */
-.pp-card.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 26px rgba(255,176,32,.38)!important}
-.pp-card.pp-cue-c.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 40px rgba(255,176,32,.55)!important}
+.pp-card.pp-cue::after{animation:ppcueShine .72s ease-in-out both;background-image:linear-gradient(105deg,transparent 36%,rgba(255,232,140,.85) 50%,transparent 64%)}
+@keyframes ppcueShine{0%{opacity:0;background-position:130% 0}12%{opacity:1}80%{opacity:1}100%{opacity:0;background-position:-30% 0}}
+/* v471 : le reflet est sur la carte (il la suit quand elle part) ; la carte attend ~0,5 s sur place pour qu'on le voie, puis part */
+.pp-card.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 34px rgba(255,190,60,.7)!important}
+.pp-card.pp-cue-c.pp-cue-sh{box-shadow:9px 9px 0 var(--yellow),0 0 44px rgba(255,190,60,.85)!important}
 @supports (color:color-mix(in srgb,red,blue)){.pp-card{box-shadow:9px 9px 0 color-mix(in srgb,var(--orange),var(--amber) calc(var(--pp-ch,0)*1%))}}
 @media (prefers-reduced-motion:reduce){.pp-card::before,.pp-card::after{display:none}.pp-card.pp-cue-sh,.pp-card.pp-cue-c.pp-cue-sh{box-shadow:9px 9px 0 var(--orange)!important}}
 .pp-mgoal b{font-weight:800}
@@ -12261,6 +12259,7 @@ function computeReinsertGap(niveau, remainingAfter){
 const GESTE_SEUIL = 45;
 const GESTE_DESARME = 33;
 let carteEnSortie = false;
+const PP_CUE_ATTENTE = 480;   /* v471 : ms que la carte attend sur place pendant le reflet d'un moment fort */
 let carteEnSortieT = null;   // minuteur du filet de sécurité : un seul à la fois, annulé dès que la carte est sortie
 const PP_NV = { vert:['var(--green)','ok'], rouge:['var(--pink)','x'], orange:['var(--amber)','wave'] };
 
@@ -12271,11 +12270,14 @@ function sortirCarte(niveau, opts, apres){
   if(!scene){ ppMood.anim = 'in'; apres(); clearTimeout(carteEnSortieT); carteEnSortie = false; return; }
   const sortie = niveau === 'orange' ? (opts.dy < 0 ? 'pp-out-up' : 'pp-out-mid') : (niveau === 'vert' ? 'pp-out-ok' : 'pp-out-ko');
   scene.style.animation = ''; scene.style.transition = '';
-  scene.classList.add(sortie);
-  ppCueSortie(scene, niveau);   // v456 : reflet sur la carte qui part
   const rc = document.querySelector('#pp-ses .pp-rcard');   // carte « à écrire » (téléphone) : la carte réponse sort avec la carte question
-  if(rc){ rc.style.animation = ''; rc.style.transition = ''; rc.classList.add(sortie); }
-  setTimeout(() => { ppMood.anim = 'in'; apres(); clearTimeout(carteEnSortieT); carteEnSortie = false; }, 320);
+  if(rc){ rc.style.animation = ''; rc.style.transition = ''; }
+  /* v471 : sur un moment fort, le reflet se joue d'abord sur la carte (elle attend PP_CUE_ATTENTE ms), puis la carte part avec son reflet. Sinon : sortie immédiate comme avant. */
+  const attente = (XP_ACTIF && ppCue) ? PP_CUE_ATTENTE : 0;
+  const part = () => { scene.classList.add(sortie); if(rc) rc.classList.add(sortie); };
+  ppCueSortie(scene, niveau);   // v456 : reflet sur la carte
+  if(attente) setTimeout(part, attente); else part();
+  setTimeout(() => { ppMood.anim = 'in'; apres(); clearTimeout(carteEnSortieT); carteEnSortie = false; }, 320 + attente);
 }
 
 (function(){
@@ -13035,18 +13037,18 @@ function ppCueSortie(sc, niveau){
   try{
     if(!XP_ACTIF || !ppCue || !sc) return;
     const evt = ppCue;
-    const cl = ['pp-cue', 'pp-cue-out', 'pp-cue-v' + (1 + Math.floor(Math.random() * 3))];
+    const cl = ['pp-cue'];
     if(evt === 'coriace') cl.push('pp-cue-c');
     cl.forEach(x => sc.classList.add(x));
     sc.classList.add('pp-cue-sh');
     if(evt !== 'rattrapee') haptique([10, 50, 14]);
-    ppCueHalo(sc, evt, niveau);
-    setTimeout(() => { sc.classList.remove('pp-cue-sh'); cl.forEach(x => sc.classList.remove(x)); }, 300);   // avant que la carte suivante n'arrive
+    /* v471 : plus de halo ni d'ondes sur une couche fixe (elle ne suivait pas la carte) : tout est sur la carte */
+    setTimeout(() => { sc.classList.remove('pp-cue-sh'); cl.forEach(x => sc.classList.remove(x)); }, PP_CUE_ATTENTE + 360);   // la carte et son reflet ont fini
   }catch(e){}
 }
 /* v457 : le moment fort se voit en lumière, pas en paillettes. Couche fixe (elle survit au changement de carte) :
    un halo doré qui enfle derrière la carte, des ondes de contour qui partent de ses bords (3 pour « Coriace », 2 pour « Palier », 1 pour « Rattrapée »),
-   et la même onde autour du bouton qu'on vient de toucher. Aucun texte. */
+   (v470 : plus rien autour du bouton touché). Aucun texte. */
 function ppCueHalo(sc, evt, niveau){
   try{
     if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -13056,8 +13058,6 @@ function ppCueHalo(sc, evt, niveau){
     const box = (rc, rad, cls, d, sc2) => '<i class="' + cls + '" style="left:' + rc.left + 'px;top:' + rc.top + 'px;width:' + rc.width + 'px;height:' + rc.height + 'px;border-radius:' + rad + 'px;--d:' + d + 'ms;--s:' + sc2 + '"></i>';
     let h = box({ left: r.left - r.width * .12, top: r.top - r.height * .12, width: r.width * 1.24, height: r.height * 1.24 }, 40, 'pp-bloom', 0, 1);
     for(let k = 0; k < nO; k++) h += box(r, 24, 'pp-onde', k * 150, (1.14 + k * .07).toFixed(2));
-    const bt = niveau ? document.querySelector('.pp-ans[onclick*="\'' + niveau + '\'"]') : null;
-    if(bt){ const br = bt.getBoundingClientRect(); if(br.width > 0){ for(let k = 0; k < nO; k++) h += box(br, 16, 'pp-onde pp-onde-b', 40 + k * 140, (1.28 + k * .12).toFixed(2)); try{ bt.classList.add('pp-ans-halo'); setTimeout(() => { try{ bt.classList.remove('pp-ans-halo'); }catch(e){} }, 700); }catch(e){} } }
     w.innerHTML = h; document.body.appendChild(w);
     setTimeout(() => { try{ w.remove(); }catch(e){} }, 1300);
   }catch(e){}
@@ -15292,7 +15292,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v469';
+const PP_APP_VERSION = 'v471';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -22223,6 +22223,12 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v471', t:["Moment fort : le reflet bien visible","Big moment: a clearly visible shine"], p:[
+    ["Quand une carte franchit un palier, un reflet doré traverse la carte (plus lumineux, plus long) et la carte attend un instant avant de partir : tu le vois en entier, et il part avec elle.","When a card reaches a new tier, a golden shine sweeps across the card (brighter, longer) and the card waits a moment before leaving: you see all of it, and it leaves with the card."]
+  ] },
+  { v:'v470', t:["Moment fort : la lumière reste sur la carte","Big moment: the glow stays on the card"], p:[
+    ["Quand une carte franchit un palier, le halo doré et les ondes entourent la carte seulement : le bouton que tu viens de toucher ne s'illumine plus.","When a card reaches a new tier, the golden glow and waves surround the card only: the button you just tapped no longer lights up."]
+  ] },
   { v:'v469', t:["Dos de la carte Maîtrise : plus clair, moins de texte","Back of the Mastery card: clearer, less text"], p:[
     ["Le dos montre l'XP de la saison et ce qui manque pour le rang suivant, puis l'XP par jour sur 7 jours avec trois chiffres : 7 jours (flèche si mieux ou moins bien que les 7 jours d'avant), record, cartes maîtrisées. Plus de phrases.","The back shows your season XP and what is left for the next rank, then XP per day over 7 days with three numbers: 7 days (arrow if better or worse than the 7 days before), best day, cards mastered. No more sentences."]
   ] },

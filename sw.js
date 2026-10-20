@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v271 : v471 (moment fort : reflet lumineux sur la carte, attente avant la sortie) : index.html change, donc nouvelle version du cache.
+   v270 : v470 (moment fort : plus de halo sur le bouton touché) : index.html change, donc nouvelle version du cache.
    v269 : v469 (dos de la carte Maîtrise : XP de la saison, XP par jour sur 7 jours, périodes nommées, cartes à amener au palier 3) : index.html change, donc nouvelle version du cache.
    v268 : v468 (Statistiques : cadre « 7 derniers jours », réussite sur 7 jours, libellés sans période répétée) : index.html change, donc nouvelle version du cache.
    v260 : v456 (le reflet doré se joue sur la carte qui part, plus de coche) : index.html change, donc nouvelle version du cache.
@@ -221,7 +223,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v269';
+const SW_VERSION = 'v271';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
