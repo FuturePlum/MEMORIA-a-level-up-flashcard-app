@@ -296,7 +296,7 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
     'Ajouter une date de contrôle':'Add a test date','Cette semaine':'This week','cartes à revoir par jour':'cards to review per day','À risque':'At risk','+ contrôle':'+ Test','Ajouter une date':'Add a date',
     'Matières et contrôles':'Subjects and tests','Toutes tes matières sont archivées.':'All your subjects are archived.','Afficher la réponse':'Show answer','Espace':'Space','pour afficher la réponse':'to show the answer',
     'Suppr':'Del','Maj':'Shift','Entrée':'Enter','Aucune carte':'No cards','Ta première carte':'Your first card','Ajouter des cartes':'Add cards',"Rien à réviser aujourd'hui":'Nothing to review today',
-    'Compte pour la maîtrise des cartes':'Counts toward card mastery','Les difficiles':'Tough ones','Les difficiles — quelle matière ?':'Tough ones — which subject?','Question suivante':'Next question','Indice':'Hint','Je ne sais pas':"I don't know",'Arrêter et faire le bilan':'Stop and sum up','Plus simple':'Simpler','Un exemple':'An example','Aide-moi à la retenir':'Help me remember it','Teste-moi sur cette carte':'Test me on this card','Mes cartes les plus ratées':'My most-missed cards',"Qu'est-ce qui manque ?":"What's missing?",'Fais une synthèse':'Make a summary','Mettre en pause':'Pause card','Reprendre':'Resume','Reprendre la carte':'Resume card','Elle revient dans tes révisions':'It comes back into your reviews','Elle sort des révisions, sans rien perdre':'It leaves your reviews, nothing is lost','Carte en pause':'Card paused','Carte reprise':'Card resumed','En pause':'Paused','Discuter de cette matière':'Talk about this subject','Questions, explications, entraînement':'Questions, explanations, practice','Discuter de la carte':'Talk about this card','Explication, astuce pour la retenir':'Explanation, a tip to remember it','Il en faut au moins 5 ratées 2 fois':'You need at least 5 cards missed twice',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
+    'Compte pour la maîtrise des cartes':'Counts toward card mastery','Compte pour la maîtrise':'Counts toward mastery','Ta régularité':'Your consistency','Ta maîtrise':'Your mastery','Tes matières':'Your subjects','Les difficiles':'Tough ones','Les difficiles — quelle matière ?':'Tough ones — which subject?','Question suivante':'Next question','Indice':'Hint','Je ne sais pas':"I don't know",'Arrêter et faire le bilan':'Stop and sum up','Plus simple':'Simpler','Un exemple':'An example','Aide-moi à la retenir':'Help me remember it','Teste-moi sur cette carte':'Test me on this card','Mes cartes les plus ratées':'My most-missed cards',"Qu'est-ce qui manque ?":"What's missing?",'Fais une synthèse':'Make a summary','Mettre en pause':'Pause card','Reprendre':'Resume','Reprendre la carte':'Resume card','Elle revient dans tes révisions':'It comes back into your reviews','Elle sort des révisions, sans rien perdre':'It leaves your reviews, nothing is lost','Carte en pause':'Card paused','Carte reprise':'Card resumed','En pause':'Paused','Discuter de cette matière':'Talk about this subject','Questions, explications, entraînement':'Questions, explanations, practice','Discuter de la carte':'Talk about this card','Explication, astuce pour la retenir':'Explanation, a tip to remember it','Il en faut au moins 5 ratées 2 fois':'You need at least 5 cards missed twice',"S'entraîner":'Practice','Un score, sans pression':'A score, no pressure','sur':'out of','Rien à réviser':'Nothing to review',
     "Retour à l'accueil":'Back to home',"Terminé pour aujourd'hui":'Done for today','Par quelle matière tu commences ?':'Which subject do you start with?','Tout enchaîner':'Do everything in a row',
     'Revoir quoi ?':'Review what?','Tout regrouper':'Combine all','Entraînement terminé · ne fait pas avancer la maîtrise':"Practice finished · doesn't advance mastery",'À revoir':'To review','Tout juste':'Just about',
     'Retour aux révisions':'Back to reviews','⇄ inversée':'⇄ reversed','Aucune carte trouvée. Essaie un autre mot.':'No cards found. Try another word.',"Aucune carte pour l'instant.":'No cards yet.',
@@ -453,10 +453,13 @@ const SEED_STOCKAGE = { "id": "", "donnees": {} };
   /* v419 : statistiques ludiques (rang de maîtrise, % du jour, temps par séance) */
   var RANGS_EN={'Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend'};
   Object.assign(D,{'Où en sont tes cartes':'Where your cards stand','Maîtrisées':'Mastered','Presque maîtrisées':'Almost mastered','En route':'On the way','À apprendre':'To learn','Aucune carte pour l\u2019instant':'No cards yet','XP aujourd\u2019hui':'XP today','Niveau':'Level','XP au total':'Total XP','XP cette semaine':'XP this week','Maîtrise':'Mastery','Bronze':'Bronze','Argent':'Silver','Or':'Gold','Platine':'Platinum','Diamant':'Diamond','Champion':'Champion','Maître':'Master','Grand maître':'Grandmaster','Légende':'Legend','Vitrine':'Showcase','estimé en fin de saison':'estimated at season end','Sommet':'Peak','/sem':'/wk','Rangs':'Ranks','Maîtrisées par jour':'Mastered per day','À voir pour progresser':'To review to progress','Cartes qui résistent':'Stubborn cards','Aucune carte ne résiste':'No stubborn cards',"aujourd'hui":'today','Aujourd\'hui':'Today','de ce que tu devais voir':'of what you had to review',"Rien à réviser aujourd'hui":'Nothing to review today','Temps par séance':'Time per session','passées à réviser':'spent studying','Nouveau rang !':'New rank!','Récemment':'Recently','par séance en moyenne':'average per session','cette semaine':'this week',"Temps actif seulement : l'app laissée ouverte ne compte pas.":"Active time only: leaving the app open doesn't count.","Aucune séance enregistrée pour l'instant.":'No session recorded yet.','erreurs':'errors','cartes actives':'active cards'});
+  /* v468 : libellés de la page Statistiques (cadre sur 7 jours) */
+  Object.assign(D,{'7 derniers jours':'Last 7 days','sur 7 jours':'over 7 days','cartes révisées':'cards reviewed','carte révisée':'card reviewed'});
   RULES.push(
     f(/^(\d+) maîtrisées? sur (\d+)$/,function(n,t){ return n+' mastered of '+t; }),
     f(/^Encore ([\d\u202f\u00a0 ]+) XP pour devenir (.+)$/,function(n,r){ return n+' XP to become '+(RANGS_EN[r]||r); }),
     f(/^(\d+) maîtrisées? cette semaine$/,function(n){ return n+' mastered this week'; }),
+    f(/^(\d+) maîtrisées? sur 7 jours$/,function(n){ return n+' mastered over 7 days'; }),
     f(/^Encore (\d+(?:[.,]5)?) cartes? à maîtriser pour devenir (.+)$/,function(n,r){ n = n.replace(',', '.'); return c(n,'card')+' left to master to become '+(RANGS_EN[r]||r); }),
     f(/^Saison T(\d) (\d{4})$/,function(q,y){ return 'Season Q'+q+' '+y; }),
     f(/^Fin de saison dans (\d+) jours?$/,function(n){ return 'Season ends in '+c(n,'day'); }),
@@ -2572,6 +2575,11 @@ body.pp-ses-on #pp-ses{display:flex;animation:ppup .3s ease-out}
 .pp-stat i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
 .pp-stat b{display:block;font-size:22px;line-height:1;font-weight:800}
 .pp-stat span{color:var(--muted);font-size:12.5px}
+/* v463 (téléphone) : « cartes révisées (7j) » sur une seule ligne (texte un peu plus petit, espace icône réduit) ; texte + chiffre descendus de 3 px */
+.pp-stat{gap:8px}
+.pp-stat>div{transform:translateY(3px)}
+.pp-stat span{font-size:11.5px}
+@media (min-width:900px) and (min-height:480px){ #pp-stats-page .pp-stat{gap:10px} #pp-stats-page .pp-stat span{font-size:12.5px} }
 .pp-heat{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:6px}
 .pp-heat i{aspect-ratio:1;border-radius:6px;background:var(--c-s1)}
 .pp-heat i.h1{background:var(--c-h1)}
@@ -3206,7 +3214,7 @@ input:focus-visible,textarea:focus-visible{ outline-offset:1px; }
   background-attachment:fixed !important;
 }
 /* v146 : clair adouci — bordures et ombres chaudes au lieu du contour noir (le clair ne ressemble plus à un sombre « inversé »). */
-:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-grp,.pp-sec,.cb-wl,.cb-mats,.pp-streak,.pp-gear){ border-color:var(--c-edge); }
+:root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-grp,.pp-sec,.cb-wl,.cb-mats,.pp-streak,.pp-gear,.pp-cadre){ border-color:var(--c-edge); }
 :root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec){ --d:3px; --sc:var(--c-edge); box-shadow:0 3px 0 var(--c-edge), 0 10px 22px rgba(var(--ov),.10); }
 :root:root:root[data-theme="light"] :is(.pp-row,.pp-prog7,.pp-mat,.pp-sec):is(:active,.js-press){ box-shadow:0 0 0 0 var(--c-edge); }
 :root:root:root[data-theme="light"] :is(.pp-grp,.cb-wl,.cb-mats){ box-shadow:0 4px 0 var(--c-edge), 0 12px 26px rgba(var(--ov),.12); }
@@ -4482,6 +4490,9 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-mbadge.leg{animation:ppleg 2.6s ease-in-out infinite}
 @keyframes ppleg{50%{filter:drop-shadow(0 0 17px color-mix(in srgb,var(--c) 85%,transparent))}}
 .pp-mgoal{margin:9px 0 0;font-size:14px;color:var(--cream)}
+/* v464 : plus de ligne « Encore X XP pour devenir … » : l'objectif d'XP du prochain rang est écrit en petit sous la fin de la barre */
+.pp-mbw{flex:1;min-width:0;position:relative}
+.pp-mgoal.pp-mgoal-t{position:absolute;right:0;top:100%;margin:5px 0 0;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
 .pp-mxp{margin:12px 0 0;padding-top:10px;border-top:1px solid rgba(255,255,255,.12)}
 .pp-mxl{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:14px;color:var(--cream)}
 .pp-mxl b{font-weight:800;font-size:15px}
@@ -4649,7 +4660,7 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-lad .lock{opacity:.3;filter:saturate(.4)}
 .pp-lad .cur .pp-mbadge{height:34px;filter:drop-shadow(0 0 8px var(--c))}
 .pp-lad .cur em{color:var(--c3)}
-.pp-dkt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.pp-dkt{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
 .pp-dkt>div{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:10px 6px;text-align:center}
 .pp-dkt b{display:block;font-size:20px;font-weight:800;line-height:1.1;color:var(--k,var(--cream))}
 .pp-dkt b small{font-size:11px;font-weight:700;color:var(--muted)}
@@ -4700,6 +4711,16 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
 .pp-sr .bb{height:8px;border-radius:5px;background:var(--c-s1);overflow:hidden}
 .pp-sr .bb u{display:block;height:100%;border-radius:5px;background:var(--blue);transform-origin:left;animation:ppgrow .8s .2s ease-out both}
 .pp-sr small{color:var(--muted);font-size:12px;text-align:right;min-width:52px}
+/* v467 : cadres de la page Statistiques (un par thème) */
+.pp-cadre{padding:14px;border-radius:20px;background:var(--panel);border:1.5px solid var(--line);margin-bottom:12px}
+.pp-sb .pp-cadre>.pp-sec2{margin:0 0 10px}
+.pp-cadre .pp-sgG{margin-bottom:0}
+.pp-cadre .pp-glob{padding:0;background:none;border:0;margin-bottom:0}
+.pp-cadre .pp-stat{background:transparent}
+.pp-cadre .pp-sgSh{margin-top:14px}
+#pp-stats-page .pp-cadre .pp-stats{grid-column:auto;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
+#pp-stats-page .pp-cadre .pp-stat{padding:12px;border-radius:16px}
+#pp-stats-page .pp-sb>.pp-cMat{break-inside:auto}
 @media (min-width:900px) and (min-height:480px){
   #pp-stats-page .pp-sgM{ grid-column:1; grid-row:1; }
   #pp-stats-page .pp-sgT{ grid-column:2; grid-row:1; }
@@ -11106,16 +11127,15 @@ function ppRevisionsParJour(nb){
   try{ ppLireJSON('cartes-reponses', [], Array.isArray).forEach(x => { if(pcJournalOk(x) && vus[x.d]) vus[x.d].add(x.id); }); }catch(e){}
   return jours.map(d => Math.max(vus[d].size, CARDS.filter(c => c.derniereRevision === d).length));
 }
+/* v466 : plus de chiffres « cartes en 7 jours » / « maîtrisées » au-dessus des barres (les maîtrisées sont déjà dans le bandeau de la matière et dans les statistiques) : on garde le seul graphique, la carte de révision gagne de la place. */
 function ppProgressHtml(){
   const today = todayStr();
   const dl = (typeof langueChoisie === 'function' && langueChoisie() === 'en') ? ['S','M','T','W','T','F','S'] : ['D','L','M','M','J','V','S'];
   const cnt = ppRevisionsParJour(7), lab = [];
   for(let i = 6; i >= 0; i--) lab.push(dl[new Date(addDays(today, -i) + 'T00:00:00').getDay()]);
-  const sem = cnt.reduce((a, v) => a + v, 0);
-  const mas = cartesPourStats().filter(c => (c.palier || 0) >= MASTERED_PALIER).length;   /* v336 */
   const mx = Math.max(1, ...cnt);
   const bars = cnt.map((v, i) => `<div><em><s class="${v ? (i === 6 ? 't' : 'a') : ''}" style="height:${v ? Math.max(22, Math.round(v / mx * 100)) : 6}%;animation-delay:${i * 50}ms"></s></em><span class="${i === 6 ? 't' : ''}">${lab[i]}</span></div>`).join('');
-  return `<div class="pp-prog7" role="button" onclick="openStreakModal()"><div class="pp-p7s"><div><i style="background:var(--c-osoft);color:var(--orange-t)">${PP_IC.cards.replace(/22/g,'16')}</i><span style="display:block"><b>${sem}</b><span>carte${sem>1?'s':''} en 7 jours</span></span></div><u></u><div><i style="background:var(--c-gsoft);color:var(--green)">${ppSvg('<path d="M4 12.5l5 5L20 6.5"/>',16)}</i><span style="display:block"><b>${mas}</b><span>maîtrisée${mas>1?'s':''}</span></span></div></div><div class="pp-p7b">${bars}</div></div>`;
+  return `<div class="pp-prog7" role="button" onclick="openStreakModal()"><div class="pp-p7b">${bars}</div></div>`;
 }
 /* Compteur qui monte de 0 au chiffre (500 ms), seulement quand l'accueil vient d'apparaître ;
    attend la fin du splash d'ouverture pour que l'animation soit visible. */
@@ -11466,7 +11486,7 @@ function renderStudyInner(){
     const ppStill = !(ppFresh || !prevHomeView);
     ppFresh = false;
     const multi = matieres.length > 1 && matiereFilter === 'toutes';
-    const rowAll = `<button class="pp-row" ${totalFiltered===0?'disabled':''} onclick="${multi ? 'openChooseMatiereForAll()' : "startStudySession('all')"}"><i class="pp-ri">${PP_IC.all.replace(/16/g,'18')}</i><div><b>Réviser tout${matiereFilter!=='toutes' ? ' — ' + escapeHtml(matiereFilter) : ''}</b><span>Compte pour la maîtrise des cartes</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
+    const rowAll = `<button class="pp-row" ${totalFiltered===0?'disabled':''} onclick="${multi ? 'openChooseMatiereForAll()' : "startStudySession('all')"}"><i class="pp-ri">${PP_IC.all.replace(/16/g,'18')}</i><div><b>Réviser tout${matiereFilter!=='toutes' ? ' — ' + escapeHtml(matiereFilter) : ''}</b><span>Compte pour la maîtrise</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
     const rowQuiz = `<button class="pp-row" ${totalFiltered<2?'disabled':''} onclick="openChooseMatiereForQuiz()"><i class="pp-ri">${PP_IC.quiz.replace(/16/g,'18')}</i><div><b>S'entraîner</b><span>Un score, sans pression</span></div><span style="color:var(--muted)">${PP_IC.chev}</span></button>`;
     el.innerHTML = `<div class="pp-view pp-home${ppStill ? ' pp-still' : ''}">${ppCtlHtml() || ppCtlAddHtml()}
   <div class="pp-hero"><div><span class="pp-sticker">${dueTotal > 0 ? "À réviser aujourd'hui" : 'Tout est à jour'}</span></div><div class="pp-hmid"><div class="pp-big" id="bigN" data-n="${dueTotal}">${dueTotal}</div>
@@ -12961,7 +12981,8 @@ function xpAffichage(){
   let sem = jour(today), prec = 0;
   for(let k = 1; k <= 6; k++) sem += jour(addDays(today, -k));
   for(let k = 7; k <= 13; k++) prec += jour(addDays(today, -k));
-  return { ...xpNiveau(xpTotal(s)), auj, record: Math.max(s.r, auj), sem: Math.round(sem), prec: Math.round(prec) };
+  const jours = []; for(let k = 6; k >= 0; k--) jours.push(Math.round(jour(addDays(today, -k))));   /* v469 : XP de chacun des 7 derniers jours (du plus ancien à aujourd'hui), pour le graphique du dos de la carte */
+  return { ...xpNiveau(xpTotal(s)), auj, record: Math.max(s.r, auj), sem: Math.round(sem), prec: Math.round(prec), jours };
 }
 function xpFmt(n){ n = Math.round(+n || 0); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'); }
 function xpCarteHtml(){
@@ -15271,7 +15292,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v461';
+const PP_APP_VERSION = 'v469';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -21238,7 +21259,7 @@ function ppStatsSeancesHtml(){
   const vraies = sem.filter(x => x.ms >= PP_SEANCE_MIN_MS), ms = vraies.length ? vraies.reduce((a, x) => a + x.ms, 0) / vraies.length : 0;
   const clock = ppSvg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 16);
   return `<div class="pp-stat"><i style="background:var(--c-s1);color:var(--blue)">${clock}</i><div><b>${ms ? ppDuree(ms) : '–'}</b><span>par séance en moyenne</span></div></div>
-    <div class="pp-stat"><i style="background:var(--c-osoft);color:var(--orange-t)">${ppIc16(PP_IC.cards)}</i><div><b>${n || '–'}</b><span>carte${n > 1 ? 's' : ''}<br>révisée${n > 1 ? 's' : ''} (7j)</span></div></div>`;
+    <div class="pp-stat"><i style="background:var(--c-osoft);color:var(--orange-t)">${ppIc16(PP_IC.cards)}</i><div><b>${n || '–'}</b><span>carte${n > 1 ? 's' : ''} révisée${n > 1 ? 's' : ''}</span></div></div>`;
 }
 /* ---- v160 : aperçu en direct sous les champs de texte (visible seulement s'il y a une mise en forme) + aide ---- */
 /* v265 : l'aperçu n'est plus un cadre sous chaque champ. Un seul bloc flottant (#pp-rvf), collé juste au-dessus du clavier (écran tactile) ou sous le champ
@@ -21542,7 +21563,7 @@ function ppStatsHtml(){
   const loc = (typeof langueChoisie === 'function' && langueChoisie() === 'en') ? 'en-GB' : 'fr-FR';
   const sesHtml = ses.length ? ses.map(x => `<div class="pp-sr"><div class="d">${ppEsc(new Date(x.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'short', day:'numeric', month:'short' }))}${x.e ? '<em class="pp-archtag">erreurs</em>' : ''}</div><b>${ppDuree(x.ms)}</b><div class="bb"><u style="width:${Math.max(6, Math.round(x.ms / maxMs * 100))}%"></u></div><small>${x.n} carte${x.n > 1 ? 's' : ''}${x.e ? '' : ' · ' + Math.round(x.v / x.n * 100) + ' %'}</small></div>`).join('') : `<p class="pp-hint">Aucune séance enregistrée pour l'instant.</p>`;
   const semMs = ppSemaineMs();
-  const seances = `<div class="pp-sgS"><div class="pp-sgSh"><p class="pp-sub2">Temps par séance</p>${semMs ? `<span class="pp-sgSw"><b>${ppDuree(semMs)}</b> cette semaine</span>` : ''}</div>${sesHtml}${ses.length ? `<p class="pp-hint" style="margin-top:6px">Temps actif seulement : l'app laissée ouverte ne compte pas. Le % est la part de réponses « Facile ».</p>` : ''}</div>`;
+  const seances = `<div class="pp-sgS"><div class="pp-sgSh"><p class="pp-sub2">Temps par séance</p>${semMs ? `<span class="pp-sgSw"><b>${ppDuree(semMs)}</b> sur 7 jours</span>` : ''}</div>${sesHtml}</div>`;
   /* v423 : « Depuis le début » = TOUT (matières archivées, en pause, supprimées comprises). « Où j'en suis » = matières actives seulement. */
   const nomsVivants = new Set(getMatieres());
   const archiv = getMatieres().filter(m => matieresConfig[m] && matieresConfig[m].archive).map(m => {
@@ -21554,26 +21575,29 @@ function ppStatsHtml(){
   const masTermines = termines.reduce((a, x) => a + x.mas, 0);
   const masVivantes = CARDS.filter(c => (c.palier || 0) >= MASTERED_PALIER).length - archiv.reduce((a, x) => a + x.mas, 0);   /* actives + en pause */
   const masTotal = masVivantes + masTermines;
-  const glob = `<div class="pp-sgG"><div class="pp-glob"><div class="pp-g2"><div><b>${masTotal}</b><span>carte${masTotal > 1 ? 's' : ''} maîtrisée${masTotal > 1 ? 's' : ''}</span></div><div><b>${ex.total}</b><span>révision${ex.total > 1 ? 's' : ''} au total</span></div><div><b>${ex.temps >= 3600000 ? Math.round(ex.temps / 3600000) + ' h' : (ex.temps ? ppDuree(ex.temps) : '–')}</b><span>passées à réviser</span></div></div>${termines.length ? `<small>${masTermines} de ces cartes maîtrisées sont dans des matières terminées (archivées ou supprimées).</small>` : ''}</div></div>`;
+  const glob = `<div class="pp-sgG"><div class="pp-glob"><div class="pp-g2"><div><b>${masTotal}</b><span>carte${masTotal > 1 ? 's' : ''} maîtrisée${masTotal > 1 ? 's' : ''}</span></div><div><b>${ex.total}</b><span>révision${ex.total > 1 ? 's' : ''} au total</span></div><div><b>${ex.temps >= 3600000 ? Math.round(ex.temps / 3600000) + ' h' : (ex.temps ? ppDuree(ex.temps) : '–')}</b><span>passées à réviser</span></div></div></div></div>`;
   const termine = termines.length ? `<div class="pp-sgE"><p class="pp-sub2" style="margin-top:16px">Matières terminées</p>${termines.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''} · ${x.tag}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}</div>` : '';
-  /* v423 : taux de réussite = part de « Facile » sur les 10 dernières séances (hors « Revoir les erreurs »). Même base que le bilan de fin de séance. */
-  const sesTaux = ppSeancesLire().filter(x => !x.e).slice(-10);
+  /* v468 : taux de réussite = part de « Facile » sur les 7 derniers jours (hors « Revoir les erreurs »), comme les autres tuiles du cadre « 7 derniers jours » (avant, v423 : 10 dernières séances). */
+  const auj7 = todayStr(), deb7 = addDays(auj7, -6);
+  const sesTaux = ppSeancesLire().filter(x => !x.e && x.d >= deb7 && x.d <= auj7);
   const nTaux = sesTaux.reduce((a, x) => a + x.n, 0), vTaux = sesTaux.reduce((a, x) => a + x.v, 0);
   const taux = nTaux ? Math.round(vTaux / nTaux * 100) : null;
-  const tuileTaux = `<div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${ppIc16(PP_IC.ok)}</i><div><b>${taux === null ? '–' : taux + ' %'}</b><span>${sesTaux.length > 1 ? 'réussite · ' + sesTaux.length + ' dernières séances' : 'réussite'}</span></div></div>`;
+  const tuileTaux = `<div class="pp-stat"><i style="background:var(--c-gsoft);color:var(--green)">${ppIc16(PP_IC.ok)}</i><div><b>${taux === null ? '–' : taux + ' %'}</b><span>réussite</span></div></div>`;
   const tuileSerie = `<div class="pp-stat"><i style="background:var(--c-yicon);color:var(--yellow-t)">${ppIc16(PP_IC.fire)}</i><div><b>${streak}</b><span>jour${streak > 1 ? 's' : ''} de suite</span></div></div>`;
+  /* v467 : la page est rangée en cadres, un par thème (le rang et « Aujourd'hui » sont déjà deux cartes, on ne les double pas). Aucune information retirée. */
+  const matsHtml = mats.length ? `<div class="pp-sgB">${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}</div>` : '';
+  const cadreMat = (mats.length || termine) ? `<div class="pp-cadre pp-cMat"><p class="pp-sec2">Tes matières</p>${matsHtml}${termine}</div>` : '';
   return `<div class="pp-sh"><button class="pp-back" aria-label="Fermer" onclick="closeStreakModal()">${PP_IC.back}</button><div><small>Ta progression</small><h2>Statistiques</h2></div></div>
-  <div class="pp-sb pp-view"><p class="pp-sec2">Où j'en suis</p>${hero}${jour}
+  <div class="pp-sb pp-view"><p class="pp-sec2">Aujourd'hui</p>${hero}${jour}
+  <div class="pp-cadre"><p class="pp-sec2">7 derniers jours</p>
   <div class="pp-stats">${tuileTaux}${tuileSerie}${ppStatsSeancesHtml()}</div>
-  <p class="pp-sec2">Récemment</p>
-  ${seances}
-  <div class="pp-sgA"><p class="pp-sub2" style="margin-top:16px">30 derniers jours</p><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div>
-  <p class="pp-hint" style="margin-top:6px">Plus la case est claire, plus tu as révisé ce jour-là.</p></div>
-  <p class="pp-sec2">Depuis le début</p>${glob}
-  <div class="pp-sgC"><p class="pp-sub2" style="margin-top:16px">Répartition des paliers</p><p class="pp-hint" style="margin:0 0 8px">Une carte monte d'un palier à chaque bonne réponse. Au palier 4, elle est maîtrisée.</p><div class="pp-seg pp-seg-r" aria-hidden="true">${barre}</div>
-  <div class="pp-tiers">${tuiles}</div></div>
-  <div class="pp-sgB">${mats.length ? `<p class="pp-sub2" style="margin-top:16px">Par matière</p>${mats.map(x => `<div class="pp-hb" style="--c:${couleurMatiere(x.m)}"><div class="t1"><span class="dot"></span>${ppEsc(x.m)}<small>${x.mas}/${x.tot} maîtrisée${x.mas > 1 ? 's' : ''}</small></div><div class="bb"><u style="width:${Math.round(x.mas / x.tot * 100)}%"></u></div></div>`).join('')}` : ''}</div>
-  ${termine}</div>`;
+  ${seances}</div>
+  <div class="pp-cadre"><p class="pp-sec2">30 derniers jours</p>
+  <div class="pp-sgA"><div class="pp-heat">${heat.map((h, i) => `<i class="${h ? 'h' + h : ''}" style="animation:pppop .3s var(--pps) both;animation-delay:${i * 14}ms"></i>`).join('')}</div></div></div>
+  <div class="pp-cadre"><p class="pp-sec2">Ta maîtrise</p>${glob}
+  <div class="pp-sgC"><p class="pp-sub2" style="margin-top:16px">Répartition des paliers</p><div class="pp-seg pp-seg-r" aria-hidden="true">${barre}</div>
+  <div class="pp-tiers">${tuiles}</div></div></div>
+  ${cadreMat}</div>`;
 }
 
 /* v453 : seuils recalculés pour un rythme de 2 à 3 contrôles par semaine (simulation-rangs.js). Une carte rapporte 1 point au total : ½ quand elle est « prête pour le contrôle » (palier 3, contrôle à 10 jours ou moins), le reste (½ ou 1) quand elle devient maîtrisée. */
@@ -21660,10 +21684,10 @@ function ppRangCarte(o){
   const mnum = `<div class="pp-mnum"><span><b>${xpFmt(o.n)}</b> XP</span></div>`;
   const but = rg.dernier
     ? `Sommet atteint : tu es Légende ce trimestre.`
-    : `Encore <b>${xpFmt(rg.reste)}</b> XP pour devenir <b style="color:${nx.c}">${nx.n}</b>`;
+    : '';
   const fin = o.jours > 0 ? `Fin de saison dans ${o.jours} jour${o.jours > 1 ? 's' : ''}` : `Dernier jour de la saison`;
   const haut = x ? `<div class="pp-mpct"><b>+${xpFmt(x.auj)}</b><span>XP aujourd\u2019hui</span></div>` : '';
-  const sem = o.masSem > 0 ? `<p class="pp-mwk">${o.masSem} maîtrisée${o.masSem > 1 ? 's' : ''} cette semaine</p>` : '';
+  const sem = o.masSem > 0 ? `<p class="pp-mwk">${o.masSem} maîtrisée${o.masSem > 1 ? 's' : ''} sur 7 jours</p>` : '';
   const calque = o.nouveau ? `<div class="pp-rs" style="--cn:${r.c};--c3n:${r.c3};--co:${PP_RANGS[o.ancienI].c}"></div>` : '';
   return `<div class="pp-sgM"><div class="pp-mst r${rg.i}${o.nouveau ? ' pp-ranim' : ''}" style="${ppRangVars(rg.i)}" role="button" tabindex="0" aria-label="Maîtrise" data-cur="${o.cur}" data-i="${rg.i}" data-o="${o.ancienI || 0}" data-n="${Math.round(o.n)}">
     ${rg.i >= 7 ? ppEmbers(rg.i === PP_RANG_MAX ? 18 : 9) : ''}
@@ -21671,8 +21695,8 @@ function ppRangCarte(o){
     <div class="pp-minfo"><small>Saison ${lab}</small><b class="pp-rn">${r.n}</b></div>
     ${haut}</div>
     ${mnum}
-    <div class="pp-mrow"><div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
-    <p class="pp-mgoal">${but}</p>${sem}
+    <div class="pp-mrow"><div class="pp-mbw"><div class="pp-mbar"><u style="width:${rg.pct}%"></u></div>${rg.dernier ? '' : `<p class="pp-mgoal pp-mgoal-t">${xpFmt(rg.suivant)} XP</p>`}</div>${rg.dernier ? '' : `<span class="pp-mnext" style="${ppRangVars(rg.i + 1)}">${ppBadgeRang(rg.i + 1)}</span>`}</div>
+    ${rg.dernier ? `<p class="pp-mgoal">${but}</p>` : ''}${sem}
     <p class="pp-mseas">${fin}</p><i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i>${calque}</div></div>`;
 }
 
@@ -21956,35 +21980,44 @@ function ppXpCarteAnime(el){
    Les Statistiques sont recréées à chaque ouverture, donc la carte repart toujours sur sa face principale. */
 let ppDosHtml = '';
 function ppRangDos(o){
-  /* v455 : seuils de rang en XP, niveau, XP totale, semaine comparée à la précédente, vitrine. Plus de projection (« estimé en fin de saison », allure nécessaire). v459 : « Ton rythme » et « Prochain contrôle » à la place de la répartition des cartes (doublon des Statistiques). */
+  /* v469 : TOUT le dos parle du rang. Gauche : échelle des rangs, XP de la SAISON (le chiffre qui fait le rang, le même que sur la face avant) et XP qui manquent pour le rang suivant, vitrine.
+     Droite : XP par jour sur les 7 derniers jours (même unité que l'échelle) avec les périodes nommées (« 7 jours d'avant », « Meilleur jour (depuis le début) »), cartes maîtrisées sur 7 jours,
+     bonus du jour, prochain contrôle (+ combien de cartes restent à amener au palier 3), puis « Cartes qui résistent ». Plus de « XP au total » (depuis le début : ne sert pas au rang). Plus de projection (v455). */
   const rg = ppRangMaitrise(o.n), r = rg.r, cs = o.cs, today = o.today;
-  const ses = ppSeancesLire(), loc = ppLangueEn() ? 'en-GB' : 'fr-FR', en = ppLangueEn();
-  const x = XP_ACTIF ? xpAffichage() : null, total = x ? xpTotal() : 0;
+  const loc = ppLangueEn() ? 'en-GB' : 'fr-FR', en = ppLangueEn();
+  const x = XP_ACTIF ? xpAffichage() : null;
+  const nj = Math.round(+o.jours), fin = !(nj >= 0) ? '' : nj > 0 ? (en ? nj + (nj > 1 ? ' days left' : ' day left') : nj + (nj > 1 ? ' j restants' : ' j restant')) : (en ? 'Last day' : 'Dernier jour');
+  /* v465 : plus de « Niveau » ni de ligne « Niveau N+1 dans … XP » : le rang est le seul objectif (le niveau ne débloquait rien et doublait le rang). */
+  const nxt = rg.dernier ? '' : (en ? PP_RANGS_EN[rg.i + 1] : rg.suivantNom);
   const tuiles = x ? `<div class="pp-dkt">
-    <div><b style="--k:${r.c3}">${x.niv}</b><span>Niveau</span></div>
-    <div><b style="--k:${r.c3}">${xpFmt(total)}</b><span>XP au total</span></div>
-    <div><b style="--k:${r.c3}">${xpFmt(x.sem)}</b><span>XP cette semaine</span></div></div>
-    <p class="pp-dkv">${en ? 'Level ' + (x.niv + 1) + ' in ' : 'Niveau ' + (x.niv + 1) + ' dans '}${xpFmt(Math.max(1, x.cout - x.dans))} XP</p>
-    <p class="pp-dkv">${en ? 'Last week ' : 'Semaine précédente '}${xpFmt(x.prec)} \u00b7 ${en ? 'Best day ' : 'Record '}${xpFmt(x.record)}</p>` : '';
+    <div><b style="--k:${r.c3}">${xpFmt(o.n)}</b><span>${en ? 'XP this season' : 'XP de la saison'}</span></div>
+    <div><b style="--k:${r.c3}">${rg.dernier ? '\u2713' : xpFmt(rg.reste)}</b><span>${rg.dernier ? (en ? 'top rank reached' : 'rang maximum atteint') : (en ? 'XP to reach ' + nxt : 'XP pour atteindre ' + nxt)}</span></div></div>` : '';
   const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(y => `<span style="${ppRangVars(y.i)}">${ppBadgeRang(y.i)}<em>${ppSaisonLabel(y.id)}</em></span>`).join('')}</div>` : '';
   /* échelle des 9 rangs (seuils en XP) */
   const lad = PP_RANGS.map((y, i) => `<span class="${i < rg.i ? 'ok' : i === rg.i ? 'cur' : 'lock'}" style="${ppRangVars(i)}">${ppBadgeRang(i)}<em>${ppXpCourt(y.s)}</em></span>`).join('');
-  /* maîtrisées par jour (7 derniers jours) */
-  const j7 = []; for(let k = 6; k >= 0; k--){ const d = addDays(today, -k); j7.push({ d, m: ses.filter(x => x.d === d).reduce((a, x) => a + x.m, 0) }); }
-  const mx = Math.max(1, ...j7.map(x => x.m));
-  const barres = j7.map(x => `<div${x.d === today ? ' class="t"' : ''}><b>${x.m || ''}</b><i style="--r:${(x.m / mx).toFixed(3)}"></i><em>${ppEsc(new Date(x.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'narrow' }))}</em></div>`).join('');
-  /* v459 : « Où en sont tes cartes » est retiré : c'était le même chiffre que « Répartition des paliers » des Statistiques. À la place, ce que les Statistiques ne disent pas et qui touche à l'XP :
-     « Ton rythme » (XP des séances, bonus de série) et « Prochain contrôle » (combien de cartes sont prêtes). Aucun calcul d'XP ni de maîtrise touché : lecture seule. */
-  let rythme = '';
+  /* v469 : XP par jour sur les 7 derniers jours (registre synchronisé : mêmes chiffres sur tous les appareils), même unité que l'échelle des rangs. Avant : cartes maîtrisées par jour (séances de cet appareil). */
+  const jx = (x && Array.isArray(x.jours)) ? x.jours : [];
+  const j7 = []; for(let k = 6; k >= 0; k--) j7.push({ d: addDays(today, -k), v: Math.max(0, Math.round(+jx[6 - k]) || 0) });
+  const mx = Math.max(1, ...j7.map(y => y.v));
+  const barres = j7.map(y => `<div${y.d === today ? ' class="t"' : ''}><b>${y.v ? ppXpCourt(y.v) : ''}</b><i style="--r:${(y.v / mx).toFixed(3)}"></i><em>${ppEsc(new Date(y.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'narrow' }))}</em></div>`).join('');
+  const nb = Math.max(0, Math.round(+o.masSem || 0));
+  const rythme = x ? `<p class="pp-dks">${en ? 'XP per day' : 'XP par jour'}<span>${en ? 'Last 7 days' : '7 derniers jours'}</span></p><div class="pp-dkb">${barres}</div>
+    <p class="pp-dkv">${en ? 'Total ' : 'Total '}${xpFmt(x.sem)} XP \u00b7 ${en ? 'previous 7 days ' : '7 jours d\u2019avant '}${xpFmt(x.prec)} XP${x.record > 0 ? '<br>' + (en ? 'Best day (ever) ' : 'Meilleur jour (depuis le début) ') + xpFmt(x.record) + ' XP' : ''}<br>${nb} ${en ? (nb === 1 ? 'card' : 'cards') + ' mastered over 7 days' : (nb > 1 ? 'cartes maîtrisées' : 'carte maîtrisée') + ' sur 7 jours'}</p>` : '';
+  /* v465 : « Ton rythme » est retiré (4 chiffres peu parlants). À la place, UNE info qui sert à monter de rang et qui n'était nulle part : le bonus du jour
+     (terminer toutes les cartes dues) est-il gagné, ou combien de cartes restent pour l'avoir ? Aucun chiffre de la formule. Caché s'il n'y avait rien à réviser aujourd'hui
+     (st.dep === 0 : aucun bonus possible) ou si tout est déjà fait sans bonus. Mêmes conditions que xpApresReponse (st.ob / au.ob, cartes dues = derniereRevision ≠ aujourd'hui et prochaineRevision ≤ aujourd'hui). Lecture seule. */
+  let bonus = '';
   if(x){
     try{
-      const sem0 = addDays(today, -6), xsem = ses.filter(q => q.d >= sem0 && q.d <= today).map(ppSeanceX).filter(v => v > 0);
-      let dern = 0; for(let k = ses.length - 1; k >= 0; k--){ const v = ppSeanceX(ses[k]); if(v > 0){ dern = v; break; } }
-      const meil = xsem.length ? Math.max(...xsem) : 0, moy = xsem.length ? Math.round(xsem.reduce((a, v) => a + v, 0) / xsem.length) : 0;
-      let bs = 0; try{ bs = Math.round((xpMultSerie() - 1) * 100); }catch(e){}
-      const nb = v => v > 0 ? xpFmt(v) : '\u2013', cel = (b, t) => `<div><i></i><b>${b}</b><span>${t}</span></div>`;
-      rythme = `<p class="pp-dks">${en ? 'Your pace' : 'Ton rythme'}</p><div class="pp-rpl">${cel(nb(dern), en ? 'Last session' : 'Dernière séance')}${cel(nb(meil), en ? 'Best (7 d)' : 'Meilleure (7 j)')}${cel(nb(moy), en ? 'Average (7 d)' : 'Moyenne (7 j)')}${cel(bs > 0 ? '+' + bs + ' %' : '0 %', en ? 'Streak bonus' : 'Bonus de série')}</div>`;
-    }catch(e){ rythme = ''; }
+      const st = xpJourLire(), au = xpAutres();
+      const reste = cs.filter(k => k.derniereRevision !== today && (k.prochaineRevision || today) <= today).length;
+      const gagne = !!(st.ob || au.ob);
+      if(gagne || (reste > 0 && st.dep !== 0)){
+        const tag = gagne ? (en ? '\u2713 earned' : '\u2713 gagné') : (en ? reste + (reste > 1 ? ' cards left' : ' card left') : reste + (reste > 1 ? ' cartes restantes' : ' carte restante'));
+        const txt = gagne ? (en ? 'You finished all of today\u2019s cards.' : 'Tu as terminé toutes tes cartes du jour.') : (en ? 'Finish all of today\u2019s cards to earn an XP bonus.' : 'Termine toutes tes cartes du jour pour gagner un bonus d\u2019XP.');
+        bonus = `<p class="pp-dks">${en ? 'Daily bonus' : 'Bonus du jour'}<span>${tag}</span></p><p class="pp-dkv">${txt}</p>`;
+      }
+    }catch(e){ bonus = ''; }
   }
   /* Prochain contrôle (matières actives) : la date la plus proche ; à égalité, la matière la moins avancée. « Prêtes » = palier 3 ou plus (maîtrisées + presque maîtrisées). Rien s'il n'y a pas de contrôle à venir. */
   let ctl = '';
@@ -22000,18 +22033,18 @@ function ppRangDos(o){
       const j = Math.max(0, Math.round((Date.parse(cb.d) - Date.parse(today)) / 864e5));
       const quand = j === 0 ? (en ? 'today' : "aujourd'hui") : j === 1 ? (en ? 'tomorrow' : 'demain') : (en ? 'in ' + j + ' days' : 'dans ' + j + ' j');
       const seg = (n, c) => n > 0 ? `<u style="--c:${c};flex:none;width:${(n / cb.n * 100).toFixed(2)}%"></u>` : '';
-      ctl = `<p class="pp-dks">${en ? 'Next test' : 'Prochain contrôle'}<span>${quand}</span></p><div class="pp-ctk"><div><span>${ppEsc(cb.m)}</span><b>${cb.mas + cb.pres}/${cb.n} ${en ? 'ready' : 'prêtes'}</b></div><div class="pp-rpb">${seg(cb.mas, 'var(--green)')}${seg(cb.pres, 'var(--yellow)')}</div></div>`;
+      ctl = `<p class="pp-dks">${en ? 'Next test' : 'Prochain contrôle'}<span>${quand}</span></p><div class="pp-ctk"><div><span>${ppEsc(cb.m)}</span><b>${cb.mas + cb.pres}/${cb.n} ${en ? 'ready' : 'prêtes'}</b></div><div class="pp-rpb">${seg(cb.mas, 'var(--green)')}${seg(cb.pres, 'var(--yellow)')}</div></div><p class="pp-dkv">${cb.n - cb.mas - cb.pres > 0 ? (en ? (cb.n - cb.mas - cb.pres) + ' to bring to tier 3' : (cb.n - cb.mas - cb.pres) + ' à amener au palier 3') : (en ? 'All ready \u2713' : 'Tout est prêt \u2713')}</p>`;
     }
   }catch(e){ ctl = ''; }
   /* cartes qui résistent (ratées au moins une fois, pas encore maîtrisées) */
   const dures = cs.filter(c => (c.palier || 0) < MASTERED_PALIER && (c.difficultes || 0) > 0).sort((a, b) => (b.difficultes || 0) - (a.difficultes || 0));
   const dh = dures.slice(0, 3).map(c => `<div class="pp-rb"><span>${ppEsc(pcNet(c.question) || '[image]')}</span><b>✕ ${c.difficultes}</b></div>`).join('');
   return `<div class="pp-dk"><div class="pp-dka">
-    <div class="pp-dkh">${ppBadgeRang(rg.i)}<div><small>Maîtrise</small><b class="pp-rn">${r.n}</b></div><div class="pp-dkr"><span>${ppSaisonLabel(o.sais.id)}</span></div></div>
+    <div class="pp-dkh">${ppBadgeRang(rg.i)}<div><small>Maîtrise</small><b class="pp-rn">${r.n}</b></div><div class="pp-dkr"><span style="display:block;text-align:right">${ppSaisonLabel(o.sais.id)}</span>${fin ? `<span style="display:block;text-align:right;font-weight:600">${fin}</span>` : ''}</div></div>
     <div class="pp-lad">${lad}</div>
     ${tuiles}${vit}</div><div class="pp-dkc">
-    <p class="pp-dks">Maîtrisées par jour</p><div class="pp-dkb">${barres}</div>
-    ${rythme}${ctl}
+    ${rythme}
+    ${bonus}${ctl}
     </div><div class="pp-dkx"><p class="pp-dks">Cartes qui résistent${dures.length ? `<span>${dures.length}</span>` : ''}</p>${dh || '<p class="pp-dkv">Aucune carte ne résiste</p>'}</div>
     <i class="pp-flipic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4"/></svg></i></div>`;
 }
@@ -22190,6 +22223,25 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v469', t:["Dos de la carte Maîtrise : tout parle du rang","Back of the Mastery card: everything is about your rank"], p:[
+    ["Le dos affiche maintenant l'XP de la saison (le chiffre qui fait ton rang) et ce qu'il te manque pour le rang suivant.","The back now shows your season XP (the number that sets your rank) and what you still need for the next rank."],
+    ["Le graphique montre l'XP par jour sur 7 jours, avec les périodes nommées : « 7 jours d'avant » et « Meilleur jour ». Le nombre de cartes maîtrisées sur 7 jours est juste dessous.","The chart shows XP per day over 7 days, with named periods: “previous 7 days” and “Best day”. Cards mastered over 7 days sit just below."],
+    ["Prochain contrôle : tu vois combien de cartes il reste à amener au palier 3.","Next test: you can see how many cards are left to bring to tier 3."]
+  ] },
+  { v:'v468', t:["Statistiques plus claires","Clearer statistics"], p:[
+    ["Les chiffres de régularité sont réunis sous « 7 derniers jours » : réussite, temps par séance et cartes révisées parlent maintenant de la même période. La série « jours de suite » reste un compteur en cours.","The consistency figures are now grouped under “Last 7 days”: success rate, time per session and cards reviewed all cover the same period. The “days in a row” streak stays a running counter."]
+  ] },
+  { v:'v467', t:["Statistiques mieux rangées","Statistics, better organised"], p:[
+    ["La page Statistiques est rangée en cadres, un par thème : Aujourd'hui, Ta régularité, 30 derniers jours, Ta maîtrise, Tes matières. Rien n'a été retiré.","The Statistics page is now grouped into frames, one per theme: Today, Your consistency, Last 30 days, Your mastery, Your subjects. Nothing was removed."]
+  ] },
+  { v:'v466', t:["Accueil plus aéré","Roomier home screen"], p:[
+    ["Le bandeau des 7 jours ne garde que le petit graphique : les chiffres sont retirés (tes cartes maîtrisées sont toujours dans les statistiques).","The 7-day strip keeps only the small chart: the numbers are gone (your mastered cards are still in the statistics)."],
+    ["« Réviser tout » : le texte tient sur une seule ligne.","“Review all”: the text now fits on a single line."]
+  ] },
+  { v:'v465', t:["Dos de la carte Maîtrise : plus simple","Back of the Mastery card: simpler"], p:[
+    ["Le « Niveau » disparaît du dos de la carte : le rang est maintenant ton seul objectif.","“Level” is gone from the back of the card: your rank is now your only goal."],
+    ["« Ton rythme » disparaît aussi. À la place, « Bonus du jour » te dit si tu as terminé toutes tes cartes du jour, ou combien il t'en reste pour avoir un bonus d'XP.","“Your pace” is gone too. In its place, “Daily bonus” tells you whether you finished all of today's cards, or how many are left to earn an XP bonus."]
+  ] },
   { v:'v460', t:["S'entraîner ignore les matières archivées","Practice ignores archived subjects"], p:[
     ["« S'entraîner » et « Les difficiles » ne proposent plus les cartes des matières archivées (compteurs, grisage et lancement), comme « Tout réviser ».","“Practice” and “Tough ones” no longer offer cards from archived subjects (counters, greying and launch), like “Study all”."]
   ] },

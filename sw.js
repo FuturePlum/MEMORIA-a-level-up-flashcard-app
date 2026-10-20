@@ -19,6 +19,8 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v269 : v469 (dos de la carte Maîtrise : XP de la saison, XP par jour sur 7 jours, périodes nommées, cartes à amener au palier 3) : index.html change, donc nouvelle version du cache.
+   v268 : v468 (Statistiques : cadre « 7 derniers jours », réussite sur 7 jours, libellés sans période répétée) : index.html change, donc nouvelle version du cache.
    v260 : v456 (le reflet doré se joue sur la carte qui part, plus de coche) : index.html change, donc nouvelle version du cache.
    v259 : v455 (Statistiques : une seule barre, l'XP de la saison ; la maîtrise n'est plus qu'un boost d'XP) : index.html change, donc nouvelle version du cache.
    v254 : v451 (Statistiques : la carte de maîtrise se retourne à tout moment, sans attendre la fin de l'animation) : index.html change, donc nouvelle version du cache.
@@ -219,7 +221,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v264';
+const SW_VERSION = 'v269';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){
