@@ -19,6 +19,7 @@
    d'un reload forcé en plein milieu de l'usage. Ce SW nettoie aussi tout
    cache résiduel d'une version antérieure au démarrage, par précaution.
 
+   v273 : v473 (XP : « Tout réviser » 5 XP par carte, passes suivantes 70 / 40 / 15 %) : index.html change, donc nouvelle version du cache.
    v272 : v472 (bilan de fin de séance : compteur d'XP à rouleaux, braises, étincelles, flash) : index.html change, donc nouvelle version du cache.
    v271 : v471 (moment fort : reflet lumineux sur la carte, attente avant la sortie) : index.html change, donc nouvelle version du cache.
    v270 : v470 (moment fort : plus de halo sur le bouton touché) : index.html change, donc nouvelle version du cache.
@@ -224,7 +225,7 @@
 
    v47 : les notifications existent en français et en anglais. Le client envoie sa langue (data.lang) avec chaque message ;
    sans message (rappel générique en arrière-plan), on suit la langue de l'appareil : français pour toute variante fr, anglais sinon. */
-const SW_VERSION = 'v272';
+const SW_VERSION = 'v273';
 const CACHE_NOM = 'memoria-' + SW_VERSION;
 
 function enAnglais(lang){

@@ -12701,10 +12701,10 @@ if(typeof module !== 'undefined') module.exports = { niveauReel, gainNiveau, bar
    Drapeau : XP_ACTIF = false → plus rien n'est calculé ni affiché (les XP déjà enregistrées sont simplement ignorées). */
 const XP_ACTIF = true;
 const XP_CFG = {
-  BASE_DUE: 10, BASE_EXTRA: 2, BASE_QUIZ: 1,                       // carte due / révision en plus / S'entraîner
+  BASE_DUE: 10, BASE_EXTRA: 5, BASE_QUIZ: 1,                       // carte due / révision en plus / S'entraîner
   X_ECRIRE: 1.3, X_NOUVELLE: 1.5, X_DIFFICILE: 1.5, X_SUE: 0.7, SUE_PALIER: 4,
   RETARD_PAR_JOUR: 1, RETARD_MAX: 7, RATE_HIER: 3, PAR_PALIER: 3, MAITRISEE: 40, PRETE_CONTROLE: 15,
-  REPETITION: [1, 0.5, 0.2],                                         // 1re, 2e, 3e passe sur la même carte le même jour ; ensuite 0
+  REPETITION: [1, 0.7, 0.4, 0.15],                                  // 1re, 2e, 3e, 4e passe sur la même carte le même jour ; ensuite 0 (v473 : avant [1, 0.5, 0.2])
   PLAFOND_EXTRA: 200,                                                // XP max par jour sur les révisions en plus (et S'entraîner)
   BONUS_OBJECTIF: 100, BONUS_COUVERTURE: 50, BONUS_2E_SEANCE: 25, BONUS_FIN_SEANCE: 25, ECART_2E_SEANCE_H: 6,
   SERIE_PAR_JOUR: 0.1, SERIE_MAX: 0.3,
@@ -15369,7 +15369,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v472';
+const PP_APP_VERSION = 'v473';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -22300,6 +22300,10 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v473', t:["« Revoir » et « Tout réviser » rapportent plus","“Review again” and “Study all” earn more"], p:[
+    ["Réviser des cartes en plus (« Tout réviser ») rapporte plus d'XP, et « Revoir » juste après une séance aussi : une 2e passe vaut maintenant 70 % d'une 1re, la 3e 40 %, et une 4e passe rapporte encore un peu.","Studying extra cards (“Study all”) now earns more XP, and so does “Review again” right after a session: a 2nd pass is now worth 70% of a 1st, the 3rd 40%, and a 4th pass still earns a little."],
+    ["Le plafond du jour sur les révisions en plus reste le même.","The daily cap on extra reviews is unchanged."]
+  ] },
   { v:'v472', t:["Ton XP en fin de séance : un compteur à rouleaux","Your XP at the end of a session: a rolling counter"], p:[
     ["Le chiffre d'XP gagnée tourne comme les rouleaux d'une machine à jackpot : chaque chiffre ralentit puis s'arrête avec un petit clic, de gauche à droite, et le dernier déclenche l'impact (flash, gerbe d'étincelles, ondes de lumière, vibration).","The XP you earned spins like the reels of a jackpot machine: each digit slows down and stops with a little click, from left to right, and the last one triggers the impact (flash, spray of sparks, waves of light, vibration)."],
     ["Pendant que ça tourne, des braises dorées montent du chiffre, et l'énergie est aspirée vers lui quand tu as bien travaillé. Plus tu as gagné, plus c'est fort.","While it spins, golden embers rise from the number, and energy is drawn into it when you worked well. The more you earned, the stronger it is."],
