@@ -4518,7 +4518,14 @@ body.sans-vie .pp-coach.think::before,body.sans-vie .pc-title i.think::before{an
   background:linear-gradient(90deg,transparent,rgba(255,240,190,.34),transparent)}
 .pp-xpl{margin:0;font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#d9a640;opacity:.92}
 .pp-xpn{display:flex;align-items:baseline;justify-content:center;gap:7px;margin:3px 0 0}
-.pp-xpd{position:relative;display:inline-grid;filter:drop-shadow(0 0 calc(var(--k)*20px) rgba(255,176,32,.7));will-change:transform}
+.pp-xpd{position:relative;display:inline-grid;will-change:transform}
+/* v472 : le chiffre est un compteur à rouleaux (un rouleau par chiffre, qui s'arrêtent de gauche à droite) ; la lueur est un calque à part (plus de filtre recalculé à chaque image) */
+.pp-xpd>.pp-xpgl{position:absolute;left:50%;top:50%;width:130%;height:150%;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;pointer-events:none;font-size:0;opacity:calc(.1 + var(--k)*.85);
+  background:radial-gradient(closest-side,rgba(255,190,60,.55) 0%,rgba(255,138,61,.2) 55%,transparent 100%)}
+.pp-od{display:inline-flex;align-items:center;justify-content:center;opacity:.5}
+.pp-odc{display:block;height:1.02em;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 15%,#000 85%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 15%,#000 85%,transparent 100%)}
+.pp-ods{display:block;will-change:transform}
+.pp-ods i,.pp-odx{display:block;height:1.02em;line-height:1.02;font-style:normal;background:linear-gradient(180deg,#fff7d6 0%,#ffd93d 40%,#ff8a3d 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .pp-xpd>*{grid-area:1/1;font-size:var(--fs,64px);line-height:1.02;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-feature-settings:"tnum";white-space:nowrap;font-style:normal}
 .pp-xpd .gh{visibility:hidden}
 .pp-xpd .lv{text-align:center;background:linear-gradient(180deg,#fff7d6 0%,#ffd93d 40%,#ff8a3d 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
@@ -13068,63 +13075,133 @@ function ppCueJoue(){
   try{ [].forEach.call(document.querySelectorAll('.pp-card'), sc => { ['pp-cue', 'pp-cue-out', 'pp-cue-v1', 'pp-cue-v2', 'pp-cue-v3', 'pp-cue-c', 'pp-cue-sh'].forEach(x => sc.classList.remove(x)); }); }catch(e){}
   ppCueChaleur();
 }
-/* v457 : bilan de fin de séance. Le chiffre grimpe vite puis ralentit (comme un compteur de jackpot) dans un halo qui grandit, avec une onde douce à chaque tic,
-   puis il s'écrase : flash, ondes de lumière, secousse, vibration. Tout grandit avec l'XP gagnée (4 paliers d'intensité). */
-function ppXpBilanAnime(){
+/* v472 : bilan de fin de séance, version « compteur à rouleaux ».
+   Le chiffre est fait d'un rouleau par chiffre : ils tournent vite puis ralentissent et s'arrêtent de GAUCHE à DROITE (comme une machine à jackpot),
+   chaque arrêt fait un petit « clic » (rebond + étincelles). Pendant le défilement : braises qui montent, et (dès 150 XP) de l'énergie aspirée vers le chiffre.
+   Le dernier rouleau (les unités) déclenche l'impact : flash, gerbe d'étincelles, ondes, secousse, vibration, « XP » qui rebondit, reflet. Tout grandit avec l'XP (4 paliers).
+   Si quelque chose plante, ppXpBilanSecours remet simplement le chiffre final (jamais un « +0 » figé). */
+function ppXpBilanSecours(b){
   try{
-    const b = document.querySelector('.pp-xpb'); if(!b || b.dataset.go) return; b.dataset.go = '1';
+    if(!b) return;
+    const txt = '+' + xpFmt(+b.dataset.x || 0);
+    const lv = b.querySelector('.lv'), od = b.querySelector('.pp-od'), gl = b.querySelector('.pp-xpgl');
+    if(od) od.remove();
+    if(gl) gl.remove();
+    if(lv){ lv.style.display = ''; lv.textContent = txt; }
+    ['.pp-xpu', '.pp-xps', '.pp-xpr', '.pp-xpl'].forEach(q => { const el = b.querySelector(q); if(el) el.style.opacity = ''; });
+    b.style.setProperty('--k', '1');
+  }catch(e){}
+}
+function ppXpBilanAnime(){
+  let b = null;
+  try{
+    b = document.querySelector('.pp-xpb'); if(!b || b.dataset.go) return; b.dataset.go = '1';
     const n = +b.dataset.x, tier = +b.dataset.t || 0, monte = b.dataset.monte === '1';
     const lv = b.querySelector('.lv'), cv = b.querySelector('.pp-xpcv'), ph = b.querySelector('.pp-xps'), chip = b.querySelector('.pp-xpr'), unit = b.querySelector('.pp-xpu'), lab = b.querySelector('.pp-xpl'), sh = b.querySelector('.pp-xpsh'), wrap = b.querySelector('.pp-xpd');
     const txt = '+' + xpFmt(n);
     if((window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || !b.animate){ lv.textContent = txt; b.style.setProperty('--k', '1'); return; }
-    lv.textContent = '+0'; ph.style.opacity = '0'; if(chip) chip.style.opacity = '0'; unit.style.opacity = '0';
-    const q = (navigator.hardwareConcurrency || 4) <= 3 ? .55 : 1;
+    const q = (navigator.hardwareConcurrency || 4) <= 3 ? .55 : 1;   // téléphone modeste : moitié moins de particules
     const COL = ['#ffb020', '#ffd93d', '#ffffff', '#ff6b3d'];
-    const rb = b.getBoundingClientRect(), W = Math.round(rb.width) || 300, H = Math.round(rb.height) || 150;
+    const W = b.offsetWidth || 300, H = b.offsetHeight || 150;
     const fx = (cv && typeof ppRangFx === 'function') ? ppRangFx(cv, W, H) : null;
-    const rl = lv.getBoundingClientRect(), cx = (rl.left - rb.left) + rl.width / 2, cy = (rl.top - rb.top) + rl.height / 2;
     const A = (el, kf, o) => { try{ return el.animate(kf, Object.assign({ fill: 'both', easing: 'cubic-bezier(.22,1,.36,1)' }, o)); }catch(e){ return null; } };
-    const dur = Math.round(950 + Math.min(1500, n * 1.5)), t0 = performance.now() + 220;   // 0,22 s d'attente : le bloc entre d'abord
+
+    /* --- les rouleaux : un par chiffre ; « + » et espaces fins restent fixes --- */
+    const od = document.createElement('span'); od.className = 'pp-od'; od.setAttribute('aria-hidden', 'true');
+    const cols = []; let di = 0;
+    Array.from(txt).forEach(ch => {
+      if(ch >= '0' && ch <= '9'){
+        const col = document.createElement('span'), st = document.createElement('span'); col.className = 'pp-odc'; st.className = 'pp-ods';
+        let h = ''; for(let d = 0; d <= 10; d++) h += '<i>' + (d % 10) + '</i>';   // 0 à 9, puis encore 0 : le rouleau boucle sans à-coup
+        st.innerHTML = h; col.appendChild(st); od.appendChild(col);
+        cols.push({ col, st, d: +ch, i: di++, done: false, turns: 1, travel: 0, D: 1 });
+      } else {
+        const s = document.createElement('span'); s.className = 'pp-odx'; s.textContent = ch; od.appendChild(s);
+      }
+    });
+    const nd = cols.length;
+    const gl = document.createElement('i'); gl.className = 'pp-xpgl'; gl.setAttribute('aria-hidden', 'true');
+    wrap.insertBefore(gl, wrap.firstChild); wrap.appendChild(od); lv.style.display = 'none';
+    const poser = (c, pos) => { c.st.style.transform = 'translate3d(0,' + (-(pos * 100 / 11)).toFixed(3) + '%,0)'; };
+    cols.forEach(c => poser(c, 0));
+
+    /* centre du chiffre dans le bloc (mesures sans transformation : le bloc est encore en train d'entrer) */
+    const nw = wrap.offsetWidth || 160, nh = wrap.offsetHeight || 60;
+    const gx = wrap.offsetLeft + nw / 2, gy = wrap.offsetTop + nh / 2;
+
+    const dur = Math.round(950 + Math.min(1500, n * 1.5)), t0 = performance.now() + 380;   // 0,38 s d'attente : le bloc entre et le titre apparaît d'abord
+    cols.forEach(c => {
+      c.turns = Math.max(1, 3 - (nd - 1 - c.i));                                   // unités : 3 tours, dizaines : 2, le reste : 1
+      c.travel = c.turns * 10 + c.d;
+      c.D = dur * (nd > 1 ? 1 - .36 * (1 - c.i / (nd - 1)) : 1);                    // les rouleaux de gauche s'arrêtent plus tôt, les unités en dernier
+    });
     const pas = 8, amp = 2 + tier * 1.5;
-    let last = 0, ticks = 0, acc = 0, fini = false, tp = t0;
-    A(lab, [{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 160 });
+    let ticks = 0, fini = false;
+    A(lab, [{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 220 });
+
+    /* un rouleau s'arrête : petit clic (rebond) + quelques étincelles à sa place */
+    const arret = c => {
+      A(c.col, [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(5%) scale(1.08)', offset: .35 }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'none' });
+      if(c.i < nd - 1){
+        if(fx) fx.sparks(COL, Math.max(2, Math.round((3 + tier) * q)), wrap.offsetLeft + od.offsetLeft + c.col.offsetLeft + c.col.offsetWidth / 2, gy, 1, 3.6, 320, 620, .06);
+        haptique(6);
+      }
+    };
     const atterrit = () => {
-      fini = true; lv.textContent = txt; b.style.setProperty('--k', '1'); b.classList.add('land');
-      A(lv, [{ filter: 'brightness(3) saturate(.6)', transform: 'scale(1.2)' }, { filter: 'brightness(1.5)', transform: 'scale(.96)', offset: .45 }, { filter: 'brightness(1)', transform: 'scale(1)' }], { duration: 760, easing: 'cubic-bezier(.2,.9,.3,1.15)' });
-      unit.style.opacity = ''; A(unit, [{ opacity: 0, transform: 'scale(.4) rotate(-14deg)' }, { opacity: 1, transform: 'scale(1.3) rotate(4deg)', offset: .55 }, { opacity: 1, transform: 'none' }], { duration: 560, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      fini = true; b.style.setProperty('--k', '1'); b.classList.add('land'); od.style.opacity = '1';
+      A(od, [{ filter: 'brightness(3) saturate(.6)', transform: 'scale(1.2)' }, { filter: 'brightness(1.5)', transform: 'scale(.96)', offset: .45 }, { filter: 'brightness(1)', transform: 'scale(1)' }], { duration: 760, easing: 'cubic-bezier(.2,.9,.3,1.15)', fill: 'none' });
+      unit.style.opacity = ''; A(unit, [{ opacity: 0, transform: 'translateX(-12px) scale(.4) rotate(-14deg)' }, { opacity: 1, transform: 'scale(1.3) rotate(4deg)', offset: .55 }, { opacity: 1, transform: 'none' }], { duration: 560, easing: 'cubic-bezier(.34,1.56,.64,1)' });
       A(sh, [{ transform: 'translateX(-130%) skewX(-18deg)', opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 1, offset: .75 }, { transform: 'translateX(290%) skewX(-18deg)', opacity: 0 }], { duration: 900, easing: 'cubic-bezier(.5,0,.3,1)' });
       const g = 22 + tier * 14;
       A(b, [{ boxShadow: '0 4px 0 #8a5a14,0 0 0 rgba(255,176,32,0)' }, { boxShadow: '0 4px 0 #8a5a14,0 0 ' + g + 'px rgba(255,176,32,.85)', offset: .22 }, { boxShadow: '0 4px 0 #8a5a14,0 0 ' + Math.round(g / 3) + 'px rgba(255,176,32,.28)' }], { duration: 1100, easing: 'ease-out' });
       if(tier >= 1){ const kf = []; for(let k = 0; k < 14; k++){ const dc = Math.pow(1 - k / 14, 1.6); kf.push({ transform: 'translate(' + ((Math.random() * 2 - 1) * amp * dc).toFixed(1) + 'px,' + ((Math.random() * 2 - 1) * amp * dc).toFixed(1) + 'px)' }); } kf.push({ transform: 'none' }); A(b, kf, { duration: 380 + tier * 90, easing: 'linear', composite: 'add' }); }
       const g0 = b.querySelector('.pp-xpg'); if(g0) A(g0, [{ transform: 'translate(-50%,-50%) scale(.9)', opacity: .5 }, { transform: 'translate(-50%,-50%) scale(1.75)', opacity: 1, offset: .3 }, { transform: 'translate(-50%,-50%) scale(1.5)', opacity: .9 }], { duration: 1300, easing: 'ease-out', fill: 'none' });
-      if(fx){   // ondes de lumière qui partent du chiffre (2 à 5 selon l'XP), toutes douces
-        const nO = 2 + tier;
-        for(let k = 0; k < nO; k++) fx.ring(k % 2 ? '#ffb020' : '#ffd93d', k * 170, .5 + k * .1, Math.max(2.5, 7 - k * 1.2), 1100 + k * 160, cx, cy);
+      A(gl, [{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(1.5)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: .9 }], { duration: 1000, easing: 'ease-out', fill: 'none' });
+      if(fx){
+        const nO = 2 + tier;   // ondes de lumière qui partent du chiffre (2 à 5 selon l'XP), toutes douces
+        for(let k = 0; k < nO; k++) fx.ring(k % 2 ? '#ffb020' : '#ffd93d', k * 170, .5 + k * .1, Math.max(2.5, 7 - k * 1.2), 1100 + k * 160, gx, gy);
+        fx.sparks(COL, Math.round((16 + tier * 14) * q), gx, gy, 2, 7 + tier, 520, 1000, .07);   // gerbe d'étincelles à l'impact
+        fx.embers(COL, Math.round((8 + tier * 8) * q), gx, gy, nw * .4, 1.8, 1000, 2000);
       }
       haptique(tier >= 3 ? [40, 30, 60, 30, 100] : tier === 2 ? [32, 28, 64] : tier === 1 ? [26, 24, 46] : [22, 20, 34]);
       setTimeout(() => { ph.style.opacity = ''; A(ph, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 520 }); }, 280);
       if(chip) setTimeout(() => {
         chip.style.opacity = ''; A(chip, [{ opacity: 0, transform: 'scale(.4) translateY(10px)' }, { opacity: 1, transform: 'scale(1.14)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 640, easing: 'cubic-bezier(.34,1.56,.64,1)' });
-        if(fx){ const rc = chip.getBoundingClientRect(), bx = rc.left - rb.left + rc.width / 2, by = rc.top - rb.top + rc.height / 2; const c = getComputedStyle(chip).getPropertyValue('--c').trim() || '#ffd93d'; fx.ring(c, 0, .55, 4, 900, bx, by); fx.ring('#ffffff', 160, .7, 2.5, 900, bx, by); }
+        if(fx){ const bx = chip.offsetLeft + chip.offsetWidth / 2, by = chip.offsetTop + chip.offsetHeight / 2; const c = getComputedStyle(chip).getPropertyValue('--c').trim() || '#ffd93d'; fx.ring(c, 0, .55, 4, 900, bx, by); fx.ring('#ffffff', 160, .7, 2.5, 900, bx, by); fx.sparks([c, '#ffffff'], Math.round(10 * q), bx, by, 1.5, 5, 400, 800, .05); }
         haptique([12, 60, 18]);
       }, 780);
       if(tier >= 2) setTimeout(() => { try{ b.classList.add('rest'); }catch(e){} }, 1200);
-      setTimeout(() => { try{ if(fx) fx.stop(); }catch(e){} }, 3600);
+      /* après l'impact : quelques braises montent encore doucement, puis tout s'arrête */
+      const tp = performance.now();
+      const post = () => { if(!b.isConnected || !fx) return; const dt = performance.now() - tp; if(dt > 2400) return; if(Math.random() < (.2 + tier * .08) * q * (1 - dt / 2400)) fx.embers(COL, 1, gx, gy + nh * .2, nw * .42, 1.5, 900, 1700); requestAnimationFrame(post); };
+      requestAnimationFrame(post);
+      setTimeout(() => { try{ if(fx) fx.stop(); }catch(e){} }, 4200);
     };
     const frame = now => {
       if(fini || !b.isConnected){ if(!b.isConnected && fx) try{ fx.stop(); }catch(e){} return; }
-      const k = Math.max(0, Math.min(1, (now - t0) / dur)), e = 1 - Math.pow(1 - k, 3.2);
-      if(now >= t0){
-        lv.textContent = '+' + xpFmt(Math.round(n * e));
-        b.style.setProperty('--k', e.toFixed(3));
-        const sp = Math.max(0, e - last) ; last = e;
-        const st = Math.floor(e * pas);
-        if(st > ticks){ ticks = st; haptique(5 + tier * 2); if(fx) fx.ring('#ffb020', 0, .3 + .25 * e, 3, 950, cx, cy); A(wrap, [{ transform: 'scale(1)' }, { transform: 'scale(' + (1.035 + tier * .012).toFixed(3) + ')' }, { transform: 'scale(1)' }], { duration: 170, easing: 'ease-out', fill: 'none' }); }
-      }
-      if(k >= 1) atterrit(); else requestAnimationFrame(frame);
+      try{
+        const t = now - t0, k = Math.max(0, Math.min(1, t / dur)), e = 1 - Math.pow(1 - k, 3.2);
+        if(t >= 0){
+          b.style.setProperty('--k', e.toFixed(3));
+          od.style.opacity = (.5 + .5 * Math.min(1, e * 1.6)).toFixed(3);   // le chiffre « se charge » en lumière
+          cols.forEach(c => {
+            if(c.done) return;
+            const kc = Math.min(1, t / c.D);
+            if(kc >= 1){ c.done = true; poser(c, c.d); arret(c); }
+            else poser(c, (c.travel * (1 - Math.pow(1 - kc, 3.2))) % 10);
+          });
+          const st = Math.floor(e * pas);
+          if(st > ticks){ ticks = st; haptique(5 + tier * 2); if(fx) fx.ring('#ffb020', 0, .3 + .25 * e, 3, 950, gx, gy); A(wrap, [{ transform: 'scale(1)' }, { transform: 'scale(' + (1.03 + tier * .01).toFixed(3) + ')' }, { transform: 'scale(1)' }], { duration: 170, easing: 'ease-out', fill: 'none' }); }
+          if(fx){
+            if(Math.random() < (.16 + tier * .09) * (.4 + e) * q) fx.embers(COL, 1, gx, gy + nh * .25, nw * .45, 1.2 + e, 800, 1500);   // braises qui montent du chiffre
+            if(tier >= 1 && e < .8 && Math.random() < (.1 + tier * .06) * q) fx.suck('#ffb020', gx, gy);                                // énergie aspirée vers le chiffre
+          }
+        }
+        if(k >= 1 && cols.every(c => c.done)) atterrit(); else requestAnimationFrame(frame);
+      }catch(err){ fini = true; try{ if(fx) fx.stop(); }catch(e2){} ppXpBilanSecours(b); }
     };
     requestAnimationFrame(frame);
-  }catch(e){}
+  }catch(e){ ppXpBilanSecours(b); }
 }
 /* === fin retour visuel === */
 
@@ -15292,7 +15369,7 @@ function ppSheetClose(){
 let ppToastT;
 /* v146 : Aide → « Signaler un bug » / « Me contacter » : ouvre la messagerie avec un mail prérempli (version, appareil, langue, apparence). */
 const PP_CONTACT_MAIL = 'loiccompas@ikmail.com';
-const PP_APP_VERSION = 'v471';
+const PP_APP_VERSION = 'v472';
 /* v183 : le bouton « Journal de diagnostic » (Réglages > Aide) est masqué. Le journal continue d'être écrit ; pour réafficher le bouton : true. */
 const PP_JOURNAL_VISIBLE = false;
 function ppAideMail(type){
@@ -22223,6 +22300,11 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
+  { v:'v472', t:["Ton XP en fin de séance : un compteur à rouleaux","Your XP at the end of a session: a rolling counter"], p:[
+    ["Le chiffre d'XP gagnée tourne comme les rouleaux d'une machine à jackpot : chaque chiffre ralentit puis s'arrête avec un petit clic, de gauche à droite, et le dernier déclenche l'impact (flash, gerbe d'étincelles, ondes de lumière, vibration).","The XP you earned spins like the reels of a jackpot machine: each digit slows down and stops with a little click, from left to right, and the last one triggers the impact (flash, spray of sparks, waves of light, vibration)."],
+    ["Pendant que ça tourne, des braises dorées montent du chiffre, et l'énergie est aspirée vers lui quand tu as bien travaillé. Plus tu as gagné, plus c'est fort.","While it spins, golden embers rise from the number, and energy is drawn into it when you worked well. The more you earned, the stronger it is."],
+    ["Le chiffre n'a plus d'effet qui clignote ou se peint à moitié pendant qu'il monte : il est fluide, même sur Chromebook.","The number no longer flickers or half-paints while it climbs: it is smooth, even on a Chromebook."]
+  ] },
   { v:'v471', t:["Moment fort : le reflet bien visible","Big moment: a clearly visible shine"], p:[
     ["Quand une carte franchit un palier, un reflet doré traverse la carte (plus lumineux, plus long) et la carte attend un instant avant de partir : tu le vois en entier, et il part avec elle.","When a card reaches a new tier, a golden shine sweeps across the card (brighter, longer) and the card waits a moment before leaving: you see all of it, and it leaves with the card."]
   ] },
