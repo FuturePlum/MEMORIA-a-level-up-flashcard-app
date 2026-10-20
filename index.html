@@ -21990,8 +21990,8 @@ function ppRangDos(o){
   /* v465 : plus de « Niveau » ni de ligne « Niveau N+1 dans … XP » : le rang est le seul objectif (le niveau ne débloquait rien et doublait le rang). */
   const nxt = rg.dernier ? '' : (en ? PP_RANGS_EN[rg.i + 1] : rg.suivantNom);
   const tuiles = x ? `<div class="pp-dkt">
-    <div><b style="--k:${r.c3}">${xpFmt(o.n)}</b><span>${en ? 'XP this season' : 'XP de la saison'}</span></div>
-    <div><b style="--k:${r.c3}">${rg.dernier ? '\u2713' : xpFmt(rg.reste)}</b><span>${rg.dernier ? (en ? 'top rank reached' : 'rang maximum atteint') : (en ? 'XP to reach ' + nxt : 'XP pour atteindre ' + nxt)}</span></div></div>` : '';
+    <div><b style="--k:${r.c3}">${xpFmt(o.n)}</b><span>${en ? 'season' : 'saison'}</span></div>
+    <div><b style="--k:${r.c3}">${rg.dernier ? '\u2713' : xpFmt(rg.reste)}</b><span>${rg.dernier ? (en ? 'top rank' : 'rang max') : (en ? 'to ' + nxt : 'pour ' + nxt)}</span></div></div>` : '';
   const vit = o.sais.v && o.sais.v.length ? `<div class="pp-vit"><small>Vitrine</small>${o.sais.v.slice(-4).map(y => `<span style="${ppRangVars(y.i)}">${ppBadgeRang(y.i)}<em>${ppSaisonLabel(y.id)}</em></span>`).join('')}</div>` : '';
   /* échelle des 9 rangs (seuils en XP) */
   const lad = PP_RANGS.map((y, i) => `<span class="${i < rg.i ? 'ok' : i === rg.i ? 'cur' : 'lock'}" style="${ppRangVars(i)}">${ppBadgeRang(i)}<em>${ppXpCourt(y.s)}</em></span>`).join('');
@@ -22001,8 +22001,9 @@ function ppRangDos(o){
   const mx = Math.max(1, ...j7.map(y => y.v));
   const barres = j7.map(y => `<div${y.d === today ? ' class="t"' : ''}><b>${y.v ? ppXpCourt(y.v) : ''}</b><i style="--r:${(y.v / mx).toFixed(3)}"></i><em>${ppEsc(new Date(y.d + 'T12:00:00').toLocaleDateString(loc, { weekday:'narrow' }))}</em></div>`).join('');
   const nb = Math.max(0, Math.round(+o.masSem || 0));
-  const rythme = x ? `<p class="pp-dks">${en ? 'XP per day' : 'XP par jour'}<span>${en ? 'Last 7 days' : '7 derniers jours'}</span></p><div class="pp-dkb">${barres}</div>
-    <p class="pp-dkv">${en ? 'Total ' : 'Total '}${xpFmt(x.sem)} XP \u00b7 ${en ? 'previous 7 days ' : '7 jours d\u2019avant '}${xpFmt(x.prec)} XP${x.record > 0 ? '<br>' + (en ? 'Best day (ever) ' : 'Meilleur jour (depuis le début) ') + xpFmt(x.record) + ' XP' : ''}<br>${nb} ${en ? (nb === 1 ? 'card' : 'cards') + ' mastered over 7 days' : (nb > 1 ? 'cartes maîtrisées' : 'carte maîtrisée') + ' sur 7 jours'}</p>` : '';
+  const dlt = !x ? '' : x.sem > x.prec ? '<i style="color:var(--green);font-style:normal"> \u25b2</i>' : x.sem < x.prec ? '<i style="color:var(--pink);font-style:normal"> \u25bc</i>' : '';   /* flèche : 7 derniers jours mieux / moins bien que les 7 jours d'avant */
+  const rythme = x ? `<p class="pp-dks">${en ? 'XP per day' : 'XP par jour'}<span>${en ? '7 days' : '7 jours'}</span></p><div class="pp-dkb">${barres}</div>
+    <div class="pp-dkt" style="grid-template-columns:repeat(3,1fr);margin-top:10px"><div><b style="--k:${r.c3}">${xpFmt(x.sem)}${dlt}</b><span>${en ? '7 days' : '7 jours'}</span></div><div><b style="--k:${r.c3}">${xpFmt(x.record)}</b><span>${en ? 'best day' : 'record'}</span></div><div><b style="--k:${r.c3}">${nb}</b><span>${en ? 'mastered' : 'maîtrisées'}</span></div></div>` : '';
   /* v465 : « Ton rythme » est retiré (4 chiffres peu parlants). À la place, UNE info qui sert à monter de rang et qui n'était nulle part : le bonus du jour
      (terminer toutes les cartes dues) est-il gagné, ou combien de cartes restent pour l'avoir ? Aucun chiffre de la formule. Caché s'il n'y avait rien à réviser aujourd'hui
      (st.dep === 0 : aucun bonus possible) ou si tout est déjà fait sans bonus. Mêmes conditions que xpApresReponse (st.ob / au.ob, cartes dues = derniereRevision ≠ aujourd'hui et prochaineRevision ≤ aujourd'hui). Lecture seule. */
@@ -22014,8 +22015,7 @@ function ppRangDos(o){
       const gagne = !!(st.ob || au.ob);
       if(gagne || (reste > 0 && st.dep !== 0)){
         const tag = gagne ? (en ? '\u2713 earned' : '\u2713 gagné') : (en ? reste + (reste > 1 ? ' cards left' : ' card left') : reste + (reste > 1 ? ' cartes restantes' : ' carte restante'));
-        const txt = gagne ? (en ? 'You finished all of today\u2019s cards.' : 'Tu as terminé toutes tes cartes du jour.') : (en ? 'Finish all of today\u2019s cards to earn an XP bonus.' : 'Termine toutes tes cartes du jour pour gagner un bonus d\u2019XP.');
-        bonus = `<p class="pp-dks">${en ? 'Daily bonus' : 'Bonus du jour'}<span>${tag}</span></p><p class="pp-dkv">${txt}</p>`;
+        bonus = `<p class="pp-dks">${en ? 'Daily bonus' : 'Bonus du jour'}<span>${tag}</span></p>`;
       }
     }catch(e){ bonus = ''; }
   }
@@ -22033,7 +22033,7 @@ function ppRangDos(o){
       const j = Math.max(0, Math.round((Date.parse(cb.d) - Date.parse(today)) / 864e5));
       const quand = j === 0 ? (en ? 'today' : "aujourd'hui") : j === 1 ? (en ? 'tomorrow' : 'demain') : (en ? 'in ' + j + ' days' : 'dans ' + j + ' j');
       const seg = (n, c) => n > 0 ? `<u style="--c:${c};flex:none;width:${(n / cb.n * 100).toFixed(2)}%"></u>` : '';
-      ctl = `<p class="pp-dks">${en ? 'Next test' : 'Prochain contrôle'}<span>${quand}</span></p><div class="pp-ctk"><div><span>${ppEsc(cb.m)}</span><b>${cb.mas + cb.pres}/${cb.n} ${en ? 'ready' : 'prêtes'}</b></div><div class="pp-rpb">${seg(cb.mas, 'var(--green)')}${seg(cb.pres, 'var(--yellow)')}</div></div><p class="pp-dkv">${cb.n - cb.mas - cb.pres > 0 ? (en ? (cb.n - cb.mas - cb.pres) + ' to bring to tier 3' : (cb.n - cb.mas - cb.pres) + ' à amener au palier 3') : (en ? 'All ready \u2713' : 'Tout est prêt \u2713')}</p>`;
+      ctl = `<p class="pp-dks">${en ? 'Next test' : 'Prochain contrôle'}<span>${quand}</span></p><div class="pp-ctk"><div><span>${ppEsc(cb.m)}</span><b>${cb.mas + cb.pres}/${cb.n} ${en ? 'ready' : 'prêtes'}</b></div><div class="pp-rpb">${seg(cb.mas, 'var(--green)')}${seg(cb.pres, 'var(--yellow)')}</div></div>`;
     }
   }catch(e){ ctl = ''; }
   /* cartes qui résistent (ratées au moins une fois, pas encore maîtrisées) */
@@ -22223,10 +22223,8 @@ function ppChoisirApparence(c){
 /* v354 : « Mises à jour » (Réglages → Aide). À CHAQUE VERSION : ajouter UNE entrée EN TÊTE de PP_NOUVEAUTES (la 1re est mise en avant,
    les autres sont repliées) et changer PP_APP_VERSION. Textes pour l'utilisateur : courts, doux, sans jargon. Format : [français, anglais]. */
 const PP_NOUVEAUTES = [
-  { v:'v469', t:["Dos de la carte Maîtrise : tout parle du rang","Back of the Mastery card: everything is about your rank"], p:[
-    ["Le dos affiche maintenant l'XP de la saison (le chiffre qui fait ton rang) et ce qu'il te manque pour le rang suivant.","The back now shows your season XP (the number that sets your rank) and what you still need for the next rank."],
-    ["Le graphique montre l'XP par jour sur 7 jours, avec les périodes nommées : « 7 jours d'avant » et « Meilleur jour ». Le nombre de cartes maîtrisées sur 7 jours est juste dessous.","The chart shows XP per day over 7 days, with named periods: “previous 7 days” and “Best day”. Cards mastered over 7 days sit just below."],
-    ["Prochain contrôle : tu vois combien de cartes il reste à amener au palier 3.","Next test: you can see how many cards are left to bring to tier 3."]
+  { v:'v469', t:["Dos de la carte Maîtrise : plus clair, moins de texte","Back of the Mastery card: clearer, less text"], p:[
+    ["Le dos montre l'XP de la saison et ce qui manque pour le rang suivant, puis l'XP par jour sur 7 jours avec trois chiffres : 7 jours (flèche si mieux ou moins bien que les 7 jours d'avant), record, cartes maîtrisées. Plus de phrases.","The back shows your season XP and what is left for the next rank, then XP per day over 7 days with three numbers: 7 days (arrow if better or worse than the 7 days before), best day, cards mastered. No more sentences."]
   ] },
   { v:'v468', t:["Statistiques plus claires","Clearer statistics"], p:[
     ["Les chiffres de régularité sont réunis sous « 7 derniers jours » : réussite, temps par séance et cartes révisées parlent maintenant de la même période. La série « jours de suite » reste un compteur en cours.","The consistency figures are now grouped under “Last 7 days”: success rate, time per session and cards reviewed all cover the same period. The “days in a row” streak stays a running counter."]
